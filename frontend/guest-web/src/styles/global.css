@@ -1,0 +1,174 @@
+:root {
+  font-family: Arial, sans-serif;
+  color: #183047;
+  background: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+.navbar {
+  background: #092a47;
+  color: white;
+  padding: 20px 8%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo {
+  color: #d9bb7c;
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-links a {
+  color: white;
+}
+
+.nav-links a:hover {
+  color: #d9bb7c;
+}
+
+.hero {
+  min-height: 470px;
+  background: #123d65;
+  color: white;
+  text-align: center;
+  padding: 105px 20px;
+}
+
+.eyebrow {
+  color: #d9bb7c;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.hero h1 {
+  font-size: 44px;
+  margin: 20px 0;
+}
+
+.hero-description {
+  max-width: 520px;
+  margin: 0 auto 35px;
+  line-height: 1.7;
+  color: #e6edf5;
+}
+
+.primary-button {
+  display: inline-block;
+  background: #d9bb7c;
+  color: #092a47;
+  padding: 14px 28px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.primary-button:hover {
+  background: #f0d39a;
+}
+
+.features {
+  padding: 65px 8%;
+  text-align: center;
+}
+
+.features h2 {
+  margin-bottom: 35px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.feature-card {
+  padding: 30px 20px;
+  border: 1px solid #e1e5e9;
+  border-radius: 10px;
+}
+
+.feature-card svg {
+  color: #b59a61;
+}
+
+.feature-card h3 {
+  margin-top: 15px;
+}
+
+.feature-card p {
+  color: #667788;
+  line-height: 1.6;
+}
+
+.simple-page {
+  min-height: 60vh;
+  padding: 70px 8%;
+  text-align: center;
+}
+
+.footer {
+  padding: 22px;
+  background: #092a47;
+  color: white;
+  text-align: center;
+  font-size: 13px;
+}
+
+
+/* Backend connection status */
+
+.backend-status {
+  background: #f4f6f8;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.status-connected {
+  color: #168758;
+  font-weight: bold;
+}
+
+.status-offline {
+  color: #c0392b;
+  font-weight: bold;
+}
+
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+  }
+
+  .hero {
+    padding: 75px 20px;
+  }
+
+  .hero h1 {
+    font-size: 32px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
