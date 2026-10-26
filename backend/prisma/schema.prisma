@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ========================================
+// ROOM STATUS
+// ========================================
+
+enum RoomStatus {
+  READY
+  OCCUPIED
+  CLEANING
+  MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+// ========================================
+// PROPERTY
+// ========================================
+
+model Property {
+  id          String  @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  province    String
+  country     String  @default("Philippines")
+  phone       String?
+  email       String?
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomTypes RoomType[]
+}
+
+// ========================================
+// ROOM TYPE
+// ========================================
+
+model RoomType {
+  id               String  @id @default(cuid())
+  propertyId       String
+  name             String
+  description      String?
+  capacity         Int
+  baseRateCentavos Int
+  isActive         Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+
+  rooms     Room[]
+  images    RoomImage[]
+  amenities RoomTypeAmenity[]
+
+  @@unique([propertyId, name])
+}
+
+// ========================================
+// PHYSICAL ROOM
+// ========================================
+
+model Room {
+  id         String     @id @default(cuid())
+  roomTypeId String
+  roomNumber String     @unique
+  floor      String?
+  status     RoomStatus @default(READY)
+  isActive   Boolean    @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
+}
+
+// ========================================
+// AMENITY
+// ========================================
+
+model Amenity {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomTypes RoomTypeAmenity[]
+}
+
+// ========================================
+// ROOM TYPE AMENITY
+// ========================================
+
+model RoomTypeAmenity {
+  roomTypeId String
+  amenityId  String
+
+  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
+
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Restrict)
+
+  @@id([roomTypeId, amenityId])
+}
+
+// ========================================
+// ROOM IMAGE
+// ========================================
+
+model RoomImage {
+  id           String  @id @default(cuid())
+  roomTypeId   String
+  filePath     String
+  altText      String?
+  displayOrder Int     @default(0)
+  isPrimary    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
+}
+
+// ========================================
+// USER STATUS
+// ========================================
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+  PENDING
+}
+
+// ========================================
+// ROLE
+// ========================================
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+}
+
+// ========================================
+// USER
+// ========================================
+
+model User {
+  id           String     @id @default(cuid())
+  roleId       String
+  name         String
+  email        String     @unique
+  passwordHash String
+  status       UserStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  role          Role           @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  refreshTokens RefreshToken[]
+  guest         Guest?
+}
+
+// ========================================
+// REFRESH TOKEN
+// ========================================
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
+
+// ========================================
+// GUEST
+// ========================================
+
+model Guest {
+  id        String  @id @default(cuid())
+  userId    String? @unique
+  firstName String
+  lastName  String
+  email     String?
+  phone     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
