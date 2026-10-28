@@ -66,6 +66,7 @@ Do not introduce frontend TypeScript.
 
 | File | Purpose |
 |---|---|
+| [DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md) | Current directory tree, folder responsibilities, and links to related documentation |
 | SYSTEM_DESIGN.md | System boundaries, roles, modules, and architecture |
 | TECHNICAL_PLAN.md | Folder structure, technical responsibilities, and roadmap |
 | design_guidelines.md | Visual foundations and interface behavior |
@@ -77,12 +78,14 @@ Do not introduce frontend TypeScript.
 | CODING_PRINCIPLES.md | SOLID, ACID, CRUD, DRY, KISS, and YAGNI |
 | CODING_PATTERNS.md | Practical frontend and backend patterns |
 | CONVENTIONAL_COMMITS.md | Commit format and examples |
+| [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md) | Project standards, folder organization, and development process |
+| [CI_CD_ROADMAP.MD](CI_CD_ROADMAP.MD) | Planned continuous integration, release, and deployment workflow |
 
 ## 5. Recommended Reading Order
 
 1. SYSTEM_DESIGN.md
 2. BUSINESS_FLOWS.md
-3. TECHNICAL_PLAN.md
+3. TECHNICAL_PLAN.md, then [DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md) for the current layout
 4. DATABASE_SCHEMA.md
 5. API.md
 6. SECURITY.md

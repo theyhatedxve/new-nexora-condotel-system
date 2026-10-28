@@ -13,3 +13,9 @@ backend/dev.db
 backend/dev.db-journal
 backend/prisma/dev.db
 backend/prisma/dev.db-journal
+
+# Isolated NEXORA database tests
+backend/step10.test.db
+backend/step10.test.db-journal
+backend/step10.test.db-wal
+backend/step10.test.db-shm

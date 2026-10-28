@@ -1,16 +1,16 @@
 # NEXORA — Codex Project Instructions and Development Status
 
-**Last status update:** 2026-10-26  
-**Authoritative specification:** NEXORA Final Condotel Management System Architecture **v2.1** (approved).  
-**Current phase:** Phase 2 — Database Foundation.  
-**Current checkpoint:** Step 4 reported complete; **Step 5 is NOT authorized**.
+**Last status update:** 2026-10-28
+**Authoritative specification:** NEXORA Final Condotel Management System Architecture **v2.1** (approved).
+**Current phase:** Phase 2 — Database Foundation **COMPLETED** (10/10, user-confirmed).
+**Current checkpoint:** Phase 2 completion confirmed by the user on 2026-10-28. Phase 3 — Authentication & RBAC is next and requires explicit approval.
 
 > IMPORTANT: This file is a progress handoff and working instructions for Codex. It is not proof that a command ran or a feature exists. Verify the repository before modifying anything. The approved Architecture v2.1 takes precedence over older v2.0 material. Do not infer that the local `Architecture Plan.txt` is v2.1 from its name; inspect the version header.
 
 ## 1. Instructions for Codex
 
 1. Follow the **KISS principle**: simple, readable, maintainable code; implement one development step at a time.
-2. **Require explicit user approval before each next step/phase.** Do not start Phase 2 Step 5, generate its code, or run its migrations until the user explicitly approves.
+2. **Require explicit user approval before each next step/phase.** Phase 2 is complete. Do not start Phase 3 implementation until the user explicitly approves that scope.
 3. For a new step: first present the field/relationship design for approval, then provide/implement code only with authorization, then give tests and await results.
 4. Prefer **Windows 11 / PowerShell / VS Code** instructions with exact paths, copy-paste code, expected outputs, and troubleshooting.
 5. Do not change the approved stack, migrate from Vitest to Jest, or add unnecessary dependencies.
@@ -40,42 +40,81 @@ Local Windows project location: `D:\Web-JSX\NEXORA`
 ```text
 NEXORA/
 ├── frontend/
-│   ├── guest-web/      # Vite React JS/JSX, development port 5173
-│   └── admin-web/      # Vite React JS/JSX, development port 5174
-├── backend/            # NestJS TS, port 3000, Prisma, Vitest
+│   ├── guest-web/                   # Vite React JS/JSX, port 5173
+│   └── admin-web/                   # Vite React JS/JSX, port 5174
+├── backend/                         # NestJS TypeScript, port 3000, Vitest
 │   ├── prisma/
-│   │   └── schema.prisma
+│   │   ├── schema.prisma            # 24 models
+│   │   └── migrations/
+│   │       ├── 20261027150551_init/migration.sql
+│   │       └── migration_lock.toml
+│   ├── src/
+│   │   ├── generated/prisma/        # Generated client, ignored by Git
+│   │   ├── prisma/
+│   │   │   ├── prisma.module.ts
+│   │   │   ├── prisma.service.ts
+│   │   │   └── seed.ts              # Guarded development sample data
+│   │   ├── app.module.ts            # Imports PrismaModule
+│   │   └── main.ts
+│   ├── test/
+│   │   ├── database/database.integrity.spec.ts
+│   │   └── app.e2e-spec.ts
 │   ├── prisma7.config.ts
-│   ├── .env             # local only, ignored by Git
+│   ├── vitest.config.ts
+│   ├── vitest.config.e2e.ts
 │   └── .env.example
 ├── docs/
+│   ├── DIRECTORY_STRUCTURE.md       # Detailed tree and documentation links
+│   ├── AGENTS.md                    # Synchronized copy of this handoff
+│   └── NEXORA_ARCHITECTURE_V2.1.md   # Documentation copy of architecture
+├── AGENTS.md                        # Repository-wide agent instructions
+├── NEXORA_ARCHITECTURE_V2.1.md       # Approved architecture
 ├── .gitignore
 └── README.md
 ```
+
+See `docs/DIRECTORY_STRUCTURE.md` for the complete source map. Keep this root
+handoff and `docs/AGENTS.md` synchronized when changing instructions or status.
+Local `.env`, SQLite databases, generated clients, and build output are not
+source deliverables. Preserve existing local files and unrelated working changes.
 
 GitHub repository: `https://github.com/theyhatedxve/new-nexora-condotel-system`.
 
 From `D:\Web-JSX\NEXORA\backend`:
 
 ```powershell
-npx prisma format
 npx prisma validate
 npm run build
 npm run test
-npm audit
+npm run test:e2e
 ```
 
-Backend health endpoint: `http://localhost:3000/api/health`. Frontend connectivity was verified in Phase 1.
+These are verification commands, not a claim they ran during this documentation
+update. `npm run test` includes `test/database/database.integrity.spec.ts` and
+requires an existing migrated `backend/step10.test.db`. Do not redirect these
+tests to the development database. The test source covers connectivity, unique
+and foreign-key constraints, required fields, related reads, rollback, and
+persistence. The end-to-end suite uses its separate Vitest configuration.
 
-**Prisma schema caution:** Put complete `@relation(fields: [...], references: [...], onDelete: Restrict)` attributes on one line. Splitting the attribute onto multiple lines caused Prisma P1012 errors in Step 3; the user fixed these and reported successful validation.
+The seed is `backend/src/prisma/seed.ts`, not `backend/prisma/seed.ts`. Its guards
+require `NEXORA_ALLOW_DEV_SEED=true` and `DATABASE_URL=file:./dev.db`. The current
+PrismaService adapter uses `file:./dev.db` relative to the backend process working
+directory; Prisma CLI configuration reads `DATABASE_URL`. Verify the resolved
+CLI and runtime database locations before any migration or seed operation.
+Do not run migrations or seeds merely to refresh documentation.
+
+Backend health endpoint: `http://localhost:3000/api/health`. Frontend connectivity
+was verified in Phase 1; it was not rerun during this documentation update.
+
+**Prisma schema caution:** Keep complete `@relation(fields: [...], references: [...], onDelete: Restrict)` attributes on one line. Splitting the attribute previously caused Prisma P1012 errors.
 
 ## 4. Status checklist — phases
 
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Project Foundation | **COMPLETED** (8/8 user-verified) |
-| 2 | Database Foundation | **IN PROGRESS** (4/10 steps completed or user-confirmed) |
-| 3 | Authentication & RBAC | Not started |
+| 2 | Database Foundation | **COMPLETED** (10/10, user-confirmed on 2026-10-28) |
+| 3 | Authentication & RBAC | Next phase; awaiting explicit approval |
 | 4 | Room Management | Not started |
 | 5 | Guest Website business features | Not started; foundation exists |
 | 6 | Reservation System | Not started |
@@ -97,24 +136,29 @@ Backend health endpoint: `http://localhost:3000/api/health`. Frontend connectivi
 - [x] Git repository, GitHub push, `.gitignore`, `.env.example`, README and development rules.
 - [x] Phase 1 integration, builds, health checks, and **Vitest** tests passed.
 
-### Phase 2 — Step-level progress (4/10)
+### Phase 2 — Completed (10/10)
 
-- [x] **Step 1 — Install and Configure Prisma:** Prisma 7.10.1, SQLite adapter and config installed; CLI/schema validation, build, Vitest and health check passed. Native SQLite in-memory driver test passed. Optional `@nestjs/mau` removed. `multer` overridden to 2.5.0; most recently reported `npm audit` found 0 vulnerabilities.
-- [x] **Step 2 — Establish Database Conventions:** Approved CUID IDs; PascalCase models/camelCase fields; integer centavos; UTC event timestamps / Asia/Manila display; separate booking/payment statuses; history preservation; one Property; backend transactions and inventory checks for conflicts.
-- [x] **Step 3 — Property and Room Models:** `Property`, `RoomType`, `Room`, `Amenity`, `RoomImage`, `RoomTypeAmenity` and `RoomStatus` enum added. User reported `prisma format`, `prisma validate`, backend build and Vitest all passed after P1012 correction.
-- [x] **Step 4 — User and Guest Models:** Design approved for `User`, `Role`, `RefreshToken`, `Guest` and `UserStatus` enum; implementation instructions delivered. **User states Step 4 completed**, but did not supply individual final command outputs. Marked *user-confirmed*, not independently reverified.
-- [ ] **Step 5 — Reservation Models:** Not started; **requires explicit approval**, starting with model design review.
-- [ ] **Step 6 — Payment Models:** Not started.
-- [ ] **Step 7 — NFC and Administration Models:** Not started.
-- [ ] **Step 8 — Database Migrations and Prisma Client Integration:** Not started.
-- [ ] **Step 9 — Initial Test Data:** Not started.
-- [ ] **Step 10 — Database Testing and Review:** Not started.
+Completion was explicitly confirmed by the user on 2026-10-28. The schema,
+migration, Prisma integration, seed, and database test source were inspected for
+this handoff. Runtime test results, seed execution, and applied migration state
+were not independently rerun or verified during this documentation update.
+
+- [x] **Step 1 — Install and Configure Prisma:** Prisma, SQLite adapter, configuration, and Vitest foundation established; earlier checks were reported successful.
+- [x] **Step 2 — Establish Database Conventions:** CUID IDs, naming, integer centavos, UTC event timestamps / Asia/Manila display, separate booking/payment states, and history preservation established.
+- [x] **Step 3 — Property and Room Models:** `Property`, `RoomType`, `Room`, `Amenity`, `RoomImage`, and `RoomTypeAmenity` defined.
+- [x] **Step 4 — User and Guest Models:** `User`, `Role`, `RefreshToken`, and `Guest` defined.
+- [x] **Step 5 — Reservation Models:** `Reservation`, `ReservationGuest`, `RoomAssignment`, and `RoomBlock` defined.
+- [x] **Step 6 — Payment Models:** `Payment`, `PaymentEvent`, and `Refund` defined.
+- [x] **Step 7 — NFC and Administration Models:** `NfcCard`, `NfcCredential`, `CardAssignment`, `DoorDevice`, `AccessLog`, `AuditLog`, and `SystemSetting` defined.
+- [x] **Step 8 — Database Migrations and Prisma Client Integration:** Initial migration source contains 24 model tables; generated client exists; `PrismaModule` and `PrismaService` are connected through `AppModule`. Completion is user-confirmed.
+- [x] **Step 9 — Initial Test Data:** Guarded seed source at `backend/src/prisma/seed.ts` provides four roles, one demo property, four amenities, three room types, six rooms, and amenity relationships. Execution completion is user-confirmed.
+- [x] **Step 10 — Database Testing and Review:** Database integrity suite exists at `backend/test/database/database.integrity.spec.ts`; completion is user-confirmed. No new test pass is claimed here.
 
 ## 5. Database model inventory (Architecture v2.1)
 
-The architecture specifies **23 main database models** plus the supporting `RoomTypeAmenity` join model, for **24 planned models**.
+The architecture specifies **23 main database models** plus the supporting `RoomTypeAmenity` join model, for **24 models**.
 
-**Defined/validated in Step 3:**
+**Property and room models — present in schema and initial migration:**
 - [x] `Property`
 - [x] `RoomType`
 - [x] `Room`
@@ -122,34 +166,32 @@ The architecture specifies **23 main database models** plus the supporting `Room
 - [x] `RoomImage`
 - [x] `RoomTypeAmenity` (supporting join model)
 
-**User-reported complete in Step 4; independently revalidate as needed:**
+**Identity and guest models — present in schema and initial migration:**
 - [x] `User`
 - [x] `Role`
 - [x] `RefreshToken`
 - [x] `Guest`
 
-**Remaining, not implemented:**
-- [ ] `Reservation`
-- [ ] `ReservationGuest`
-- [ ] `RoomAssignment`
-- [ ] `RoomBlock`
-- [ ] `Payment`
-- [ ] `PaymentEvent`
-- [ ] `Refund`
-- [ ] `NfcCard`
-- [ ] `NfcCredential`
-- [ ] `CardAssignment`
-- [ ] `DoorDevice`
-- [ ] `AccessLog`
-- [ ] `AuditLog`
-- [ ] `SystemSetting`
+**Reservation, payment, NFC, and administration models — present in schema and initial migration:**
+- [x] `Reservation`
+- [x] `ReservationGuest`
+- [x] `RoomAssignment`
+- [x] `RoomBlock`
+- [x] `Payment`
+- [x] `PaymentEvent`
+- [x] `Refund`
+- [x] `NfcCard`
+- [x] `NfcCredential`
+- [x] `CardAssignment`
+- [x] `DoorDevice`
+- [x] `AccessLog`
+- [x] `AuditLog`
+- [x] `SystemSetting`
 
-**Current model count:** 10 defined or user-reported completed; 14 not yet implemented. This is **schema progress**, not proof of tables or runtime features.
+**Current model count:** All 24 models are defined in the schema and represented in the initial migration source. Phase 2 is user-confirmed complete. This does not mark later business services, API endpoints, or production database compatibility complete.
 
 ## 6. Not yet built (do not mark complete)
 
-- SQLite schema migrations and generated Prisma Client integration with NestJS.
-- Runtime database queries, relations, seeds, and integration tests.
 - JWT authentication, account registration/login, RBAC guards, session rotation.
 - Operational room management and live availability calculation.
 - Guest no-account reservation workflow, check-in/out, inventory holds, physical room assignments.
@@ -159,4 +201,9 @@ The architecture specifies **23 main database models** plus the supporting `Room
 
 ## 7. The next requested action
 
-**STOP.** The user has **not approved Phase 2 Step 5**. If asked for progress, use this checklist and distinguish verified vs user-confirmed work. If the user later explicitly approves Step 5, first present the `Reservation`, `ReservationGuest`, `RoomAssignment`, and `RoomBlock` model design and seek approval **before writing Prisma code**. Preserve all existing models and the approved v2.1 architecture.
+Phase 2 is complete. Phase 3 — Authentication & RBAC is the next development
+phase and has not been authorized by this documentation request. When explicitly
+approved, review the existing schema and architecture, present the proposed
+Phase 3 design and scope, and follow the step-by-step approval workflow before
+implementation. Preserve all existing models, migrations, seed data, tests, and
+the approved v2.1 architecture.

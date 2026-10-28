@@ -10,6 +10,10 @@ Preserve existing working project structure and package configuration.
 
 ## 2. Project Structure
 
+For the inspected current directory tree and links between folders and project
+documentation, see [System Directory Structure](DIRECTORY_STRUCTURE.md).
+The tree below describes the intended expanded layout, including future folders.
+
 The existing frontend/ parent directory is retained.
 
 This reconciles the blueprint's illustrative root-level frontend folders
