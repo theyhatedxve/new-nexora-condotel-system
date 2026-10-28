@@ -1,136 +1,81 @@
-
 # NEXORA
-Condotel Management System
 
-## Project Architecture
+**Condotel Management System**
 
-Master Blueprint: NEXORA Final Architecture v2.1
+NEXORA is a web-based system for managing one condotel property. It is designed
+to bring room information, reservations, guest services, payments, and daily
+property operations into one platform.
 
-NEXORA is a web-based condotel management system
-for one property.
+The system aims to make booking easier for guests and help staff organize their
+work from a shared administrative workspace.
 
-The system contains three applications:
+## Who the System Is For
 
-1. Guest Website - React and JavaScript
-2. Admin Dashboard - React and JavaScript
-3. Backend API - NestJS and TypeScript
+- **Guests** who want to explore rooms, make reservations, and manage their stays.
+- **Reception staff** who handle bookings, guest assistance, check-in, and check-out.
+- **Property managers** who oversee room availability and daily operations.
+- **Administrators** who manage staff access and system settings.
 
-## Project Folders
+## Planned Capabilities
 
-frontend/guest-web - Public Guest Website
+These capabilities describe the intended system. Development is ongoing;
+completion of the project and database foundations does not mean all features
+are available.
 
-frontend/admin-web - Staff Admin Dashboard
+| Area | Intended capabilities |
+|---|---|
+| Room discovery | Browse room types, amenities, photos, and availability |
+| Reservations | Book stays, review booking details, and manage reservations |
+| Guest services | Support optional guest accounts and booking without an account |
+| Reception operations | Coordinate room assignments, check-in, and check-out |
+| Payments | Support online checkout and payment at the property |
+| Room management | Organize room information, rates, and operational status |
+| NFC access management | Manage guest access cards, subject to compatible hardware and testing |
+| Reports | Review occupancy, reservations, and financial summaries |
+| Administration | Manage staff access, property settings, and activity records |
 
-backend - NestJS REST API
+## System Applications
 
-docs - Project documentation
+NEXORA consists of three connected applications:
 
-## Development Requirements
+1. **Guest Website** — the public interface for discovering rooms and arranging stays.
+2. **Admin Dashboard** — the staff workspace for property operations.
+3. **Backend API** — the shared application service supporting both interfaces.
 
-- Node.js 24 LTS
-- npm
-- Visual Studio Code
-- Git
+The frontend applications use React with JavaScript and JSX. The backend uses
+NestJS with TypeScript.
 
-## Installation
+## Project Organization
 
-Run these commands in their respective folders.
+```text
+NEXORA/
+├── frontend/
+│   ├── guest-web/    # Guest Website
+│   └── admin-web/    # Admin Dashboard
+├── backend/          # Shared Backend API
+├── docs/             # Project documentation
+└── README.md         # System overview
+```
 
-Guest Website:
-cd frontend/guest-web
-npm install
+## Development Status
 
-Admin Dashboard:
-cd frontend/admin-web
-npm install
+As of **October 28, 2026**:
 
-Backend:
-cd backend
-npm install
+| Phase | Status |
+|---|---|
+| Phase 1 — Project Foundation | Complete |
+| Phase 2 — Database Foundation | Complete, as confirmed by the project owner |
+| Phase 3 — Authentication and Access Control | Next planned phase; not started |
+| Remaining development phases | Planned |
 
-## Environment Setup
+The current foundation includes the starter guest and admin applications,
+backend connectivity, and database structure. Operational features will be
+implemented and verified in later phases. The system is under development and
+has not been declared ready for production use.
 
-Create a .env file using each application's
-.env.example file.
+## Project Scope
 
-Frontend API address:
-VITE_API_URL=http://localhost:3000/api
-
-Backend environment example:
-PORT=3000
-
-## Running the Applications
-
-Open three separate terminals from the NEXORA root.
-
-Terminal 1 - Backend:
-cd backend
-npm run start:dev
-
-Terminal 2 - Guest Website:
-cd frontend/guest-web
-npm run dev -- --port 5173 --strictPort
-
-Terminal 3 - Admin Dashboard:
-cd frontend/admin-web
-npm run dev -- --port 5174 --strictPort
-
-## Local Addresses
-
-Guest Website:
-http://localhost:5173
-
-Admin Dashboard:
-http://localhost:5174
-
-Backend Health Check:
-http://localhost:3000/api/health
-
-## Testing
-
-In each application folder, run:
-
-npm run build
-
-For backend unit tests:
-
-npm run test
-
-## Current Development Status
-
-Phase 1 - Project Foundation
-
-Completed:
-- Development environment setup
-- Project folder setup
-- Guest Website starter
-- Admin Dashboard starter
-- NestJS backend foundation
-- Frontend and backend communication
-
-Step 7:
-Project standards and documentation
-
-## Development Rules
-
-- Keep code simple and readable.
-- Build one feature at a time.
-- Test before proceeding.
-- Do not commit passwords or secrets.
-- Keep frontend and backend separate.
-- Use the approved Architecture v2.1.
-- Do not change the architecture without approval.
-
-## Future Development
-
-Phase 2 - Database Foundation
-Phase 3 - Authentication and Roles
-Phase 4 - Room Management
-Phase 5 - Guest Website
-Phase 6 - Reservations
-Phase 7 - Payments
-Phase 8 - Admin Dashboard
-Phase 9 - NFC Management
-Phase 10 - Reports and Settings
-Phase 11 - Testing and Security
-Phase 12 - Production Deployment
+The initial system serves a single condotel property. Its focus is guest
+booking, reception workflows, room management, payment handling, and property
+administration. Physical NFC access depends on hardware selection and
+integration testing.
