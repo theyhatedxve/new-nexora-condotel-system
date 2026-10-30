@@ -4,7 +4,8 @@
 
 NEXORA is a single-property condotel management system.
 
-It includes:
+Its approved scope includes the following; payments and NFC business features
+remain future work:
 
 - NEXORA Guest Website.
 - NEXORA Admin Dashboard.
@@ -38,6 +39,22 @@ A documented feature is not automatically implemented or tested.
 Do not infer current project progress from an older architecture status.
 Verify the current repository and the latest approved development results.
 
+### Accepted progress
+
+| Phase | Status |
+|---|---|
+| Phase 1 | COMPLETED |
+| Phase 2 | COMPLETED |
+| Phase 3 | COMPLETED — 8/8 steps |
+| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+
+The owner accepted Phase 3 from reported successful tests: 23/23 checks, HTTP
+security, full Vitest regression, NestJS build, Prisma validation, and preserved
+development data. This synchronization inspected source and Markdown; it did
+not rerun those checks. See [eight-step checklist](IMPLEMENTATION_GUIDE.md#5-phase-03--authentication-and-rbac)
+and [evidence boundaries](SECURITY.md#14-security-acceptance-checks).
+Phase completion is not production readiness or approval to start Phase 4.
+
 ## 3. Technology Stack
 
 | Area | Approved technology |
@@ -66,11 +83,13 @@ Do not introduce frontend TypeScript.
 
 | File | Purpose |
 |---|---|
+| [AGENTS.md](AGENTS.md) | Synchronized progress handoff and completed phase checklists |
+| [NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md) | Approved baseline and current-status addendum |
 | [DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md) | Current directory tree, folder responsibilities, and links to related documentation |
 | SYSTEM_DESIGN.md | System boundaries, roles, modules, and architecture |
 | TECHNICAL_PLAN.md | Folder structure, technical responsibilities, and roadmap |
 | design_guidelines.md | Visual foundations and interface behavior |
-| API.md | API routes, access rules, and proposed contracts |
+| [API.md](API.md) | Implemented auth/health contracts and clearly proposed future business APIs |
 | DATABASE_SCHEMA.md | Models, relationships, constraints, and data conventions |
 | BUSINESS_FLOWS.md | Operational workflows and failure handling |
 | SECURITY.md | Authentication, authorization, payment, and NFC security |
@@ -117,9 +136,11 @@ Approval of documentation does not authorize application implementation.
 - Inventory-hold duration.
 - Cancellation and refund policy.
 - Pay at Property arrival cutoff and no-show timing.
-- Final request and response contracts.
-- Remaining detailed Prisma fields and constraints.
+- Final contracts for future business APIs; Phase 3 auth contracts are implemented.
+- Future service constraints and any approved schema evolution; the current schema has 25 models.
 - Production hosting, domains, and durable image storage.
 - Production migration and recovery procedures.
+- Email GET-link prefetch protection and SMTP failure monitoring.
+- Bootstrap CORS review, legacy end-to-end test reconciliation, and detailed acceptance-run evidence (see [security concerns](SECURITY.md#15-production-hardening-and-open-concerns)).
 
 Keep these decisions visible until resolved.

@@ -16,8 +16,9 @@ Preferred foundations:
 - Database transactions.
 - Integration adapters where needed.
 
-Examples below illustrate structure.
-They are not complete authorized feature implementations.
+Examples below illustrate structure. They are not complete authorized future
+feature implementations. Phase 3 is COMPLETED — 8/8 steps; its current reusable
+patterns are recorded below. Phase 4 onward is NOT STARTED / AWAITING APPROVAL.
 
 ## 2. React Component Composition
 
@@ -285,3 +286,27 @@ Do not wrap every Prisma method with an identical repository method.
 - Is history preserved?
 - Are external failures represented honestly?
 - Can unnecessary layers be removed?
+
+## 14. Implemented Phase 3 Patterns
+
+Use the existing backend patterns rather than recreating them:
+
+- AuthController coordinates validated DTOs, Origin checks, cookies, and service
+  calls. RegistrationService, EmailVerificationService, PasswordService, and
+  EmailService separate account rules, credential claims, hashing, and SMTP.
+- Global JWT and Roles guards require authentication by default; @Public() is an
+  explicit bypass for those guards, while @Roles() uses an explicit allowlist
+  without an administrator bypass. Neither decorator replaces record ownership.
+- OwnershipModule exports OwnershipService. Future feature services must call
+  assertGuestAccess or assertReservationAccess with the trusted JWT identity and
+  explicitly approved staff roles; inaccessible private records receive 404.
+- Transactions claim refresh/verification credentials conditionally to prevent
+  reuse. Registration commits account/profile/token records before SMTP; a
+  mail failure cannot roll back that transaction. Monitoring remains release work.
+- Auth, logout, ownership, registration, and HTTP tests use isolated SQLite files;
+  HTTP/registration tests fake email delivery. See [test guidance](IMPLEMENTATION_GUIDE.md#15-command-guidance).
+
+The owner's accepted 23/23 result is reported evidence; no fresh tests ran for
+this update. [Security](SECURITY.md) documents behavioral boundaries, test-source
+coverage, and production concerns. Full booking/payment services remain future
+patterns, not completed implementations.

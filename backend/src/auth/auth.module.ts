@@ -12,6 +12,10 @@ import {
   getJwtSecret,
 } from './auth.config.js';
 
+import { RegistrationService } from './registration.service.js';
+import { EmailVerificationService } from './email-verification.service.js';
+import { EmailService } from './email.service.js';
+
 @Module({
   imports: [
     PrismaModule,
@@ -31,6 +35,9 @@ import {
     AuthService,
     PasswordService,
     JwtStrategy,
+    RegistrationService,
+    EmailVerificationService,
+    EmailService, 
   ],
 })
 export class AuthModule {}

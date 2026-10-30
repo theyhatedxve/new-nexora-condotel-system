@@ -2,6 +2,18 @@
 
 ## 1. Implementation Approach
 
+| Phase | Status |
+|---|---|
+| Phase 1 | COMPLETED |
+| Phase 2 | COMPLETED |
+| Phase 3 | COMPLETED — 8/8 steps |
+| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+
+Accepted scope and eight completed Phase 3 steps are tracked in the
+[implementation guide](IMPLEMENTATION_GUIDE.md). The owner reports 23/23
+acceptance checks passed; this Markdown-only task did not rerun tests/builds.
+No production-readiness or Phase 4 authorization is implied.
+
 Build one approved feature at a time.
 
 Prefer direct, readable implementations with minimal dependencies.
@@ -73,6 +85,12 @@ NEXORA/
 ```
 
 Add folders when needed. This tree is not a requirement to create empty folders.
+
+Current additions include auth registration/verification/security tests,
+common/decorators, common/guards, common/ownership, and src/prisma integration.
+The current schema has 25 models and three migrations; see
+[the inspected directory map](DIRECTORY_STRUCTURE.md) and
+[database history](DATABASE_SCHEMA.md).
 
 ## 3. File Naming
 
@@ -154,24 +172,27 @@ Frontend configuration contains public values such as the API base URL.
 Vite frontend environment values are visible to users.
 Never place backend secrets in frontend configuration.
 
-Exact environment-variable names are implementation details to approve.
+Auth configuration reads JWT_ACCESS_SECRET and AUTH_ALLOWED_ORIGINS. Email
+delivery reads SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, and
+AUTH_VERIFY_URL. These are variable names only; actual values remain outside
+documentation. See [security](SECURITY.md) for transport and monitoring limits.
 
 ## 7. Development Roadmap
 
-| Phase | Deliverable |
-|---|---|
-| 01 — Project Foundation | Two React JSX applications, NestJS backend, API connection |
-| 02 — Database Foundation | Models, relationships, migrations, seeds |
-| 03 — Authentication & RBAC | Sessions, roles, optional guest accounts |
-| 04 — Room Management | Types, rooms, rates, images, amenities |
-| 05 — Guest Website | Public pages and availability interface |
-| 06 — Reservation System | Holds, bookings, assignments, check-in/out |
-| 07 — Payment System | PayMongo and Pay at Property |
-| 08 — Admin Dashboard | Operational screens and statistics |
-| 09 — NFC Management | Cards, assignments, simulations, later device integration |
-| 10 — Reports & Settings | Reports, policies, audit views |
-| 11 — Testing & Security | Integrated journeys and failure scenarios |
-| 12 — Production Deployment | Hosting, PostgreSQL, storage, recovery, monitoring |
+| Phase | Deliverable | Status |
+|---|---|---|
+| 01 — Project Foundation | Two React JSX applications, NestJS backend, API connection | COMPLETED |
+| 02 — Database Foundation | Models, relationships, migrations, seeds | COMPLETED |
+| 03 — Authentication & RBAC | Sessions, roles, optional guest accounts | COMPLETED — 8/8 steps |
+| 04 — Room Management | Types, rooms, rates, images, amenities | NOT STARTED / AWAITING APPROVAL |
+| 05 — Guest Website | Public pages and availability interface | NOT STARTED / AWAITING APPROVAL |
+| 06 — Reservation System | Holds, bookings, assignments, check-in/out | NOT STARTED / AWAITING APPROVAL |
+| 07 — Payment System | PayMongo and Pay at Property | NOT STARTED / AWAITING APPROVAL |
+| 08 — Admin Dashboard | Operational screens and statistics | NOT STARTED / AWAITING APPROVAL |
+| 09 — NFC Management | Cards, assignments, simulations, later device integration | NOT STARTED / AWAITING APPROVAL |
+| 10 — Reports & Settings | Reports, policies, audit views | NOT STARTED / AWAITING APPROVAL |
+| 11 — Testing & Security | Integrated journeys and failure scenarios | NOT STARTED / AWAITING APPROVAL |
+| 12 — Production Deployment | Hosting, PostgreSQL, storage, recovery, monitoring | NOT STARTED / AWAITING APPROVAL |
 
 Security and testing apply throughout development.
 Phase 11 provides broader integrated verification.
@@ -186,6 +207,10 @@ Phase 11 provides broader integrated verification.
 | Frontend | Forms, loading, errors, booking and staff workflows |
 | End-to-end | Complete guest and reception journeys |
 | External integration | PayMongo test mode and selected NFC hardware |
+
+Phase 3 acceptance includes isolated auth, ownership, registration, and HTTP
+security suites. See [test prerequisites and commands](IMPLEMENTATION_GUIDE.md#15-command-guidance)
+and [reported versus inspected evidence](SECURITY.md#14-security-acceptance-checks).
 
 Use the project's configured test tools and scripts.
 

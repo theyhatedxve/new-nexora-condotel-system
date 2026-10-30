@@ -9,6 +9,26 @@ The system serves one condotel property.
 
 Guest registration is optional. A guest may book without creating an account.
 
+### Implementation status
+
+| Phase | Status |
+|---|---|
+| Phase 1 | COMPLETED |
+| Phase 2 | COMPLETED |
+| Phase 3 | COMPLETED — 8/8 steps |
+| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+
+The owner reports successful Phase 3 acceptance (23/23 checks); this update
+inspected source without rerunning application tests. The working modular
+monolith now includes authentication, registration/email verification, global
+JWT/role/throttling guards, and reusable ownership services. It has 25 Prisma
+models after the Phase 3 EmailVerificationToken extension. Operational business
+features and frontend auth integration remain future work; this is not a
+production-readiness declaration.
+
+See [phase checklists](IMPLEMENTATION_GUIDE.md), [actual API contracts](API.md),
+[database evolution](DATABASE_SCHEMA.md), and [security evidence](SECURITY.md).
+
 ## 2. System Architecture
 
 ```text
@@ -71,7 +91,12 @@ Frontend applications must never connect directly to the database.
 | Audit | Administrative activity history |
 | Uploads | Room image validation and storage |
 
-Create modules as their approved implementation steps require them.
+This module table describes the approved full-system scope. AuthModule and
+PrismaModule are implemented; OwnershipModule exports record-access checks for
+explicit import by future feature modules. User/guest management, rooms,
+reservations, payments, NFC, dashboards, reports, uploads, settings, and audit
+business APIs are not established by Phase 3. Create their modules only under
+the corresponding approved phases.
 
 ## 5. Roles and Permissions
 
@@ -90,13 +115,19 @@ Create modules as their approved implementation steps require them.
 | Manage staff accounts | No | No | No | Yes |
 | Manage settings | No | No | No | Yes |
 
-Backend guards and service-level ownership checks enforce these permissions.
+The table defines permissions for future business features. Global JWT and role
+guards are implemented; @Roles() matches explicit role lists without an ADMIN
+bypass. OwnershipService checks linked Guest.userId and reservation.guest.userId,
+returns 404 for private/inaccessible records, and permits staff only through an
+explicit caller allowlist. Future feature services must call these helpers; they
+do not automatically protect APIs that have not been implemented.
 
 Hiding a button does not enforce authorization.
 
 ## 6. Guest Website
 
-Approved routes:
+Approved target routes (not a current implementation inventory; the guest
+application currently registers only / and /rooms):
 
 | Route | Screen |
 |---|---|
@@ -118,7 +149,7 @@ A route parameter is an identifier, not proof of ownership.
 
 ## 7. Admin Dashboard
 
-Main areas:
+Planned business areas (existing admin navigation includes placeholder pages):
 
 - Dashboard.
 - Reservations.
@@ -199,6 +230,8 @@ Future scope:
 
 ## 11. Unresolved Decisions
 
-Refer to README.md for the decision register.
+Refer to the [documentation index](README.md#7-outstanding-decisions) for the
+decision register and [security concerns](SECURITY.md#15-production-hardening-and-open-concerns)
+for remaining production work.
 
 Do not silently turn TBD policies into application defaults.

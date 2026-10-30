@@ -2,16 +2,28 @@
 
 ## 1. Status and Scope
 
-This document describes the target data model.
+Phase 2 — Database Foundation is COMPLETED and accepted: initial schema,
+relationships, migrations, Prisma Client/NestJS integration, development seed,
+and isolated integrity tests. Architecture v2.1 listed 23 core models plus the
+supporting RoomTypeAmenity join model (24 in Phase 2). Phase 3 Step 7 added
+EmailVerificationToken: the inspected current schema has **25 models**.
 
-Master Architecture v2.1 defines 23 core models.
-RoomTypeAmenity is a supporting join model, bringing the documented model
-set to 24.
+Phase 3 is COMPLETED — 8/8 steps based on owner-reported acceptance. Current
+fields below follow backend/prisma/schema.prisma; this documents the approved
+extension without replacing the historical architecture. Room, reservation,
+payment, NFC, reports, and settings business APIs remain future work.
+This documentation task did not query databases or apply migrations.
 
-Model existence does not mean its database table or business feature
-has been implemented.
+### Migration source history
 
-Exact fields must be reconciled with the current approved Prisma schema.
+| Directory under backend/prisma/migrations/ | Schema change |
+|---|---|
+| 20261027150551_init | Initial 24-model foundation |
+| 20261029133315_add_refresh_token_family | Nullable RefreshToken.familyId and index |
+| 20261030134255_add_email_verification_tokens | EmailVerificationToken table, unique hash, user/expiry indexes, restrictive User foreign key |
+
+Migration files were inspected. Successful validation and preservation of the
+development database are reported acceptance results, not fresh checks here.
 
 ## 2. Data Conventions
 
@@ -40,6 +52,7 @@ They must not be converted as though they were actual arrival instants.
 
 ```text
 Role ──< User ──< RefreshToken
+          ├──< EmailVerificationToken
           |
           └── optional Guest link
 
@@ -52,7 +65,7 @@ Property ──< RoomType ──< Room
                  └──< RoomTypeAmenity >── Amenity
 
 Guest ──< Reservation
-Guest ──< ReservationGuest >── Reservation
+Reservation ──< ReservationGuest (additional occupant names)
 
 Reservation ──< Payment ──< Refund
 PaymentEvent ── provider-event processing and payment association
@@ -67,20 +80,33 @@ User ──< AuditLog
 SystemSetting ── operating configuration
 ```
 
-Exact NFC cardinalities await hardware and credential-design approval.
+Current NFC foreign-key cardinalities follow section 8; physical hardware
+capability and protocol remain subject to selection and testing.
 
 ## 4. Identity and Guest Models
 
-| Model | Important fields | Constraints / rules |
+| Model | Current fields | Constraints / rules |
 |---|---|---|
-| Role | id, name, description | Unique role name |
-| User | id, roleId, name, email, passwordHash, status | Unique normalized email; role relationship |
-| RefreshToken | id, userId, tokenHash, expiresAt, revokedAt | Store hash; support rotation and revocation |
-| Guest | id, userId?, firstName, lastName, email?, phone? | Optional unique account link |
+| Role | id, name, description?, createdAt, updatedAt | Unique name |
+| User | id, roleId, name, email, passwordHash, status, createdAt, updatedAt | Unique email; Role FK; UserStatus defaults PENDING |
+| RefreshToken | id, userId, familyId?, tokenHash, expiresAt, revokedAt?, createdAt | Unique hash; familyId index; User FK with Restrict |
+| EmailVerificationToken | id, userId, tokenHash, expiresAt, usedAt?, createdAt | Unique hash; userId and expiresAt indexes; User FK with Restrict |
+| Guest | id, userId?, firstName, lastName, email?, phone?, createdAt, updatedAt | Optional unique User link with Restrict |
 
-A Guest may exist without a User.
+UserStatus values: ACTIVE, DISABLED, PENDING. User has many refresh tokens and
+email-verification tokens, an optional Guest, and audit/refund/settings links.
+Registration normalizes email, assigns GUEST, and atomically creates the PENDING
+User, Guest, and verification hash. Verification atomically claims an unexpired,
+unused credential and changes PENDING to ACTIVE. See [security](SECURITY.md).
 
-Do not use email matching alone to attach historical bookings to an account.
+familyId remains nullable for existing-record compatibility; current login sets
+it, and refresh rejects records without it. Only credential hashes are stored.
+EmailVerificationToken has a 30-minute service-enforced lifetime and single-use
+usedAt marker. Expiry is not a database cleanup scheduler.
+
+A Guest may exist without a User. Booking without registration remains required;
+no accountless booking API has been built. Do not attach historical bookings by
+email matching alone.
 
 ## 5. Property and Room Models
 
@@ -106,174 +132,97 @@ RoomBlock describes dated inventory exclusion.
 
 ## 6. Reservation Models
 
-Approved concepts:
+These model definitions exist; reservation operations and inventory enforcement
+are NOT STARTED / AWAITING APPROVAL in later phases.
 
-- One primary Guest.
-- Reserved RoomType.
-- Additional occupants separate from User accounts.
-- Physical assignments separate from Reservation.
-- Preserved assignment history.
-- Temporary hold expiry.
-- Rate and total snapshots in centavos.
-
-Field names below follow the reviewed reservation design.
-Verify them against the latest approved schema.
-
-### 6.1 Reservation
-
-| Field | Logical type | Purpose |
+| Model | Current fields | Constraints / relations |
 |---|---|---|
-| id | String | Primary key |
-| reservationNumber | String | Unique reference |
-| primaryGuestId | String | Primary guest |
-| roomTypeId | String | Reserved category |
-| checkInDate | Date label | First occupied night |
-| checkOutDate | Date label | Exclusive stay end |
-| guestCount | Integer | Total occupants |
-| nightlyRateCentavos | Integer | Agreed nightly rate |
-| totalAmountCentavos | Integer | Agreed total |
-| status | Enum | Reservation lifecycle |
-| holdExpiresAt | Timestamp, optional | Pending hold deadline |
-| checkedInAt | Timestamp, optional | Actual check-in |
-| checkedOutAt | Timestamp, optional | Actual checkout |
-| createdAt / updatedAt | Timestamp | Record history |
+| Reservation | id, reservationNumber, guestId, roomTypeId, checkInDate, checkOutDate, guestCount, nightlyRateCentavos, totalAmountCentavos, status, holdExpiresAt?, createdAt, updatedAt | Unique reference; restrictive Guest and RoomType FKs; indexes on guestId, roomTypeId/checkInDate/checkOutDate, status/holdExpiresAt |
+| ReservationGuest | id, reservationId, firstName, lastName, createdAt | Restrictive Reservation FK; reservationId index |
+| RoomAssignment | id, reservationId, roomId, assignedAt, releasedAt?, createdAt | Restrictive Reservation/Room FKs; reservationId and roomId indexes |
+| RoomBlock | id, roomId, startDate, endDate, reason, createdAt, updatedAt | Restrictive Room FK; roomId/startDate/endDate index |
 
-Reservation states:
+ReservationStatus is PENDING, CONFIRMED, CHECKED_IN, CHECKED_OUT, CANCELLED,
+or EXPIRED. Allowed transitions still require business-service enforcement.
 
-PENDING → CONFIRMED → CHECKED_IN → CHECKED_OUT
+The former planning table used primaryGuestId; the actual field is guestId and
+the relation is guest. Reservation has no checkedInAt/checkedOutAt fields.
+ReservationGuest stores occupant names, not a guestId link or unique
+reservationId/guestId pair. RoomAssignment uses assignedAt/releasedAt and has no
+startDate/endDate/updatedAt. RoomBlock has no type or cancelledAt. These are
+explicit differences from earlier detailed planning examples; future services
+must work from the current schema and obtain approval for any needed changes.
 
-Additional outcomes:
-
-- CANCELLED.
-- EXPIRED.
-
-Allowed transitions require backend enforcement.
-
-### 6.2 ReservationGuest
-
-| Field | Logical type | Purpose |
-|---|---|---|
-| id | String | Primary key |
-| reservationId | String | Reservation relationship |
-| guestId | String | Additional occupant |
-| createdAt | Timestamp | Creation time |
-
-Constraints:
-
-- Unique reservationId + guestId.
-- Do not duplicate the primary guest.
-- Occupant counts must fit the approved guest-count policy.
-
-### 6.3 RoomAssignment
-
-| Field | Logical type | Purpose |
-|---|---|---|
-| id | String | Primary key |
-| reservationId | String | Associated stay |
-| roomId | String | Physical room |
-| startDate / endDate | Date labels | Assignment interval |
-| releasedAt | Timestamp, optional | Release/replacement marker |
-| createdAt / updatedAt | Timestamp | History |
-
-Preserve old records when rooms change.
-
-The exact treatment of in-stay room transfers requires an approved service
-design. A release timestamp must not erase historically occupied dates.
-
-### 6.4 RoomBlock
-
-| Field | Logical type | Purpose |
-|---|---|---|
-| id | String | Primary key |
-| roomId | String | Blocked room |
-| type | Enum | Maintenance / out of service |
-| startDate / endDate | Date labels | Blocked interval |
-| reason | String | Operational explanation |
-| cancelledAt | Timestamp, optional | Withdrawal marker |
-| createdAt / updatedAt | Timestamp | History |
-
-Do not subtract the same physical room twice when blocks overlap.
+Preserve assignment history and check overlapping stays transactionally in
+future implementations. Current indexes do not enforce non-overlapping stays,
+single-property cardinality, positive capacities, or the full booking rules.
 
 ## 7. Payment Models
 
-Detailed fields remain proposed until the payment phase is approved.
+Schema foundation is present; payment processing is NOT STARTED / AWAITING
+APPROVAL (Phase 7). Current scalar field groups:
 
-| Model | Proposed field groups | Essential rules |
+| Model | Current fields | Constraints / relations |
 |---|---|---|
-| Payment | reservationId, amountCentavos, method, state, provider references, timestamps | Trusted amount; preserve payment attempts and collections |
-| PaymentEvent | unique providerEventId, eventType, processingState, relevant references, timestamps | Duplicate-safe processing |
-| Refund | paymentId, amountCentavos, reason, state, provider reference, timestamps | Refund cannot exceed the remaining refundable amount |
+| Payment | id, reservationId, method, status, amountCentavos, currency, provider?, providerCheckoutId?, providerPaymentId?, referenceNumber?, paidAt?, createdAt, updatedAt | Unique checkout/payment provider IDs; Reservation FK; indexes on reservationId, status, method/createdAt |
+| PaymentEvent | id, paymentId?, providerEventId, eventType, providerCreatedAt?, status, signatureVerified, payloadJson?, processedAt?, errorMessage?, createdAt | Unique providerEventId; optional Payment FK; indexes on paymentId, status/createdAt, eventType |
+| Refund | id, paymentId, amountCentavos, reason, status, providerRefundId?, processedByUserId?, requestedAt, completedAt?, updatedAt | Unique providerRefundId; Payment and optional User FKs; indexes on paymentId, status, processedByUserId |
 
-Payment state and reservation state are independent.
+PaymentMethod: PAYMONGO, PAY_AT_PROPERTY. PaymentStatus: UNPAID, PENDING,
+PARTIALLY_PAID, PAID, FAILED, PARTIALLY_REFUNDED, REFUNDED. PaymentEventStatus:
+RECEIVED, PROCESSED, IGNORED, FAILED. RefundStatus: PENDING, COMPLETED, FAILED,
+CANCELLED. Currency defaults PHP; amounts are integer centavos.
 
-Architecture payment states:
-
-- Unpaid.
-- Pending.
-- Partially Paid.
-- Paid.
-- Failed.
-- Refunded.
-- Partially Refunded.
-
-The payment phase must distinguish individual attempt states from the
-reservation's aggregate payment summary.
-
-Do not store raw payment-card details.
+Reservation and payment statuses are independent. Future services must verify
+provider evidence, prevent duplicate effects, distinguish individual payment
+records from aggregate summaries, and limit refunds. Never store card details.
 
 ## 8. NFC Models
 
-Hardware-dependent details remain TBD.
+Schema foundation exists; software operations and hardware integration remain
+NOT STARTED / AWAITING APPROVAL. All listed FKs use Restrict on delete.
 
-| Model | Purpose |
-|---|---|
-| NfcCard | Registered card and lifecycle |
-| NfcCredential | Secure credential reference and lifecycle |
-| CardAssignment | Authorized credential, stay, room, and validity |
-| DoorDevice | Selected lock/controller and room association |
-| AccessLog | Device event, credential reference, time, and outcome |
+| Model | Current scalar fields | Constraints / relations |
+|---|---|---|
+| NfcCard | id, cardIdentifier, status, label?, registeredAt, updatedAt | Unique identifier; status index; many credentials |
+| NfcCredential | id, cardId, credentialReference, status, issuedAt, revokedAt?, expiresAt?, createdAt | Unique opaque reference; Card FK; indexes on cardId, status, expiresAt |
+| CardAssignment | id, credentialId, reservationId?, roomId, validFrom, validUntil, revokedAt?, createdAt | Credential, optional Reservation, and Room FKs; indexes on each FK and validity interval |
+| DoorDevice | id, roomId, deviceIdentifier, name?, status, lastSeenAt?, createdAt, updatedAt | Unique roomId and deviceIdentifier; Room FK; status index |
+| AccessLog | id, credentialId?, doorDeviceId, result, occurredAt, source, reason?, createdAt | Optional Credential and required DoorDevice FKs; indexes on credentialId, doorDeviceId/occurredAt, result/occurredAt |
 
-Do not assume card UID is a secure credential.
+NfcCardStatus: AVAILABLE, ASSIGNED, LOST, DISABLED. NfcCredentialStatus:
+INACTIVE, ACTIVE, REVOKED, EXPIRED. DoorDeviceStatus: REGISTERED, ACTIVE,
+OFFLINE, DISABLED. AccessResult: GRANTED, DENIED, ERROR.
 
-Do not store secrets in AccessLog.
-
-Guest and staff access need explicit authorization rules.
+The current schema gives each Room at most one DoorDevice. Real credential
+capability, offline behavior, and protocol remain hardware-dependent. Do not
+trust card UID alone or put secret keys into credentialReference or AccessLog.
 
 ## 9. Administrative Models
 
-| Model | Proposed field groups | Essential rules |
+| Model | Current scalar fields | Constraints / relations |
 |---|---|---|
-| AuditLog | actor, action, entityType, entityId, timestamp, safe metadata | Append-oriented history; exclude secrets |
-| SystemSetting | key, validated value, updatedAt, updatedBy | Unique key; authorize and audit changes |
+| AuditLog | id, actorUserId?, action, entityType, entityId?, detailsJson?, createdAt | Optional User actor FK with Restrict; indexes on actorUserId, entityType/entityId, createdAt |
+| SystemSetting | id, key, value, description?, updatedByUserId?, createdAt, updatedAt | Unique key; optional User updater FK with Restrict; updatedByUserId index |
 
-Audit retention and privacy rules remain TBD.
+Administrative services, audit-event capture, settings validation, and retention
+policy are future work. Store sanitized details only; schema presence does not
+prove append-only auditing or security enforcement.
 
 ## 10. Constraints and Indexes
 
-Use database constraints for:
+The current schema includes unique account emails, role and amenity names,
+room numbers, booking references, provider identifiers, credential identifiers,
+and token hashes. RoomType has a propertyId/name composite unique constraint;
+RoomTypeAmenity uses a composite roomTypeId/amenityId primary key. Foreign-key
+deletions are restrictive. Full field/index details are in the tables above
+and the current schema.
 
-- Unique emails and references.
-- Foreign-key relationships.
-- Unique room-type amenity pairs.
-- Unique additional-occupant pairs.
-- Unique provider event identities.
-- Appropriate approved numeric and date checks.
-
-Candidate indexes:
-
-- Reservation primary guest.
-- Reservation room type, status, and stay dates.
-- Reservation status and hold deadline.
-- Assignment room and date range.
-- Assignment reservation and release marker.
-- Block room and date range.
-- Payment reservation.
-- Access event device and timestamp.
-- Audit actor/entity and timestamp.
-
-Choose indexes from actual queries.
-
-A unique booking reference does not prevent overlapping stays.
+Numeric/date business checks, occupant-count policy, single-property rules, and
+non-overlapping bookings need explicit service enforcement. No guestId-based
+unique pair exists on ReservationGuest. Candidate query-specific inventory
+indexes may be reviewed in future phases; do not confuse them with implemented
+constraints. A unique booking reference does not prevent overlapping stays.
 
 ## 11. Inventory Integrity
 
@@ -300,7 +249,11 @@ The final allocation algorithm requires implementation review.
 
 ## 12. Transaction Boundaries
 
-Operations requiring coordinated database writes include:
+Implemented auth transactions coordinate registration, refresh rotation,
+verification token claims/account activation, and verification resend. SMTP is
+after commit and is not rolled back with database writes.
+
+Future operations requiring coordinated database writes include:
 
 - Creating a reservation and inventory hold.
 - Confirming inventory.

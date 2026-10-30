@@ -1,5 +1,31 @@
 # NEXORA — Business Flows
 
+Phases 1 and 2 are COMPLETED; Phase 3 is COMPLETED — 8/8 steps based on
+owner acceptance. Phase 4 onward is NOT STARTED / AWAITING APPROVAL. Sections
+1–13 describe approved future business workflows and checks, not functioning
+room/booking/payment/NFC APIs. This task ran no application tests.
+
+### Implemented optional account and session flow
+
+1. Guest may register with first/last name, email, and password; account creation
+   remains optional for future booking.
+2. Backend assigns GUEST and transactionally creates the PENDING user, linked
+   guest profile, and hashed email-verification credential.
+3. After commit, SMTP sends a verification link valid for 30 minutes. Delivery
+   failure leaves the account PENDING; eligible guests may request resend.
+4. A valid single-use verification link atomically activates the account.
+5. ACTIVE users log in for a 15-minute access JWT and seven-day HttpOnly refresh
+   credential; refresh rotates the credential and rejects replay/concurrent reuse.
+6. Logout revokes the current session family and clears the refresh cookie.
+   Other login families are independent; already-issued access JWTs may remain
+   valid until expiry while the user remains ACTIVE.
+
+Private record access must explicitly call OwnershipService using the trusted
+identity and allowed staff roles. Cross-guest and missing records return 404;
+roles do not imply record ownership. Full guest/reservation APIs and private
+accountless booking verification remain future work. See [API](API.md) for
+contracts and [security](SECURITY.md) for acceptance and delivery limits.
+
 ## 1. Room Search
 
 ```text

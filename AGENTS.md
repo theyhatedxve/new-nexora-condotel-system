@@ -2,15 +2,15 @@
 
 **Last status update:** 2026-10-30
 **Authoritative specification:** NEXORA Final Condotel Management System Architecture **v2.1** (approved).
-**Current phase:** Phase 3 — Authentication & RBAC **IN PROGRESS** (implementation present; phase completion not confirmed).
-**Current checkpoint:** Phase 2 remains complete (10/10, user-confirmed). Phase 3 authentication, session rotation, logout, and role-guard source now exist. Review outstanding checks below before advancing.
+**Current phase:** Phase 3 — Authentication & RBAC **COMPLETED — 8/8 steps** (project-owner accepted).
+**Current checkpoint:** Phases 1–3 are complete. Phase 4 onward is **NOT STARTED / AWAITING APPROVAL**. Owner reports 23/23 final acceptance checks passed; no new application checks ran for this documentation update.
 
 > IMPORTANT: This file is a progress handoff and working instructions for Codex. It is not proof that a command ran or a feature exists. Verify the repository before modifying anything. The approved Architecture v2.1 takes precedence over older v2.0 material. Do not infer that the local `Architecture Plan.txt` is v2.1 from its name; inspect the version header.
 
 ## 1. Instructions for Codex
 
 1. Follow the **KISS principle**: simple, readable, maintainable code; implement one development step at a time.
-2. **Require explicit user approval before each next step/phase.** Phase 3 source is already present. This handoff update does not authorize additional implementation, migrations, or advancement to another step/phase.
+2. **Require explicit user approval before each next step/phase.** Phase 3 is accepted complete. Phase 4 and later phases are not started or authorized. This documentation task does not authorize application changes, migrations, or deployment.
 3. For a new step: first present the field/relationship design for approval, then provide/implement code only with authorization, then give tests and await results.
 4. Prefer **Windows 11 / PowerShell / VS Code** instructions with exact paths, copy-paste code, expected outputs, and troubleshooting.
 5. Do not change the approved stack, migrate from Vitest to Jest, or add unnecessary dependencies.
@@ -26,7 +26,7 @@
 - **Testing:** **Vitest** for NestJS backend. Retain it.
 - **ORM:** Prisma 7.10.1 (at last successful installation).
 - **Development DB:** SQLite; **production target:** PostgreSQL (requires its own migration/deployment verification).
-- **Authentication (Phase 3, in progress):** JWT + Passport, Argon2id, RBAC guards, and rotating hashed refresh-token source are present; full integration verification remains outstanding.
+- **Authentication (Phase 3, complete):** JWT + Passport, Argon2id, rotating hashed refresh families, RBAC, ownership helpers, and optional verified guest registration; acceptance is owner-reported.
 - **Payments (later phase):** PayMongo hosted checkout + verified webhooks; Pay at Property.
 - **NFC (later phase):** card/credential/device administration; actual hardware to be selected.
 - **Business rules:** Guest account optional; no-login booking supported; prevent double booking; separate reservation/payment states; preserve important history; backend-enforced permissions and pricing.
@@ -44,33 +44,49 @@ NEXORA/
 │   └── admin-web/                   # Vite React JS/JSX, port 5174
 ├── backend/                         # NestJS TypeScript, port 3000, Vitest
 │   ├── prisma/
-│   │   ├── schema.prisma            # 24 models
+│   │   ├── schema.prisma            # 25 current models
 │   │   └── migrations/
 │   │       ├── 20261027150551_init/migration.sql
 │   │       ├── 20261029133315_add_refresh_token_family/migration.sql
+│   │       ├── 20261030134255_add_email_verification_tokens/migration.sql
 │   │       └── migration_lock.toml
 │   ├── src/
 │   │   ├── auth/
-│   │   │   ├── dto/login.dto.ts
+│   │   │   ├── dto/
+│   │   │   │   ├── login.dto.ts
+│   │   │   │   ├── register.dto.ts
+│   │   │   │   ├── resend-verification.dto.ts
+│   │   │   │   └── verify-email.dto.ts
+│   │   │   ├── security/
+│   │   │   │   └── security-http.spec.ts
 │   │   │   ├── auth.config.ts
-│   │   │   ├── auth.controller.ts
 │   │   │   ├── auth.controller.spec.ts
-│   │   │   ├── auth.module.ts
-│   │   │   ├── auth.service.ts
-│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.controller.ts
 │   │   │   ├── auth.logout.spec.ts
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── email-verification.service.ts
+│   │   │   ├── email.service.ts
 │   │   │   ├── jwt.strategy.ts
+│   │   │   ├── password.service.spec.ts
 │   │   │   ├── password.service.ts
-│   │   │   └── password.service.spec.ts
+│   │   │   ├── registration.service.ts
+│   │   │   ├── registration.spec.ts
+│   │   │   └── verify-email.dto.ts
 │   │   ├── common/
 │   │   │   ├── decorators/
 │   │   │   │   ├── public.decorator.ts
 │   │   │   │   └── roles.decorator.ts
-│   │   │   └── guards/
-│   │   │       ├── jwt-auth.guard.ts
-│   │   │       ├── jwt-auth.guard.spec.ts
-│   │   │       ├── roles.guard.ts
-│   │   │       └── roles.guard.spec.ts
+│   │   │   ├── guards/
+│   │   │   │   ├── jwt-auth.guard.spec.ts
+│   │   │   │   ├── jwt-auth.guard.ts
+│   │   │   │   ├── roles.guard.spec.ts
+│   │   │   │   └── roles.guard.ts
+│   │   │   └── ownership/
+│   │   │       ├── ownership.module.ts
+│   │   │       ├── ownership.service.spec.ts
+│   │   │       └── ownership.service.ts
 │   │   ├── generated/prisma/        # Generated client, ignored by Git
 │   │   ├── prisma/
 │   │   │   ├── prisma.module.ts
@@ -95,7 +111,7 @@ NEXORA/
 └── README.md
 ```
 
-See `docs/DIRECTORY_STRUCTURE.md` for the broader source map; its Phase 2 snapshot does not yet include the Phase 3 additions listed here. Keep this root
+See `docs/DIRECTORY_STRUCTURE.md` for the inspected Phase 3 directory map. Keep this root
 handoff and `docs/AGENTS.md` synchronized when changing instructions or status.
 Local `.env`, SQLite databases, generated clients, and build output are not
 source deliverables. Preserve existing local files and unrelated working changes.
@@ -105,18 +121,19 @@ GitHub repository: `https://github.com/theyhatedxve/new-nexora-condotel-system`.
 From `D:\Web-JSX\NEXORA\backend`:
 
 ```powershell
-npx prisma validate
-npm run build
+npx prisma validate --config prisma7.config.ts
+npm run test -- src/auth/security/security-http.spec.ts
 npm run test
-npm run test:e2e
+npm run build
 ```
 
-These are verification commands, not a claim they ran during this documentation
-update. `npm run test` includes `test/database/database.integrity.spec.ts` and
-requires an existing migrated `backend/step10.test.db`. Do not redirect these
-tests to the development database. The test source covers connectivity, unique
-and foreign-key constraints, required fields, related reads, rollback, and
-persistence. The end-to-end suite uses its separate Vitest configuration.
+These are examples, not commands executed during this documentation task.
+Full Vitest includes existing migrated isolated files step3.auth.test.db,
+step6.ownership.test.db, step7.registration.test.db, step8.security.test.db,
+and step10.test.db under backend/. Do not substitute dev.db. Tests write
+synthetic records in test databases; build writes output. The separate
+npm run test:e2e still uses an outdated Hello World! test and must be reviewed
+before use. See docs/IMPLEMENTATION_GUIDE.md for command effects/prerequisites.
 
 The seed is `backend/src/prisma/seed.ts`, not `backend/prisma/seed.ts`. Its guards
 require `NEXORA_ALLOW_DEV_SEED=true` and `DATABASE_URL=file:./dev.db`. The current
@@ -136,16 +153,16 @@ was verified in Phase 1; it was not rerun during this documentation update.
 |---|---|---|
 | 1 | Project Foundation | **COMPLETED** (8/8 user-verified) |
 | 2 | Database Foundation | **COMPLETED** (10/10, user-confirmed on 2026-10-28) |
-| 3 | Authentication & RBAC | **IN PROGRESS** — backend source and tests present; completion not confirmed |
-| 4 | Room Management | Not started |
-| 5 | Guest Website business features | Not started; foundation exists |
-| 6 | Reservation System | Not started |
-| 7 | Payment System | Not started |
-| 8 | Admin Dashboard business features | Not started; foundation exists |
-| 9 | NFC Management | Not started |
-| 10 | Reports & Settings | Not started |
-| 11 | Security & Testing final phase | Not started (foundational tests already exist) |
-| 12 | Production Deployment | Not started |
+| 3 | Authentication & RBAC | **COMPLETED — 8/8 steps** (owner-reported acceptance) |
+| 4 | Room Management | NOT STARTED / AWAITING APPROVAL |
+| 5 | Guest Website business features | NOT STARTED / AWAITING APPROVAL |
+| 6 | Reservation System | NOT STARTED / AWAITING APPROVAL |
+| 7 | Payment System | NOT STARTED / AWAITING APPROVAL |
+| 8 | Admin Dashboard business features | NOT STARTED / AWAITING APPROVAL |
+| 9 | NFC Management | NOT STARTED / AWAITING APPROVAL |
+| 10 | Reports & Settings | NOT STARTED / AWAITING APPROVAL |
+| 11 | Security & Testing final phase | NOT STARTED / AWAITING APPROVAL |
+| 12 | Production Deployment | NOT STARTED / AWAITING APPROVAL |
 
 ### Phase 1 — Completed (8/8)
 
@@ -176,47 +193,46 @@ were not independently rerun or verified during this documentation update.
 - [x] **Step 9 — Initial Test Data:** Guarded seed source at `backend/src/prisma/seed.ts` provides four roles, one demo property, four amenities, three room types, six rooms, and amenity relationships. Execution completion is user-confirmed.
 - [x] **Step 10 — Database Testing and Review:** Database integrity suite exists at `backend/test/database/database.integrity.spec.ts`; completion is user-confirmed. No new test pass is claimed here.
 
-### Phase 3 — Implementation checklist (source inspection, 2026-10-30)
+### Phase 3 — Completed (8/8)
 
-Checked items mean implementation source is present and inspected. They do not
-mean the corresponding tests passed or the whole phase is complete. This is a
-capability inventory, not a newly approved step sequence.
+- [x] **Step 1 — Account and Session Contracts:** Registration, login, refresh, logout, account statuses, token lifetimes, and public/protected routes. See docs/API.md.
+- [x] **Step 2 — Password Hashing:** Argon2id service, verification, parameter/salt tests.
+- [x] **Step 3 — Login and Refresh Rotation:** ACTIVE-only JWT authentication, 15-minute access tokens, seven-day HttpOnly refresh cookies, hashed credentials, token families, replay detection, and concurrent-claim protection.
+- [x] **Step 4 — Logout and Session Revocation:** Current family revocation and matching-cookie clearing; independent device families. Access JWTs may remain valid until expiry while the user remains ACTIVE.
+- [x] **Step 5 — Role-Based Guards:** Global throttling/JWT/role guards, @Public(), @Roles(), ADMIN/MANAGER/RECEPTIONIST/GUEST, 401/403 responses, no implicit ADMIN bypass.
+- [x] **Step 6 — Ownership Checks:** OwnershipModule and OwnershipService for linked guest profiles and reservations, explicit staff allowlists, cross-guest denial, privacy-preserving 404, and isolated SQLite tests. Future feature services must invoke these helpers.
+- [x] **Step 7 — Optional Guest Registration:** Server-assigned GUEST, transactional PENDING User/Guest creation, single-use hashed verification tokens with 30-minute expiry, activation, duplicate protection, resend, and post-commit SMTP delivery.
+- [x] **Step 8 — Authentication and Security Testing:** Owner accepted HTTP security and full Vitest regression, NestJS build, Prisma validation, and development database preservation; final result reported 23/23 checks passed with no reported errors.
 
-- [x] Argon2id password hashing and verification service with test source.
-- [x] Login DTO validation and credential-based login service.
-- [x] JWT access-token issuance and Passport strategy checking active users.
-- [x] Refresh credentials hashed before storage, rotated transactionally, with token-family revocation on reuse.
-- [x] Logout revokes the current refresh-token family and clears its cookie.
-- [x] Auth controller exposes login, refresh, and logout; includes origin checks, HTTP-only refresh cookies, and throttling decorators.
-- [x] Global JWT authentication guard with an explicit public-route decorator.
-- [x] Role decorator and guard with explicit role matching and no implicit administrator bypass.
-- [x] Public health endpoint and protected `auth-check` endpoint.
-- [x] Cookie parsing, validation pipe, CORS configuration, and global throttling are wired into the application source.
-- [x] `RefreshToken.familyId` and its index added to the schema; migration source exists at `backend/prisma/migrations/20261029133315_add_refresh_token_family/migration.sql`. Model count remains 24.
-- [x] Test source exists for passwords, authentication/rotation, logout, auth-controller logout, JWT guards, and role guards.
-- [ ] Independently verify the latest backend type check, lint, and relevant unit tests; these were not run during this documentation update.
-- [ ] Confirm the refresh-token-family migration is applied to the intended database and the generated client matches the schema.
-- [ ] Verify HTTP login, refresh cookies, logout, protected-route 401 responses, and role-based 403 responses through integration tests.
-- [ ] Update and verify the existing end-to-end test, which still expects `/` to return `Hello World!`.
-- [ ] Implement and verify remaining Phase 3 scope, including optional guest registration and frontend authentication integration, after explicit approval.
-- [ ] Obtain explicit confirmation before marking Phase 3 complete or advancing phases.
+### Evidence and remaining deployment concerns
 
-### Latest code changes and verification notes
+The owner supplied completion and successful acceptance results. This task
+independently inspected source paths, DTOs, controllers, guards, ownership,
+schema, migration SQL, package scripts, and test fixtures. No application tests,
+SMTP sends, builds, migrations, or database writes ran during this task.
 
-- `backend/package.json` and its lockfile now include JWT, Passport, Argon2, throttling, validation/transformation, and cookie-parser packages and related types.
-- `AppModule` imports `AuthModule` and registers throttling, JWT, and role guards globally. Protected routes require authentication unless marked public.
-- Auth endpoints are `POST /api/auth/login`, `POST /api/auth/refresh`, and `POST /api/auth/logout`. The controller applies origin checks even to public auth routes. Public means bypassing authentication, not bypassing validation or origin checks.
-- `GET /api/health` is explicitly public; `GET /api/auth-check` is protected. A 401 on a protected route can be expected for a missing or invalid access token; it does not alone prove a code defect.
-- `main.ts` currently calls `enableCors()` twice: once with configured origins and credentials, then with hardcoded local origins. Review actual preflight and credentialed-request behavior before claiming browser authentication works.
-- `bootstrap()` is still invoked without a rejection handler. The 2026-10-29 inspection reported a backend `no-floating-promises` lint error at this call.
-- The 2026-10-29 inspection passed backend TypeScript validation, admin lint, and seven in-memory password/health-service checks. Guest lint reported a `new Date()` render-purity warning. Those checks predate the latest auth changes and are not evidence that the current auth suites pass.
-- Auth/logout tests use mocked dependencies; their presence does not verify real database migrations, browser cookies, or end-to-end HTTP behavior. No runtime tests, migrations, seeds, or production checks ran for this 2026-10-30 documentation update.
-- Frontend source still contains starter pages and admin placeholders; do not infer that login screens, refresh interceptors, or guest registration exist from backend auth code.
-- Current application and migration changes include uncommitted working-tree files. Preserve them; this documentation task does not authorize committing, overwriting, or reverting them.
+See docs/SECURITY.md sections 14–15 for the acceptance/check mapping and limits.
+The HTTP file contains 17 named cases; the supplied 23/23 describes the overall
+acceptance checklist, not 23 named HTTP cases. Real SQLite suites exist for auth,
+logout, ownership, and registration; email delivery is faked in registration/HTTP
+tests. Do not repeat the older claim that all auth/logout tests use mocks.
+
+Production concerns include GET-link email prefetching, silent SMTP failure
+monitoring, duplicate enableCors calls in main.ts, the unhandled bootstrap
+promise, the stale separate end-to-end test, and CLI/runtime database path
+alignment. The extra src/auth/verify-email.dto.ts is empty; the imported DTO is
+src/auth/dto/verify-email.dto.ts. These source findings were not changed and do
+not revoke the owner's accepted Phase 3 status.
+
+GET /api/auth-check is a diagnostic route, not a business API. Security-test
+routes are fixture-only. Frontends remain starter/placeholder applications;
+backend completion does not establish their sign-in integration. Guests may
+book without registering when the future booking workflow is implemented.
+Preserve all unrelated and uncommitted application work.
 
 ## 5. Database model inventory (Architecture v2.1)
 
-The architecture specifies **23 main database models** plus the supporting `RoomTypeAmenity` join model, for **24 models**.
+Architecture v2.1 specifies **23 main models** plus `RoomTypeAmenity`: **24 models in the accepted Phase 2 foundation**. Phase 3 Step 7 adds `EmailVerificationToken`, giving **25 current Prisma models**. Preserve the approved extension and never overwrite it with the older baseline.
 
 **Property and room models — present in schema and initial migration:**
 - [x] `Property`
@@ -248,11 +264,13 @@ The architecture specifies **23 main database models** plus the supporting `Room
 - [x] `AuditLog`
 - [x] `SystemSetting`
 
-**Current model count:** All 24 models are defined in the schema and represented in the initial migration source. Phase 2 is user-confirmed complete. This does not mark later business services, API endpoints, or production database compatibility complete.
+- [x] `EmailVerificationToken` — Phase 3 Step 7; unique tokenHash, User relation with Restrict, expiry/usedAt, userId and expiry indexes.
+
+**Current model count:** 25. The initial migration has 24 models; the two later migrations add refresh family tracking and the verification-token model. Phases 2 and 3 are accepted complete; future business APIs and production compatibility remain unimplemented.
 
 ## 6. Remaining work (do not mark complete)
 
-- Complete Phase 3 verification and remaining authentication scope, including optional guest registration and frontend integration. Login, JWT, role guards, refresh rotation, and logout now have implementation source as listed above.
+- Future frontend authentication integration and remaining production-hardening concerns; backend Phase 3 is accepted complete.
 - Operational room management and live availability calculation.
 - Guest no-account reservation workflow, check-in/out, inventory holds, physical room assignments.
 - PayMongo checkout, payment webhook verification, Pay at Property, refunds.
@@ -261,10 +279,9 @@ The architecture specifies **23 main database models** plus the supporting `Room
 
 ## 7. The next requested action
 
-Use this handoff to review the existing Phase 3 implementation and outstanding
-checks. Phase 2 remains complete. Do not restart Phase 3 as if no code exists,
-and do not mark it complete based on file presence. Obtain approval for the next
-implementation or corrective scope before changing application code. Preserve
-all existing models, migrations, seeds, tests, and the approved v2.1 architecture.
-Keep the root `AGENTS.md` and `docs/AGENTS.md` synchronized. Never copy actual
-secrets, credentials, tokens, or guest records into documentation or tool output.
+Phases 1–3 are complete. Phase 4 — Room Management and subsequent phases are
+NOT STARTED / AWAITING APPROVAL. Present the Phase 4 plan only when requested;
+obtain explicit approval before implementation. This synchronization does not
+authorize application changes, migrations, commits, pushes, or deployments.
+Keep root AGENTS.md and docs/AGENTS.md synchronized, preserve Architecture v2.1,
+and never record actual secrets, credentials, tokens, or private guest data.

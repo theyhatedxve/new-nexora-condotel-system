@@ -179,16 +179,16 @@ model User {
   auditLogs       AuditLog[]      @relation("AuditLogActor")
   updatedSettings SystemSetting[] @relation("SystemSettingUpdater")
 
-  role             Role           @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  refreshTokens    RefreshToken[]
-  guest            Guest?
-  processedRefunds Refund[]       @relation("RefundProcessedBy")
+  emailVerificationTokens EmailVerificationToken[]
+  role                    Role                     @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  refreshTokens           RefreshToken[]
+  guest                   Guest?
+  processedRefunds        Refund[]                 @relation("RefundProcessedBy")
 }
 
 // ========================================
 // REFRESH TOKEN
 // ========================================
-
 
 model RefreshToken {
   id        String    @id @default(cuid())
@@ -204,7 +204,6 @@ model RefreshToken {
 
   @@index([familyId])
 }
-
 
 // ========================================
 // GUEST
@@ -634,4 +633,19 @@ model SystemSetting {
   updatedByUser User? @relation("SystemSettingUpdater", fields: [updatedByUserId], references: [id], onDelete: Restrict)
 
   @@index([updatedByUserId])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([expiresAt])
 }

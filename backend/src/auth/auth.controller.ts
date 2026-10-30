@@ -24,9 +24,26 @@ import {
 
 import { Public } from '../common/decorators/public.decorator.js';
 
+
+import { Get, Query } from '@nestjs/common';
+
+import { RegistrationService } from './registration.service.js';
+import { EmailVerificationService } from './email-verification.service.js';
+
+import { RegisterDto } from './dto/register.dto.js';
+import { ResendVerificationDto } from './dto/resend-verification.dto.js';
+import { VerifyEmailDto } from './dto/verify-email.dto.js';
+
+
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  
+  constructor(
+    private readonly authService: AuthService,
+    private readonly registrationService: RegistrationService,
+    private readonly emailVerificationService: EmailVerificationService,
+  ) {}
+
 
   private checkOrigin(origin: string | undefined): void {
     const allowedOrigins = getAllowedOrigins();
@@ -138,4 +155,54 @@ export class AuthController {
       REFRESH_COOKIE_OPTIONS,
     );
   }
+
+  
+  @Public()
+  @Post('register')
+  @HttpCode(201)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  async register(
+    @Body() body: RegisterDto,
+    @Headers('origin') origin: string | undefined,
+  ) {
+    this.checkOrigin(origin);
+
+    return this.registrationService.register(body);
+  }
+
+  @Public()
+  @Get('verify-email')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  async verifyEmail(
+    @Query() query: VerifyEmailDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('Referrer-Policy', 'no-referrer');
+
+    await this.emailVerificationService.verifyEmail(query.token);
+
+    return {
+      message: 'Email verified successfully. You can now log in.',
+    };
+  }
+
+  @Public()
+  @Post('resend-verification')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  async resendVerification(
+    @Body() body: ResendVerificationDto,
+    @Headers('origin') origin: string | undefined,
+  ) {
+    this.checkOrigin(origin);
+
+    return this.emailVerificationService.resendVerification(
+      body.email,
+    );
+  }
+
 }
+
+

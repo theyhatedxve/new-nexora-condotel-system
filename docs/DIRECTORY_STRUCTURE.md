@@ -6,20 +6,19 @@ This guide maps the system's directories to their responsibilities and related
 documentation. Paths are relative to the `NEXORA/` repository root at
 `D:\Web-JSX\NEXORA`.
 
-The current structure below was inspected on 2026-10-28, including local files
+The current structure below was inspected on 2026-10-30, including local files
 that are not yet committed. File presence does not establish that a feature has
 been tested or deployed. The [approved architecture v2.1](../NEXORA_ARCHITECTURE_V2.1.md)
 defines system scope; the [documentation index](README.md) explains document
 authority and status labels.
 
-Phase 2 — Database Foundation is **complete (10/10)**, confirmed by the user on
-2026-10-28. The schema and initial migration source contain all 24 models.
-The latest additions and changes include the seed's relocation to
-`backend/src/prisma/seed.ts`, database integrity tests, and documentation copies
-of the agent handoff and architecture. See [AGENTS.md](AGENTS.md) for the
-completion checklist; [root AGENTS.md](../AGENTS.md) carries the same handoff.
-Runtime checks were not rerun for this documentation update. Phase 3 remains
-pending explicit approval.
+Phases 1 and 2 are COMPLETED. Phase 3 is **COMPLETED — 8/8 steps**,
+accepted by the owner from reported 23/23 checks, full regression, build, Prisma
+validation, and preserved development data. Phase 4 onward is **NOT STARTED /
+AWAITING APPROVAL**. This task inspected source; it did not rerun application
+checks. Phase 2's initial 24 models remain; Phase 3 adds EmailVerificationToken
+for **25 current models**. See [AGENTS.md](AGENTS.md) for the completion checklist
+and [security](SECURITY.md#14-security-acceptance-checks) for evidence boundaries.
 
 ## 2. Current Directory Structure
 
@@ -85,9 +84,49 @@ NEXORA/
 │   │   ├── migrations/
 │   │   │   ├── 20261027150551_init/
 │   │   │   │   └── migration.sql
+│   │   │   ├── 20261029133315_add_refresh_token_family/
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20261030134255_add_email_verification_tokens/
+│   │   │   │   └── migration.sql
 │   │   │   └── migration_lock.toml
-│   │   └── schema.prisma               # All 24 models defined
+│   │   └── schema.prisma               # All 25 current models defined
 │   ├── src/
+│   │   ├── auth/
+│   │   │   ├── dto/
+│   │   │   │   ├── login.dto.ts
+│   │   │   │   ├── register.dto.ts
+│   │   │   │   ├── resend-verification.dto.ts
+│   │   │   │   └── verify-email.dto.ts
+│   │   │   ├── security/
+│   │   │   │   └── security-http.spec.ts
+│   │   │   ├── auth.config.ts
+│   │   │   ├── auth.controller.spec.ts
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.logout.spec.ts
+│   │   │   ├── auth.module.ts
+│   │   │   ├── auth.service.spec.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── email-verification.service.ts
+│   │   │   ├── email.service.ts
+│   │   │   ├── jwt.strategy.ts
+│   │   │   ├── password.service.spec.ts
+│   │   │   ├── password.service.ts
+│   │   │   ├── registration.service.ts
+│   │   │   ├── registration.spec.ts
+│   │   │   └── verify-email.dto.ts
+│   │   ├── common/
+│   │   │   ├── decorators/
+│   │   │   │   ├── public.decorator.ts
+│   │   │   │   └── roles.decorator.ts
+│   │   │   ├── guards/
+│   │   │   │   ├── jwt-auth.guard.spec.ts
+│   │   │   │   ├── jwt-auth.guard.ts
+│   │   │   │   ├── roles.guard.spec.ts
+│   │   │   │   └── roles.guard.ts
+│   │   │   └── ownership/
+│   │   │       ├── ownership.module.ts
+│   │   │       ├── ownership.service.spec.ts
+│   │   │       └── ownership.service.ts
 │   │   ├── generated/
 │   │   │   └── prisma/                  # Generated Prisma client
 │   │   ├── prisma/
@@ -153,8 +192,10 @@ NEXORA/
 | Frontend `src/services/` | HTTP client configuration and API access | [API contracts](API.md), [coding patterns](CODING_PATTERNS.md) |
 | Frontend `src/styles/`, `src/assets/`, and `public/` | Shared CSS, imported assets, and static public files | [Design guidelines](design_guidelines.md) |
 | `backend/src/` | API bootstrap, modules, controllers, and services | [System design](SYSTEM_DESIGN.md), [API contracts](API.md), [technical plan](TECHNICAL_PLAN.md) |
+| `backend/src/auth/` | Auth, registration, SMTP delivery, verification, DTOs, and security tests | [Implemented API](API.md), [security](SECURITY.md) |
+| `backend/src/common/` | Public/role decorators, global guards, and reusable OwnershipModule/OwnershipService | [Security](SECURITY.md), [coding patterns](CODING_PATTERNS.md) |
 | `backend/src/prisma/` | NestJS database provider, connection lifecycle, and guarded development seed | [Database schema](DATABASE_SCHEMA.md), [coding patterns](CODING_PATTERNS.md) |
-| `backend/prisma/` | All 24 model definitions and initial migration history | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
+| `backend/prisma/` | All 25 model definitions and three migrations | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `backend/src/generated/prisma/` | Prisma-generated client used by backend code; regenerate through Prisma tooling | [Database schema](DATABASE_SCHEMA.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/src/*.spec.ts` and `backend/test/` | Colocated unit tests and separate end-to-end tests using Vitest configuration | [Implementation guide](IMPLEMENTATION_GUIDE.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/test/database/` | Database integrity tests using an existing migrated `backend/step10.test.db`; covers connectivity, constraints, relations, rollback, and persistence | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
@@ -163,9 +204,15 @@ NEXORA/
 | `docs/` | Architecture explanations, standards, contracts, and delivery guidance | [Documentation index](README.md) |
 
 Both frontend applications communicate with the shared backend API. Database
-access belongs in the backend. The presence of placeholder screens or database
-models does not establish operational booking, payment, authentication, or NFC
-functionality.
+access belongs in the backend. Backend authentication is accepted through Phase 3; placeholder screens and
+database models do not establish frontend authentication integration, booking,
+payment, or physical NFC functionality. Ownership helpers must be called by
+future business services explicitly.
+
+Isolated suite database paths are documented in the
+[implementation guide](IMPLEMENTATION_GUIDE.md#15-command-guidance). The extra
+backend/src/auth/verify-email.dto.ts is empty; the controller imports
+backend/src/auth/dto/verify-email.dto.ts. No source cleanup was performed.
 
 ## 4. Planned Structure and Placement Rules
 
@@ -175,10 +222,10 @@ needs them:
 
 - Frontend `layouts/`, `routes/`, and `hooks/` where absent. The admin application
   already has `layouts/`; the guest application does not yet have it.
-- Backend feature directories: `auth/`, `users/`, `guests/`, `rooms/`,
+- Backend future feature directories: `users/`, `guests/`, `rooms/`,
   `reservations/`, `payments/`, `nfc/`, `dashboard/`, `reports/`, `uploads/`,
   `settings/`, and `audit/`.
-- Backend `common/` for shared backend concerns when needed.
+- Backend `auth/` and `common/` already exist; add further shared concerns only when needed.
 
 Keep frontend source in JavaScript/JSX and backend source in TypeScript. Place
 business logic in backend services, follow the existing naming conventions, and
@@ -219,5 +266,5 @@ intended layout changes, and keep the [documentation index](README.md) linked to
 this guide.
 
 Exclude dependency contents, build output, secrets, and local database contents
-from directory documentation. Use the [root README](../README.md) for local setup
+from directory documentation. Use the [root README](../README.md) for the public system overview
 and the [implementation guide](IMPLEMENTATION_GUIDE.md) for verification steps.

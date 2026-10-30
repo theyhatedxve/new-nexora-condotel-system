@@ -21,6 +21,25 @@ Documentation approval does not authorize all application phases.
 
 ## 2. Preflight Review
 
+Current accepted milestones (documentation synchronized 2026-10-30):
+
+| Phase | Status |
+|---|---|
+| Phase 1 | COMPLETED |
+| Phase 2 | COMPLETED |
+| Phase 3 | COMPLETED — 8/8 steps |
+| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+
+Phase 1 delivered the two React JavaScript/JSX foundations and connected NestJS
+API. Phase 2 delivered the 24-model foundation, migrations, Prisma/NestJS
+integration, guarded development seed, and isolated integrity tests. Phase 3
+added authentication/security and EmailVerificationToken (25 current models).
+The owner reports 23/23 final acceptance checks passed without reported errors,
+including HTTP security, full Vitest regression, build, Prisma validation, and
+development database preservation. No fresh application checks ran in this task.
+See [security evidence and limits](SECURITY.md#14-security-acceptance-checks).
+
+
 Before continuing development:
 
 - Read applicable AGENTS.md instructions.
@@ -34,6 +53,8 @@ Before continuing development:
 Do not restart completed work based on outdated architecture status text.
 
 ## 3. Phase 01 — Project Foundation
+
+**Status: COMPLETED.**
 
 Steps:
 
@@ -52,44 +73,53 @@ Both frontends can reach the backend, and the foundation checks pass.
 
 ## 4. Phase 02 — Database Foundation
 
-Steps:
+**Status: COMPLETED.** Accepted deliverables:
 
-1. Review Prisma and SQLite configuration.
-2. Confirm naming, identifiers, money, and date conventions.
-3. Review property and room models.
-4. Review user and guest models.
-5. Review reservation models.
-6. Review payment models.
-7. Review NFC models.
-8. Review audit/settings models.
-9. Review indexes and constraints.
-10. Approve migrations and seed data separately as required.
+1. Prisma and SQLite configuration.
+2. Naming, identifier, money, and date conventions.
+3. Property and room models.
+4. User and guest models.
+5. Reservation models.
+6. Payment models.
+7. NFC and administration models.
+8. Migrations and Prisma Client/NestJS integration.
+9. Guarded development sample data.
+10. Isolated database integrity testing and review.
 
-Pass condition:
-
-Approved schema validates, migrations work on disposable data, and
-relationships/constraints behave as intended.
-
-Schema approval does not automatically authorize database migration.
+The original foundation has 24 models. Phase 3 adds token-family tracking and
+EmailVerificationToken without replacing the original schema. See
+[database schema and migrations](DATABASE_SCHEMA.md). Completion and runtime
+results are project-owner accepted; no migration or seed ran for this update.
+Schema approval does not authorize a new database migration.
 
 ## 5. Phase 03 — Authentication and RBAC
 
-Steps:
+**Status: COMPLETED — 8/8 steps**, accepted by the project owner.
 
-1. Define approved account and session contracts.
-2. Implement password hashing.
-3. Implement login and refresh rotation.
-4. Implement logout and revocation.
-5. Add role guards.
-6. Add ownership checks.
-7. Implement optional guest registration.
-8. Test invalid credentials and privilege boundaries.
+- [x] Step 1 — Account and Session Contracts.
+- [x] Step 2 — Password Hashing.
+- [x] Step 3 — Login and Refresh Rotation.
+- [x] Step 4 — Logout and Session Revocation.
+- [x] Step 5 — Role-Based Guards.
+- [x] Step 6 — Ownership Checks.
+- [x] Step 7 — Optional Guest Registration.
+- [x] Step 8 — Authentication and Security Testing.
 
-Pass condition:
+The implemented contracts include ACTIVE-only JWT sessions, rotating refresh
+families, cookie clearing, explicit roles, reusable record ownership, optional
+PENDING guest registration, and single-use 30-minute email verification.
+[API.md](API.md) defines endpoint details; [SECURITY.md](SECURITY.md) describes
+session behavior, acceptance evidence, and production-hardening concerns.
 
-Protected APIs reject unauthorized requests and cross-guest access.
+The owner's final 23/23 checks include real HTTP integration and full Vitest
+regression, build, Prisma validation, and preserved development data. That is
+reported evidence, not a fresh execution here. Backend acceptance does not
+establish frontend login screens, accountless booking, full guest/reservation
+APIs, real SMTP delivery, or production readiness.
 
 ## 6. Phase 04 — Room Management
+
+**Status: NOT STARTED / AWAITING APPROVAL.**
 
 Steps:
 
@@ -107,6 +137,8 @@ Authorized staff can manage inventory without violating existing bookings.
 
 ## 7. Phase 05 — Guest Website
 
+**Status: NOT STARTED / AWAITING APPROVAL.**
+
 Steps:
 
 1. Build shared guest layout.
@@ -122,6 +154,8 @@ Pass condition:
 Guests can discover eligible rooms with clear prices and usable navigation.
 
 ## 8. Phase 06 — Reservation System
+
+**Status: NOT STARTED / AWAITING APPROVAL.**
 
 Steps:
 
@@ -142,6 +176,8 @@ Bookings preserve trusted prices and cannot oversell inventory.
 
 ## 9. Phase 07 — Payment System
 
+**Status: NOT STARTED / AWAITING APPROVAL.**
+
 Steps:
 
 1. Approve detailed payment records and policies.
@@ -159,6 +195,8 @@ Only trusted payment evidence changes financial state.
 
 ## 10. Phase 08 — Admin Dashboard
 
+**Status: NOT STARTED / AWAITING APPROVAL.**
+
 Steps:
 
 1. Build staff layout and navigation.
@@ -173,6 +211,8 @@ Pass condition:
 Dashboard figures and actions reflect authorized backend data.
 
 ## 11. Phase 09 — NFC Management
+
+**Status: NOT STARTED / AWAITING APPROVAL.**
 
 Steps:
 
@@ -192,6 +232,8 @@ Simulation is verified separately from physical hardware behavior.
 
 ## 12. Phase 10 — Reports and Settings
 
+**Status: NOT STARTED / AWAITING APPROVAL.**
+
 Steps:
 
 1. Approve occupancy and revenue definitions.
@@ -205,6 +247,8 @@ Pass condition:
 Reports reconcile with underlying data and settings are access-controlled.
 
 ## 13. Phase 11 — Testing and Security
+
+**Status: NOT STARTED / AWAITING APPROVAL.**
 
 Verify:
 
@@ -226,6 +270,8 @@ Critical journeys and failure scenarios pass with recorded evidence.
 
 ## 14. Phase 12 — Production Deployment
 
+**Status: NOT STARTED / AWAITING APPROVAL.**
+
 Steps:
 
 1. Approve hosting and domains.
@@ -245,20 +291,42 @@ The deployment passes functional, security, integration, and recovery checks.
 
 ## 15. Command Guidance
 
-Use scripts present in the relevant package.json.
+Existing scripts were inspected in backend/package.json. Run from
+D:\Web-JSX\NEXORA\backend only after authorizing the relevant checks:
 
-Before giving a command:
+```powershell
+npx prisma validate --config prisma7.config.ts
+npm run test -- src/auth/security/security-http.spec.ts
+npm run test
+npm run build
+```
 
-- Specify the working directory.
-- Check the script or configuration exists.
-- Explain whether it reads or changes data.
-- State expected output.
-- Do not claim success without execution evidence.
+These commands were not executed during this documentation task. Prisma
+validation reads the schema/configuration and does not create tables. The
+security command executes the real HTTP suite; npm run test uses Vitest's
+**/*.spec.ts selection and includes isolated database suites. Tests mutate
+synthetic data in existing migrated test databases; build writes generated
+output. Neither command authorizes migration or seeding of development data.
 
-If Prisma uses a custom configuration filename, supply the appropriate
-explicit configuration path.
+| Existing suite | Required database under backend/ |
+|---|---|
+| Auth service and logout | step3.auth.test.db |
+| Ownership | step6.ownership.test.db |
+| Registration | step7.registration.test.db |
+| HTTP security | step8.security.test.db |
+| Database integrity | step10.test.db |
 
-Do not assume schema validation creates database tables.
+Confirm migrations, client generation, target paths, and synthetic configuration
+before an approved test run. Never substitute dev.db for an isolated test file.
+HTTP/registration suites use fake email delivery, not production SMTP.
+
+npm run test:e2e selects **/*.e2e-spec.ts separately. The current legacy
+app.e2e-spec.ts still expects Hello World! and does not isolate the real Prisma
+provider; it is not the accepted HTTP security suite. Review it before use.
+
+Provide each command's working directory, write effects, prerequisites, and
+actual output. Custom Prisma CLI configuration is prisma7.config.ts. Do not
+claim success from command examples or schema validation alone.
 
 ## 16. Step Completion Record
 

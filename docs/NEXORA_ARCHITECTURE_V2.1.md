@@ -1,10 +1,14 @@
 # NEXORA — Final Condotel Management System Architecture
 
 > **Master architecture blueprint:** Version 2.1  
-> **Status:** Approved architecture; implementation not started.  
+> **Status:** Approved architecture v2.1; historical baseline with current progress addendum below.
 > **Intended readers:** Codex, other AI coding assistants, developers, reviewers.  
 > **Authority:** This file supersedes NEXORA Architecture v2.0 for frontend technology and file conventions. All other approved v2.0 requirements remain intact.  
 > **Instruction:** Do not generate application code or begin implementation until the user approves the relevant phase and explicitly authorizes code generation.
+
+> **Implementation addendum (2026-10-30):** Phase 1 — COMPLETED; Phase 2 — COMPLETED; Phase 3 — COMPLETED — 8/8 steps. Phase 4 onward — NOT STARTED / AWAITING APPROVAL. The owner reports 23/23 acceptance checks passed, HTTP security, full Vitest regression, NestJS build, Prisma validation, and preserved development data. This documentation task did not rerun those checks. Completion is not production readiness.
+>
+> Phase 2 established 24 models (23 core plus RoomTypeAmenity); Phase 3 Step 7 adds EmailVerificationToken for 25 current Prisma models. This approved implementation extension does not replace or silently rewrite the original model list below. See [current schema](DATABASE_SCHEMA.md), [actual API](API.md), and [phase checklist](IMPLEMENTATION_GUIDE.md).
 
 ## Instructions for AI coding tools
 
@@ -479,8 +483,8 @@ NFC management is in software v1.0, but **real lock integration cannot be comple
 | Backend | NestJS + TypeScript |
 | Business rules/database/NFC design | Retained from v2.0 |
 | Development phases | Twelve phases retained |
-| Implementation | **Not started** |
-| Coding authorization | **Not granted yet** |
+| Implementation | Phases 1–2 COMPLETED; Phase 3 COMPLETED — 8/8 steps; later phases NOT STARTED / AWAITING APPROVAL |
+| Coding authorization | No Phase 4 or later implementation authorized by this documentation task |
 
 ### Explicitly unresolved decisions
 
@@ -497,4 +501,4 @@ These remain for the relevant planning stages, not for an AI tool to invent:
 - **v2.0:** Original approved blueprint with React TypeScript frontends.
 - **v2.1:** Same system scope, business rules, database, backend architecture, NFC plan and 12 phases; **both React frontends changed to JavaScript + JSX + Vite**, with `.jsx`/`.js` file conventions.
 
-**Next action:** Phase 1 — Project Foundation **planning review only**, until user explicitly authorizes implementation code.
+**Next action:** Phase 4 — Room Management planning only when requested; obtain explicit approval before implementation. The original architecture decisions and twelve-phase sequence remain the baseline.

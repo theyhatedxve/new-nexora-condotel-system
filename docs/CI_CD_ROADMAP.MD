@@ -5,6 +5,21 @@
 > Implementation: Requires approval for each specific step.
 > Hosting provider, production domains, and deployment commands: TBD.
 
+### Accepted application progress
+
+| Phase | Status |
+|---|---|
+| Phase 1 | COMPLETED |
+| Phase 2 | COMPLETED |
+| Phase 3 | COMPLETED — 8/8 steps |
+| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+
+The owner reports 23/23 final checks passed, HTTP security, full Vitest
+regression, NestJS build, Prisma validation, and preserved development data.
+This task inspected sources and edited Markdown only; no fresh checks ran.
+Application-phase acceptance does not mark CI workflows or deployment stages
+below implemented. These remain a proposed roadmap requiring approval.
+
 ## 1. Purpose
 
 CI/CD helps NEXORA detect problems before releasing updates.
@@ -117,7 +132,7 @@ NEXORA/
 │   ├── src/
 │   └── prisma/
 └── docs/
-    └── CI_CD_ROADMAP.md
+    └── CI_CD_ROADMAP.MD
 ```
 
 Workflow filenames are proposed.
@@ -197,7 +212,18 @@ A successful build must not be reported as successful test coverage.
 9. Run applicable database/API integration tests.
 10. Build NestJS.
 
-Exact commands depend on the installed Prisma version and package scripts.
+Current backend commands and their prerequisites are recorded in the
+[implementation guide](IMPLEMENTATION_GUIDE.md#15-command-guidance). The HTTP
+security suite is selected by npm run test -- src/auth/security/security-http.spec.ts;
+full npm run test includes five isolated SQLite database paths across its suites.
+Provision/migrate those disposable files separately under approved CI setup;
+never point tests at development data. Use prisma7.config.ts explicitly for CLI
+validation. No pipeline or databases were created by this documentation update.
+
+The HTTP fixture fakes SMTP and configures its own Nest app; it does not validate
+main.ts bootstrap CORS or real email delivery. The legacy npm run test:e2e
+Hello World! expectation is a separate unresolved check, not the accepted HTTP
+security suite. Preserve the [evidence boundary](SECURITY.md#14-security-acceptance-checks).
 
 If Prisma uses a custom configuration filename, provide its explicit path.
 
