@@ -189,9 +189,11 @@ model User {
 // REFRESH TOKEN
 // ========================================
 
+
 model RefreshToken {
   id        String    @id @default(cuid())
   userId    String
+  familyId  String?
   tokenHash String    @unique
   expiresAt DateTime
   revokedAt DateTime?
@@ -199,7 +201,10 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([familyId])
 }
+
 
 // ========================================
 // GUEST
