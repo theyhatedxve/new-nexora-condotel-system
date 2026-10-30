@@ -19,3 +19,17 @@ backend/step10.test.db
 backend/step10.test.db-journal
 backend/step10.test.db-wal
 backend/step10.test.db-shm
+
+
+#Phase 4 Step 1 test
+backend/phase4.step1.test.db
+backend/phase4.step1.test.db-journal
+backend/phase4.step1.test.db-wal
+backend/phase4.step1.test.db-shm
+
+
+#Phase 4 Step 2 Test 
+backend/phase4.step2.test.db
+backend/phase4.step2.test.db-journal
+backend/phase4.step2.test.db-wal
+backend/phase4.step2.test.db-shm

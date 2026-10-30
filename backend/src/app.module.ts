@@ -10,6 +10,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 
+import { RoomTypesModule } from './room-types/room-types.module.js';
+
+import { RoomsModule } from './rooms/rooms.module.js';
+
 @Module({
   imports: [PrismaModule, ThrottlerModule.forRoot([
     {
@@ -17,7 +21,7 @@ import { RolesGuard } from './common/guards/roles.guard.js';
       limit: 60,
     },
   ]),
-  AuthModule,],
+  AuthModule, RoomTypesModule, RoomsModule,],
   controllers: [AppController],
   providers: [AppService, {
     provide: APP_GUARD,
