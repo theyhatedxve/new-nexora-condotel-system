@@ -1,6 +1,10 @@
 
 import { api } from "./api.js";
 
+/**
+ * Search room availability using the existing backend.
+ * The backend determines availability and calculates prices.
+ */
 export async function searchAvailability(
   { checkIn, checkOut, guests },
   signal,
@@ -14,9 +18,11 @@ export async function searchAvailability(
     signal,
   });
 
-  if (!Array.isArray(response.data?.data)) {
-    throw new Error("Unexpected availability response.");
+  const results = response.data?.data;
+
+  if (!Array.isArray(results)) {
+    throw new Error("Invalid availability response.");
   }
 
-  return response.data.data;
+  return results;
 }

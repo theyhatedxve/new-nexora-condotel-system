@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import {
@@ -5,11 +6,16 @@ import {
   listRoomTypeImages,
 } from "../services/roomTypesApi.js";
 
-// A missing photo should not hide the room, so image errors become "no image".
+// Missing room photos should not prevent room listings.
 async function addPrimaryImage(roomType) {
   try {
     const images = await listRoomTypeImages(roomType.id);
-    const image = images.find((item) => item.isPrimary) ?? images[0] ?? null;
+
+    const image =
+      images.find((item) => item.isPrimary) ??
+      images[0] ??
+      null;
+
     return { ...roomType, image };
   } catch {
     return { ...roomType, image: null };
@@ -17,32 +23,58 @@ async function addPrimaryImage(roomType) {
 }
 
 export function useRoomTypes() {
-  const [state, setState] = useState({ status: "loading", rooms: [] });
+  const [state, setState] = useState({
+    status: "loading",
+    rooms: [],
+  });
+
+  const [retryCount, setRetryCount] = useState(0);
+
+  function retry() {
+    setRetryCount((count) => count + 1);
+  }
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function loadRooms() {
+      setState({
+        status: "loading",
+        rooms: [],
+      });
+
       try {
         const roomTypes = await listRoomTypes();
-        const rooms = await Promise.all(roomTypes.map(addPrimaryImage));
+
+        const rooms = await Promise.all(
+          roomTypes.map(addPrimaryImage),
+        );
 
         if (!cancelled) {
-          setState({ status: "success", rooms });
+          setState({
+            status: "success",
+            rooms,
+          });
         }
       } catch {
         if (!cancelled) {
-          setState({ status: "error", rooms: [] });
+          setState({
+            status: "error",
+            rooms: [],
+          });
         }
       }
     }
 
-    load();
+    loadRooms();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryCount]);
 
-  return state;
+  return {
+    ...state,
+    retry,
+  };
 }

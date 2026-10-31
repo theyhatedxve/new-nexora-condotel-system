@@ -15,7 +15,7 @@ function BackLink() {
 
 function RoomDetails() {
   const { id } = useParams();
-  const { status, room, images, amenities } = useRoomDetails(id);
+  const { status, room, images, amenities, retry } = useRoomDetails(id);
 
   if (status === "loading") {
     return (
@@ -39,16 +39,32 @@ function RoomDetails() {
     );
   }
 
-  if (status === "error") {
+  
+    if (status === "error") {
     return (
-      <main className="room-details">
+        <main className="room-details">
         <BackLink />
-        <p className="rooms-message rooms-error" role="alert">
-          We could not load this room. Please try again later.
-        </p>
-      </main>
+
+        <div className="guest-feedback" role="alert">
+            <h1>Room details unavailable</h1>
+
+            <p>
+            We couldn't load this room's information.
+            Please check your connection and try again.
+            </p>
+
+            <button
+            type="button"
+            className="feedback-retry-button"
+            onClick={retry}
+            >
+            Try Again
+            </button>
+        </div>
+        </main>
     );
-  }
+    }
+
 
   return (
     <main className="room-details">

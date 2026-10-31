@@ -86,10 +86,14 @@ export default function AvailabilitySearch() {
     setLoading(false);
   }
 
+  const [hasSearched, setHasSearched] = useState(false);
+
   async function handleSearch(event) {
     event.preventDefault();
 
     clearPreviousSearch();
+
+    setHasSearched(false);
 
     const search = { checkIn, checkOut, guests };
     const validationError = validateSearch(search);
@@ -113,6 +117,8 @@ export default function AvailabilitySearch() {
       if (!controller.signal.aborted) {
         setResults(data);
       }
+
+      setHasSearched(true);
     } catch (requestError) {
       if (!controller.signal.aborted) {
         setError(
@@ -128,6 +134,10 @@ export default function AvailabilitySearch() {
       }
     }
   }
+
+  function retrySearch() {
+  handleSearch({ preventDefault() {} });
+}
 
   return (
     <section
@@ -195,11 +205,23 @@ export default function AvailabilitySearch() {
         </button>
       </form>
 
-      {error && (
-        <p className="availability-error" role="alert">
-          {error}
-        </p>
-      )}
+      
+        {error && (
+        <div className="guest-feedback" role="alert">
+            <h3>Search unsuccessful</h3>
+
+            <p>{error}</p>
+
+            <button
+            type="button"
+            className="feedback-retry-button"
+            onClick={retrySearch}
+            >
+            Try Again
+            </button>
+        </div>
+        )}
+
 
       <div aria-live="polite" aria-busy={loading}>
         {loading && <p>Checking room availability...</p>}
@@ -208,12 +230,33 @@ export default function AvailabilitySearch() {
           <div className="availability-results">
             <h3>Search Results</h3>
 
-            {results.length === 0 && (
-              <p>
-                No room types match your search.
-                Try another guest count or date range.
-              </p>
-            )}
+            
+        {hasSearched && results.length === 0 && (
+        <div className="guest-feedback" role="status">
+            <h3>No matching rooms</h3>
+
+            <p>
+            No room types match your guest count.
+            Try changing the number of guests or
+            selecting different dates.
+            </p>
+        </div>
+        )}
+
+        {hasSearched &&
+        results.length > 0 &&
+        results.every((room) => !room.available) && (
+            <div className="guest-feedback" role="status">
+            <h3>No rooms available for these dates</h3>
+
+            <p>
+                Matching room types exist, but none are
+                available for the selected stay.
+                Please try another date range.
+            </p>
+            </div>
+        )}
+
 
             {results.map((room) => (
               <article

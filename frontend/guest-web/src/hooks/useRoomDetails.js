@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import {
@@ -6,27 +7,46 @@ import {
   listRoomTypeImages,
 } from "../services/roomTypesApi.js";
 
-// Primary image first, then the order chosen by staff.
 function sortImages(images) {
   return [...images].sort(
-    (a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.displayOrder - b.displayOrder,
+    (a, b) =>
+      Number(b.isPrimary) - Number(a.isPrimary) ||
+      a.displayOrder - b.displayOrder,
   );
 }
 
 export function useRoomDetails(roomTypeId) {
-  const [state, setState] = useState({ id: null, status: "loading" });
+  const [state, setState] = useState({
+    id: null,
+    status: "loading",
+  });
+
+  const [retryCount, setRetryCount] = useState(0);
+
+  function retry() {
+    setRetryCount((count) => count + 1);
+  }
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function loadRoomDetails() {
+      setState({
+        id: roomTypeId,
+        status: "loading",
+      });
+
       try {
-        // Photos and amenities are optional, so their errors become empty lists.
-        const [room, images, amenities] = await Promise.all([
-          getRoomType(roomTypeId),
-          listRoomTypeImages(roomTypeId).catch(() => []),
-          listRoomTypeAmenities(roomTypeId).catch(() => []),
-        ]);
+        const [room, images, amenities] =
+          await Promise.all([
+            getRoomType(roomTypeId),
+
+            // Photos and amenities remain optional.
+            listRoomTypeImages(roomTypeId).catch(() => []),
+            listRoomTypeAmenities(roomTypeId).catch(
+              () => [],
+            ),
+          ]);
 
         if (!cancelled) {
           setState({
@@ -39,19 +59,36 @@ export function useRoomDetails(roomTypeId) {
         }
       } catch (error) {
         if (!cancelled) {
-          const status = error.response?.status === 404 ? "notFound" : "error";
-          setState({ id: roomTypeId, status });
+          const status =
+            error.response?.status === 404
+              ? "notFound"
+              : "error";
+
+          setState({
+            id: roomTypeId,
+            status,
+          });
         }
       }
     }
 
-    load();
+    loadRoomDetails();
 
     return () => {
       cancelled = true;
     };
-  }, [roomTypeId]);
+  }, [roomTypeId, retryCount]);
 
-  // Ignore results that belong to a previously viewed room.
-  return state.id === roomTypeId ? state : { status: "loading" };
+  // Never show details belonging to a previous room.
+  if (state.id !== roomTypeId) {
+    return {
+      status: "loading",
+      retry,
+    };
+  }
+
+  return {
+    ...state,
+    retry,
+  };
 }

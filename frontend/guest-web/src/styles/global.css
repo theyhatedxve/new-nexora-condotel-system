@@ -411,6 +411,72 @@ a {
   color: var(--color-gold);
 }
 
+
+/* Phase 5 Step 6 — Loading, Empty, and Failure States */
+
+.guest-feedback {
+  width: 100%;
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.guest-feedback h1,
+.guest-feedback h2,
+.guest-feedback h3 {
+  margin-top: 0;
+  color: var(--color-primary);
+}
+
+.guest-feedback p {
+  max-width: 540px;
+  margin: 0.75rem auto;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.feedback-retry-button {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.feedback-retry-button:hover {
+  opacity: 0.9;
+}
+
+.feedback-retry-button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.feedback-retry-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .guest-feedback {
+    padding: 1rem;
+  }
+
+  .feedback-retry-button {
+    width: 100%;
+  }
+}
+
+
 /* ---------- Narrow screens ---------- */
 
 @media (max-width: 768px) {
