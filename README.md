@@ -67,12 +67,15 @@ As of **October 31, 2026**:
 | Phase 2 — Database Foundation | COMPLETED |
 | Phase 3 — Authentication and Access Control | COMPLETED — 8/8 steps |
 | Phase 4 | COMPLETED — 7/7 steps |
-| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 5 — Guest Website | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete/frontend in progress; Steps 6–7 pending |
+| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
 
 The current foundation includes the starter guest and admin applications,
 backend connectivity, database structure, and accepted backend authentication
 and access controls, including optional guest registration and email verification,
 plus room-management APIs for rooms, categories, amenities, images, states, and blocks.
+Guest room listings/details use backend data. Availability search and stay-price
+quotes are implemented in the backend; their guest-interface integration is in progress.
 The project owner reports successful Phase 3 acceptance checks; no fresh
 application tests ran during this documentation update. Frontend sign-in
 integration and operational features remain later work. The system is under

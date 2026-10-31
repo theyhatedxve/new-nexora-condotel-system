@@ -172,6 +172,12 @@ Backend configuration categories:
 - Encryption keys when required.
 - Approved business policies.
 
+The current bootstrap listens on port 3000; a configurable PORT is not
+implemented by main.ts. Prisma CLI reads DATABASE_URL, while PrismaService
+uses a fixed SQLite runtime path; confirm targets before authorized migrations.
+PayMongo/webhook/encryption/business-policy entries above are future categories,
+not proof of implemented configuration consumers.
+
 Frontend configuration contains public values such as the API base URL.
 
 Vite frontend environment values are visible to users.
@@ -201,7 +207,7 @@ documentation. See [security](SECURITY.md) for transport and monitoring limits.
 | 09 — NFC Management | Cards, assignments, simulations, later device integration | NOT STARTED / AWAITING APPROVAL |
 | 10 — Reports & Settings | Reports, policies, audit views | NOT STARTED / AWAITING APPROVAL |
 | 11 — Testing & Security | Integrated journeys and failure scenarios | NOT STARTED / AWAITING APPROVAL |
-| 12 — Production Deployment | Hosting, PostgreSQL, storage, recovery, monitoring | NOT STARTED / AWAITING APPROVAL |
+| 12 — Production Deployment | Hosting, recommended PostgreSQL, storage, recovery, monitoring | NOT STARTED / AWAITING APPROVAL |
 
 Security and testing apply throughout development.
 Phase 11 provides broader integrated verification.
@@ -263,3 +269,30 @@ For Steps 4–5, backend implementation is owner-confirmed complete, with fronte
 integration still in progress. Seven quick rule checks were reported from a
 separate copy; permanent availability tests and full local build/lint results
 remain unverified. See [reported checks and limitations](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45).
+
+## 11. Architecture and Implementation Review Items
+
+Audit authority: [docs/NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md).
+Architecture requirements, inspected implementation, and owner-confirmed
+milestones serve different purposes. Do not change requirements to justify a
+source deviation or treat accepted phase completion as production readiness.
+
+| Item | Approved baseline / observed source | Disposition |
+|---|---|---|
+| Reception room-status writes | Architecture section 4 lists reception room/rate management as View. RoomStatusController and RoomStatusService allow RECEPTIONIST to switch READY and CLEANING. | **OWNER REVIEW REQUIRED:** confirm whether housekeeping transitions are an intended exception. Keep the baseline table and document actual route behavior; this audit authorizes neither a permission expansion nor a source correction. |
+| Physical project layout | The blueprint's illustrative tree places guest-web/admin-web at root; the repository uses frontend/guest-web and frontend/admin-web. | Document the actual paths without moving files or changing the two-frontend/one-API architecture. |
+| Informational inventory | Architecture requires transaction-safe double-booking prevention; current search calculates nightly type-level capacity, and physical-room helpers reserve nothing. | Preserve the requirement for future booking writers. Current search is informational, not proof that a complete booking/allocation flow exists. |
+| Property policies | Code limits search to 30 nights and uses broad signed-integer capacity/rate bounds. Hold duration, cancellation, no-show, arrival cutoffs, and production deployment choices remain unresolved. | Document code constants without inventing property policy. Policy changes require owner approval. |
+| Current schema extensions | Initial blueprint has 23 core models; the accepted foundation adds RoomTypeAmenity and subsequent work adds EmailVerificationToken and canceledAt. | Preserve 25 current models and four migrations. Do not replace them with historical examples. |
+
+No new step completion is accepted by this audit. The owner checkpoint remains
+Phases 1–4 complete; Phase 5 Steps 1–3 complete, Steps 4–5 backend complete and
+frontend in progress, Steps 6–7 pending; Phase 6 onward awaits approval.
+
+Outstanding verification remains local build/lint for availability, permanent
+availability regression coverage, frontend search/quote integration and browser
+acceptance, the legacy end-to-end fixture, deployed CORS/cookies, real SMTP,
+backups/recovery, and PostgreSQL compatibility. Existing Phase 3 23/23 and seven
+quick availability checks remain reported evidence, not test executions in this
+audit. See [verification context](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45)
+and [security concerns](SECURITY.md#15-production-hardening-and-open-concerns).

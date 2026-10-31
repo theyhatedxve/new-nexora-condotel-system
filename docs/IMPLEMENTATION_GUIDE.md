@@ -47,7 +47,8 @@ See [security evidence and limits](SECURITY.md#14-security-acceptance-checks).
 Before continuing development:
 
 - Read applicable AGENTS.md instructions.
-- Read Master Architecture v2.1.
+- Read the authoritative [docs/NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md).
+- Reconcile source deviations through [owner review](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items), not by altering the approved baseline.
 - Check the existing frontend folder structure.
 - Inspect package scripts and locked versions.
 - Inspect the Prisma schema and configuration.
@@ -346,7 +347,7 @@ Critical journeys and failure scenarios pass with recorded evidence.
 Steps:
 
 1. Approve hosting and domains.
-2. Provision production PostgreSQL.
+2. Confirm the production database choice; PostgreSQL is recommended.
 3. Test production migrations and data transfer.
 4. Configure secrets and HTTPS.
 5. Configure durable uploads.

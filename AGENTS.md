@@ -3,20 +3,21 @@
 **Last synchronized:** 2026-10-31. Paths below are relative to D:\Web-JSX\NEXORA.
 **Current checkpoint:** Phases 1–4 and Phase 5 Steps 1–3 are complete. Phase 5
 Steps 4–5: backend complete; frontend in progress. Steps 6–7 remain pending.
-Phase 6 onward is
-NOT STARTED / AWAITING APPROVAL. This is documentation maintenance,
+Phase 6 onward is NOT STARTED / AWAITING APPROVAL. This is documentation maintenance,
 not authorization to implement, migrate, install, commit, push, or deploy.
 
 ## A. Project Identity
 
 - NEXORA is a one-property Condotel Management System, a modular monolith.
-- Architecture v2.1 remains the approved baseline. Preserve original design
-  decisions; current contracts/schema are documented in docs/API.md and
+- docs/NEXORA_ARCHITECTURE_V2.1.md is the authoritative approved baseline.
+  The root architecture file is a reference copy, not a competing authority.
+  Preserve original design decisions; current contracts/schema are documented in docs/API.md and
   docs/DATABASE_SCHEMA.md rather than inferred from historical examples.
 - Development environment: Windows 11, VS Code, PowerShell. Commands below use
   the existing npm projects in backend/, frontend/guest-web/, and frontend/admin-web/.
 - Backend: NestJS/Express, TypeScript, ESM, Prisma 7, SQLite development database.
-  PostgreSQL is the production target requiring its own migration/acceptance work.
+  PostgreSQL is the recommended production target, requiring a final decision
+  and its own migration/acceptance work.
 - Both frontends: React, JavaScript/JSX, Vite, React Router, Axios, plain CSS,
   Lucide React. Do not introduce frontend TypeScript or replace Vitest with Jest.
 - Guest accounts are optional. Accountless booking remains required when booking
@@ -336,7 +337,7 @@ frontend completion, or the entire Phase 5 complete from this report alone.
 |---|---|
 | backend/src/main.ts | Nest bootstrap, startup rejection handler, cookie parsing, ValidationPipe, CORS, /api prefix, port 3000 |
 | backend/src/availability/ | Public search controller/DTO, service, pure nightly calculator; read-only availability and stay-price quote |
-| backend/src/app.module.ts | Prisma, auth, room types, rooms/status, amenities, room images, room blocks; global throttling/JWT/roles guards |
+| backend/src/app.module.ts | Prisma, auth, room types, rooms/status, amenities, room images, room blocks, availability; global throttling/JWT/roles guards |
 | backend/src/auth/ | AuthModule, controller, password/session/registration/verification/SMTP services; DTOs and security tests |
 | backend/src/prisma/ | Global PrismaModule, PrismaService, guarded development seed |
 | backend/src/room-types/ | RoomTypesModule, controller/service, create/update DTOs, rate-snapshot integration tests |
@@ -461,6 +462,14 @@ build writes output. Provisioning/migrating test files is a separate approved
 operation. npm run test:e2e selects the stale legacy fixture separately and
 must be reviewed before use. Frontend directories provide dev/build/lint/preview
 scripts; no frontend test script is declared.
+
+### Architecture discrepancy requiring owner review
+
+Architecture v2.1 lists reception room/rate management as View, but the current
+room-status controller/service permits RECEPTIONIST READY/CLEANING transitions.
+Do not silently change the baseline or assume the exception is approved. See
+docs/TECHNICAL_PLAN.md section 11 for the review record and remaining gaps.
+This audit leaves the owner-confirmed milestone checkpoint unchanged.
 
 ## H. Current Project Status and Next Boundary
 

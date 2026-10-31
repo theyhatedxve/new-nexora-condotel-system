@@ -164,8 +164,8 @@ one configured property and shared positive rate/capacity bounds at runtime.
 
 ## 7. Payment Models
 
-Schema foundation is present; payment processing is NOT STARTED / AWAITING
-APPROVAL (Phase 7). Current scalar field groups:
+Schema foundation is present; payment business functionality is
+**PLANNED — NOT IMPLEMENTED** (Phase 7, awaiting approval). Current scalar field groups:
 
 | Model | Current fields | Constraints / relations |
 |---|---|---|
@@ -249,8 +249,8 @@ protect checked-in assignments, and reclassification/deactivation protects
 upcoming unreleased assignments. These controls do not expose a booking API.
 
 Current base-rate updates leave Reservation.nightlyRateCentavos and
-Reservation.totalAmountCentavos untouched; snapshot/inventory tests verify that
-intent in source. No fresh database/test run was performed here.
+Reservation.totalAmountCentavos untouched; snapshot/inventory test source asserts
+that intent. No fresh database/test run was performed here.
 
 Two intervals overlap when:
 
@@ -348,19 +348,7 @@ This type-level nightly calculation differs from InventorySafetyService's
 physical-room eligibility check. A positive nightly count does not prove a
 single physical room can cover the complete stay, and neither check creates a
 booking/hold. Full reservation allocation, pricing snapshots at booking time,
-and safe inventory acquisition remain future implementation. See
+and safe inventory acquisition remain future implementation. Backend portions
+of Phase 5 Steps 4–5 are owner-confirmed complete; frontend integration remains
+in progress. See
 [availability contract](API.md#5-implemented-room-management-and-availability).
-
-## 15. Informational Availability Queries
-
-The new AvailabilityModule reads existing room-type, room, block, and reservation
-models without a new schema migration. It filters active types/rooms, respects
-canceledAt on blocks, and subtracts overlapping CONFIRMED/CHECKED_IN reservations
-and PENDING reservations with no hold expiry or an unexpired hold. It evaluates
-free capacity per night without counting room assignments a second time.
-
-This is a read-only information query, not transactional booking acquisition or
-proof of a single feasible physical room for an entire stay. The physical-room
-InventorySafetyService and future assignment writers have a separate role.
-Backend search/quote support is complete per owner confirmation; corresponding
-frontend work remains in progress. See [API](API.md) for exact query fields.

@@ -1,5 +1,6 @@
 # NEXORA — Final Condotel Management System Architecture
 
+> **Authoritative file:** docs/NEXORA_ARCHITECTURE_V2.1.md; the repository-root file is a reference copy.
 > **Master architecture blueprint:** Version 2.1  
 > **Status:** Approved architecture v2.1; historical baseline with current progress addendum below.
 > **Intended readers:** Codex, other AI coding assistants, developers, reviewers.  
@@ -342,6 +343,10 @@ Suggested NestJS module structure: **Controller** receives requests; **Service**
 
 ## 14. Final project folder architecture
 
+The following approved design example is preserved. Actual repository paths
+place both applications under frontend/; future module entries are planned,
+not a claim that files exist. See the [current directory map](DIRECTORY_STRUCTURE.md).
+
 This is an **intended layout**, not permission to create every folder immediately. Add folders only when their features require them.
 
 ```text
@@ -488,12 +493,17 @@ NFC management is in software v1.0, but **real lock integration cannot be comple
 
 ### Explicitly unresolved decisions
 
+An implementation permission difference (reception READY/CLEANING writes versus
+the room/rate view-only row) requires owner review in the
+[review register](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items).
+The approved permission table above remains unchanged.
+
 These remain for the relevant planning stages, not for an AI tool to invent:
 
 - NFC card, reader/encoder, smart-lock model, online/offline mode, and vendor protocol.
 - Property cancellation rules, Pay at Property arrival cutoff, and no-show timing.
 - Real production hostname(s), domain(s), hosting provider and persistent image storage.
-- Final detailed Prisma attributes, request/response DTOs, error formats and endpoint implementation contracts.
+- Final detailed attributes, DTOs, error formats, and endpoint contracts for unimplemented domains. Current schema/API contracts are documented in DATABASE_SCHEMA.md and API.md.
 - Production migration and operational processes to be tested before launch.
 
 ### Version history

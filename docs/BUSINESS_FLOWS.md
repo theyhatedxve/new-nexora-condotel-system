@@ -50,6 +50,8 @@ Search does not guarantee inventory until the backend safely acquires it.
 
 ## 2. Guest Booking
 
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+
 ```text
 Select room type
       ↓
@@ -71,6 +73,8 @@ verification mechanism.
 
 ## 3. PayMongo Checkout
 
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+
 1. Validate the reservation and the caller's access.
 2. Safely acquire or validate the inventory hold.
 3. Calculate the expected amount in NestJS.
@@ -91,6 +95,8 @@ Do not create duplicate sessions blindly after a network timeout.
 
 ## 4. Pay at Property
 
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+
 1. Guest selects Pay at Property.
 2. Backend validates booking details and inventory.
 3. Eligible booking becomes Confirmed.
@@ -103,6 +109,10 @@ Do not create duplicate sessions blindly after a network timeout.
 Arrival cutoffs and no-show rules remain TBD.
 
 ## 5. Hold Expiration
+
+The availability reader already excludes expired PENDING holds. Hold creation,
+cleanup/state transitions, and late-payment reconciliation below are
+**PLANNED — NOT IMPLEMENTED** booking/payment work.
 
 1. Compare holdExpiresAt with backend time.
 2. Exclude expired holds from current inventory calculations.
@@ -118,6 +128,8 @@ Do not silently revive an expired booking.
 
 ## 6. Room Assignment
 
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+
 1. Verify staff permission.
 2. Verify the reservation is eligible.
 3. Select a physical room of the reserved type.
@@ -128,6 +140,8 @@ Do not silently revive an expired booking.
 Do not assign a room based only on its current Ready status.
 
 ## 7. Check-in
+
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
 
 1. Verify staff permission.
 2. Find the reservation.
@@ -142,6 +156,8 @@ Do not assign a room based only on its current Ready status.
 The required payment condition for check-in must be agreed as policy.
 
 ## 8. Check-out
+
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
 
 ```text
 Authorized checkout
@@ -167,6 +183,8 @@ Do not show a credential as physically revoked until the selected hardware
 provides the required confirmation.
 
 ## 9. Cancellation and Refund
+
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
 
 1. Verify ownership or staff permission.
 2. Evaluate the approved cancellation policy.
@@ -206,6 +224,8 @@ Do not remove promised inventory without addressing existing bookings.
 
 ## 11. Lost NFC Card
 
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+
 1. Verify the guest and active stay.
 2. Mark the old card/credential according to the approved lifecycle.
 3. Initiate revocation.
@@ -230,6 +250,9 @@ Offline revocation behavior depends on hardware.
 | Database failure | Roll back the database operation where applicable |
 
 ## 13. Business Acceptance Checks
+
+The following are target acceptance criteria for their respective future
+workflows, not a report that those journeys passed.
 
 - Accountless guest can complete an authorized booking.
 - A guest cannot read another guest's booking.

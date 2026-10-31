@@ -1,18 +1,19 @@
 # NEXORA — Final Condotel Management System Architecture
 
+> **Reference copy:** The authoritative baseline is [docs/NEXORA_ARCHITECTURE_V2.1.md](docs/NEXORA_ARCHITECTURE_V2.1.md).
 > **Master architecture blueprint:** Version 2.1  
 > **Status:** Approved architecture v2.1; historical baseline with current progress addendum below.
 > **Intended readers:** Codex, other AI coding assistants, developers, reviewers.  
 > **Authority:** This file supersedes NEXORA Architecture v2.0 for frontend technology and file conventions. All other approved v2.0 requirements remain intact.  
 > **Instruction:** Do not generate application code or begin implementation until the user approves the relevant phase and explicitly authorizes code generation.
 
-> **Implementation addendum (2026-10-30):** Phase 1 — COMPLETED; Phase 2 — COMPLETED; Phase 3 — COMPLETED — 8/8 steps. Phase 4 onward — NOT STARTED / AWAITING APPROVAL. The owner reports 23/23 acceptance checks passed, HTTP security, full Vitest regression, NestJS build, Prisma validation, and preserved development data. This documentation task did not rerun those checks. Completion is not production readiness.
+> **Implementation addendum (2026-10-31):** Phases 1–4 are COMPLETED; Phase 3 has 8/8 steps and Phase 4 has 7/7 steps. Phase 5 is IN PROGRESS: Steps 1–3 complete; Steps 4–5 backend complete with frontend in progress; Steps 6–7 pending. Phase 6 onward is NOT STARTED / AWAITING APPROVAL. Completion is owner-directed; this task inspected current sources and installed metadata without rerunning application tests. Earlier Phase 3 23/23 acceptance remains owner-reported. The original requirements and planned twelve-phase order below are a historical baseline, not authorization for new work.
 >
 > Phase 2 established 24 models (23 core plus RoomTypeAmenity); Phase 3 Step 7 adds EmailVerificationToken for 25 current Prisma models. This approved implementation extension does not replace or silently rewrite the original model list below. See [current schema](docs/DATABASE_SCHEMA.md), [actual API](docs/API.md), and [phase checklist](docs/IMPLEMENTATION_GUIDE.md).
 
 ## Instructions for AI coding tools
 
-1. Treat this document as the authoritative NEXORA architecture specification. Do not silently alter the approved stack, scope, business rules, or development order.
+1. Use docs/NEXORA_ARCHITECTURE_V2.1.md as the authoritative NEXORA architecture specification; this file preserves the reference blueprint. Do not silently alter the approved stack, scope, business rules, or development order.
 2. Follow **KISS — Keep It Simple, Stupid**: readable, straightforward, maintainable code; minimal dependencies; no unnecessary abstractions, microservices, or advanced patterns.
 3. **Approval-first workflow:** Explain each phase's proposed work and ask for approval *before* generating code. An approved architecture is **not** permission to write code. Implement only the specific approved phase and step.
 4. When authorized to code, provide ready-to-copy-paste examples with the **exact folder, filename, insertion/replacement location, commands, simple explanation, and expected test results**. Avoid downloadable-code-only deliverables.
@@ -342,6 +343,10 @@ Suggested NestJS module structure: **Controller** receives requests; **Service**
 
 ## 14. Final project folder architecture
 
+This is a preserved design example; actual frontend paths include frontend/.
+See the [current directory map](docs/DIRECTORY_STRUCTURE.md) and the authoritative
+master for current contract references and owner-review items.
+
 This is an **intended layout**, not permission to create every folder immediately. Add folders only when their features require them.
 
 ```text
@@ -483,8 +488,8 @@ NFC management is in software v1.0, but **real lock integration cannot be comple
 | Backend | NestJS + TypeScript |
 | Business rules/database/NFC design | Retained from v2.0 |
 | Development phases | Twelve phases retained |
-| Implementation | Phases 1–2 COMPLETED; Phase 3 COMPLETED — 8/8 steps; later phases NOT STARTED / AWAITING APPROVAL |
-| Coding authorization | No Phase 4 or later implementation authorized by this documentation task |
+| Implementation | Phases 1–4 COMPLETED; Phase 5 Steps 1–3 complete, Steps 4–5 backend complete/frontend in progress, Steps 6–7 pending; Phase 6 onward NOT STARTED / AWAITING APPROVAL |
+| Coding authorization | Documentation synchronization only; no new implementation authorized; Phase 6 onward awaiting approval |
 
 ### Explicitly unresolved decisions
 
@@ -501,4 +506,4 @@ These remain for the relevant planning stages, not for an AI tool to invent:
 - **v2.0:** Original approved blueprint with React TypeScript frontends.
 - **v2.1:** Same system scope, business rules, database, backend architecture, NFC plan and 12 phases; **both React frontends changed to JavaScript + JSX + Vite**, with `.jsx`/`.js` file conventions.
 
-**Next action:** Phase 4 — Room Management planning only when requested; obtain explicit approval before implementation. The original architecture decisions and twelve-phase sequence remain the baseline.
+**Next action:** Continue Phase 5 Steps 4–5 frontend integration under the approved workflow, then address pending Steps 6–7. Do not begin Phase 6 without explicit approval. The original architecture decisions and twelve-phase sequence remain the baseline.

@@ -122,12 +122,10 @@ Guest Website                       Administration Dashboard
       \                                      /
        +------------ Shared Backend API ----+
                               |
-                     Central SQL Database
-                              |
-            Planned external integration boundaries
-                    /                         \
-          Hosted payment provider       NFC adapter and
-                                        compatible door devices
+             +----------------+----------------+
+             |                |                |
+       Central SQL      Planned hosted    Planned NFC adapter
+         Database       payment provider  and compatible doors
 ```
 
 The two web applications use React with JavaScript/JSX and Vite. The backend

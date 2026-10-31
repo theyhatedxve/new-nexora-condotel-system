@@ -4,8 +4,9 @@
 
 Phases 1–4 are completed per project-owner instruction; Phase 4 has seven steps.
 Phase 5 is IN PROGRESS: Steps 1–3 are complete; Steps 4–5 have completed
-backend work and frontend integration in progress. Steps 6–7 remain pending. Phase 6 onward is NOT STARTED / AWAITING APPROVAL. This task inspected sources,
-installed dependencies, and documentation; it ran no application tests.
+backend work and frontend integration in progress. Steps 6–7 remain pending.
+Phase 6 onward is NOT STARTED / AWAITING APPROVAL. These are owner-confirmed
+milestones; source inspection does not independently verify acceptance tests.
 
 Section 4 describes implemented auth/health controllers. Section 5 describes
 registered room, amenity, image, status, block, and availability controllers.
@@ -14,7 +15,13 @@ planned. See [acceptance boundaries](SECURITY.md#14-security-acceptance-checks).
 
 ## 2. General Conventions
 
-Proposed conventions:
+NEXORA uses one NestJS/Express REST API shared by the guest and admin React
+applications. Frontends use Axios and never access Prisma/the database directly.
+Architecture authority: [v2.1](NEXORA_ARCHITECTURE_V2.1.md).
+
+Implemented base path: /api. Local development origin: http://localhost:3000.
+Production API hostname is TBD; HTTPS is required for production.
+The following are architecture/data conventions; not every future domain exists:
 
 - Base path: /api
 - JSON request and response bodies, except approved upload endpoints.
@@ -63,7 +70,7 @@ otherwise configures 60 requests per 60,000 ms. @Public() does not bypass thrott
 | GET /api/health | 200; {status: ok, application: NEXORA Backend, message: The backend is running successfully.} | None | Global default | No controller Origin check |
 
 These field descriptions show response shapes, not literal JSON examples or
-live credentials. Success responses are not uniformly wrapped: only login and
+live credentials. Within auth/health, responses are not uniformly wrapped: only login and
 refresh use the data envelope. No access token is issued by registration or
 verification. Registering an existing email returns the same acknowledgment;
 it does not assert that an existing account is PENDING or change its status.
@@ -122,7 +129,7 @@ they are not registered production API features.
 401 indicates failed/missing authentication; 403 indicates a denied role or
 Origin; ownership checks return 404 for inaccessible or missing private records.
 429 indicates throttling. Current auth errors use NestJS exception responses,
-not the proposed custom error envelope in section 10. See
+not a custom error envelope; section 10 describes current exception handling. See
 [ownership enforcement](SECURITY.md#3-authorization) and
 [registration delivery limits](SECURITY.md#15-production-hardening-and-open-concerns).
 Guest accounts remain optional; complete accountless booking is future scope.
@@ -131,7 +138,8 @@ Guest accounts remain optional; complete accountless booking is future scope.
 
 All paths below include /api. A/M means ADMIN or MANAGER; Staff means ADMIN,
 MANAGER, or RECEPTIONIST. Public routes bypass JWT/role guards; all routes remain
-subject to global throttling (60 per 60,000 ms). These controllers add no explicit
+subject to throttling (global default 60 per 60,000 ms; availability overrides
+this to 30). These controllers add no explicit
 Origin check beyond bootstrap CORS; the auth POST Origin rules are separate.
 JSON responses use {data: ...}, except 204 deletes and the image binary response.
 POST defaults to 201 unless explicitly changed; GET/PATCH return 200.
@@ -162,6 +170,7 @@ POST defaults to 201 unless explicitly changed; GET/PATCH return 200.
 | POST /api/rooms/:id/blocks | A/M | CreateRoomBlockDto; 201 |
 | PATCH /api/rooms/:id/blocks/:blockId | A/M | UpdateRoomBlockDto; canceled rows cannot be edited |
 | POST /api/rooms/:id/blocks/:blockId/cancel | A/M | 201 (Nest POST default), preserves row and sets canceledAt; repeats return 409 |
+| GET /api/availability | Public; 30/minute | SearchAvailabilityDto query; 200 {data: [...]} with date-based type availability and server-computed prices |
 
 Room-type public fields: id, name, description, capacity, baseRateCentavos.
 Write responses additionally include propertyId/isActive. There is no separate
@@ -199,7 +208,10 @@ saved reservation price snapshots. Type capacity reductions/deactivation check
 protected upcoming PENDING/CONFIRMED/CHECKED_IN reservations. Reclassifying or
 deactivating a physical room checks protected unreleased assignments.
 
-Receptionists may only transition READY to CLEANING or CLEANING to READY.
+The implemented service permits receptionists to transition READY to CLEANING
+or CLEANING to READY. This is a permission difference requiring owner review
+against the architecture room/rate view-only row; see
+[architecture review items](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items).
 ADMIN/MANAGER may use the service's permitted transitions between READY,
 CLEANING, MAINTENANCE, and OUT_OF_SERVICE. Manual OCCUPIED changes and transitions
 out of OCCUPIED are not allowed; same-state requests conflict. A checked-in
@@ -226,7 +238,8 @@ The input-byte limit does not establish a total disk-storage quota.
 
 ### Inventory service boundary
 
-InventorySafetyService exports assertEligible and assertEligibleInTx. It checks
+InventorySafetyService exposes assertEligible and assertEligibleInTx through
+InventorySafetyModule (not as HTTP endpoints). It checks
 activity, category/capacity, immediate/future status, dated blocks, and assignment
 overlap; it exposes no controller. The check reserves nothing. Future writers
 must check and write in one transaction. Current protection conservatively
@@ -234,11 +247,6 @@ includes PENDING assignments without checking hold expiry; aggregate unassigned
 inventory and the complete reservation acquisition workflow remain future work.
 
 ### Public date/capacity availability and pricing
-
-Backend portions of Phase 5 Steps 4–5 are owner-confirmed complete. The guest
-frontend does not yet request this endpoint or display a searched-stay total;
-those frontend portions remain in progress. Source inspection is not a fresh
-runtime test result.
 
 Backend implementation for Steps 4–5 is owner-confirmed complete. Seven quick
 rule checks were reported from another repository copy; a permanent availability
@@ -282,138 +290,110 @@ booking succeeds. Booking creation and safe acquisition remain unimplemented.
 Guest room listing/details currently call metadata/image/amenity endpoints only,
 and format backend nightly rates. A search form, availability request, and
 searched-stay total display were not found in the inspected guest pages.
-Steps 4–5 are owner-confirmed complete; this integration boundary is retained
-without claiming an independently verified end-to-end search flow.
+Only the backend portions of Steps 4–5 are owner-confirmed complete. Their
+frontend integration remains in progress; no end-to-end search pass is claimed.
 
 ## 6. Reservations
 
-| Method | Proposed route | Access |
-|---|---|---|
-| POST | /reservations | Public guest checkout or authorized staff |
-| GET | /reservations | Staff; guest listings must be ownership scoped |
-| GET | /reservations/:id | Verified owner or authorized staff |
-| POST | /reservations/:id/cancel | Verified owner under policy or authorized staff |
-| POST | /reservations/:id/assign-room | Receptionist / Manager / Administrator |
-| POST | /reservations/:id/check-in | Receptionist / Manager / Administrator |
-| POST | /reservations/:id/check-out | Receptionist / Manager / Administrator |
+**PLANNED — NOT IMPLEMENTED.** No reservation controller or booking-write API
+is registered. Architecture v2.1 illustrates /api/reservations,
+/api/reservations/:id, and check-in/check-out paths; these are design examples,
+not current callable contracts. Final methods, DTOs, response projections,
+booking-verification credentials, cancellation contracts, and errors require
+approval in Phase 6. No proposed booking JSON is an implemented input schema.
 
-Proposed creation request:
+Required responsibilities:
 
-```json
-{
-  "roomTypeId": "room-type-example",
-  "checkInDate": "2026-11-10",
-  "checkOutDate": "2026-11-12",
-  "guestCount": 2,
-  "guest": {
-    "firstName": "Sample",
-    "lastName": "Guest",
-    "email": "guest@example.com",
-    "phone": "+639000000000"
-  },
-  "paymentMethod": "PAY_AT_PROPERTY"
-}
-```
+- Support optional accounts and authorized accountless guest checkout.
+- Validate real stay dates/capacity and calculate trusted integer-centavo prices.
+- Recheck and acquire inventory transactionally, including holds, blocks, and
+  protected assignments; preserve agreed price snapshots and history.
+- Scope guest records through ownership or an approved private accountless
+  verification mechanism; explicit staff permissions govern operational actions.
+- Support assignment, cancellation, check-in/out, and hold expiry under approved
+  policies. Reservation and payment states remain independent.
 
-The backend derives:
+The implemented availability endpoint and ownership/inventory helpers do not
+create these workflows. A reference alone is not a booking-access credential.
 
-- Trusted account association.
-- Initial reservation state.
-- Applicable rate.
-- Total amount.
-- Reservation number.
-- Hold deadline when required.
+## 7. Payments and Webhooks
 
-Do not accept client-supplied prices or privileged statuses.
+**PLANNED — NOT IMPLEMENTED.** No payment/refund/webhook controller is registered.
+Architecture v2.1 illustrates /api/payments/checkout and /api/webhooks/paymongo;
+methods, DTOs, provider payload mapping, and response contracts are TBD for the
+approved payment phase. Refund and collection responsibilities below do not
+imply additional implemented route paths.
 
-## 7. Payments
-
-| Method | Proposed route | Access |
-|---|---|---|
-| POST | /payments/checkout | Verified reservation owner or authorized staff |
-| GET | /reservations/:id/payments | Verified owner or authorized staff |
-| POST | /reservations/:id/payments | Receptionist / Manager / Administrator; property collections |
-| POST | /payments/:id/refunds | Manager / Administrator |
-| POST | /webhooks/paymongo | Verified provider request |
-
-The checkout request identifies the reservation.
-NestJS determines the expected payable amount.
-
-The webhook handler must authenticate the event, validate its association,
-and apply duplicate-safe processing.
+PayMongo Hosted Checkout must use backend-calculated amounts and verified
+webhook evidence. Validate signature, event identity, reservation association,
+amount/currency, and duplicate processing before changing financial state.
+A browser return URL is not payment evidence; never store raw card details.
+Pay at Property collections require authorized staff recording. Refunds require
+Manager/Administrator permission and preservation of payment/refund history.
+Eligible Pay at Property bookings are intended to be Confirmed while Unpaid,
+subject to still-unresolved arrival cutoff, cancellation, and no-show policies.
+See [business flows](BUSINESS_FLOWS.md) and [security](SECURITY.md#7-payment-security).
 
 ## 8. Users, Guests, NFC, and Operations
 
-| Method | Proposed route | Access |
-|---|---|---|
-| GET / POST / PATCH | /users and /users/:id | Administrator |
-| GET / PATCH | /guests and /guests/:id | Authorized staff; separate ownership rules for guests |
-| GET / POST | /nfc/cards | Receptionist / Manager / Administrator |
-| POST | /nfc/assignments | Receptionist / Manager / Administrator |
-| POST | /nfc/assignments/:id/revoke | Receptionist / Manager / Administrator |
-| GET | /dashboard | Authorized staff; role-filtered data |
-| GET | /reports | Manager / Administrator |
-| GET / PATCH | /settings | Administrator |
-| GET | /audit-logs | Proposed: Manager / Administrator; final policy TBD |
+**PLANNED — NOT IMPLEMENTED.** Auth registration creates a linked guest profile,
+but no full user-management, guest-management, NFC, dashboard, report, settings,
+or audit controller is registered. Existing schema models and admin placeholders
+do not establish these APIs.
 
-Each method must have its own authorization rule.
+| Domain | Approved responsibility / permission intent |
+|---|---|
+| Users | Administrator manages staff accounts and roles |
+| Guests | Explicitly authorized staff manage guest details; guest access requires private ownership checks |
+| NFC | Authorized reception/management issue and revoke credential assignments; hardware/device protocol is TBD |
+| Dashboard | Authorized operational summaries derived from backend records |
+| Reports | Manager/Administrator access to consistently defined occupancy, reservation, revenue, and access reports |
+| Settings | Administrator changes validated property/operating policy |
+| Audit logs | Preserve consequential administrative activity without secrets; final read-access/retention policy is TBD |
 
-Do not assume all actions in a route group share identical permissions.
+Architecture path examples are retained in the [master blueprint](NEXORA_ARCHITECTURE_V2.1.md#12-rest-api-architecture).
+Final HTTP methods, DTOs, filters, projections, and any additional route paths
+must be approved when the corresponding domain is implemented. Future endpoints
+must explicitly invoke ownership checks; ADMIN has no implicit bypass. Real
+NFC access requires selected compatible hardware and physical verification.
 
 ## 9. Pagination
 
-Proposed list parameters:
+**PLANNED — NOT IMPLEMENTED as a shared API contract.** Current room/amenity/
+image/block controllers return their inspected data arrays without the proposed
+page/pageSize/meta wrapper. Parameters, bounded page sizes, search/sort fields,
+and list envelopes for future business APIs remain TBD. Apply role/ownership
+filters before counting or returning private records.
 
-- page: positive integer.
-- pageSize: bounded positive integer.
-- search: optional.
-- sortBy: allowlisted field.
-- sortOrder: asc or desc.
+## 10. Error Handling
 
-Proposed response:
+Current controllers/services use NestJS HTTP exceptions and its default exception
+response handling. No project-wide custom error.code/requestId envelope or
+exception filter was found. DTO failures can return a message array; service
+exceptions can return a string message, with NestJS statusCode/error fields.
+Do not treat a proposed future envelope as an implemented contract.
 
-```json
-{
-  "data": [],
-  "meta": {
-    "page": 1,
-    "pageSize": 20,
-    "total": 0
-  }
-}
-```
-
-Apply ownership and role filters before counting records.
-
-## 10. Error Contract
-
-Proposed future error envelope (not installed for current auth controllers):
-
-```json
-{
-  "error": {
-    "code": "INVENTORY_UNAVAILABLE",
-    "message": "The selected room type is unavailable for these dates.",
-    "requestId": "request-example"
-  }
-}
-```
-
-| HTTP status | Use |
+| HTTP status | Implemented meaning / future use |
 |---|---|
-| 400 | Invalid request |
-| 401 | Missing or invalid authentication |
-| 403 | Authenticated but not permitted |
-| 404 | Record unavailable; may also protect private-record existence |
-| 409 | Inventory conflict, invalid transition, or idempotency conflict |
-| 429 | Rate limit reached |
-| 500 | Unexpected server error |
+| 400 | DTO, malformed cookie, date, or service input rejection |
+| 401 | Missing/invalid authentication, rejected credentials/session, or well-formed invalid verification credential |
+| 403 | Role denial or disallowed/missing auth POST Origin |
+| 404 | Record unavailable; ownership checks also hide private-record existence |
+| 409 | Existing room/amenity conflicts, protected changes, or invalid operational transitions; booking conflicts are future work |
+| 413 | Oversized image input |
+| 429 | Throttler limit reached |
+| 500 | Unexpected error or required single-property/configuration invariant failure |
 
-Never expose stack traces, SQL errors, or secrets.
+Validation, role guards, and controller-specific rules remain applicable even
+when an endpoint is public to JWT authentication. Avoid leaking SQL, stacks,
+credentials, or guest data; source inspection is not a live leakage/security test.
+Future error-format changes require separate contract approval.
 
 ## 11. Idempotency
 
-Proposed use: an Idempotency-Key header for retry-sensitive operations.
+**PLANNED — NOT IMPLEMENTED.** An Idempotency-Key header is a prior proposed
+implementation detail, not an approved current API requirement. Final retry
+contracts, header naming, and retention are TBD in the relevant feature phase.
 
 The backend should associate the key with:
 
@@ -430,9 +410,15 @@ It is separate from client-request idempotency.
 
 Retention and retry behavior remain TBD.
 
-## 12. Contract Verification
+## 12. Testing and Implementation Status
 
-Test:
+Implemented source and suite locations are documented in
+[security evidence](SECURITY.md#14-security-acceptance-checks); the separate
+[backend report](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45)
+records seven owner-reported quick checks, a removed temporary file, and
+unverified local build/lint. No application tests ran for this audit.
+
+Current features and future contracts must be tested according to their scope:
 
 1. Valid requests.
 2. Invalid dates and capacity.

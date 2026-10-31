@@ -26,9 +26,12 @@ Phase 6 onward is NOT STARTED / AWAITING APPROVAL.
 
 A reusable component receives data through props.
 
-Example file:
+Illustrative component example (not the current RoomCard API):
 
 frontend/guest-web/src/components/RoomCard.jsx
+
+The existing component takes a room prop and renders a React Router Link.
+This simplified composition example is not a replacement for that file.
 
 ```jsx
 export default function RoomCard({ roomType, onViewDetails }) {
@@ -55,9 +58,13 @@ It does not calculate inventory or authorize bookings.
 
 Keep request details outside presentational components.
 
-Example file:
+Illustrative injection pattern (not the current module export contract):
 
 frontend/guest-web/src/services/roomTypesApi.js
+
+The actual module exports listRoomTypes, getRoomType, listRoomTypeImages, and
+listRoomTypeAmenities, imports api, and unwraps response.data.data. It does not
+export the factory below or perform availability search.
 
 ```js
 export function createRoomTypesApi(apiClient) {
@@ -70,7 +77,9 @@ export function createRoomTypesApi(apiClient) {
 }
 ```
 
-The injected Axios instance owns the approved base URL and session behavior.
+The example injected Axios instance owns the approved base URL. Current
+frontend clients configure base URL/timeout; browser session integration remains
+incomplete. Do not infer automatic token injection or credentialed refresh.
 
 Use a similar instance in the admin application.
 Do not introduce cross-application packaging until it provides clear value.
@@ -98,7 +107,8 @@ Do not copy server data into multiple independent states without need.
 
 ## 5. NestJS Controller and Service
 
-Recommended feature structure:
+**PLANNED — NOT IMPLEMENTED:** reservation-module example only; no such
+module is registered. It illustrates existing NestJS separation conventions:
 
 ```text
 backend/src/reservations/

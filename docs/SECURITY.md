@@ -47,6 +47,11 @@ or remove the PENDING account. Never include actual credentials in documentation
 
 ## 3. Authorization
 
+Architecture v2.1 lists reception room/rate management as View, while current
+room-status code permits READY/CLEANING writes. Whether this is an intended
+housekeeping exception requires [owner review](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items).
+This audit changes neither the baseline permission table nor application code.
+
 Global guards are registered in order: ThrottlerGuard, JwtAuthGuard, RolesGuard.
 @Public() bypasses JWT/role authentication, not throttling, validation, or the
 Origin check applied to auth POST endpoints. Unmarked routes require JWT
@@ -121,6 +126,9 @@ review against the actual deployment origins before release.
 
 ## 7. Payment Security
 
+**PLANNED — NOT IMPLEMENTED.** These are future security requirements, not
+claims that checkout, collection, refunds, or webhook handlers already exist.
+
 - Use PayMongo Hosted Checkout.
 - Keep provider secrets in the backend.
 - Verify webhook signatures against the expected payload.
@@ -139,6 +147,9 @@ References:
 - [PayMongo integration best practices](https://docs.paymongo.com/docs/developer-tools-best-practices-1)
 
 ## 8. NFC Security
+
+**PLANNED — NOT IMPLEMENTED.** Schema records alone do not implement device
+authentication, credential issuance, simulations, or real door operations.
 
 - Select a cryptographically authenticated card/lock system.
 - Do not trust UID alone.
@@ -201,6 +212,9 @@ Never commit:
 - Private guest data.
 
 ## 11. Auditing
+
+**PLANNED — NOT IMPLEMENTED as an audit service/API.** AuditLog is currently
+a schema foundation; the following defines the required operational behavior.
 
 Audit consequential actions:
 
@@ -319,8 +333,9 @@ is NOT STARTED / AWAITING APPROVAL.
   log credentials. Real SMTP/TLS delivery still needs environment acceptance.
 - main.ts calls enableCors twice; inspect credentialed preflight behavior and
   deployment allowlists. The HTTP fixture does not cover this bootstrap path.
-- Startup now uses void bootstrap().catch with safe error reporting and a failing
-  process exit code; the earlier unhandled-startup finding is superseded. This
+- Startup now uses void bootstrap().catch with console error reporting and a failing
+  process exit code. It logs the caught error object; automatic redaction is
+  not established by this handler. The earlier unhandled-startup finding is superseded. This
   documentation task did not rerun lint or force a startup failure.
 - test/app.e2e-spec.ts still expects / to return Hello World! and imports the
   real AppModule without isolating Prisma. It is separate from npm run test and
@@ -328,8 +343,8 @@ is NOT STARTED / AWAITING APPROVAL.
 - PrismaService uses a fixed runtime SQLite path while CLI reads DATABASE_URL;
   verify resolved targets before any authorized migration. PostgreSQL migrations,
   recovery, backups, deployment monitoring, and HTTPS remain deployment work.
-- The unused backend/src/auth/verify-email.dto.ts has been removed in the
-  inspected working tree. The controller still uses the real DTO at
+- The unused backend/src/auth/verify-email.dto.ts was removed before this audit
+  and is absent from the inspected repository. The controller still uses the real DTO at
   backend/src/auth/dto/verify-email.dto.ts. No source cleanup was performed by
   this documentation task.
 - Frontend auth integration, password recovery/account-security workflows, and

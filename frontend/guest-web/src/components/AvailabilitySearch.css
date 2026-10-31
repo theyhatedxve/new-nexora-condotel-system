@@ -1,0 +1,127 @@
+
+.availability-search {
+  width: 100%;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #d6dde8;
+  border-radius: 12px;
+}
+
+.availability-search h2,
+.availability-search h3,
+.availability-search h4 {
+  color: #14263f;
+}
+
+.availability-search > p {
+  color: #526078;
+}
+
+.availability-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.availability-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #172033;
+}
+
+.availability-fields input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #d6dde8;
+  border-radius: 6px;
+  font: inherit;
+  background: #fff;
+  color: #172033;
+}
+
+.availability-search button {
+  padding: 0.85rem 1.5rem;
+  border: 0;
+  border-radius: 6px;
+  background: #14263f;
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.availability-search button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.availability-search :focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.availability-error {
+  margin-top: 1rem;
+  color: #b91c1c;
+}
+
+.availability-results {
+  margin-top: 2rem;
+}
+
+.availability-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 1.25rem;
+  border: 1px solid #d6dde8;
+  border-radius: 8px;
+}
+
+.availability-result p {
+  margin: 0;
+}
+
+.availability-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.availability-result-header h4 {
+  margin: 0;
+}
+
+.availability-result a {
+  color: #14263f;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.availability-note {
+  margin-top: 1rem;
+  color: #526078;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 700px) {
+  .availability-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .availability-search {
+    padding: 1rem;
+  }
+
+  .availability-search button {
+    width: 100%;
+  }
+}

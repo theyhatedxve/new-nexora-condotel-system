@@ -34,6 +34,10 @@ See [phase checklists](IMPLEMENTATION_GUIDE.md), [actual API contracts](API.md),
 
 ## 2. System Architecture
 
+The diagram shows the approved complete-system boundaries. Payment and NFC
+integrations are **PLANNED — NOT IMPLEMENTED**; current modules are listed in
+section 4. Both frontend applications use the shared API, never direct SQL.
+
 ```text
 NEXORA Guest Website                 NEXORA Admin Dashboard
 React + JavaScript + Vite             React + JavaScript + Vite
@@ -120,7 +124,8 @@ business workflows remain future work. See [actual contracts](API.md).
 | Manage staff accounts | No | No | No | Yes |
 | Manage settings | No | No | No | Yes |
 
-The table defines the full-system permission intent. Room/amenity/image writes
+The table preserves the full-system Architecture v2.1 permission intent, not
+a declaration that all business APIs exist. Room/amenity/image writes
 are implemented for ADMIN/MANAGER; physical room/block reads allow reception.
 Reception status changes are restricted to READY/CLEANING. Other business
 permissions remain requirements for future features. Global JWT and role
@@ -129,6 +134,10 @@ bypass. OwnershipService checks linked Guest.userId and reservation.guest.userId
 returns 404 for private/inaccessible records, and permits staff only through an
 explicit caller allowlist. Future feature services must call these helpers; they
 do not automatically protect APIs that have not been implemented.
+
+The implemented reception READY/CLEANING writes differ from the baseline
+room/rate view-only row. Whether those housekeeping transitions are an approved
+exception requires owner review; see [review items](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items).
 
 Hiding a button does not enforce authorization.
 
@@ -245,8 +254,8 @@ Future scope:
 
 ## 11. Unresolved Decisions
 
-Refer to the [security concerns](SECURITY.md#15-production-hardening-and-open-concerns) for the
-decision register and [security concerns](SECURITY.md#15-production-hardening-and-open-concerns)
+See [architecture/implementation review items](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items)
+for decisions requiring owner review and [security concerns](SECURITY.md#15-production-hardening-and-open-concerns)
 for remaining production work.
 
 Do not silently turn TBD policies into application defaults.

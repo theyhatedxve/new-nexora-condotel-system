@@ -1,8 +1,12 @@
 import RoomCard from "../components/RoomCard";
 import { useRoomTypes } from "../hooks/useRoomTypes";
 
+import AvailabilitySearch from "../components/AvailabilitySearch";
+
 function Rooms() {
   const { status, rooms } = useRoomTypes();
+
+  <AvailabilitySearch />
 
   return (
     <main className="rooms-page">

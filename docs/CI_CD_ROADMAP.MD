@@ -1,6 +1,6 @@
 # NEXORA — CI/CD Roadmap
 
-> Architecture reference: NEXORA Master Architecture v2.1.
+> Architecture reference: [authoritative NEXORA v2.1](NEXORA_ARCHITECTURE_V2.1.md).
 > Status: Proposed development and deployment roadmap.
 > Implementation: Requires approval for each specific step.
 > Hosting provider, production domains, and deployment commands: TBD.
@@ -16,7 +16,7 @@
 | Phase 5 | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
 | Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
 
-The owner reports 23/23 final checks passed, HTTP security, full Vitest
+The owner reports 23/23 Phase 3 final checks passed, HTTP security, full Vitest
 regression, NestJS build, Prisma validation, and preserved development data.
 This task inspected sources and edited Markdown only; no fresh checks ran.
 Phase 4 completion is owner-directed; current tests were inspected, not rerun.
@@ -631,7 +631,8 @@ It does not replace its phase approvals.
 
 - GitHub repository visibility and available protection features.
 - Final Node.js version.
-- Exact package scripts.
+- Final deployment/CI selection of checks from the existing package scripts;
+  the current script inventory is already documented in AGENTS.md.
 - Workflow action versions and pinned SHAs.
 - Hosting provider.
 - Production database choice.

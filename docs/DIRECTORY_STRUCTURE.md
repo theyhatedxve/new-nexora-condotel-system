@@ -6,9 +6,9 @@ This guide maps the system's directories to their responsibilities and related
 documentation. Paths are relative to the `NEXORA/` repository root at
 `D:\Web-JSX\NEXORA`.
 
-The current structure below was inspected on 2026-10-31, including local files
-that are not yet committed. File presence does not establish that a feature has
-been tested or deployed. The [approved architecture v2.1](../NEXORA_ARCHITECTURE_V2.1.md)
+The current structure below was inspected on 2026-10-31. Runtime artifacts are
+identified without exposing their contents. File presence does not establish
+that a feature has been tested or deployed. The [approved architecture v2.1](NEXORA_ARCHITECTURE_V2.1.md)
 defines system scope; the [development reference](AGENTS.md) records current scope and approval gates.
 The [system overview](README.md) describes the product without development logs.
 
@@ -313,7 +313,7 @@ future business services explicitly.
 Isolated suite database paths are documented in the
 [implementation guide](IMPLEMENTATION_GUIDE.md#15-command-guidance). The guest frontend has no availability request service or date/guest search and
 searched-stay quote UI yet. The unused backend/src/auth/verify-email.dto.ts was
-removed in the working tree; the controller imports
+removed before this audit; the controller imports
 backend/src/auth/dto/verify-email.dto.ts. This task performed no source cleanup.
 
 ## 4. Planned Structure and Placement Rules
@@ -345,7 +345,7 @@ Follow the approval and verification process in the
 |---|---|
 | [README.md](README.md) | Product-focused system overview and intended user experiences |
 | [AGENTS.md](AGENTS.md) | Phase completion checklist and agent handoff; kept synchronized with the root copy |
-| [NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md) | Documentation copy of the approved architecture that defines the system scope |
+| [NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md) | Authoritative approved architecture baseline; root file is a reference copy |
 | [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) | Explains system boundaries and the responsibilities behind the directories |
 | [TECHNICAL_PLAN.md](TECHNICAL_PLAN.md) | Defines the intended expanded layout, naming, request lifecycle, and roadmap |
 | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) | Explains the models and constraints represented in `backend/prisma/` |
