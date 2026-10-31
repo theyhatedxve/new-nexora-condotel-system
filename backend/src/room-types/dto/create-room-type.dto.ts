@@ -9,6 +9,11 @@ import {
   MinLength,
 } from 'class-validator';
 
+import {
+  MAX_RATE_CENTAVOS,
+  MAX_ROOM_CAPACITY,
+} from '../../common/validation/room-rate-capacity.service.js';
+
 export class CreateRoomTypeDto {
   @IsString()
   @MinLength(1)
@@ -22,11 +27,12 @@ export class CreateRoomTypeDto {
 
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(MAX_ROOM_CAPACITY)
   capacity!: number;
 
   @IsInt()
-  @Min(0)
-  @Max(2147483647)
+  @Min(1)
+  @Max(MAX_RATE_CENTAVOS)
   baseRateCentavos!: number;
+  
 }

@@ -12,6 +12,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateRoomTypeDto } from './dto/create-room-type.dto.js';
 import type { UpdateRoomTypeDto } from './dto/update-room-type.dto.js';
 
+import { RoomRateCapacityService } from '../common/validation/room-rate-capacity.service.js';
+
 const publicFields = {
   id: true,
   name: true,
@@ -28,7 +30,10 @@ const staffFields = {
 
 @Injectable()
 export class RoomTypesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+  private readonly prisma: PrismaService,
+  private readonly rateCapacity: RoomRateCapacityService,
+) {}
 
   // Only the approved single property is supported.
   private async getPropertyId(): Promise<string> {
@@ -83,6 +88,11 @@ export class RoomTypesService {
     const propertyId = await this.getPropertyId();
     const name = dto.name.trim();
 
+    this.rateCapacity.validateRoomType({
+    baseRateCentavos: dto.baseRateCentavos,
+    capacity: dto.capacity,
+    });
+
     if (!name) {
       throw new BadRequestException(
         'Room type name is required.',
@@ -108,6 +118,18 @@ export class RoomTypesService {
 
   async update(id: string, dto: UpdateRoomTypeDto) {
     const propertyId = await this.getPropertyId();
+
+    if (dto.baseRateCentavos !== undefined) {
+    this.rateCapacity.validateBaseRate(
+        dto.baseRateCentavos,
+    );
+    }
+
+    if (dto.capacity !== undefined) {
+    this.rateCapacity.validateCapacity(
+        dto.capacity,
+    );
+    }
 
     if (Object.keys(dto).length === 0) {
       throw new BadRequestException(

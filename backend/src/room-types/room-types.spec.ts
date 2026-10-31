@@ -22,6 +22,8 @@ import { PrismaClient } from '../generated/prisma/client.js';
 
 import { RoomTypesService } from './room-types.service.js';
 
+import { RoomRateCapacityService } from '../common/validation/room-rate-capacity.service.js';
+
 const testDb = resolve(process.cwd(), 'phase4.step1.test.db');
 const devDb = resolve(process.cwd(), 'dev.db');
 
@@ -82,7 +84,10 @@ describe('Phase 4 Step 1 — RoomTypesService', () => {
 
     propertyId = property.id;
 
-    service = new RoomTypesService(prisma as never);
+    service = new RoomTypesService(
+    prisma as never,
+    new RoomRateCapacityService(),
+    );
   });
 
   afterAll(async () => {
