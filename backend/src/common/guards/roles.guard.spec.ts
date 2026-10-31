@@ -153,7 +153,9 @@ describe('RolesGuard', () => {
 
     const context = {
       getHandler: () =>
-        ManagerOnlyController.prototype.managerOnly,
+        ManagerOnlyController.prototype.managerOnly.bind(
+          ManagerOnlyController.prototype,
+        ),
       getClass: () => ManagerOnlyController,
       switchToHttp: () => ({
         getRequest: () => ({

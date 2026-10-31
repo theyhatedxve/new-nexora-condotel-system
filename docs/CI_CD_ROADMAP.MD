@@ -13,7 +13,8 @@
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
 | Phase 4 | COMPLETED — 7/7 steps |
-| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 5 | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
+| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
 
 The owner reports 23/23 final checks passed, HTTP security, full Vitest
 regression, NestJS build, Prisma validation, and preserved development data.

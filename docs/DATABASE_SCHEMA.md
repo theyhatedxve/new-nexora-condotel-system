@@ -334,3 +334,33 @@ Local backups/ and storage/ directories are not versioned business APIs.
 Dedicated test targets and command effects are maintained in
 [AGENTS.md](AGENTS.md#e-database-architecture-and-safety). Do not substitute dev.db.
 PostgreSQL deployment remains separate future compatibility work.
+
+## 15. Informational Availability Queries
+
+AvailabilityModule adds read-only search and server-calculated nightly/stay
+pricing without a schema change: the current schema still has 25 models and
+four migrations. It counts usable active rooms minus active dated blocks and
+inventory-holding reservations per night. PENDING records with null or future
+holdExpiresAt hold capacity; expired pending holds do not. It does not separately
+subtract assignments and double-count their reservations.
+
+This type-level nightly calculation differs from InventorySafetyService's
+physical-room eligibility check. A positive nightly count does not prove a
+single physical room can cover the complete stay, and neither check creates a
+booking/hold. Full reservation allocation, pricing snapshots at booking time,
+and safe inventory acquisition remain future implementation. See
+[availability contract](API.md#5-implemented-room-management-and-availability).
+
+## 15. Informational Availability Queries
+
+The new AvailabilityModule reads existing room-type, room, block, and reservation
+models without a new schema migration. It filters active types/rooms, respects
+canceledAt on blocks, and subtracts overlapping CONFIRMED/CHECKED_IN reservations
+and PENDING reservations with no hold expiry or an unexpired hold. It evaluates
+free capacity per night without counting room assignments a second time.
+
+This is a read-only information query, not transactional booking acquisition or
+proof of a single feasible physical room for an entire stay. The physical-room
+InventorySafetyService and future assignment writers have a separate role.
+Backend search/quote support is complete per owner confirmation; corresponding
+frontend work remains in progress. See [API](API.md) for exact query fields.

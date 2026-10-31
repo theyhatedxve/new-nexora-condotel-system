@@ -1,31 +1,23 @@
-
 import { BrowserRouter, Routes, Route } from "react-router";
 
-import Navbar from "./components/Navbar";
-import BackendStatus from "./components/BackendStatus";
+import GuestLayout from "./layouts/GuestLayout";
 import Home from "./pages/Home";
 import Rooms from "./pages/Rooms";
+import RoomDetails from "./pages/RoomDetails";
 
+import "./styles/tokens.css";
 import "./styles/global.css";
 
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-
-      <BackendStatus />
-
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/rooms" element={<Rooms />} />
+        <Route element={<GuestLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/rooms" element={<Rooms />} />
+          <Route path="/rooms/:id" element={<RoomDetails />} />
+        </Route>
       </Routes>
-
-      <footer className="footer">
-        <p>
-          © {new Date().getFullYear()} NEXORA.
-          All rights reserved.
-        </p>
-      </footer>
     </BrowserRouter>
   );
 }

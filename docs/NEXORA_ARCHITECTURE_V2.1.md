@@ -6,7 +6,7 @@
 > **Authority:** This file supersedes NEXORA Architecture v2.0 for frontend technology and file conventions. All other approved v2.0 requirements remain intact.  
 > **Instruction:** Do not generate application code or begin implementation until the user approves the relevant phase and explicitly authorizes code generation.
 
-> **Implementation addendum (2026-10-31):** Phases 1–4 are COMPLETED; Phase 3 has 8/8 steps and Phase 4 has 7/7 steps. Phase 5 onward is NOT STARTED / AWAITING APPROVAL. Completion is owner-directed; this task inspected current sources and installed metadata without rerunning application tests. Earlier Phase 3 23/23 acceptance remains owner-reported. The original requirements and planned twelve-phase order below are a historical baseline, not authorization for new work.
+> **Implementation addendum (2026-10-31):** Phases 1–4 are COMPLETED; Phase 3 has 8/8 steps and Phase 4 has 7/7 steps. Phase 5 is IN PROGRESS: Steps 1–3 complete; Steps 4–5 backend complete with frontend in progress; Steps 6–7 pending. Phase 6 onward is NOT STARTED / AWAITING APPROVAL. Completion is owner-directed; this task inspected current sources and installed metadata without rerunning application tests. Earlier Phase 3 23/23 acceptance remains owner-reported. The original requirements and planned twelve-phase order below are a historical baseline, not authorization for new work.
 >
 > Phase 2 established 24 models (23 core plus RoomTypeAmenity); Phase 3 Step 7 adds EmailVerificationToken for 25 current Prisma models. This approved implementation extension does not replace or silently rewrite the original model list below. See [current schema](DATABASE_SCHEMA.md), [actual API](API.md), and [phase checklist](IMPLEMENTATION_GUIDE.md).
 
@@ -483,8 +483,8 @@ NFC management is in software v1.0, but **real lock integration cannot be comple
 | Backend | NestJS + TypeScript |
 | Business rules/database/NFC design | Retained from v2.0 |
 | Development phases | Twelve phases retained |
-| Implementation | Phases 1–4 COMPLETED; subsequent phases NOT STARTED / AWAITING APPROVAL |
-| Coding authorization | No Phase 5 or later implementation authorized by this documentation task |
+| Implementation | Phases 1–4 COMPLETED; Phase 5 Steps 1–3 complete, Steps 4–5 backend complete/frontend in progress, Steps 6–7 pending; Phase 6 onward NOT STARTED / AWAITING APPROVAL |
+| Coding authorization | Documentation synchronization only; no new implementation authorized; Phase 6 onward awaiting approval |
 
 ### Explicitly unresolved decisions
 
@@ -501,4 +501,4 @@ These remain for the relevant planning stages, not for an AI tool to invent:
 - **v2.0:** Original approved blueprint with React TypeScript frontends.
 - **v2.1:** Same system scope, business rules, database, backend architecture, NFC plan and 12 phases; **both React frontends changed to JavaScript + JSX + Vite**, with `.jsx`/`.js` file conventions.
 
-**Next action:** Phase 5 — Guest Website planning only when requested; obtain explicit approval before implementation. The original architecture decisions and twelve-phase sequence remain the baseline.
+**Next action:** Continue Phase 5 Steps 4–5 frontend integration under the approved workflow, then address pending Steps 6–7. Do not begin Phase 6 without explicit approval. The original architecture decisions and twelve-phase sequence remain the baseline.

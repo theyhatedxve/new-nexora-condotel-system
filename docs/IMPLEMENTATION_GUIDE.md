@@ -21,7 +21,7 @@ Documentation approval does not authorize all application phases.
 
 ## 2. Preflight Review
 
-Current accepted milestones (documentation synchronized 2026-10-30):
+Current accepted milestones (documentation synchronized 2026-10-31):
 
 | Phase | Status |
 |---|---|
@@ -29,7 +29,8 @@ Current accepted milestones (documentation synchronized 2026-10-30):
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
 | Phase 4 | COMPLETED — 7/7 steps |
-| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 5 | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
+| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
 
 Phase 1 delivered the two React JavaScript/JSX foundations and connected NestJS
 API. Phase 2 delivered the 24-model foundation, migrations, Prisma/NestJS
@@ -144,28 +145,84 @@ Implementation and test sources were inspected; no fresh tests/build ran here.
 
 Detailed files, rules, and test targets are maintained in
 [AGENTS.md](AGENTS.md#c-completed-project-phases); exact endpoints and DTOs in
-[API.md](API.md#5-implemented-room-management-and-planned-availability).
+[API.md](API.md#5-implemented-room-management-and-availability).
 Inventory eligibility does not reserve a room or expose public booking/availability.
 Full room-type allocation, hold expiry/acquisition, and connected frontend forms
-remain future integration work. Phase 5 onward requires explicit approval.
+remain future integration work. Phase 5 Steps 4–5 frontend work remains in progress and Steps 6–7 remain pending;
+Phase 6 onward requires explicit approval.
 
 ## 7. Phase 05 — Guest Website
 
-**Status: NOT STARTED / AWAITING APPROVAL.**
+**Status: IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending.**
 
-Steps:
+- [x] **Step 1 — Shared Guest Layout:** GuestLayout renders navigation, backend
+  status, outlet, footer, and a skip link. Navbar supports a collapsible menu;
+  styles/tokens.css and global.css supply shared visual foundations.
+- [x] **Step 2 — Homepage:** Home.jsx provides the NEXORA hero, feature cards,
+  room-browsing calls to action, and links to /rooms.
+- [x] **Step 3 — Room Listing and Details:** /rooms uses useRoomTypes and RoomCard;
+  /rooms/:id uses useRoomDetails, galleries, and amenities. roomTypesApi.js fetches
+  public room types, images, and amenities; hooks suppress stale responses.
+- [ ] **Step 4 — Date and Capacity Search: PARTIALLY COMPLETE.** Backend complete,
+  owner-confirmed: AvailabilityModule exposes GET /api/availability with checkIn,
+  checkOut, and guests; validates dates/capacity and accounts for active inventory,
+  dated blocks, and inventory-holding reservations. Frontend date/guest inputs,
+  availability requests, results, and integration remain in progress.
+- [ ] **Step 5 — Backend-Calculated Pricing Display: PARTIALLY COMPLETE.** Backend
+  complete, owner-confirmed: AvailabilityService returns nights, nightlyRateCentavos,
+  and totalAmountCentavos. Current cards/details display baseRateCentavos per night
+  using formatMoney.js; displaying the searched-stay quote in the frontend remains
+  in progress. A nightly-rate display is not completion of the whole step.
+- [ ] **Step 6 — Loading, Empty, and Failure States:** Pending overall acceptance.
+  Existing messages and optional image/amenity fallbacks are partial implementation
+  evidence, not confirmation that the full step is complete.
+- [ ] **Step 7 — Responsive and Keyboard Verification:** Pending. Navigation
+  attributes, skip links, focus styles, and responsive CSS exist; no new browser
+  or keyboard acceptance pass was performed in this documentation task.
 
-1. Build shared guest layout.
-2. Build homepage.
-3. Build room listing and details.
-4. Add date and capacity search.
-5. Show backend-calculated pricing.
-6. Add loading, empty, and failure states.
-7. Verify narrow-screen and keyboard behavior.
+**Evidence and next work:** The owner's latest clarification supersedes earlier
+5/7 completion claims: only Steps 1–3 are fully complete. Backend portions of
+Steps 4–5 are complete; their frontend portions are still in progress. Current
+Rooms.jsx and RoomDetails.jsx have no date/guest search form, availability API
+request, or searched-stay total. roomTypesApi.js currently fetches room metadata
+only. No dedicated availability test file or frontend test script was found;
+this documentation task ran no application tests, builds, migrations, or seeds.
 
-Pass condition:
+Availability is informational and reserves nothing. The nightly capacity check
+does not prove one physical room is available for a whole stay or acquire
+inventory. Complete allocation and booking writes remain Phase 6 scope.
+Finish frontend integration for Steps 4–5, then complete/verify Steps 6–7 under
+the approved workflow. Phase 5 remains in progress; Phase 6 onward is
+NOT STARTED / AWAITING APPROVAL.
 
-Guests can discover eligible rooms with clear prices and usable navigation.
+### Reported backend checks for Steps 4–5
+
+The owner supplied the following implementation report for the availability
+endpoint. This is reported evidence from another copy of the repository, not
+checks executed during this documentation task:
+
+| Check | Reported result / current evidence |
+|---|---|
+| Date and inventory rules | Seven quick checks reportedly passed. Named scenarios included free inventory, fully booked inventory, back-to-back stays, a blocked room, two rooms with one reserved, and no rooms. The supplied count is seven; six scenario descriptions were provided. |
+| Temporary check file | Reportedly removed after those checks; it is not a permanent regression suite. |
+| Permanent availability tests | Promised in a later message; no dedicated availability test file is currently present under backend/src/availability/. Do not mark them complete until supplied and verified. |
+| Full NestJS build | Not completed in the reported sandbox because Prisma client generation/download was unavailable. Local build success remains unverified. |
+| TypeScript diagnostics | The report mentioned 109 errors in untouched files while generated database types were unavailable. Sandbox causation was reported, not independently established; these diagnostics do not prove the new code is error-free. |
+| Local build and lint | Results have not been supplied for this backend milestone. npm run build and npm run lint remain outstanding local verification. |
+
+From D:\Web-JSX\NEXORA\backend, when verification is authorized:
+
+```powershell
+npm run build
+npm run lint
+```
+
+The build writes generated output; lint checks the current source. This task did
+not run either command, download/generate Prisma Client, install dependencies,
+or modify application files. Preserve backend/dev.db and keep database tests
+isolated. Backend implementation remains owner-confirmed complete; the reported
+quick checks do not establish a full build or permanent regression pass.
+Frontend search and searched-stay pricing integration remain in progress.
 
 ## 8. Phase 06 — Reservation System
 

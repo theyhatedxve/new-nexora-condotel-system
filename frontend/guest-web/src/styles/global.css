@@ -1,7 +1,9 @@
+/* ---------- Base ---------- */
+
 :root {
-  font-family: Arial, sans-serif;
-  color: #183047;
-  background: #ffffff;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-background);
 }
 
 * {
@@ -16,18 +18,62 @@ a {
   text-decoration: none;
 }
 
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Page structure ---------- */
+
+.site {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-content {
+  flex: 1;
+}
+
+.site-content:focus {
+  outline: none;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: -100px;
+  background: var(--color-gold-light);
+  color: var(--color-on-gold);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-small);
+  font-weight: bold;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  top: var(--space-2);
+}
+
+/* ---------- Navbar ---------- */
+
 .navbar {
-  background: #092a47;
-  color: white;
-  padding: 20px 8%;
+  position: relative;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: var(--space-4) 8%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: var(--space-4);
+}
+
+.navbar :focus-visible {
+  outline-color: var(--color-gold-light);
 }
 
 .logo {
-  color: #d9bb7c;
+  color: var(--color-gold-light);
   font-size: 26px;
   font-weight: bold;
   letter-spacing: 2px;
@@ -35,27 +81,72 @@ a {
 
 .nav-links {
   display: flex;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .nav-links a {
-  color: white;
+  color: var(--color-on-primary);
+  padding: var(--space-1) 0;
+  border-bottom: 2px solid transparent;
 }
 
-.nav-links a:hover {
-  color: #d9bb7c;
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--color-gold-light);
+  border-bottom-color: var(--color-gold-light);
 }
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: 0;
+  color: var(--color-on-primary);
+  padding: var(--space-2);
+  cursor: pointer;
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+  padding: var(--space-6);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  text-align: center;
+  font-size: 13px;
+}
+
+/* ---------- Backend status (development helper) ---------- */
+
+.backend-status {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-4);
+  text-align: center;
+  font-size: 13px;
+}
+
+.status-connected {
+  color: var(--color-success);
+  font-weight: bold;
+}
+
+.status-offline {
+  color: var(--color-danger);
+  font-weight: bold;
+}
+
+/* ---------- Existing page styles (Home and Rooms) ---------- */
 
 .hero {
   min-height: 470px;
-  background: #123d65;
-  color: white;
+  background: var(--color-primary-soft);
+  color: var(--color-on-primary);
   text-align: center;
   padding: 105px 20px;
 }
 
 .eyebrow {
-  color: #d9bb7c;
+  color: var(--color-gold-light);
   font-size: 13px;
   font-weight: bold;
   letter-spacing: 3px;
@@ -75,10 +166,10 @@ a {
 
 .primary-button {
   display: inline-block;
-  background: #d9bb7c;
-  color: #092a47;
+  background: var(--color-gold-light);
+  color: var(--color-on-gold);
   padding: 14px 28px;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   font-weight: bold;
 }
 
@@ -103,12 +194,13 @@ a {
 
 .feature-card {
   padding: 30px 20px;
-  border: 1px solid #e1e5e9;
-  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
 }
 
 .feature-card svg {
-  color: #b59a61;
+  color: var(--color-gold);
 }
 
 .feature-card h3 {
@@ -116,8 +208,24 @@ a {
 }
 
 .feature-card p {
-  color: #667788;
+  color: var(--color-text-muted);
   line-height: 1.6;
+}
+
+.cta-band {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  text-align: center;
+  padding: var(--space-12) 8%;
+}
+
+.cta-band h2 {
+  color: var(--color-on-primary);
+  margin-top: 0;
+}
+
+.cta-band p {
+  margin-bottom: var(--space-6);
 }
 
 .simple-page {
@@ -126,38 +234,209 @@ a {
   text-align: center;
 }
 
-.footer {
-  padding: 22px;
-  background: #092a47;
-  color: white;
-  text-align: center;
-  font-size: 13px;
+/* ---------- Rooms page ---------- */
+
+.rooms-page {
+  padding: var(--space-12) 8%;
 }
 
-
-/* Backend connection status */
-
-.backend-status {
-  background: #f4f6f8;
-  padding: 10px 20px;
+.rooms-page h1 {
+  margin-top: 0;
   text-align: center;
-  font-size: 13px;
 }
 
-.status-connected {
-  color: #168758;
+.rooms-intro {
+  text-align: center;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-8);
+}
+
+.rooms-message {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.rooms-error {
+  color: var(--color-danger);
   font-weight: bold;
 }
 
-.status-offline {
-  color: #c0392b;
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-6);
+}
+
+.room-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+}
+
+.room-card-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.room-card-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+  color: var(--color-text-muted);
+}
+
+.room-card-body {
+  padding: var(--space-4);
+}
+
+.room-card-body h2 {
+  margin: 0 0 var(--space-2);
+}
+
+.room-card-description {
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-bottom: var(--space-3);
+}
+
+.room-card-capacity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.room-card-price strong {
+  color: var(--color-primary);
+  font-size: 1.25rem;
+}
+
+.outline-button {
+  display: inline-block;
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-small);
+  color: var(--color-primary);
   font-weight: bold;
 }
 
+.outline-button:hover {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Room details page ---------- */
+
+.room-details {
+  padding: var(--space-8) 8% var(--space-12);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.room-details h1 {
+  margin: 0 0 var(--space-2);
+}
+
+.room-details-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.room-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+
+.room-gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-medium);
+}
+
+.room-gallery img:first-child {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 9;
+}
+
+.room-details-description {
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.amenity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.amenity-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.amenity-list svg {
+  color: var(--color-gold);
+}
+
+/* ---------- Narrow screens ---------- */
 
 @media (max-width: 768px) {
-  .navbar {
+  .nav-toggle {
+    display: block;
+  }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     flex-direction: column;
+    gap: 0;
+    background: var(--color-primary);
+    padding: var(--space-2) 8% var(--space-4);
+    z-index: 5;
+  }
+
+  .nav-links.is-open {
+    display: flex;
+  }
+
+  .nav-links a {
+    padding: var(--space-3) 0;
   }
 
   .hero {

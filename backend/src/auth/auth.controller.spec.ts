@@ -14,7 +14,8 @@ import type { Request, Response } from 'express';
 import { AuthController } from './auth.controller.js';
 import type { AuthService } from './auth.service.js';
 
-import { Public } from '../common/decorators/public.decorator.js';
+import type { RegistrationService } from './registration.service.js';
+import type { EmailVerificationService } from './email-verification.service.js';
 
 import {
   REFRESH_COOKIE_NAME,
@@ -41,7 +42,11 @@ describe('AuthController logout', () => {
       logout: logoutMock,
     } as unknown as AuthService;
 
-    controller = new AuthController(authService);
+    controller = new AuthController(
+      authService,
+      {} as RegistrationService,
+      {} as EmailVerificationService,
+    );
   });
 
   afterEach(() => {

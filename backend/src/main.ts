@@ -40,4 +40,7 @@ async function bootstrap() {
   await app.listen(3000);
 }
 
-bootstrap();
+void bootstrap().catch((error: unknown) => {
+  console.error('Failed to start NEXORA backend:', error);
+  process.exitCode = 1;
+});

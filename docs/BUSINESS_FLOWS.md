@@ -1,8 +1,8 @@
 # NEXORA — Business Flows
 
 Phases 1 and 2 are COMPLETED; Phase 3 is COMPLETED — 8/8 steps based on
-owner acceptance. Phase 4 room management is completed (7/7); Phase 5 onward is
-NOT STARTED / AWAITING APPROVAL. Booking/payment/NFC workflows below remain
+owner acceptance. Phase 4 room management is completed (7/7); Phase 5 is in progress: Steps 1–3 complete; Steps 4–5 backend complete, frontend
+in progress; Steps 6–7 pending. Phase 6 onward is NOT STARTED / AWAITING APPROVAL. Booking/payment/NFC workflows below remain
 intended operations. Room metadata, permitted statuses, and dated room blocks
 are implemented; that does not make the complete stay journey operational. This task ran no application tests.
 
@@ -28,6 +28,13 @@ accountless booking verification remain future work. See [API](API.md) for
 contracts and [security](SECURITY.md) for acceptance and delivery limits.
 
 ## 1. Room Search
+
+The public backend endpoint GET /api/availability implements date/capacity
+validation and informational nightly availability/stay pricing. Frontend search
+inputs, request/results integration, and searched-stay total display remain in
+progress. Existing room listing/detail pages fetch metadata and nightly base
+rates. The diagram below describes the intended connected search journey;
+it is not yet a completed browser workflow. No booking is created by search.
 
 ```text
 Guest selects dates and guest count

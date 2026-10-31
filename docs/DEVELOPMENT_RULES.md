@@ -98,5 +98,6 @@ helpers alone do not expose public booking or guarantee complete allocation.
 Never reset, overwrite, or redirect tests to backend/dev.db. Approve additive
 migrations and consistent backups separately; use dedicated test databases and
 temporary image storage. Record actual regression results and update documentation
-after approved steps. Phase 5 onward requires explicit approval. Exact installed
+after approved steps. Remaining work must follow the approved step workflow. Phase 5 Steps 4–5
+frontend integration is in progress; Phase 6 onward requires explicit approval. Exact installed
 dependencies and current workflow are maintained in [AGENTS.md](AGENTS.md).

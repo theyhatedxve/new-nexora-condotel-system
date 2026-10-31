@@ -17,7 +17,8 @@ Guest registration is optional. A guest may book without creating an account.
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
 | Phase 4 | COMPLETED — 7/7 steps |
-| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 5 | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
+| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
 
 The owner reports successful Phase 3 acceptance (23/23 checks); this update
 inspected source without rerunning application tests. The working modular
@@ -97,7 +98,8 @@ This table describes the approved full-system scope. Implemented modules are
 AuthModule, PrismaModule, RoomTypesModule, RoomsModule, AmenitiesModule,
 RoomImagesModule, and RoomBlocksModule. OwnershipModule and InventorySafetyModule
 export reusable checks for explicit use by feature services. The inventory
-service exposes no public booking/availability API. Full guest/staff management,
+service exposes no public booking/availability API. AvailabilityModule separately
+registers GET /api/availability for read-only date/capacity and price queries. Full guest/staff management,
 reservations, payments, NFC, data-powered dashboards, reports, settings, and audit
 business workflows remain future work. See [actual contracts](API.md).
 
@@ -132,8 +134,15 @@ Hiding a button does not enforce authorization.
 
 ## 6. Guest Website
 
+Implemented guest browsing uses GuestLayout, Home, Rooms, RoomDetails, room cards,
+metadata hooks/services, image URL resolution, and PHP nightly-rate formatting.
+Backend availability search and stay-price calculation are complete per owner
+confirmation. Frontend date/guest controls, availability requests/results, and
+searched-stay quote display remain in progress. Steps 6–7 interface-state and
+responsive/keyboard acceptance remain pending; no fresh browser testing ran here.
+
 Approved target routes (not a current implementation inventory; the guest
-application currently registers only / and /rooms):
+application currently registers /, /rooms, and /rooms/:id):
 
 | Route | Screen |
 |---|---|

@@ -13,8 +13,10 @@ API and a central database so access rules and business decisions stay consisten
 
 The backend currently supports accounts, authentication, authorization, room-type
 and physical-room management, amenities, room images, operational room states,
-and dated room blocks. The web applications provide starter screens and
-navigation; complete guest and staff workflows are still intended capabilities.
+and dated room blocks. The guest website connects room listings and details to public backend data.
+Date-based search and stay-price quotes are supported by the backend; their
+frontend integration is still being built. The administration dashboard retains
+starter/placeholder screens; complete booking and staff workflows remain intended capabilities.
 
 ## 3. System Users
 
@@ -30,16 +32,19 @@ automatically bypass an explicit role list or private-record ownership check.
 
 ## 4. Guest-Facing Website
 
-The guest application currently includes a homepage, rooms screen, navigation,
-shared styling, and a backend-connection status component. Public backend APIs
-provide active room-type details, amenities, and approved room images. Complete
-integration of that data into the guest browsing experience remains to be built.
+The guest application includes a shared layout, responsive navigation, footer,
+homepage, room listing, and room-detail pages. Room listings and details fetch
+public room-type information, photos, and amenities and display the current
+nightly rate. Hooks handle loading, errors, missing optional content, and stale
+responses; complete interface-state and accessibility acceptance is still pending.
 
-The intended experience includes property information, accommodation photos,
-room-type details, date-based availability, reservations, optional accounts,
-booking management, and payment selection. Account registration, email
-verification, and sign-in are supported by backend services; complete browser
-account screens and reservation/payment workflows are not yet available.
+The backend provides date/guest-capacity availability and calculated nightly and
+stay-total prices. Date/guest search controls, availability requests/results,
+and searched-stay quote display in the guest interface are still in progress.
+
+Optional registration, verification, and sign-in are supported by backend
+services; complete browser account screens, reservations, payment selection,
+and personal booking-management workflows remain intended capabilities.
 
 ## 5. Administration Dashboard
 
@@ -67,8 +72,10 @@ reservations to physical rooms and retain release history.
 A reusable backend eligibility service checks room activity, matching type,
 capacity, operational status, active blocks, and conflicting assignments.
 Immediate use requires a Ready room. Future eligibility uses the requested dates
-and relevant conflicts. This check does not reserve inventory or expose a public
-availability or booking API; complete reservation allocation remains intended work.
+and relevant conflicts. The eligibility helper reserves nothing. A separate public availability API
+provides informational room-type results and backend-calculated stay prices;
+its guest-facing search/quote interface is still in progress. Neither operation
+creates a booking. Complete reservation allocation remains intended work.
 
 ## 7. Reservation and Guest Experience
 

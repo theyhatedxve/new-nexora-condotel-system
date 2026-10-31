@@ -1,8 +1,10 @@
 # NEXORA — Development Reference and Completion Checklist
 
 **Last synchronized:** 2026-10-31. Paths below are relative to D:\Web-JSX\NEXORA.
-**Current checkpoint:** Phases 1–4 completed per project-owner instruction;
-Phase 5 onward NOT STARTED / AWAITING APPROVAL. This is documentation maintenance,
+**Current checkpoint:** Phases 1–4 and Phase 5 Steps 1–3 are complete. Phase 5
+Steps 4–5: backend complete; frontend in progress. Steps 6–7 remain pending.
+Phase 6 onward is
+NOT STARTED / AWAITING APPROVAL. This is documentation maintenance,
 not authorization to implement, migrate, install, commit, push, or deploy.
 
 ## A. Project Identity
@@ -156,7 +158,8 @@ install merely to inspect versions. package.json ranges alone are insufficient.
 | Phase 2 — Database Architecture | COMPLETED | Owner-accepted foundation; schema, adapter, migrations, seed, isolated test source inspected |
 | Phase 3 — Authentication and Authorization | COMPLETED — 8/8 steps | Owner's previously reported 23/23 acceptance; current source/tests inspected |
 | Phase 4 — Room Management | COMPLETED — 7/7 steps | Owner's completion instruction; all seven implementation areas and test source inspected |
-| Phase 5 onward | NOT STARTED / AWAITING APPROVAL | Future business implementation is not authorized by this task |
+| Phase 5 — Guest Website | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending | Owner-confirmed; source/integration limits below |
+| Phase 6 onward | NOT STARTED / AWAITING APPROVAL | Future business implementation is not authorized by this task |
 
 Checked implementation items below describe repository source and accepted
 milestones. No application test suite, build, migration, seed, database query,
@@ -268,11 +271,71 @@ unassigned room-type inventory/holds and complete booking concurrency remain
 future integration work. No independent Phase 4 test run/pass count is available
 from this task; test-source presence does not prove production readiness.
 
+### Phase 5 — Guest Website (3 fully completed steps; 2 partially complete)
+
+- [x] **Step 1 — Shared Guest Layout:** GuestLayout renders navigation, backend
+  status, outlet, footer, and a skip link. Navbar supports a collapsible menu;
+  styles/tokens.css and global.css supply shared visual foundations.
+- [x] **Step 2 — Homepage:** Home.jsx provides the NEXORA hero, feature cards,
+  room-browsing calls to action, and links to /rooms.
+- [x] **Step 3 — Room Listing and Details:** /rooms uses useRoomTypes and RoomCard;
+  /rooms/:id uses useRoomDetails, galleries, and amenities. roomTypesApi.js fetches
+  public room types, images, and amenities; hooks suppress stale responses.
+- [ ] **Step 4 — Date and Capacity Search: PARTIALLY COMPLETE.** Backend complete,
+  owner-confirmed: AvailabilityModule exposes GET /api/availability with checkIn,
+  checkOut, and guests; validates dates/capacity and accounts for active inventory,
+  dated blocks, and inventory-holding reservations. Frontend date/guest inputs,
+  availability requests, results, and integration remain in progress.
+- [ ] **Step 5 — Backend-Calculated Pricing Display: PARTIALLY COMPLETE.** Backend
+  complete, owner-confirmed: AvailabilityService returns nights, nightlyRateCentavos,
+  and totalAmountCentavos. Current cards/details display baseRateCentavos per night
+  using formatMoney.js; displaying the searched-stay quote in the frontend remains
+  in progress. A nightly-rate display is not completion of the whole step.
+- [ ] **Step 6 — Loading, Empty, and Failure States:** Pending overall acceptance.
+  Existing messages and optional image/amenity fallbacks are partial implementation
+  evidence, not confirmation that the full step is complete.
+- [ ] **Step 7 — Responsive and Keyboard Verification:** Pending. Navigation
+  attributes, skip links, focus styles, and responsive CSS exist; no new browser
+  or keyboard acceptance pass was performed in this documentation task.
+
+**Evidence and next work:** The owner's latest clarification supersedes earlier
+5/7 completion claims: only Steps 1–3 are fully complete. Backend portions of
+Steps 4–5 are complete; their frontend portions are still in progress. Current
+Rooms.jsx and RoomDetails.jsx have no date/guest search form, availability API
+request, or searched-stay total. roomTypesApi.js currently fetches room metadata
+only. No dedicated availability test file or frontend test script was found;
+this documentation task ran no application tests, builds, migrations, or seeds.
+
+Availability is informational and reserves nothing. The nightly capacity check
+does not prove one physical room is available for a whole stay or acquire
+inventory. Complete allocation and booking writes remain Phase 6 scope.
+Finish frontend integration for Steps 4–5, then complete/verify Steps 6–7 under
+the approved workflow. Phase 5 remains in progress; Phase 6 onward is
+NOT STARTED / AWAITING APPROVAL.
+
+### Latest backend availability verification report
+
+For Phase 5 Steps 4–5, the owner reports seven quick date/inventory checks passed
+in another repository copy and the temporary test file was removed. Permanent
+availability tests were promised separately and are not present in the inspected
+availability directory. The report did not complete the full build because
+Prisma-generated types could not be obtained in that sandbox. Its 109 reported
+TypeScript diagnostics do not independently establish whether the new code is
+correct. Local npm run build and npm run lint results remain outstanding.
+
+This task recorded that report without executing those checks or generating a
+Prisma client. Full details and safe command context are in
+docs/IMPLEMENTATION_GUIDE.md under Reported backend checks for Steps 4–5.
+Steps 4–5 backend implementation is complete per owner confirmation; frontend
+integration is still in progress. Do not mark permanent tests, full build/lint,
+frontend completion, or the entire Phase 5 complete from this report alone.
+
 ## D. Backend Structure
 
 | Location / module | Responsibility |
 |---|---|
-| backend/src/main.ts | Nest bootstrap, cookie parsing, ValidationPipe, CORS, /api prefix, port 3000 |
+| backend/src/main.ts | Nest bootstrap, startup rejection handler, cookie parsing, ValidationPipe, CORS, /api prefix, port 3000 |
+| backend/src/availability/ | Public search controller/DTO, service, pure nightly calculator; read-only availability and stay-price quote |
 | backend/src/app.module.ts | Prisma, auth, room types, rooms/status, amenities, room images, room blocks; global throttling/JWT/roles guards |
 | backend/src/auth/ | AuthModule, controller, password/session/registration/verification/SMTP services; DTOs and security tests |
 | backend/src/prisma/ | Global PrismaModule, PrismaService, guarded development seed |
@@ -353,8 +416,8 @@ write synthetic records and image tests use temporary filesystem storage.
 - Uploads validate decoded content rather than filenames/MIME alone; SVG and
   unsupported/corrupt images fail. Storage uses generated keys and guarded paths,
   outside a blanket static directory. Public responses omit internal file paths.
-- main.ts still registers CORS twice and calls bootstrap without a rejection
-  handler. The legacy test/app.e2e-spec.ts still expects Hello World!; it does not
+- main.ts still registers CORS twice; startup now uses void bootstrap().catch
+  and sets a failing process exit code on rejection. The legacy test/app.e2e-spec.ts still expects Hello World!; it does not
   isolate Prisma. Do not confuse it with the accepted HTTP security suite.
 - Production work includes email-prefetch-safe verification, SMTP failure
   monitoring, durable image storage and orphan/pending-delete recovery, HTTPS,
@@ -406,10 +469,15 @@ Phase 4 has seven completed steps; source and test fixtures substantiate the
 listed implementation areas. Application tests/builds were not rerun here and
 no new successful-test count is inferred.
 
-Phase 5 — Guest Website and subsequent phases are NOT STARTED / AWAITING APPROVAL.
-Existing guest/admin starter screens do not establish connected booking,
+Phase 5 is IN PROGRESS: Steps 1–3 are complete; Steps 4–5 have completed backend
+work and frontend work in progress. Steps 6–7 remain pending.
+The guest website now has a shared layout, homepage, connected room listing and
+detail screens. Search-form/stay-total integration is not evident in current
+frontend source. Phase 6 onward is NOT STARTED / AWAITING APPROVAL.
+Existing guest/admin screens do not establish connected booking,
 payments, financial reporting, check-in/out, or NFC door hardware functionality.
-Inventory helpers reserve nothing and expose no public booking endpoint.
+Inventory helpers reserve nothing. The new public availability endpoint is
+informational and exposes no booking-write operation.
 
 Maintain docs/AGENTS.md and the root AGENTS.md consistently. docs/README.md is
 exclusively the product overview: no phase tables, completion logs, test counts,

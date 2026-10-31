@@ -8,12 +8,15 @@
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
 | Phase 4 | COMPLETED — 7/7 steps |
-| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 5 | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
+| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
 
 Accepted scope, eight completed Phase 3 steps, and seven completed Phase 4 steps are tracked in the
 [implementation guide](IMPLEMENTATION_GUIDE.md). The owner previously reported 23/23 Phase 3
 acceptance checks passed; this Markdown-only task did not rerun tests/builds.
-Phase 4 is owner-confirmed complete; no production-readiness or Phase 5 authorization is implied.
+Phase 4 is owner-confirmed complete. Phase 5 Steps 1–3 are complete; Steps 4–5
+have completed backend work with frontend integration in progress. Steps 6–7
+remain pending; no full-phase acceptance or Phase 6 authorization is implied.
 
 Build one approved feature at a time.
 
@@ -87,7 +90,7 @@ NEXORA/
 
 Add folders when needed. This tree is not a requirement to create empty folders.
 
-Current modules include auth, room-types, rooms, amenities, room-images,
+Current modules include availability, auth, room-types, rooms, amenities, room-images,
 room-blocks, common/decorators, common/guards, common/ownership,
 common/validation, common/inventory, and src/prisma integration.
 The current schema has 25 models and four migrations; see
@@ -191,7 +194,7 @@ documentation. See [security](SECURITY.md) for transport and monitoring limits.
 | 02 — Database Foundation | Models, relationships, migrations, seeds | COMPLETED |
 | 03 — Authentication & RBAC | Sessions, roles, optional guest accounts | COMPLETED — 8/8 steps |
 | 04 — Room Management | Types, rooms, rates, images, amenities, states/blocks, inventory safety | COMPLETED — 7/7 steps |
-| 05 — Guest Website | Public pages and availability interface | NOT STARTED / AWAITING APPROVAL |
+| 05 — Guest Website | Shared layout, homepage, room listing/detail, search/pricing foundations | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
 | 06 — Reservation System | Holds, bookings, assignments, check-in/out | NOT STARTED / AWAITING APPROVAL |
 | 07 — Payment System | PayMongo and Pay at Property | NOT STARTED / AWAITING APPROVAL |
 | 08 — Admin Dashboard | Operational screens and statistics | NOT STARTED / AWAITING APPROVAL |
@@ -239,3 +242,24 @@ Production requires:
 - NFC failure procedures after hardware selection.
 
 Hosting providers and deployment domains remain TBD.
+
+## 10. Guest Website Checkpoint
+
+Phase 5 Steps 1–3 are owner-confirmed complete. Steps 4–5 backend work is
+complete; frontend date/guest search and searched-stay quote integration remain
+in progress. The repository now includes
+GuestLayout, Footer, RoomCard, useRoomTypes/useRoomDetails, RoomDetails,
+roomTypesApi, tokens.css, and formatMoney. The backend adds AvailabilityModule
+and a public read-only availability/stay-price quote. No schema migration is
+introduced by this work.
+
+The current guest pages display backend nightly rates but do not call the new
+availability API or provide a date/guest search form/stay-total display. Record
+that source boundary alongside the owner's partial-completion clarification. Steps 6–7
+remain pending; existing UI states/CSS are not a completed acceptance pass.
+See [current checklist](AGENTS.md#c-completed-project-phases) and [API](API.md).
+
+For Steps 4–5, backend implementation is owner-confirmed complete, with frontend
+integration still in progress. Seven quick rule checks were reported from a
+separate copy; permanent availability tests and full local build/lint results
+remain unverified. See [reported checks and limitations](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45).

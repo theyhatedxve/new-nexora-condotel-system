@@ -1,16 +1,39 @@
+import RoomCard from "../components/RoomCard";
+import { useRoomTypes } from "../hooks/useRoomTypes";
+
 function Rooms() {
+  const { status, rooms } = useRoomTypes();
+
   return (
-    <main className="simple-page">
+    <main className="rooms-page">
       <h1>Our Rooms</h1>
+      <p className="rooms-intro">Rates shown are per night.</p>
 
-      <p>
-        Our room listings will be available here soon.
-      </p>
+      {status === "loading" && (
+        <p className="rooms-message" role="status">
+          Loading rooms...
+        </p>
+      )}
 
-      <p>
-        NEXORA Room Management will be connected
-        in the upcoming development phases.
-      </p>
+      {status === "error" && (
+        <p className="rooms-message rooms-error" role="alert">
+          We could not load the rooms. Please try again later.
+        </p>
+      )}
+
+      {status === "success" && rooms.length === 0 && (
+        <p className="rooms-message">
+          No rooms are available to show right now.
+        </p>
+      )}
+
+      {status === "success" && rooms.length > 0 && (
+        <div className="room-grid">
+          {rooms.map((room) => (
+            <RoomCard key={room.id} room={room} />
+          ))}
+        </div>
+      )}
     </main>
   );
 }

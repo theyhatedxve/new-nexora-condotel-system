@@ -97,7 +97,9 @@ The implemented browser contract returns access JWTs in login/refresh JSON and
 uses an HttpOnly refresh cookie. See [API.md](API.md) for exact attributes,
 Origin requirements, DTOs, response envelopes, and rate limits. Frontend token
 storage, renewal interceptors, and sign-in screens are not established by the
-backend milestone; both frontend applications still contain starter screens.
+backend milestone. The guest app now has connected public room screens; admin
+operational pages remain placeholders. Browser sign-in/refresh integration is
+not established by those public guest screens.
 
 Auth POST requests require an explicit allowlisted Origin. Verification GET is
 public without a controller Origin check to permit email navigation. HTTPS is
@@ -304,8 +306,10 @@ is not proof that one request always succeeds or PostgreSQL behaves identically.
 
 ## 15. Production Hardening and Open Concerns
 
-Completion of Phases 1–4 is not a production-readiness declaration. Phase 5 onward is
-NOT STARTED / AWAITING APPROVAL.
+Phases 1–4 and Phase 5 Steps 1–3 are owner-confirmed complete. For Steps 4–5,
+backend work is complete and frontend integration is in progress. This is not a
+production-readiness declaration. Phase 5 Steps 6–7 remain pending; Phase 6 onward
+is NOT STARTED / AWAITING APPROVAL.
 
 - Verification currently consumes a credential on GET. Email clients and link
   scanners may prefetch it; review a confirmation interaction before launch.
@@ -315,15 +319,38 @@ NOT STARTED / AWAITING APPROVAL.
   log credentials. Real SMTP/TLS delivery still needs environment acceptance.
 - main.ts calls enableCors twice; inspect credentialed preflight behavior and
   deployment allowlists. The HTTP fixture does not cover this bootstrap path.
-- bootstrap() still has no rejection handler. A prior inspection reported a
-  no-floating-promises lint error; this task did not rerun lint.
+- Startup now uses void bootstrap().catch with safe error reporting and a failing
+  process exit code; the earlier unhandled-startup finding is superseded. This
+  documentation task did not rerun lint or force a startup failure.
 - test/app.e2e-spec.ts still expects / to return Hello World! and imports the
   real AppModule without isolating Prisma. It is separate from npm run test and
   must be reviewed before treating npm run test:e2e as a valid release check.
 - PrismaService uses a fixed runtime SQLite path while CLI reads DATABASE_URL;
   verify resolved targets before any authorized migration. PostgreSQL migrations,
   recovery, backups, deployment monitoring, and HTTPS remain deployment work.
-- backend/src/auth/verify-email.dto.ts is an empty extra file; the controller
-  uses backend/src/auth/dto/verify-email.dto.ts. No source cleanup was performed.
+- The unused backend/src/auth/verify-email.dto.ts has been removed in the
+  inspected working tree. The controller still uses the real DTO at
+  backend/src/auth/dto/verify-email.dto.ts. No source cleanup was performed by
+  this documentation task.
 - Frontend auth integration, password recovery/account-security workflows, and
   full business APIs are not established by this backend milestone.
+
+## 16. Public Availability and Guest Website Boundaries
+
+The availability route is public and throttled at 30 requests per 60 seconds.
+DTO/date/capacity checks occur in the backend; the response contains room-type
+availability and price fields, not guest identities or private reservations.
+Read-only search creates no inventory hold. Any future booking writer must
+revalidate availability/ownership/prices inside the acquisition transaction.
+
+Guest pages format backend centavo amounts and resolve controlled image URLs.
+Hooks suppress stale results but convert optional image/amenity errors into empty
+content, which needs review under the pending UI-state step. Responsive and
+keyboard acceptance remains pending. No dedicated availability test suite was
+found and no fresh browser, lint, build, or application test run occurred here.
+
+The owner reports seven quick availability-rule checks passed in another copy;
+the temporary file was removed. This does not replace permanent regression
+coverage or a successful local build/lint. See
+[the backend verification report](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45)
+for the reported Prisma-generation limitation and outstanding checks.

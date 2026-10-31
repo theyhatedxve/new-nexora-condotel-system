@@ -79,7 +79,6 @@ describe('NEXORA Phase 3 Step 8 — HTTP security', () => {
   let prisma: PrismaClient;
   let origin: string;
 
-  let testAccessToken = '';
   let testRefreshCookie = '';
 
   beforeAll(async () => {
@@ -360,8 +359,6 @@ describe('NEXORA Phase 3 Step 8 — HTTP security', () => {
 
     const accessToken = response.body.data.accessToken;
 
-    testAccessToken = accessToken;
-
     const firstCookie = Array.isArray(cookies)
     ? cookies[0]
     : String(cookies ?? '');
@@ -483,8 +480,8 @@ describe('NEXORA Phase 3 Step 8 — HTTP security', () => {
     ]);
 
     const statuses = results
-      .map((result) => result.status)
-      .sort();
+    .map((result) => result.status)
+    .sort((a, b) => a - b);
 
     expect(statuses).toEqual([200, 401]);
   });

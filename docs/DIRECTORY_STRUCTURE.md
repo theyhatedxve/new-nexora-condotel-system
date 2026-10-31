@@ -13,7 +13,9 @@ defines system scope; the [development reference](AGENTS.md) records current sco
 The [system overview](README.md) describes the product without development logs.
 
 Phases 1–4 are COMPLETED per owner instruction. Phase 3 has eight completed
-steps and Phase 4 has seven. Phase 5 onward awaits explicit approval. Earlier
+steps and Phase 4 has seven. Phase 5 Steps 1–3 are complete; Steps 4–5 backend
+work is complete and frontend integration is in progress. Steps 6–7 remain
+pending; Phase 6 onward awaits explicit approval. Earlier
 Phase 3 acceptance was based on the owner-reported 23/23 checks, full regression,
 build, Prisma validation, and preserved development data. Phase 4 source/test fixtures were
 inspected; no new pass count is claimed. This task did not rerun application checks. Phase 2's initial 24 models remain; Phase 3 adds EmailVerificationToken
@@ -28,58 +30,7 @@ secrets, Git internals, and temporary schema backups are omitted.
 
 ```text
 NEXORA/
-├── frontend/
-│   ├── guest-web/                       # Public React JavaScript/JSX application
-│   │   ├── public/                      # Static public assets
-│   │   ├── src/
-│   │   │   ├── assets/                  # Assets imported by application code
-│   │   │   ├── components/
-│   │   │   │   ├── BackendStatus.jsx
-│   │   │   │   └── Navbar.jsx
-│   │   │   ├── pages/
-│   │   │   │   ├── Home.jsx
-│   │   │   │   └── Rooms.jsx
-│   │   │   ├── services/
-│   │   │   │   └── api.js               # Axios API client
-│   │   │   ├── styles/
-│   │   │   │   └── global.css
-│   │   │   ├── App.jsx
-│   │   │   ├── App.css
-│   │   │   ├── index.css
-│   │   │   └── main.jsx
-│   │   ├── .env.example
-│   │   ├── index.html
-│   │   ├── package.json
-│   │   ├── package-lock.json
-│   │   ├── vite.config.js
-│   │   └── README.md
-│   └── admin-web/                       # Staff React JavaScript/JSX application
-│       ├── public/
-│       ├── src/
-│       │   ├── assets/
-│       │   ├── components/
-│       │   │   ├── BackendStatus.jsx
-│       │   │   └── Sidebar.jsx
-│       │   ├── layouts/
-│       │   │   └── AdminLayout.jsx
-│       │   ├── pages/
-│       │   │   ├── Dashboard.jsx
-│       │   │   └── PlaceholderPage.jsx
-│       │   ├── services/
-│       │   │   └── api.js
-│       │   ├── styles/
-│       │   │   └── global.css
-│       │   ├── App.jsx
-│       │   ├── App.css
-│       │   ├── index.css
-│       │   └── main.jsx
-│       ├── .env.example
-│       ├── index.html
-│       ├── package.json
-│       ├── package-lock.json
-│       ├── vite.config.js
-│       └── README.md
-├── backend/                             # Shared NestJS TypeScript REST API
+├── backend/
 │   ├── prisma/
 │   │   ├── migrations/
 │   │   │   ├── 20261027150551_init/
@@ -91,7 +42,7 @@ NEXORA/
 │   │   │   ├── 20261031_phase4_step6_room_block_cancellation/
 │   │   │   │   └── migration.sql
 │   │   │   └── migration_lock.toml
-│   │   └── schema.prisma               # All 25 current models defined
+│   │   └── schema.prisma
 │   ├── src/
 │   │   ├── amenities/
 │   │   │   ├── dto/
@@ -125,8 +76,14 @@ NEXORA/
 │   │   │   ├── password.service.spec.ts
 │   │   │   ├── password.service.ts
 │   │   │   ├── registration.service.ts
-│   │   │   ├── registration.spec.ts
-│   │   │   └── verify-email.dto.ts
+│   │   │   └── registration.spec.ts
+│   │   ├── availability/
+│   │   │   ├── dto/
+│   │   │   │   └── search-availability.dto.ts
+│   │   │   ├── availability-calculator.ts
+│   │   │   ├── availability.controller.ts
+│   │   │   ├── availability.module.ts
+│   │   │   └── availability.service.ts
 │   │   ├── common/
 │   │   │   ├── decorators/
 │   │   │   │   ├── public.decorator.ts
@@ -204,44 +161,121 @@ NEXORA/
 │   │   │   └── database.integrity.spec.ts
 │   │   └── app.e2e-spec.ts
 │   ├── .env.example
-│   ├── .gitignore
 │   ├── .gitattributes
+│   ├── .gitignore
 │   ├── .oxlintrc.json
 │   ├── .prettierrc
 │   ├── nest-cli.json
-│   ├── package.json
 │   ├── package-lock.json
+│   ├── package.json
 │   ├── prisma7.config.ts
+│   ├── README.md
 │   ├── skills-lock.json
-│   ├── tsconfig.json
 │   ├── tsconfig.build.json
-│   ├── vitest.config.ts
+│   ├── tsconfig.json
 │   ├── vitest.config.e2e.ts
-│   └── README.md
+│   └── vitest.config.ts
+├── backups/                         # Local contents omitted
 ├── docs/
-│   ├── README.md                       # System overview
-│   ├── DIRECTORY_STRUCTURE.md          # This directory guide
-│   ├── AGENTS.md                       # Synchronized agent handoff and checklist
-│   ├── NEXORA_ARCHITECTURE_V2.1.md      # Documentation copy of architecture
-│   ├── SYSTEM_DESIGN.md
-│   ├── TECHNICAL_PLAN.md
-│   ├── DATABASE_SCHEMA.md
+│   ├── AGENTS.md
 │   ├── API.md
 │   ├── BUSINESS_FLOWS.md
-│   ├── SECURITY.md
-│   ├── design_guidelines.md
-│   ├── IMPLEMENTATION_GUIDE.md
-│   ├── DEVELOPMENT_RULES.md
-│   ├── CODING_PRINCIPLES.md
+│   ├── CI_CD_ROADMAP.MD
 │   ├── CODING_PATTERNS.md
+│   ├── CODING_PRINCIPLES.md
 │   ├── CONVENTIONAL_COMMITS.md
-│   └── CI_CD_ROADMAP.MD
-├── backups/                            # Local backup contents omitted
-├── storage/                            # Local image contents omitted
+│   ├── DATABASE_SCHEMA.md
+│   ├── design_guidelines.md
+│   ├── DEVELOPMENT_RULES.md
+│   ├── DIRECTORY_STRUCTURE.md
+│   ├── IMPLEMENTATION_GUIDE.md
+│   ├── NEXORA_ARCHITECTURE_V2.1.md
+│   ├── README.md
+│   ├── SECURITY.md
+│   ├── SYSTEM_DESIGN.md
+│   └── TECHNICAL_PLAN.md
+├── frontend/
+│   ├── admin-web/
+│   │   ├── public/
+│   │   │   ├── favicon.svg
+│   │   │   └── icons.svg
+│   │   ├── src/
+│   │   │   ├── assets/
+│   │   │   │   ├── hero.png
+│   │   │   │   ├── react.svg
+│   │   │   │   └── vite.svg
+│   │   │   ├── components/
+│   │   │   │   ├── BackendStatus.jsx
+│   │   │   │   └── Sidebar.jsx
+│   │   │   ├── layouts/
+│   │   │   │   └── AdminLayout.jsx
+│   │   │   ├── pages/
+│   │   │   │   ├── Dashboard.jsx
+│   │   │   │   └── PlaceholderPage.jsx
+│   │   │   ├── services/
+│   │   │   │   └── api.js
+│   │   │   ├── styles/
+│   │   │   │   └── global.css
+│   │   │   ├── App.css
+│   │   │   ├── App.jsx
+│   │   │   ├── index.css
+│   │   │   └── main.jsx
+│   │   ├── .env.example
+│   │   ├── .gitignore
+│   │   ├── .oxlintrc.json
+│   │   ├── index.html
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   └── vite.config.js
+│   └── guest-web/
+│       ├── public/
+│       │   ├── favicon.svg
+│       │   └── icons.svg
+│       ├── src/
+│       │   ├── assets/
+│       │   │   ├── hero.png
+│       │   │   ├── react.svg
+│       │   │   └── vite.svg
+│       │   ├── components/
+│       │   │   ├── BackendStatus.jsx
+│       │   │   ├── Footer.jsx
+│       │   │   ├── Navbar.jsx
+│       │   │   └── RoomCard.jsx
+│       │   ├── hooks/
+│       │   │   ├── useRoomDetails.js
+│       │   │   └── useRoomTypes.js
+│       │   ├── layouts/
+│       │   │   └── GuestLayout.jsx
+│       │   ├── pages/
+│       │   │   ├── Home.jsx
+│       │   │   ├── RoomDetails.jsx
+│       │   │   └── Rooms.jsx
+│       │   ├── services/
+│       │   │   ├── api.js
+│       │   │   └── roomTypesApi.js
+│       │   ├── styles/
+│       │   │   ├── global.css
+│       │   │   └── tokens.css
+│       │   ├── utils/
+│       │   │   └── formatMoney.js
+│       │   ├── App.css
+│       │   ├── App.jsx
+│       │   ├── index.css
+│       │   └── main.jsx
+│       ├── .env.example
+│       ├── .gitignore
+│       ├── .oxlintrc.json
+│       ├── index.html
+│       ├── package-lock.json
+│       ├── package.json
+│       ├── README.md
+│       └── vite.config.js
+├── storage/                         # Local contents omitted
 ├── .gitignore
-├── AGENTS.md                            # Agent instructions and progress handoff
-├── NEXORA_ARCHITECTURE_V2.1.md           # Approved architecture
-└── README.md                            # Project setup and local commands
+├── AGENTS.md
+├── NEXORA_ARCHITECTURE_V2.1.md
+└── README.md
 ```
 
 ## 3. Directory Responsibilities
@@ -255,6 +289,8 @@ NEXORA/
 | Frontend `src/services/` | HTTP client configuration and API access | [API contracts](API.md), [coding patterns](CODING_PATTERNS.md) |
 | Frontend `src/styles/`, `src/assets/`, and `public/` | Shared CSS, imported assets, and static public files | [Design guidelines](design_guidelines.md) |
 | `backend/src/` | API bootstrap, modules, controllers, and services | [System design](SYSTEM_DESIGN.md), [API contracts](API.md), [technical plan](TECHNICAL_PLAN.md) |
+| `backend/src/availability/` | Public read-only date/capacity search and backend stay-price quote; frontend integration remains in progress | [API](API.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
+| `frontend/guest-web/src/layouts/`, `hooks/`, `services/`, and `utils/` | Shared guest layout, connected room metadata, image URL handling, and nightly-rate formatting | [System design](SYSTEM_DESIGN.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `backend/src/auth/` | Auth, registration, SMTP delivery, verification, DTOs, and security tests | [Implemented API](API.md), [security](SECURITY.md) |
 | `backend/src/common/` | Public/role decorators, global guards, and reusable OwnershipModule/OwnershipService | [Security](SECURITY.md), [coding patterns](CODING_PATTERNS.md) |
 | `backend/src/room-types/`, `rooms/`, `amenities/`, `room-images/`, `room-blocks/` | Implemented room-management modules, DTOs, controllers, services, and isolated tests | [API](API.md), [security](SECURITY.md) |
@@ -275,9 +311,10 @@ payment, or physical NFC functionality. Ownership helpers must be called by
 future business services explicitly.
 
 Isolated suite database paths are documented in the
-[implementation guide](IMPLEMENTATION_GUIDE.md#15-command-guidance). The extra
-backend/src/auth/verify-email.dto.ts is empty; the controller imports
-backend/src/auth/dto/verify-email.dto.ts. No source cleanup was performed.
+[implementation guide](IMPLEMENTATION_GUIDE.md#15-command-guidance). The guest frontend has no availability request service or date/guest search and
+searched-stay quote UI yet. The unused backend/src/auth/verify-email.dto.ts was
+removed in the working tree; the controller imports
+backend/src/auth/dto/verify-email.dto.ts. This task performed no source cleanup.
 
 ## 4. Planned Structure and Placement Rules
 
@@ -285,8 +322,8 @@ The [technical plan's project structure](TECHNICAL_PLAN.md#2-project-structure)
 includes future directories. They are created when an approved implementation
 needs them:
 
-- Frontend `layouts/`, `routes/`, and `hooks/` where absent. The admin application
-  already has `layouts/`; the guest application does not yet have it.
+- Guest `layouts/`, `hooks/`, and `utils/` now exist. Add `routes/` or other
+  frontend directories only when required; existing route declarations are in App.jsx.
 - Backend future feature directories: `users/`, `guests/`,
   `reservations/`, `payments/`, `nfc/`, `dashboard/`, `reports/`, `uploads/`,
   `settings/`, and `audit/`.

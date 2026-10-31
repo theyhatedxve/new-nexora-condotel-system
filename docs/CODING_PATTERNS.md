@@ -18,7 +18,9 @@ Preferred foundations:
 
 Examples below illustrate structure. They are not complete authorized future
 feature implementations. Phase 3 is COMPLETED — 8/8 steps; its current reusable
-patterns are recorded below. Phase 5 onward is NOT STARTED / AWAITING APPROVAL.
+patterns are recorded below. Phase 5 is in progress: Steps 1–3 complete; Steps
+4–5 backend complete with frontend integration in progress; Steps 6–7 pending.
+Phase 6 onward is NOT STARTED / AWAITING APPROVAL.
 
 ## 2. React Component Composition
 
@@ -329,3 +331,16 @@ Staged deletion supports restoration after record failure, but pending-file and
 orphan recovery still require operations monitoring. Tests use dedicated
 phase4.step1.test.db through phase4.step7.test.db targets and temporary image storage.
 See [API contracts](API.md) and [current handoff](AGENTS.md) for exact behavior.
+
+## 16. Guest Browsing and Availability Boundary
+
+GuestLayout composes the shared navigation/footer and Outlet. RoomCard,
+useRoomTypes, useRoomDetails, roomTypesApi.js, and formatMoney.js support connected
+room metadata browsing with backend-supplied nightly rates. AvailabilityModule
+separates query validation, data loading, and the pure nightly calculator.
+
+Date/capacity search and stay-total calculation exist in the backend; frontend
+request controls, results, and searched-stay quote display remain in progress.
+Do not duplicate booking pricing in frontend hooks or infer that metadata fetches
+complete an availability integration. Quote/search is informational; booking
+must safely acquire inventory and revalidate prices in its own future workflow.

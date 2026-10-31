@@ -3,12 +3,13 @@
 ## 1. Contract Status
 
 Phases 1–4 are completed per project-owner instruction; Phase 4 has seven steps.
-Phase 5 onward is NOT STARTED / AWAITING APPROVAL. This task inspected sources,
+Phase 5 is IN PROGRESS: Steps 1–3 are complete; Steps 4–5 have completed
+backend work and frontend integration in progress. Steps 6–7 remain pending. Phase 6 onward is NOT STARTED / AWAITING APPROVAL. This task inspected sources,
 installed dependencies, and documentation; it ran no application tests.
 
 Section 4 describes implemented auth/health controllers. Section 5 describes
-registered room, amenity, image, status, and block controllers. Public availability,
-booking, payments, guest/staff management, NFC, reports, and settings APIs remain
+registered room, amenity, image, status, block, and availability controllers.
+Booking, payments, guest/staff management, NFC, reports, and settings APIs remain
 planned. See [acceptance boundaries](SECURITY.md#14-security-acceptance-checks).
 
 ## 2. General Conventions
@@ -126,7 +127,7 @@ not the proposed custom error envelope in section 10. See
 [registration delivery limits](SECURITY.md#15-production-hardening-and-open-concerns).
 Guest accounts remain optional; complete accountless booking is future scope.
 
-## 5. Implemented Room Management and Planned Availability
+## 5. Implemented Room Management and Availability
 
 All paths below include /api. A/M means ADMIN or MANAGER; Staff means ADMIN,
 MANAGER, or RECEPTIONIST. Public routes bypass JWT/role guards; all routes remain
@@ -232,7 +233,57 @@ must check and write in one transaction. Current protection conservatively
 includes PENDING assignments without checking hold expiry; aggregate unassigned
 inventory and the complete reservation acquisition workflow remain future work.
 
-GET /api/availability and public booking endpoints are **planned, not registered**.
+### Public date/capacity availability and pricing
+
+Backend portions of Phase 5 Steps 4–5 are owner-confirmed complete. The guest
+frontend does not yet request this endpoint or display a searched-stay total;
+those frontend portions remain in progress. Source inspection is not a fresh
+runtime test result.
+
+Backend implementation for Steps 4–5 is owner-confirmed complete. Seven quick
+rule checks were reported from another repository copy; a permanent availability
+suite and successful local build/lint are not yet verified. See
+[reported verification](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45).
+Frontend search and searched-stay quote integration remain in progress.
+
+GET /api/availability is registered through AvailabilityModule and marked
+@Public(). Throttle: 30 requests per 60,000 ms; no controller-level Origin
+check beyond bootstrap CORS. Successful response: 200 with {data: [...]}.
+SearchAvailabilityDto accepts checkIn and checkOut as YYYY-MM-DD strings and
+guests converted to an integer from 1 to 2147483647. These names differ from
+earlier illustrative checkInDate/checkOutDate/guestCount query examples.
+
+The service validates real Philippine calendar dates, checkout after check-in,
+check-in not before today in Asia/Manila, and a maximum 30-night stay. The
+30-night bound is the current code constant; it does not establish a separately
+verified property policy. Invalid query/date input returns 400; exactly one
+Property is required or the service returns 500.
+
+Response rows contain id, name, capacity, available, nights,
+nightlyRateCentavos, and totalAmountCentavos. Only active room types with
+sufficient capacity are returned, sorted by base rate/name; unavailable matching
+types remain in the response with available: false. There is no currency,
+roomTypeId, image, or amenity field in this response. Values are PHP centavos;
+the server computes totalAmountCentavos = baseRateCentavos × nights.
+
+Eligible physical-room counts exclude inactive rooms and MAINTENANCE/
+OUT_OF_SERVICE. Active dated blocks reduce capacity per night; canceled blocks
+are ignored. CONFIRMED and CHECKED_IN reservations hold inventory; PENDING
+reservations hold inventory when holdExpiresAt is null or still in the future.
+Expired pending holds, CANCELLED, EXPIRED, and CHECKED_OUT reservations do not
+reduce these counts. Assignments are not counted again as separate reservations.
+
+The pure hasRoomEveryNight calculator requires positive remaining room count
+on every stay night. This does not prove the same physical room is available
+for the entire stay; the search does not account for a feasible assignment
+across changing blocks. It reserves nothing and does not guarantee a future
+booking succeeds. Booking creation and safe acquisition remain unimplemented.
+
+Guest room listing/details currently call metadata/image/amenity endpoints only,
+and format backend nightly rates. A search form, availability request, and
+searched-stay total display were not found in the inspected guest pages.
+Steps 4–5 are owner-confirmed complete; this integration boundary is retained
+without claiming an independently verified end-to-end search flow.
 
 ## 6. Reservations
 
