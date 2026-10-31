@@ -327,6 +327,7 @@ model RoomAssignment {
 // ROOM BLOCK
 // ========================================
 
+
 model RoomBlock {
   id     String @id @default(cuid())
   roomId String
@@ -337,6 +338,9 @@ model RoomBlock {
 
   reason String
 
+  // Null = active. Non-null = canceled.
+  canceledAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -344,6 +348,7 @@ model RoomBlock {
 
   @@index([roomId, startDate, endDate])
 }
+
 
 enum PaymentMethod {
   PAYMONGO
