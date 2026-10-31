@@ -477,6 +477,142 @@ a {
 }
 
 
+/* ==========================================
+   PHASE 5 — STEP 7
+   Responsive and keyboard accessibility
+   ========================================== */
+
+/* Prevent media from exceeding its container. */
+img,
+video {
+  max-width: 100%;
+}
+
+/* Prevent wide content from forcing page overflow. */
+.site-content,
+.rooms-page,
+.room-details {
+  min-width: 0;
+}
+
+/* Consistent focus indicators for keyboard users. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* Maintain visible focus on dark navigation. */
+.navbar a:focus-visible,
+.navbar button:focus-visible {
+  outline-color: var(--color-gold-light);
+}
+
+/* Improve clickable target sizes. */
+.nav-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.primary-button,
+.outline-button,
+.feedback-retry-button {
+  min-height: 44px;
+}
+
+/* Fix grid overflow on narrow mobile screens. */
+.room-grid {
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+/* Responsive room gallery. */
+.room-gallery {
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+
+/* Preserve image proportions. */
+.room-card-image,
+.room-gallery img {
+  max-width: 100%;
+}
+
+/* Room cards must not expand beyond the grid. */
+.room-card,
+.room-card-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Improve readability on narrow devices. */
+.hero h1 {
+  overflow-wrap: anywhere;
+}
+
+/* Keep menu toggle visible and usable on mobile. */
+@media (max-width: 768px) {
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .navbar {
+    padding-left: 5%;
+    padding-right: 5%;
+  }
+
+  .rooms-page {
+    padding: var(--space-8) 5%;
+  }
+
+  .room-details {
+    padding: var(--space-6) 5%;
+  }
+
+  .room-gallery img:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Additional adjustments for very narrow phones. */
+@media (max-width: 360px) {
+  .logo {
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+
+  .hero {
+    padding: 60px 5%;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .room-card-body {
+    padding: var(--space-3);
+  }
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
 /* ---------- Narrow screens ---------- */
 
 @media (max-width: 768px) {

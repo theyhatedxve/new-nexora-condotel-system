@@ -179,6 +179,48 @@
   line-height: 1.6;
 }
 
+
+/* Phase 5 Step 7 — Search layout safeguards */
+
+.availability-search,
+.availability-result,
+.availability-result-card,
+.availability-results {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.availability-fields > *,
+.availability-results-grid > * {
+  min-width: 0;
+}
+
+.availability-fields input {
+  max-width: 100%;
+  min-height: 44px;
+}
+
+.availability-search button,
+.availability-button {
+  min-height: 44px;
+}
+
+.availability-result,
+.availability-result-card {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .availability-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .availability-results-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
 @media (max-width: 768px) {
   .availability-fields {
     grid-template-columns: 1fr;
