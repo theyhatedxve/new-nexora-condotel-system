@@ -18,7 +18,7 @@ Preferred foundations:
 
 Examples below illustrate structure. They are not complete authorized future
 feature implementations. Phase 3 is COMPLETED — 8/8 steps; its current reusable
-patterns are recorded below. Phase 4 onward is NOT STARTED / AWAITING APPROVAL.
+patterns are recorded below. Phase 5 onward is NOT STARTED / AWAITING APPROVAL.
 
 ## 2. React Component Composition
 
@@ -310,3 +310,22 @@ The owner's accepted 23/23 result is reported evidence; no fresh tests ran for
 this update. [Security](SECURITY.md) documents behavioral boundaries, test-source
 coverage, and production concerns. Full booking/payment services remain future
 patterns, not completed implementations.
+
+## 15. Implemented Room-Management Patterns
+
+RoomTypesModule, RoomsModule, AmenitiesModule, RoomImagesModule, and
+RoomBlocksModule use DTO/controller/service separation and explicit response
+projections. RoomRateCapacityService centralizes positive integer/centavo
+validation; Philippine date helpers validate real end-exclusive calendar ranges.
+
+InventorySafetyModule exports assertEligible/assertEligibleInTx without a public
+controller. An assignment writer must check and write in the same transaction;
+a read-only precheck does not reserve anything. Room blocks use canceledAt to
+preserve history. Reservation price snapshots are not updated with current rates.
+
+Image validation decodes/re-encodes WebP and storage uses generated keys. File
+changes need compensation because SQL rollback cannot undo filesystem changes.
+Staged deletion supports restoration after record failure, but pending-file and
+orphan recovery still require operations monitoring. Tests use dedicated
+phase4.step1.test.db through phase4.step7.test.db targets and temporary image storage.
+See [API contracts](API.md) and [current handoff](AGENTS.md) for exact behavior.

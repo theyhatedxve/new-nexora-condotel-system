@@ -28,12 +28,15 @@ Current accepted milestones (documentation synchronized 2026-10-30):
 | Phase 1 | COMPLETED |
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
-| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 4 | COMPLETED — 7/7 steps |
+| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
 
 Phase 1 delivered the two React JavaScript/JSX foundations and connected NestJS
 API. Phase 2 delivered the 24-model foundation, migrations, Prisma/NestJS
 integration, guarded development seed, and isolated integrity tests. Phase 3
 added authentication/security and EmailVerificationToken (25 current models).
+Phase 4 is completed per owner instruction, with room management, validated image
+uploads, shared numeric/date validation, status/blocks, and inventory safety.
 The owner reports 23/23 final acceptance checks passed without reported errors,
 including HTTP security, full Vitest regression, build, Prisma validation, and
 development database preservation. No fresh application checks ran in this task.
@@ -119,21 +122,32 @@ APIs, real SMTP delivery, or production readiness.
 
 ## 6. Phase 04 — Room Management
 
-**Status: NOT STARTED / AWAITING APPROVAL.**
+**Status: COMPLETED — 7/7 steps**, per project-owner instruction on 2026-10-31.
+Implementation and test sources were inspected; no fresh tests/build ran here.
 
-Steps:
+- [x] Step 1 — Room-Type Management: active public reads, ADMIN/MANAGER writes,
+  property scope, duplicate protection, safe capacity/deactivation changes.
+- [x] Step 2 — Physical-Room Management: staff reads, unique room numbers,
+  active type membership, protected reclassification/deactivation.
+- [x] Step 3 — Amenity Management: catalog writes, public reads, links/detach,
+  normalized names, duplicate and permission checks.
+- [x] Step 4 — Approved Room Image Uploads: bounded decoded JPEG/PNG/WebP,
+  WebP re-encoding, controlled storage/delivery, primary selection and recovery.
+- [x] Step 5 — Rate and Capacity Validation: shared integer/centavo bounds,
+  guest-capacity checks, reservation price-snapshot preservation.
+- [x] Step 6 — Operational States and Dated Room Blocks: permitted role-based
+  transitions, real calendar-date ranges, overlap checks, additive canceledAt
+  migration, history-preserving cancellation.
+- [x] Step 7 — Inventory Safety and Regression Testing: reusable transaction-scoped
+  eligibility helper, isolated fixtures for status/block/assignment conflicts,
+  snapshots and concurrent assignment safety.
 
-1. Implement room-type management.
-2. Implement physical-room management.
-3. Add amenities.
-4. Add approved image uploads.
-5. Add rate and capacity validation.
-6. Add operational states and dated blocks.
-7. Test inventory-reducing changes.
-
-Pass condition:
-
-Authorized staff can manage inventory without violating existing bookings.
+Detailed files, rules, and test targets are maintained in
+[AGENTS.md](AGENTS.md#c-completed-project-phases); exact endpoints and DTOs in
+[API.md](API.md#5-implemented-room-management-and-planned-availability).
+Inventory eligibility does not reserve a room or expose public booking/availability.
+Full room-type allocation, hold expiry/acquisition, and connected frontend forms
+remain future integration work. Phase 5 onward requires explicit approval.
 
 ## 7. Phase 05 — Guest Website
 
@@ -315,6 +329,8 @@ output. Neither command authorizes migration or seeding of development data.
 | Registration | step7.registration.test.db |
 | HTTP security | step8.security.test.db |
 | Database integrity | step10.test.db |
+| Room types, physical rooms, amenities, images | phase4.step1.test.db, phase4.step2.test.db, phase4.step3.test.db, phase4.step4.test.db |
+| Rate snapshots, room states/blocks, inventory | phase4.step5.test.db, phase4.step6.test.db, phase4.step7.test.db |
 
 Confirm migrations, client generation, target paths, and synthetic configuration
 before an approved test run. Never substitute dev.db for an isolated test file.

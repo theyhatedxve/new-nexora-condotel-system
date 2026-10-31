@@ -1,9 +1,10 @@
 # NEXORA — Business Flows
 
 Phases 1 and 2 are COMPLETED; Phase 3 is COMPLETED — 8/8 steps based on
-owner acceptance. Phase 4 onward is NOT STARTED / AWAITING APPROVAL. Sections
-1–13 describe approved future business workflows and checks, not functioning
-room/booking/payment/NFC APIs. This task ran no application tests.
+owner acceptance. Phase 4 room management is completed (7/7); Phase 5 onward is
+NOT STARTED / AWAITING APPROVAL. Booking/payment/NFC workflows below remain
+intended operations. Room metadata, permitted statuses, and dated room blocks
+are implemented; that does not make the complete stay journey operational. This task ran no application tests.
 
 ### Implemented optional account and session flow
 
@@ -175,6 +176,17 @@ Cancellation does not automatically mean refund success.
 Cancellation fees and refund rules remain TBD.
 
 ## 10. Maintenance Block
+
+Implemented room-block APIs accept real Philippine calendar dates, reject active
+block overlap and protected unreleased assignment conflicts, and retain canceled
+history through canceledAt. ADMIN/MANAGER can create/update/cancel; reception can
+read. Canceled blocks cannot be edited or canceled twice. Checks and writes share
+a transaction. The reusable inventory service rejects active dated blocks but
+ignores canceled ones. It reserves no inventory.
+
+The complete operational workflow below additionally requires future aggregate
+unassigned-reservation capacity checks and audit/event integration; do not infer
+those from the existing per-room conflict checks.
 
 1. Authorized staff selects a room and date interval.
 2. Backend validates the interval.

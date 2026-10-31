@@ -2,15 +2,14 @@
 
 ## 1. Contract Status
 
-Phases 1 and 2 are COMPLETED. Phase 3 is **COMPLETED — 8/8 steps**, accepted
-by the project owner based on reported checks. Phase 4 onward is
-**NOT STARTED / AWAITING APPROVAL**. No application tests ran for this
-Markdown-only synchronization.
+Phases 1–4 are completed per project-owner instruction; Phase 4 has seven steps.
+Phase 5 onward is NOT STARTED / AWAITING APPROVAL. This task inspected sources,
+installed dependencies, and documentation; it ran no application tests.
 
-Sections 4 and the health response below describe inspected, registered
-controllers. Room, reservation, payment, user-management, and NFC routes in
-sections 5–8 remain proposed under Architecture v2.1; their APIs are not built.
-See [security acceptance and limits](SECURITY.md#14-security-acceptance-checks).
+Section 4 describes implemented auth/health controllers. Section 5 describes
+registered room, amenity, image, status, and block controllers. Public availability,
+booking, payments, guest/staff management, NFC, reports, and settings APIs remain
+planned. See [acceptance boundaries](SECURITY.md#14-security-acceptance-checks).
 
 ## 2. General Conventions
 
@@ -127,44 +126,113 @@ not the proposed custom error envelope in section 10. See
 [registration delivery limits](SECURITY.md#15-production-hardening-and-open-concerns).
 Guest accounts remain optional; complete accountless booking is future scope.
 
-## 5. Rooms and Availability
+## 5. Implemented Room Management and Planned Availability
 
-| Method | Proposed route | Access |
+All paths below include /api. A/M means ADMIN or MANAGER; Staff means ADMIN,
+MANAGER, or RECEPTIONIST. Public routes bypass JWT/role guards; all routes remain
+subject to global throttling (60 per 60,000 ms). These controllers add no explicit
+Origin check beyond bootstrap CORS; the auth POST Origin rules are separate.
+JSON responses use {data: ...}, except 204 deletes and the image binary response.
+POST defaults to 201 unless explicitly changed; GET/PATCH return 200.
+
+| Method and path | Permission | Request / response |
 |---|---|---|
-| GET | /room-types | Public projection |
-| GET | /room-types/:id | Public projection |
-| POST | /room-types | Manager / Administrator |
-| PATCH | /room-types/:id | Manager / Administrator |
-| GET | /rooms | Receptionist / Manager / Administrator |
-| POST | /rooms | Manager / Administrator |
-| PATCH | /rooms/:id | Manager / Administrator |
-| GET | /availability | Public; rate limited |
+| GET /api/room-types | Public | Active types only; public field projection |
+| GET /api/room-types/:id | Public | Active type or 404 |
+| POST /api/room-types | A/M | CreateRoomTypeDto; 201 staff projection |
+| PATCH /api/room-types/:id | A/M | UpdateRoomTypeDto; staff projection |
+| GET /api/rooms | Staff | Physical-room records with nested room-type summary |
+| GET /api/rooms/:id | Staff | Physical-room detail or 404 |
+| POST /api/rooms | A/M | CreateRoomDto; 201, defaults READY/active |
+| PATCH /api/rooms/:id | A/M | UpdateRoomDto; status is not accepted here |
+| PATCH /api/rooms/:id/status | Staff, with service restrictions | UpdateRoomStatusDto |
+| GET /api/amenities | Public | id, name, description |
+| POST /api/amenities | A/M | CreateAmenityDto; 201 |
+| PATCH /api/amenities/:id | A/M | UpdateAmenityDto |
+| GET /api/room-types/:id/amenities | Public | Active type's linked amenities |
+| POST /api/room-types/:id/amenities | A/M | AttachAmenityDto; 201 linked amenity |
+| DELETE /api/room-types/:id/amenities/:amenityId | A/M | 204, no body |
+| GET /api/room-types/:id/images | Public | Active type's image projections |
+| POST /api/room-types/:id/images | A/M | One multipart file plus optional altText/displayOrder; 201 image projection |
+| PATCH /api/room-types/:id/images/:imageId | A/M | UpdateRoomImageDto |
+| DELETE /api/room-types/:id/images/:imageId | A/M | 204, staged file/record deletion |
+| GET /api/room-images/:imageId/file | Public | Active type only; WebP binary, nosniff, inline, public max-age=300 |
+| GET /api/rooms/:id/blocks | Staff | Includes canceled history; sorted by startDate/id |
+| POST /api/rooms/:id/blocks | A/M | CreateRoomBlockDto; 201 |
+| PATCH /api/rooms/:id/blocks/:blockId | A/M | UpdateRoomBlockDto; canceled rows cannot be edited |
+| POST /api/rooms/:id/blocks/:blockId/cancel | A/M | 201 (Nest POST default), preserves row and sets canceledAt; repeats return 409 |
 
-Proposed availability request:
+Room-type public fields: id, name, description, capacity, baseRateCentavos.
+Write responses additionally include propertyId/isActive. There is no separate
+staff endpoint listing inactive room types. Physical rooms return id,
+roomNumber, floor, status, isActive, roomTypeId, and a nested type projection.
+Images return id, roomTypeId, altText, displayOrder, isPrimary, and url; never
+internal filePath. Block fields include id, roomId, dates, reason, canceledAt,
+createdAt, updatedAt. Image metadata is fetched separately from room-type data.
 
-```http
-GET /api/availability?checkInDate=2026-11-10&checkOutDate=2026-11-12&guestCount=2
-```
+### Room DTOs and rules
 
-Proposed response:
+| DTO | Accepted fields |
+|---|---|
+| CreateRoomTypeDto | name string 1–100; optional nullable description up to 2000; integer capacity and baseRateCentavos each 1–2147483647 |
+| UpdateRoomTypeDto | Optional create fields plus Boolean isActive |
+| CreateRoomDto | roomNumber string 1–30; nonempty roomTypeId; optional nullable floor up to 30 |
+| UpdateRoomDto | Optional create fields plus Boolean isActive |
+| UpdateRoomStatusDto | status: READY, CLEANING, MAINTENANCE, or OUT_OF_SERVICE |
+| CreateAmenityDto | name 1–100; optional nullable description up to 1000 |
+| UpdateAmenityDto | Optional create fields |
+| AttachAmenityDto | Nonempty amenityId string |
+| UpdateRoomImageDto | Optional nullable altText up to 300, integer displayOrder 0–2147483647, Boolean isPrimary; false is rejected by service |
+| CreateRoomBlockDto | startDate/endDate as YYYY-MM-DD strings; reason 3–500 characters |
+| UpdateRoomBlockDto | Optional block fields; at least one supplied |
 
-```json
-{
-  "data": [
-    {
-      "roomTypeId": "room-type-example",
-      "name": "Deluxe Suite",
-      "available": true,
-      "nightlyRateCentavos": 250000,
-      "totalAmountCentavos": 500000,
-      "currency": "PHP"
-    }
-  ]
-}
-```
+Global validation rejects undeclared DTO fields. Services reject empty updates,
+blank normalized names, invalid dates, duplicates, and disallowed changes. Optional
+fields use class-validator IsOptional; null is skipped by that decorator, so do
+not infer strict null rejection from the table. Future callers must follow the
+service contract; optional-null edge handling has not been independently tested here.
 
-Availability responses are informational.
-Inventory must be checked again when creating or confirming a booking.
+Capacity/rate values are integer bounds, not a realistic property-specific room
+capacity policy. Rates are centavos; changing the current base rate preserves
+saved reservation price snapshots. Type capacity reductions/deactivation check
+protected upcoming PENDING/CONFIRMED/CHECKED_IN reservations. Reclassifying or
+deactivating a physical room checks protected unreleased assignments.
+
+Receptionists may only transition READY to CLEANING or CLEANING to READY.
+ADMIN/MANAGER may use the service's permitted transitions between READY,
+CLEANING, MAINTENANCE, and OUT_OF_SERVICE. Manual OCCUPIED changes and transitions
+out of OCCUPIED are not allowed; same-state requests conflict. A checked-in
+unreleased assignment with checkout after today prevents administrative changes.
+Inactive rooms cannot transition to READY/CLEANING.
+
+Blocks use real Philippine calendar dates represented by UTC-midnight markers,
+start-inclusive/end-exclusive. Create rejects inactive rooms. Create/update
+reject overlapping active blocks and protected unreleased assignment intervals;
+cancel uses canceledAt (one l), never deletion. Missing records return 404,
+conflicts 409, invalid input 400, missing JWT 401, wrong role 403. Property-scoped
+services require exactly one configured Property or return 500.
+
+### Image upload contract
+
+Multipart field file is required: at most one file, 5 MiB maximum, two text
+fields. Only altText (up to 300) and displayOrder (canonical nonnegative integer
+string up to 2147483647) are accepted. Uploaded bytes must decode as JPEG, PNG,
+or WebP within a 20,000,000-pixel input limit. They are rotated/re-encoded to WebP
+without copying metadata, stored under generated keys, and served through the
+controlled file controller. The first image becomes primary; later changes can
+select a new primary, and deleting the primary chooses a remaining image.
+The input-byte limit does not establish a total disk-storage quota.
+
+### Inventory service boundary
+
+InventorySafetyService exports assertEligible and assertEligibleInTx. It checks
+activity, category/capacity, immediate/future status, dated blocks, and assignment
+overlap; it exposes no controller. The check reserves nothing. Future writers
+must check and write in one transaction. Current protection conservatively
+includes PENDING assignments without checking hold expiry; aggregate unassigned
+inventory and the complete reservation acquisition workflow remain future work.
+
+GET /api/availability and public booking endpoints are **planned, not registered**.
 
 ## 6. Reservations
 

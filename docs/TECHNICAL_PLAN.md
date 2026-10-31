@@ -7,12 +7,13 @@
 | Phase 1 | COMPLETED |
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
-| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 4 | COMPLETED — 7/7 steps |
+| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
 
-Accepted scope and eight completed Phase 3 steps are tracked in the
-[implementation guide](IMPLEMENTATION_GUIDE.md). The owner reports 23/23
+Accepted scope, eight completed Phase 3 steps, and seven completed Phase 4 steps are tracked in the
+[implementation guide](IMPLEMENTATION_GUIDE.md). The owner previously reported 23/23 Phase 3
 acceptance checks passed; this Markdown-only task did not rerun tests/builds.
-No production-readiness or Phase 4 authorization is implied.
+Phase 4 is owner-confirmed complete; no production-readiness or Phase 5 authorization is implied.
 
 Build one approved feature at a time.
 
@@ -86,9 +87,10 @@ NEXORA/
 
 Add folders when needed. This tree is not a requirement to create empty folders.
 
-Current additions include auth registration/verification/security tests,
-common/decorators, common/guards, common/ownership, and src/prisma integration.
-The current schema has 25 models and three migrations; see
+Current modules include auth, room-types, rooms, amenities, room-images,
+room-blocks, common/decorators, common/guards, common/ownership,
+common/validation, common/inventory, and src/prisma integration.
+The current schema has 25 models and four migrations; see
 [the inspected directory map](DIRECTORY_STRUCTURE.md) and
 [database history](DATABASE_SCHEMA.md).
 
@@ -172,6 +174,10 @@ Frontend configuration contains public values such as the API base URL.
 Vite frontend environment values are visible to users.
 Never place backend secrets in frontend configuration.
 
+Room image storage supports ROOM_IMAGE_STORAGE_DIR; the default is
+../storage/room-images relative to backend/. Installed exact versions for all
+62 direct application dependencies are in [AGENTS.md](AGENTS.md#b-installed-dependencies-and-exact-versions).
+
 Auth configuration reads JWT_ACCESS_SECRET and AUTH_ALLOWED_ORIGINS. Email
 delivery reads SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, and
 AUTH_VERIFY_URL. These are variable names only; actual values remain outside
@@ -184,7 +190,7 @@ documentation. See [security](SECURITY.md) for transport and monitoring limits.
 | 01 — Project Foundation | Two React JSX applications, NestJS backend, API connection | COMPLETED |
 | 02 — Database Foundation | Models, relationships, migrations, seeds | COMPLETED |
 | 03 — Authentication & RBAC | Sessions, roles, optional guest accounts | COMPLETED — 8/8 steps |
-| 04 — Room Management | Types, rooms, rates, images, amenities | NOT STARTED / AWAITING APPROVAL |
+| 04 — Room Management | Types, rooms, rates, images, amenities, states/blocks, inventory safety | COMPLETED — 7/7 steps |
 | 05 — Guest Website | Public pages and availability interface | NOT STARTED / AWAITING APPROVAL |
 | 06 — Reservation System | Holds, bookings, assignments, check-in/out | NOT STARTED / AWAITING APPROVAL |
 | 07 — Payment System | PayMongo and Pay at Property | NOT STARTED / AWAITING APPROVAL |
@@ -209,7 +215,9 @@ Phase 11 provides broader integrated verification.
 | External integration | PayMongo test mode and selected NFC hardware |
 
 Phase 3 acceptance includes isolated auth, ownership, registration, and HTTP
-security suites. See [test prerequisites and commands](IMPLEMENTATION_GUIDE.md#15-command-guidance)
+security suites. Phase 4 adds isolated room-type/room/amenity/image, validation,
+status/block, snapshot and inventory tests; this documentation task inspected
+them without executing a new regression run. See [test prerequisites and commands](IMPLEMENTATION_GUIDE.md#15-command-guidance)
 and [reported versus inspected evidence](SECURITY.md#14-security-acceptance-checks).
 
 Use the project's configured test tools and scripts.

@@ -6,17 +6,17 @@ This guide maps the system's directories to their responsibilities and related
 documentation. Paths are relative to the `NEXORA/` repository root at
 `D:\Web-JSX\NEXORA`.
 
-The current structure below was inspected on 2026-10-30, including local files
+The current structure below was inspected on 2026-10-31, including local files
 that are not yet committed. File presence does not establish that a feature has
 been tested or deployed. The [approved architecture v2.1](../NEXORA_ARCHITECTURE_V2.1.md)
-defines system scope; the [documentation index](README.md) explains document
-authority and status labels.
+defines system scope; the [development reference](AGENTS.md) records current scope and approval gates.
+The [system overview](README.md) describes the product without development logs.
 
-Phases 1 and 2 are COMPLETED. Phase 3 is **COMPLETED — 8/8 steps**,
-accepted by the owner from reported 23/23 checks, full regression, build, Prisma
-validation, and preserved development data. Phase 4 onward is **NOT STARTED /
-AWAITING APPROVAL**. This task inspected source; it did not rerun application
-checks. Phase 2's initial 24 models remain; Phase 3 adds EmailVerificationToken
+Phases 1–4 are COMPLETED per owner instruction. Phase 3 has eight completed
+steps and Phase 4 has seven. Phase 5 onward awaits explicit approval. Earlier
+Phase 3 acceptance was based on the owner-reported 23/23 checks, full regression,
+build, Prisma validation, and preserved development data. Phase 4 source/test fixtures were
+inspected; no new pass count is claimed. This task did not rerun application checks. Phase 2's initial 24 models remain; Phase 3 adds EmailVerificationToken
 for **25 current models**. See [AGENTS.md](AGENTS.md) for the completion checklist
 and [security](SECURITY.md#14-security-acceptance-checks) for evidence boundaries.
 
@@ -88,9 +88,22 @@ NEXORA/
 │   │   │   │   └── migration.sql
 │   │   │   ├── 20261030134255_add_email_verification_tokens/
 │   │   │   │   └── migration.sql
+│   │   │   ├── 20261031_phase4_step6_room_block_cancellation/
+│   │   │   │   └── migration.sql
 │   │   │   └── migration_lock.toml
 │   │   └── schema.prisma               # All 25 current models defined
 │   ├── src/
+│   │   ├── amenities/
+│   │   │   ├── dto/
+│   │   │   │   ├── attach-amenity.dto.ts
+│   │   │   │   ├── create-amenity.dto.ts
+│   │   │   │   └── update-amenity.dto.ts
+│   │   │   ├── amenities.authorization.spec.ts
+│   │   │   ├── amenities.controller.ts
+│   │   │   ├── amenities.module.ts
+│   │   │   ├── amenities.service.ts
+│   │   │   ├── amenities.spec.ts
+│   │   │   └── room-type-amenities.controller.ts
 │   │   ├── auth/
 │   │   │   ├── dto/
 │   │   │   │   ├── login.dto.ts
@@ -123,18 +136,66 @@ NEXORA/
 │   │   │   │   ├── jwt-auth.guard.ts
 │   │   │   │   ├── roles.guard.spec.ts
 │   │   │   │   └── roles.guard.ts
-│   │   │   └── ownership/
-│   │   │       ├── ownership.module.ts
-│   │   │       ├── ownership.service.spec.ts
-│   │   │       └── ownership.service.ts
+│   │   │   ├── inventory/
+│   │   │   │   ├── inventory-safety.module.ts
+│   │   │   │   ├── inventory-safety.service.ts
+│   │   │   │   └── inventory-safety.spec.ts
+│   │   │   ├── ownership/
+│   │   │   │   ├── ownership.module.ts
+│   │   │   │   ├── ownership.service.spec.ts
+│   │   │   │   └── ownership.service.ts
+│   │   │   └── validation/
+│   │   │       ├── philippine-date-range.ts
+│   │   │       ├── room-rate-capacity.service.ts
+│   │   │       └── room-rate-capacity.spec.ts
 │   │   ├── generated/
-│   │   │   └── prisma/                  # Generated Prisma client
+│   │   │   └── prisma/                  # Generated contents omitted
 │   │   ├── prisma/
 │   │   │   ├── prisma.module.ts
 │   │   │   ├── prisma.service.ts
-│   │   │   └── seed.ts                 # Guarded development sample data
-│   │   ├── app.controller.ts
+│   │   │   └── seed.ts
+│   │   ├── room-blocks/
+│   │   │   ├── dto/
+│   │   │   │   ├── create-room-block.dto.ts
+│   │   │   │   └── update-room-block.dto.ts
+│   │   │   ├── room-blocks.authorization.spec.ts
+│   │   │   ├── room-blocks.controller.ts
+│   │   │   ├── room-blocks.module.ts
+│   │   │   ├── room-blocks.service.ts
+│   │   │   └── room-blocks.spec.ts
+│   │   ├── room-images/
+│   │   │   ├── dto/
+│   │   │   │   └── update-room-image.dto.ts
+│   │   │   ├── image-storage.service.ts
+│   │   │   ├── image-validation.service.ts
+│   │   │   ├── room-images.authorization.spec.ts
+│   │   │   ├── room-images.controller.ts
+│   │   │   ├── room-images.module.ts
+│   │   │   ├── room-images.service.ts
+│   │   │   └── room-images.spec.ts
+│   │   ├── room-types/
+│   │   │   ├── dto/
+│   │   │   │   ├── create-room-type.dto.ts
+│   │   │   │   └── update-room-type.dto.ts
+│   │   │   ├── room-rate-capacity.integration.spec.ts
+│   │   │   ├── room-types.controller.ts
+│   │   │   ├── room-types.module.ts
+│   │   │   ├── room-types.service.ts
+│   │   │   └── room-types.spec.ts
+│   │   ├── rooms/
+│   │   │   ├── dto/
+│   │   │   │   ├── create-room.dto.ts
+│   │   │   │   ├── update-room-status.dto.ts
+│   │   │   │   └── update-room.dto.ts
+│   │   │   ├── room-status.controller.ts
+│   │   │   ├── room-status.service.ts
+│   │   │   ├── rooms.authorization.spec.ts
+│   │   │   ├── rooms.controller.ts
+│   │   │   ├── rooms.module.ts
+│   │   │   ├── rooms.service.ts
+│   │   │   └── rooms.spec.ts
 │   │   ├── app.controller.spec.ts
+│   │   ├── app.controller.ts
 │   │   ├── app.module.ts
 │   │   ├── app.service.ts
 │   │   └── main.ts
@@ -158,7 +219,7 @@ NEXORA/
 │   ├── vitest.config.e2e.ts
 │   └── README.md
 ├── docs/
-│   ├── README.md                       # Documentation index
+│   ├── README.md                       # System overview
 │   ├── DIRECTORY_STRUCTURE.md          # This directory guide
 │   ├── AGENTS.md                       # Synchronized agent handoff and checklist
 │   ├── NEXORA_ARCHITECTURE_V2.1.md      # Documentation copy of architecture
@@ -175,6 +236,8 @@ NEXORA/
 │   ├── CODING_PATTERNS.md
 │   ├── CONVENTIONAL_COMMITS.md
 │   └── CI_CD_ROADMAP.MD
+├── backups/                            # Local backup contents omitted
+├── storage/                            # Local image contents omitted
 ├── .gitignore
 ├── AGENTS.md                            # Agent instructions and progress handoff
 ├── NEXORA_ARCHITECTURE_V2.1.md           # Approved architecture
@@ -194,17 +257,19 @@ NEXORA/
 | `backend/src/` | API bootstrap, modules, controllers, and services | [System design](SYSTEM_DESIGN.md), [API contracts](API.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/src/auth/` | Auth, registration, SMTP delivery, verification, DTOs, and security tests | [Implemented API](API.md), [security](SECURITY.md) |
 | `backend/src/common/` | Public/role decorators, global guards, and reusable OwnershipModule/OwnershipService | [Security](SECURITY.md), [coding patterns](CODING_PATTERNS.md) |
+| `backend/src/room-types/`, `rooms/`, `amenities/`, `room-images/`, `room-blocks/` | Implemented room-management modules, DTOs, controllers, services, and isolated tests | [API](API.md), [security](SECURITY.md) |
+| `backend/src/common/validation/` and `common/inventory/` | Shared numeric/date validation and transaction-scoped room eligibility; no public booking endpoint | [Database safety](DATABASE_SCHEMA.md), [development reference](AGENTS.md) |
 | `backend/src/prisma/` | NestJS database provider, connection lifecycle, and guarded development seed | [Database schema](DATABASE_SCHEMA.md), [coding patterns](CODING_PATTERNS.md) |
-| `backend/prisma/` | All 25 model definitions and three migrations | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
+| `backend/prisma/` | All 25 model definitions and four migrations | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `backend/src/generated/prisma/` | Prisma-generated client used by backend code; regenerate through Prisma tooling | [Database schema](DATABASE_SCHEMA.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/src/*.spec.ts` and `backend/test/` | Colocated unit tests and separate end-to-end tests using Vitest configuration | [Implementation guide](IMPLEMENTATION_GUIDE.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/test/database/` | Database integrity tests using an existing migrated `backend/step10.test.db`; covers connectivity, constraints, relations, rollback, and persistence | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `.env.example` files | Environment configuration templates without real credentials | [Security](SECURITY.md), [development rules](DEVELOPMENT_RULES.md) |
 | Application `package.json` files | Per-application dependencies and executable scripts | [Implementation guide](IMPLEMENTATION_GUIDE.md), [CI/CD roadmap](CI_CD_ROADMAP.MD) |
-| `docs/` | Architecture explanations, standards, contracts, and delivery guidance | [Documentation index](README.md) |
+| `docs/` | Architecture explanations, standards, contracts, and delivery guidance | [Development reference](AGENTS.md) |
 
 Both frontend applications communicate with the shared backend API. Database
-access belongs in the backend. Backend authentication is accepted through Phase 3; placeholder screens and
+access belongs in the backend. Backend authentication and room management are implemented; placeholder screens and
 database models do not establish frontend authentication integration, booking,
 payment, or physical NFC functionality. Ownership helpers must be called by
 future business services explicitly.
@@ -222,10 +287,11 @@ needs them:
 
 - Frontend `layouts/`, `routes/`, and `hooks/` where absent. The admin application
   already has `layouts/`; the guest application does not yet have it.
-- Backend future feature directories: `users/`, `guests/`, `rooms/`,
+- Backend future feature directories: `users/`, `guests/`,
   `reservations/`, `payments/`, `nfc/`, `dashboard/`, `reports/`, `uploads/`,
   `settings/`, and `audit/`.
-- Backend `auth/` and `common/` already exist; add further shared concerns only when needed.
+- Backend `auth/`, `room-types/`, `rooms/`, `amenities/`, `room-images/`,
+  `room-blocks/`, and `common/` already exist; add further shared concerns only when needed.
 
 Keep frontend source in JavaScript/JSX and backend source in TypeScript. Place
 business logic in backend services, follow the existing naming conventions, and
@@ -240,7 +306,7 @@ Follow the approval and verification process in the
 
 | Document | How it relates to this guide |
 |---|---|
-| [README.md](README.md) | Entry point, document authority, and reading order |
+| [README.md](README.md) | Product-focused system overview and intended user experiences |
 | [AGENTS.md](AGENTS.md) | Phase completion checklist and agent handoff; kept synchronized with the root copy |
 | [NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md) | Documentation copy of the approved architecture that defines the system scope |
 | [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) | Explains system boundaries and the responsibilities behind the directories |
@@ -262,7 +328,7 @@ Follow the approval and verification process in the
 Update this file when source directories or significant entry points change.
 Keep the current tree aligned with the working source and identify planned
 directories separately. Update the [technical plan](TECHNICAL_PLAN.md) when the
-intended layout changes, and keep the [documentation index](README.md) linked to
+intended layout changes, and keep the [development reference](AGENTS.md) aligned with
 this guide.
 
 Exclude dependency contents, build output, secrets, and local database contents

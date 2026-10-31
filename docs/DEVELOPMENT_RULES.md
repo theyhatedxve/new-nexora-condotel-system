@@ -86,3 +86,17 @@ Update the README as the project develops.
 Document important implementation decisions.
 
 Keep instructions understandable.
+
+## 9. Room-Management and Database Safety
+
+Reuse shared rate/capacity, Philippine-date, and inventory helpers. Keep
+integer-centavo reservation price snapshots independent from current room rates.
+Use canceledAt for room-block cancellation; preserve historical rows. Perform
+inventory checks in the same transaction as assignment writes. Eligibility
+helpers alone do not expose public booking or guarantee complete allocation.
+
+Never reset, overwrite, or redirect tests to backend/dev.db. Approve additive
+migrations and consistent backups separately; use dedicated test databases and
+temporary image storage. Record actual regression results and update documentation
+after approved steps. Phase 5 onward requires explicit approval. Exact installed
+dependencies and current workflow are maintained in [AGENTS.md](AGENTS.md).

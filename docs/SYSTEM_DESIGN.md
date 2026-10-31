@@ -16,15 +16,17 @@ Guest registration is optional. A guest may book without creating an account.
 | Phase 1 | COMPLETED |
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
-| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 4 | COMPLETED — 7/7 steps |
+| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
 
 The owner reports successful Phase 3 acceptance (23/23 checks); this update
 inspected source without rerunning application tests. The working modular
-monolith now includes authentication, registration/email verification, global
-JWT/role/throttling guards, and reusable ownership services. It has 25 Prisma
-models after the Phase 3 EmailVerificationToken extension. Operational business
-features and frontend auth integration remain future work; this is not a
-production-readiness declaration.
+monolith includes authentication, registration/email verification, global
+JWT/role/throttling guards, room-management modules, and shared ownership/inventory
+services. It has 25 Prisma models after the Phase 3 EmailVerificationToken extension. Room-management
+services, image uploads, operational states, blocks, and inventory eligibility
+are implemented. Full booking/payment operations and frontend auth integration
+remain future work; this is not a production-readiness declaration.
 
 See [phase checklists](IMPLEMENTATION_GUIDE.md), [actual API contracts](API.md),
 [database evolution](DATABASE_SCHEMA.md), and [security evidence](SECURITY.md).
@@ -91,12 +93,13 @@ Frontend applications must never connect directly to the database.
 | Audit | Administrative activity history |
 | Uploads | Room image validation and storage |
 
-This module table describes the approved full-system scope. AuthModule and
-PrismaModule are implemented; OwnershipModule exports record-access checks for
-explicit import by future feature modules. User/guest management, rooms,
-reservations, payments, NFC, dashboards, reports, uploads, settings, and audit
-business APIs are not established by Phase 3. Create their modules only under
-the corresponding approved phases.
+This table describes the approved full-system scope. Implemented modules are
+AuthModule, PrismaModule, RoomTypesModule, RoomsModule, AmenitiesModule,
+RoomImagesModule, and RoomBlocksModule. OwnershipModule and InventorySafetyModule
+export reusable checks for explicit use by feature services. The inventory
+service exposes no public booking/availability API. Full guest/staff management,
+reservations, payments, NFC, data-powered dashboards, reports, settings, and audit
+business workflows remain future work. See [actual contracts](API.md).
 
 ## 5. Roles and Permissions
 
@@ -115,7 +118,10 @@ the corresponding approved phases.
 | Manage staff accounts | No | No | No | Yes |
 | Manage settings | No | No | No | Yes |
 
-The table defines permissions for future business features. Global JWT and role
+The table defines the full-system permission intent. Room/amenity/image writes
+are implemented for ADMIN/MANAGER; physical room/block reads allow reception.
+Reception status changes are restricted to READY/CLEANING. Other business
+permissions remain requirements for future features. Global JWT and role
 guards are implemented; @Roles() matches explicit role lists without an ADMIN
 bypass. OwnershipService checks linked Guest.userId and reservation.guest.userId,
 returns 404 for private/inaccessible records, and permits staff only through an
@@ -230,7 +236,7 @@ Future scope:
 
 ## 11. Unresolved Decisions
 
-Refer to the [documentation index](README.md#7-outstanding-decisions) for the
+Refer to the [security concerns](SECURITY.md#15-production-hardening-and-open-concerns) for the
 decision register and [security concerns](SECURITY.md#15-production-hardening-and-open-concerns)
 for remaining production work.
 

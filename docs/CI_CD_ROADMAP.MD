@@ -12,11 +12,13 @@
 | Phase 1 | COMPLETED |
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
-| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 4 | COMPLETED — 7/7 steps |
+| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
 
 The owner reports 23/23 final checks passed, HTTP security, full Vitest
 regression, NestJS build, Prisma validation, and preserved development data.
 This task inspected sources and edited Markdown only; no fresh checks ran.
+Phase 4 completion is owner-directed; current tests were inspected, not rerun.
 Application-phase acceptance does not mark CI workflows or deployment stages
 below implemented. These remain a proposed roadmap requiring approval.
 
@@ -215,7 +217,8 @@ A successful build must not be reported as successful test coverage.
 Current backend commands and their prerequisites are recorded in the
 [implementation guide](IMPLEMENTATION_GUIDE.md#15-command-guidance). The HTTP
 security suite is selected by npm run test -- src/auth/security/security-http.spec.ts;
-full npm run test includes five isolated SQLite database paths across its suites.
+full npm run test includes the five earlier isolated database targets plus
+phase4.step1.test.db through phase4.step7.test.db for room-management suites.
 Provision/migrate those disposable files separately under approved CI setup;
 never point tests at development data. Use prisma7.config.ts explicitly for CLI
 validation. No pipeline or databases were created by this documentation update.

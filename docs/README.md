@@ -1,146 +1,139 @@
-# NEXORA — Documentation Index
+# 1. NEXORA
 
-## 1. Purpose
+NEXORA is an integrated, web-based Condotel Management System for one property.
+It connects accommodation information, guest services, and staff operations
+through a shared platform designed for secure and maintainable daily use.
 
-NEXORA is a single-property condotel management system.
+## 2. System Overview
 
-Its approved scope includes the following; payments and NFC business features
-remain future work:
+The system is designed to reduce fragmented room records and disconnected
+workflows. A guest-facing website provides a public entry point, while an
+administration dashboard gives staff a dedicated workspace. Both use one backend
+API and a central database so access rules and business decisions stay consistent.
 
-- NEXORA Guest Website.
-- NEXORA Admin Dashboard.
-- One shared NestJS REST API.
-- One centralized SQL database.
-- PayMongo Hosted Checkout.
-- Pay at Property.
-- NFC management, with physical integration dependent on hardware selection.
+The backend currently supports accounts, authentication, authorization, room-type
+and physical-room management, amenities, room images, operational room states,
+and dated room blocks. The web applications provide starter screens and
+navigation; complete guest and staff workflows are still intended capabilities.
 
-This documentation explains the architecture, business rules, development
-standards, and implementation order.
+## 3. System Users
 
-## 2. Architecture Authority
-
-The approved Master Architecture v2.1 defines the system scope.
-
-These documents expand that architecture without replacing it.
-
-Use the following labels:
-
-| Label | Meaning |
+| User | Responsibilities and typical interactions |
 |---|---|
-| Approved | Explicitly defined by Master Architecture v2.1 or a subsequent approved decision |
-| Proposed | Suggested implementation detail awaiting approval |
-| TBD | Decision has not been made |
-| Implemented | Verified in the application source |
-| Tested | Verified through a recorded test |
+| Guest | Explore accommodation and, as guest workflows become available, arrange and manage a stay; account creation is optional |
+| Receptionist | Review physical rooms and blocks; perform permitted ready/cleaning transitions; intended reception workflows include guest assistance and arrivals/departures |
+| Manager | Manage room types, physical rooms, amenities, images, rates, capacity, operational states, and dated blocks; intended oversight includes reservations and reports |
+| Administrator | Manage permitted room operations and system access; wider staff-account and settings interfaces remain intended capabilities |
 
-A documented feature is not automatically implemented or tested.
+Permissions are enforced by the backend. An administrator role does not
+automatically bypass an explicit role list or private-record ownership check.
 
-Do not infer current project progress from an older architecture status.
-Verify the current repository and the latest approved development results.
+## 4. Guest-Facing Website
 
-### Accepted progress
+The guest application currently includes a homepage, rooms screen, navigation,
+shared styling, and a backend-connection status component. Public backend APIs
+provide active room-type details, amenities, and approved room images. Complete
+integration of that data into the guest browsing experience remains to be built.
 
-| Phase | Status |
-|---|---|
-| Phase 1 | COMPLETED |
-| Phase 2 | COMPLETED |
-| Phase 3 | COMPLETED — 8/8 steps |
-| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+The intended experience includes property information, accommodation photos,
+room-type details, date-based availability, reservations, optional accounts,
+booking management, and payment selection. Account registration, email
+verification, and sign-in are supported by backend services; complete browser
+account screens and reservation/payment workflows are not yet available.
 
-The owner accepted Phase 3 from reported successful tests: 23/23 checks, HTTP
-security, full Vitest regression, NestJS build, Prisma validation, and preserved
-development data. This synchronization inspected source and Markdown; it did
-not rerun those checks. See [eight-step checklist](IMPLEMENTATION_GUIDE.md#5-phase-03--authentication-and-rbac)
-and [evidence boundaries](SECURITY.md#14-security-acceptance-checks).
-Phase completion is not production readiness or approval to start Phase 4.
+## 5. Administration Dashboard
 
-## 3. Technology Stack
+The administration application provides a shared layout, sidebar, dashboard
+starter, and placeholder operational pages. Room-management APIs support
+room types, physical rooms, amenities, photos, rates, capacity, permitted
+operational status changes, and maintenance/date blocks.
 
-| Area | Approved technology |
-|---|---|
-| Guest frontend | React, JavaScript/JSX, Vite |
-| Admin frontend | React, JavaScript/JSX, Vite |
-| Navigation | React Router |
-| API client | Axios |
-| Styling | Plain CSS |
-| Icons | Lucide React |
-| Backend | NestJS with Express |
-| Backend language | TypeScript |
-| Database access | Prisma ORM |
-| Development database | SQLite |
-| Production database | PostgreSQL recommended |
-| Authentication | Passport and JWT |
-| Password hashing | Argon2id |
-| Payments | PayMongo Hosted Checkout and Pay at Property |
+Connected management forms, reservation and guest-record workflows, staff-account
+administration, payment/transaction screens, reports, and monitoring views remain
+intended interface capabilities. Navigation labels do not establish a working
+business workflow.
 
-Frontend source uses `.jsx`, `.js`, and `.css`.
-Backend source uses `.ts`.
+## 6. Room Inventory and Availability
 
-Do not introduce frontend TypeScript.
+A **room type** describes an accommodation category, its capacity, and base rate.
+A **physical room** is an individual room belonging to that type. Room images and
+amenities describe the category; operational status describes a room's current
+condition, such as Ready, Cleaning, Occupied, Maintenance, or Out of Service.
 
-## 4. Documentation Map
+Dated blocks exclude a physical room for an interval. Canceling a block preserves
+its history while removing it from active block checks. Room assignments link
+reservations to physical rooms and retain release history.
 
-| File | Purpose |
-|---|---|
-| [AGENTS.md](AGENTS.md) | Synchronized progress handoff and completed phase checklists |
-| [NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md) | Approved baseline and current-status addendum |
-| [DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md) | Current directory tree, folder responsibilities, and links to related documentation |
-| SYSTEM_DESIGN.md | System boundaries, roles, modules, and architecture |
-| TECHNICAL_PLAN.md | Folder structure, technical responsibilities, and roadmap |
-| design_guidelines.md | Visual foundations and interface behavior |
-| [API.md](API.md) | Implemented auth/health contracts and clearly proposed future business APIs |
-| DATABASE_SCHEMA.md | Models, relationships, constraints, and data conventions |
-| BUSINESS_FLOWS.md | Operational workflows and failure handling |
-| SECURITY.md | Authentication, authorization, payment, and NFC security |
-| IMPLEMENTATION_GUIDE.md | Step-by-step development and verification |
-| CODING_PRINCIPLES.md | SOLID, ACID, CRUD, DRY, KISS, and YAGNI |
-| CODING_PATTERNS.md | Practical frontend and backend patterns |
-| CONVENTIONAL_COMMITS.md | Commit format and examples |
-| [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md) | Project standards, folder organization, and development process |
-| [CI_CD_ROADMAP.MD](CI_CD_ROADMAP.MD) | Planned continuous integration, release, and deployment workflow |
+A reusable backend eligibility service checks room activity, matching type,
+capacity, operational status, active blocks, and conflicting assignments.
+Immediate use requires a Ready room. Future eligibility uses the requested dates
+and relevant conflicts. This check does not reserve inventory or expose a public
+availability or booking API; complete reservation allocation remains intended work.
 
-## 5. Recommended Reading Order
+## 7. Reservation and Guest Experience
 
-1. SYSTEM_DESIGN.md
-2. BUSINESS_FLOWS.md
-3. TECHNICAL_PLAN.md, then [DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md) for the current layout
-4. DATABASE_SCHEMA.md
-5. API.md
-6. SECURITY.md
-7. design_guidelines.md
-8. CODING_PRINCIPLES.md
-9. CODING_PATTERNS.md
-10. IMPLEMENTATION_GUIDE.md
-11. CONVENTIONAL_COMMITS.md
+The intended journey is to explore rooms, select stay dates, provide guest
+details, review a trusted price, choose payment, and receive a confirmed booking.
+Reception would then coordinate room assignment, arrival, departure, and follow-up
+room preparation. These complete booking and reception workflows are not yet
+operational.
 
-## 6. Development Workflow
+Guests must be able to book without registering when booking becomes available.
+Optional accounts are intended to provide convenient access to verified personal
+records. Booking references alone must never expose private stay information.
 
-For each phase or step:
+## 8. Security and Data Protection
 
-1. Review the existing implementation.
-2. Explain the proposed change.
-3. Obtain approval for the specific scope.
-4. Provide readable, copy-paste-ready code when authorized.
-5. Explain exact file locations and placement.
-6. Run the relevant checks.
-7. Record actual results.
-8. Obtain approval before advancing to another phase.
+The backend uses password hashing, signed access tokens, rotating session
+credentials, explicit role permissions, and reusable ownership checks. Optional
+registration requires email verification before account activation. Guest data
+is returned only through authorized access and appropriate response projections.
 
-Approval of documentation does not authorize application implementation.
+Uploaded room images are decoded and validated, then re-encoded for controlled
+public delivery. Backend secrets and private records belong outside public
+source and browser configuration. Production operation requires HTTPS, durable
+storage, monitoring, tested recovery, and deployment-specific verification.
 
-## 7. Outstanding Decisions
+The intended online payment design uses hosted checkout and verified provider
+events. Payment processing is not implemented; a browser return page must never
+be treated as proof of payment.
 
-- NFC cards, encoders, readers, locks, and vendor protocol.
-- NFC online/offline behavior.
-- Inventory-hold duration.
-- Cancellation and refund policy.
-- Pay at Property arrival cutoff and no-show timing.
-- Final contracts for future business APIs; Phase 3 auth contracts are implemented.
-- Future service constraints and any approved schema evolution; the current schema has 25 models.
-- Production hosting, domains, and durable image storage.
-- Production migration and recovery procedures.
-- Email GET-link prefetch protection and SMTP failure monitoring.
-- Bootstrap CORS review, legacy end-to-end test reconciliation, and detailed acceptance-run evidence (see [security concerns](SECURITY.md#15-production-hardening-and-open-concerns)).
+## 9. NFC Room Access
 
-Keep these decisions visible until resolved.
+NFC card administration and compatible door-lock integration are planned.
+The intended design associates approved credentials with authorized rooms and
+stay periods, supports revocation, and records supported access events.
+
+Actual unlocking, expiry, offline behavior, and revocation depend on selected
+cards, readers, locks, and vendor integration methods. Physical door functionality
+must not be inferred from database models or software simulations.
+
+## 10. System Architecture
+
+```text
+Guest Website                       Administration Dashboard
+      \                                      /
+       +------------ Shared Backend API ----+
+                              |
+                     Central SQL Database
+                              |
+            Planned external integration boundaries
+                    /                         \
+          Hosted payment provider       NFC adapter and
+                                        compatible door devices
+```
+
+The two web applications use React with JavaScript/JSX and Vite. The backend
+uses NestJS with TypeScript and Prisma database access. SQLite supports local
+development; PostgreSQL is the recommended production target and requires
+separate migration and deployment verification. Payment and hardware boundaries
+in the diagram describe intended integrations.
+
+Technical references: [API contracts](API.md), [system design](SYSTEM_DESIGN.md),
+[database architecture](DATABASE_SCHEMA.md), and [security](SECURITY.md).
+
+## 11. System Vision
+
+NEXORA aims to provide a connected, secure, efficient, and maintainable condotel
+management experience, with clear guest interactions and reliable tools for
+the people operating the property.

@@ -10,7 +10,8 @@ EmailVerificationToken: the inspected current schema has **25 models**.
 
 Phase 3 is COMPLETED — 8/8 steps based on owner-reported acceptance. Current
 fields below follow backend/prisma/schema.prisma; this documents the approved
-extension without replacing the historical architecture. Room, reservation,
+extension without replacing the historical architecture. Phase 4 room-type, room,
+amenity, image, status, and dated-block services are implemented. Reservation,
 payment, NFC, reports, and settings business APIs remain future work.
 This documentation task did not query databases or apply migrations.
 
@@ -21,6 +22,7 @@ This documentation task did not query databases or apply migrations.
 | 20261027150551_init | Initial 24-model foundation |
 | 20261029133315_add_refresh_token_family | Nullable RefreshToken.familyId and index |
 | 20261030134255_add_email_verification_tokens | EmailVerificationToken table, unique hash, user/expiry indexes, restrictive User foreign key |
+| 20261031_phase4_step6_room_block_cancellation | Add nullable RoomBlock.canceledAt; existing rows stay active, canceled history is preserved |
 
 Migration files were inspected. Successful validation and preservation of the
 development database are reported acceptance results, not fresh checks here.
@@ -113,7 +115,7 @@ email matching alone.
 | Model | Important fields | Constraints / rules |
 |---|---|---|
 | Property | id, name, address, city, province, country, contact fields | Single-property invariant |
-| RoomType | id, propertyId, name, capacity, baseRateCentavos, isActive | Positive capacity; nonnegative rate |
+| RoomType | id, propertyId, name, capacity, baseRateCentavos, isActive | Service-enforced integer capacity/rate in 1–2147483647; positive centavos |
 | Room | id, roomTypeId, roomNumber, floor?, status, isActive | Unique room number |
 | Amenity | id, name, description? | Unique amenity name |
 | RoomTypeAmenity | roomTypeId, amenityId | Composite primary key |
@@ -132,15 +134,17 @@ RoomBlock describes dated inventory exclusion.
 
 ## 6. Reservation Models
 
-These model definitions exist; reservation operations and inventory enforcement
-are NOT STARTED / AWAITING APPROVAL in later phases.
+These model definitions exist. Full reservation operations and aggregate
+inventory acquisition remain NOT STARTED / AWAITING APPROVAL. Physical-room
+eligibility and administrative block/assignment protections are implemented
+as described in section 11.
 
 | Model | Current fields | Constraints / relations |
 |---|---|---|
 | Reservation | id, reservationNumber, guestId, roomTypeId, checkInDate, checkOutDate, guestCount, nightlyRateCentavos, totalAmountCentavos, status, holdExpiresAt?, createdAt, updatedAt | Unique reference; restrictive Guest and RoomType FKs; indexes on guestId, roomTypeId/checkInDate/checkOutDate, status/holdExpiresAt |
 | ReservationGuest | id, reservationId, firstName, lastName, createdAt | Restrictive Reservation FK; reservationId index |
 | RoomAssignment | id, reservationId, roomId, assignedAt, releasedAt?, createdAt | Restrictive Reservation/Room FKs; reservationId and roomId indexes |
-| RoomBlock | id, roomId, startDate, endDate, reason, createdAt, updatedAt | Restrictive Room FK; roomId/startDate/endDate index |
+| RoomBlock | id, roomId, startDate, endDate, reason, canceledAt?, createdAt, updatedAt | Restrictive Room FK; roomId/startDate/endDate index |
 
 ReservationStatus is PENDING, CONFIRMED, CHECKED_IN, CHECKED_OUT, CANCELLED,
 or EXPIRED. Allowed transitions still require business-service enforcement.
@@ -149,13 +153,14 @@ The former planning table used primaryGuestId; the actual field is guestId and
 the relation is guest. Reservation has no checkedInAt/checkedOutAt fields.
 ReservationGuest stores occupant names, not a guestId link or unique
 reservationId/guestId pair. RoomAssignment uses assignedAt/releasedAt and has no
-startDate/endDate/updatedAt. RoomBlock has no type or cancelledAt. These are
+startDate/endDate/updatedAt. RoomBlock has no type; Phase 4 added canceledAt (one l), not cancelledAt. These are
 explicit differences from earlier detailed planning examples; future services
 must work from the current schema and obtain approval for any needed changes.
 
-Preserve assignment history and check overlapping stays transactionally in
-future implementations. Current indexes do not enforce non-overlapping stays,
-single-property cardinality, positive capacities, or the full booking rules.
+Preserve assignment history and use the shared transactional eligibility
+checks when implementing future assignment writers. Current indexes do not enforce non-overlapping stays,
+single-property cardinality or the full booking rules. Room services enforce
+one configured property and shared positive rate/capacity bounds at runtime.
 
 ## 7. Payment Models
 
@@ -218,13 +223,34 @@ RoomTypeAmenity uses a composite roomTypeId/amenityId primary key. Foreign-key
 deletions are restrictive. Full field/index details are in the tables above
 and the current schema.
 
-Numeric/date business checks, occupant-count policy, single-property rules, and
-non-overlapping bookings need explicit service enforcement. No guestId-based
+Rate/capacity and block-date checks are implemented in services. Complete
+booking allocation, aggregate inventory, and reservation lifecycle rules still
+need their future service implementation. No guestId-based
 unique pair exists on ReservationGuest. Candidate query-specific inventory
 indexes may be reviewed in future phases; do not confuse them with implemented
 constraints. A unique booking reference does not prevent overlapping stays.
 
 ## 11. Inventory Integrity
+
+Phase 4 InventorySafetyService checks a physical room's property, active room/type,
+matching type, capacity, permitted operational status, active blocks, and overlapping
+unreleased PENDING/CONFIRMED/CHECKED_IN assignments. It excludes canceled blocks
+(canceledAt not null). IMMEDIATE requires READY and dates covering today in
+Asia/Manila. FUTURE can permit CLEANING/OCCUPIED when no dated conflict exists.
+MAINTENANCE/OUT_OF_SERVICE are ineligible. The service reserves nothing; future
+writers must call assertEligibleInTx within the assignment transaction. The
+current checks protect PENDING assignments conservatively without hold-expiry
+filtering and do not implement aggregate unassigned room-type inventory.
+
+Room block create/update checks overlapping active blocks and protected
+assignments in the same transaction as the write. Cancellation preserves the
+record; canceled blocks cannot be edited or canceled twice. Room status changes
+protect checked-in assignments, and reclassification/deactivation protects
+upcoming unreleased assignments. These controls do not expose a booking API.
+
+Current base-rate updates leave Reservation.nightlyRateCentavos and
+Reservation.totalAmountCentavos untouched; snapshot/inventory tests verify that
+intent in source. No fresh database/test run was performed here.
 
 Two intervals overlap when:
 
@@ -253,7 +279,9 @@ Implemented auth transactions coordinate registration, refresh rotation,
 verification token claims/account activation, and verification resend. SMTP is
 after commit and is not rolled back with database writes.
 
-Future operations requiring coordinated database writes include:
+Phase 4 also uses transactions for protected room/type updates, block conflicts,
+image primary selection and record deletion. File operations use compensation,
+not SQL rollback. Future booking/payment operations include:
 
 - Creating a reservation and inventory hold.
 - Confirming inventory.
@@ -288,3 +316,21 @@ Persist their state and provide safe retry/reconciliation behavior.
 9. Verify application behavior and recovery.
 
 Changing the datasource provider alone is not a complete SQLite-to-PostgreSQL migration.
+
+## 14. SQLite Safety and Backup Policy
+
+The runtime adapter is PrismaBetterSqlite3 with file:./dev.db; launching from
+backend/ targets D:\Web-JSX\NEXORA\backend\dev.db. A source comment mentioning
+prisma/dev.db is stale. CLI configuration uses DATABASE_URL in prisma7.config.ts;
+verify the CLI target independently before authorizing any migration.
+
+Use additive, reviewed migrations; never reset/replace development data as a
+test setup shortcut. Use a consistent SQLite backup API or an approved offline
+backup accounting for journals/WAL. Check PRAGMA integrity_check on a read-only
+backup connection and rehearse restoration on a disposable file before trusting
+recovery. No backup, query, integrity check, or migration was executed here.
+Local backups/ and storage/ directories are not versioned business APIs.
+
+Dedicated test targets and command effects are maintained in
+[AGENTS.md](AGENTS.md#e-database-architecture-and-safety). Do not substitute dev.db.
+PostgreSQL deployment remains separate future compatibility work.

@@ -59,18 +59,20 @@ NEXORA/
 
 ## Development Status
 
-As of **October 30, 2026**:
+As of **October 31, 2026**:
 
 | Phase | Status |
 |---|---|
 | Phase 1 — Project Foundation | COMPLETED |
 | Phase 2 — Database Foundation | COMPLETED |
 | Phase 3 — Authentication and Access Control | COMPLETED — 8/8 steps |
-| Phase 4 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 4 | COMPLETED — 7/7 steps |
+| Phase 5 onward | NOT STARTED / AWAITING APPROVAL |
 
 The current foundation includes the starter guest and admin applications,
 backend connectivity, database structure, and accepted backend authentication
-and access controls, including optional guest registration and email verification.
+and access controls, including optional guest registration and email verification,
+plus room-management APIs for rooms, categories, amenities, images, states, and blocks.
 The project owner reports successful Phase 3 acceptance checks; no fresh
 application tests ran during this documentation update. Frontend sign-in
 integration and operational features remain later work. The system is under

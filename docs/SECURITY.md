@@ -151,20 +151,31 @@ Hardware capability must be verified physically.
 
 Software simulation does not prove door security.
 
-## 9. Upload Security
+## 9. Implemented Room Image Security
 
-For room images:
+Room image writes require ADMIN/MANAGER; public reads only serve active types
+within the configured property. No blanket static directory is exposed. Multer
+uses memory storage, one file, at most two metadata fields, and a 5 MiB input
+limit. Controller metadata is allowlisted; displayOrder is a bounded integer
+and altText is length-limited. Global role guards run before upload processing.
 
-- Allowlist supported formats.
-- Validate content as well as filename extension.
-- Enforce size and resource limits.
-- Generate safe storage names.
-- Prevent path traversal.
-- Keep uploaded content from executing as application code.
-- Apply controlled public delivery for approved room images.
-- Use durable production storage.
+Sharp inspects decoded content: JPEG, PNG, and WebP only, with a 20-million-pixel
+input limit and strict decode errors. Content is auto-rotated and re-encoded to
+WebP; source metadata is not copied. Generated UUID storage keys, path guards,
+exclusive file creation and controlled public delivery prevent client-chosen
+storage paths. Responses omit internal file paths; binary responses set image/webp,
+nosniff, inline disposition, and short public caching.
 
-Sensitive documents, if later introduced, require separate access rules.
+Upload failure attempts cleanup. Deletion stages the file, deletes/updates image
+records transactionally, restores on database failure, then finalizes removal.
+Storage is not part of the SQL transaction: orphan/pending-delete monitoring,
+durable production storage, quotas, and recovery require deployment work.
+The default storage location is ../storage/room-images relative to backend/,
+configurable with ROOM_IMAGE_STORAGE_DIR; values are not published here.
+
+Image behavior and role metadata tests exist. They were inspected, not rerun.
+A MIME string, filename extension, database record, or unit test alone does not
+establish production upload safety.
 
 ## 10. Encryption and Secrets
 
@@ -276,9 +287,24 @@ Payment verification, price tampering, upload abuse, NFC revocation, and complet
 booking journeys remain future phase acceptance requirements. Phase 11's broader
 security work is NOT STARTED / AWAITING APPROVAL.
 
+### Room-management security evidence
+
+Phase 4 is COMPLETED — 7/7 steps per owner instruction. Inspected tests cover
+room/type permissions and protected history, amenity links, image decoding and
+storage compensation, positive rate/capacity bounds, snapshot preservation,
+operational transitions, block cancellation/overlap, and transaction-scoped
+inventory checks. Dedicated phase4.step1.test.db through phase4.step7.test.db
+targets appear in source. Authorization suites inspect role metadata; they do
+not independently exercise every route over HTTP. No Phase 4 suite or regression
+was executed in this documentation task, and no pass count is inferred.
+
+The concurrent assignment fixture checks that at most one overlapping assignment
+commits. It may allow both attempts to fail due to conflict/SQLite locking; it
+is not proof that one request always succeeds or PostgreSQL behaves identically.
+
 ## 15. Production Hardening and Open Concerns
 
-Phase 3 acceptance is not a production-readiness declaration. Phase 4 onward is
+Completion of Phases 1–4 is not a production-readiness declaration. Phase 5 onward is
 NOT STARTED / AWAITING APPROVAL.
 
 - Verification currently consumes a credential on GET. Email clients and link
