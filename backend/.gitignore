@@ -33,3 +33,8 @@ backend/phase4.step2.test.db
 backend/phase4.step2.test.db-journal
 backend/phase4.step2.test.db-wal
 backend/phase4.step2.test.db-shm
+
+
+# Uploaded room images and isolated tests
+storage/room-images/
+backend/phase4.step4.test.db*
