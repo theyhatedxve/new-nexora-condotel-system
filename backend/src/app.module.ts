@@ -14,6 +14,8 @@ import { RoomTypesModule } from './room-types/room-types.module.js';
 
 import { RoomsModule } from './rooms/rooms.module.js';
 
+import { AmenitiesModule } from './amenities/amenities.module.js';
+
 @Module({
   imports: [PrismaModule, ThrottlerModule.forRoot([
     {
@@ -21,7 +23,7 @@ import { RoomsModule } from './rooms/rooms.module.js';
       limit: 60,
     },
   ]),
-  AuthModule, RoomTypesModule, RoomsModule,],
+  AuthModule, RoomTypesModule, RoomsModule, AmenitiesModule,],
   controllers: [AppController],
   providers: [AppService, {
     provide: APP_GUARD,
