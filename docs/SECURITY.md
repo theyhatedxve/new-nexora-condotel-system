@@ -94,7 +94,10 @@ The final mechanism must provide:
 Do not expose booking details merely because someone supplies a reference
 and publicly discoverable contact information.
 
-The verification mechanism remains TBD.
+The implemented mechanism is an emailed single-use fragment link exchanged
+through an explicit POST for a hashed, expiring HttpOnly booking session.
+Private summary reads reuse that session; a booking reference/email pair
+alone never returns booking details. See [current contracts](AGENTS.md).
 
 ## 5. Session Transport
 
@@ -109,8 +112,9 @@ not established by those public guest screens.
 Auth POST requests require an explicit allowlisted Origin. Verification GET is
 public without a controller Origin check to permit email navigation. HTTPS is
 required for production verification URLs and Secure refresh cookies.
-CORS is not authentication. The duplicate CORS registration in main.ts needs
-review against the actual deployment origins before release.
+CORS is not authentication. main.ts uses one configured Origin allowlist with
+credentials enabled; verify actual deployment origins and credentialed preflight
+before release.
 
 ## 6. Validation and Data Exposure
 
@@ -126,8 +130,26 @@ review against the actual deployment origins before release.
 
 ## 7. Payment Security
 
-**PLANNED — NOT IMPLEMENTED.** These are future security requirements, not
-claims that checkout, collection, refunds, or webhook handlers already exist.
+Phase 7 is IN PROGRESS. Step 7.1 implements read-only summaries with the
+authorization boundary below. Hosted Checkout, collection/refund writes and
+webhook processing remain future security requirements.
+
+### Phase 7.1 payment-summary authorization
+
+JWT payment summaries use OwnershipModule and OwnershipService.
+assertReservationAccess accepts an optional transaction-scoped database
+parameter so authorization and financial reads share one transaction.
+Existing callers retain their default behavior.
+
+Accountless payment summaries reuse the existing private booking session.
+The reservation number passed internally to the summary service is derived
+from that verified session, never from client-supplied identifiers.
+
+Read-only summaries expose no payment/provider identifiers, raw tokens,
+receipt references or staff identities. They do not grant collection,
+refund or payment-status mutation permissions.
+
+### Planned provider and payment-write controls
 
 - Use PayMongo Hosted Checkout.
 - Keep provider secrets in the backend.
@@ -213,8 +235,9 @@ Never commit:
 
 ## 11. Auditing
 
-**PLANNED — NOT IMPLEMENTED as an audit service/API.** AuditLog is currently
-a schema foundation; the following defines the required operational behavior.
+Phase 6 reservation operations capture audit events in their transactions.
+A full audit-management service/API remains planned; the following requirements
+also apply to future financial, staff and device operations.
 
 Audit consequential actions:
 
@@ -299,8 +322,9 @@ concurrent verification, rate limiting, and production Secure-cookie behavior)
 are not explicit named cases in that HTTP file. Retain the owner's acceptance
 record and obtain its detailed run/check mapping when preparing release evidence.
 
-Payment verification, price tampering, upload abuse, NFC revocation, and complete
-booking journeys remain future phase acceptance requirements. Phase 11's broader
+Phase 6 booking/price/ownership suites and journey sources are recorded in
+AGENTS.md; they were not rerun here. Provider verification, physical NFC
+revocation and full-system acceptance remain future phase requirements. Phase 11's broader
 security work is NOT STARTED / AWAITING APPROVAL.
 
 ### Room-management security evidence
@@ -320,10 +344,9 @@ is not proof that one request always succeeds or PostgreSQL behaves identically.
 
 ## 15. Production Hardening and Open Concerns
 
-Phases 1–4 and Phase 5 Steps 1–3 are owner-confirmed complete. For Steps 4–5,
-backend work is complete and frontend integration is in progress. This is not a
-production-readiness declaration. Phase 5 Steps 6–7 remain pending; Phase 6 onward
-is NOT STARTED / AWAITING APPROVAL.
+Phases 1–6 are owner-confirmed complete. Phase 7 is IN PROGRESS: Step 7.1
+is prepared/verified in the review copy, with owner-local verification pending;
+Steps 7.2–7.8 are NOT STARTED. This is not a production-readiness declaration.
 
 - Verification currently consumes a credential on GET. Email clients and link
   scanners may prefetch it; review a confirmation interaction before launch.
@@ -331,8 +354,9 @@ is NOT STARTED / AWAITING APPROVAL.
 - Registration/resend catch SMTP failures without recording a monitoring event.
   Add approved safe delivery monitoring and recovery before deployment; never
   log credentials. Real SMTP/TLS delivery still needs environment acceptance.
-- main.ts calls enableCors twice; inspect credentialed preflight behavior and
-  deployment allowlists. The HTTP fixture does not cover this bootstrap path.
+- main.ts now uses one credentialed CORS configuration and the allowed Origin
+  list. Verify deployed preflight behavior; isolated HTTP fixtures do not prove
+  production bootstrap/network behavior.
 - Startup now uses void bootstrap().catch with console error reporting and a failing
   process exit code. It logs the caught error object; automatic redaction is
   not established by this handler. The earlier unhandled-startup finding is superseded. This
@@ -355,13 +379,14 @@ is NOT STARTED / AWAITING APPROVAL.
 The availability route is public and throttled at 30 requests per 60 seconds.
 DTO/date/capacity checks occur in the backend; the response contains room-type
 availability and price fields, not guest identities or private reservations.
-Read-only search creates no inventory hold. Any future booking writer must
-revalidate availability/ownership/prices inside the acquisition transaction.
+Read-only search creates no inventory hold. The Phase 6 reservation writer
+revalidates dates/capacity/prices and acquires inventory transactionally; private
+record access uses explicit JWT ownership or verified booking sessions.
 
 Guest pages format backend centavo amounts and resolve controlled image URLs.
 Hooks suppress stale results but convert optional image/amenity errors into empty
-content, which needs review under the pending UI-state step. Responsive and
-keyboard acceptance remains pending. No dedicated availability test suite was
+content. Phase 5 interface-state, responsive and keyboard work is owner-confirmed
+complete; this update does not independently rerun browser acceptance. No dedicated availability test suite was
 found and no fresh browser, lint, build, or application test run occurred here.
 
 The owner reports seven quick availability-rule checks passed in another copy;

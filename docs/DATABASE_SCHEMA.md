@@ -6,13 +6,17 @@ Phase 2 — Database Foundation is COMPLETED and accepted: initial schema,
 relationships, migrations, Prisma Client/NestJS integration, development seed,
 and isolated integrity tests. Architecture v2.1 listed 23 core models plus the
 supporting RoomTypeAmenity join model (24 in Phase 2). Phase 3 Step 7 added
-EmailVerificationToken: the inspected current schema has **25 models**.
+EmailVerificationToken brought the count to 25. Phase 6 added
+ReservationAccessToken and ReservationAccessSession: the current schema has
+**27 models and five migrations**. Step 7.1 introduces no schema change.
 
 Phase 3 is COMPLETED — 8/8 steps based on owner-reported acceptance. Current
 fields below follow backend/prisma/schema.prisma; this documents the approved
 extension without replacing the historical architecture. Phase 4 room-type, room,
-amenity, image, status, and dated-block services are implemented. Reservation,
-payment, NFC, reports, and settings business APIs remain future work.
+amenity, image, status, and dated-block services are implemented. Phases 5–6
+are owner-confirmed complete, including reservation workflows. Phase 7 is in
+progress with read-only payment summaries; collection/provider/refund writes,
+NFC, reports and settings remain future work.
 This documentation task did not query databases or apply migrations.
 
 ### Migration source history
@@ -23,6 +27,7 @@ This documentation task did not query databases or apply migrations.
 | 20261029133315_add_refresh_token_family | Nullable RefreshToken.familyId and index |
 | 20261030134255_add_email_verification_tokens | EmailVerificationToken table, unique hash, user/expiry indexes, restrictive User foreign key |
 | 20261031_phase4_step6_room_block_cancellation | Add nullable RoomBlock.canceledAt; existing rows stay active, canceled history is preserved |
+| 20261101070000_reservation_private_access | Add ReservationAccessToken and ReservationAccessSession, restrictive Reservation FKs, unique token hashes and lookup/expiry indexes |
 
 Migration files were inspected. Successful validation and preservation of the
 development database are reported acceptance results, not fresh checks here.
@@ -134,14 +139,16 @@ RoomBlock describes dated inventory exclusion.
 
 ## 6. Reservation Models
 
-These model definitions exist. Full reservation operations and aggregate
-inventory acquisition remain NOT STARTED / AWAITING APPROVAL. Physical-room
-eligibility and administrative block/assignment protections are implemented
-as described in section 11.
+Phase 6 reservation operations are implemented and owner-confirmed complete.
+Current acquisition, private access, assignment, expiration, cancellation and
+stay contracts are summarized in [AGENTS.md](AGENTS.md). Database indexes alone
+do not enforce those service-level rules.
 
 | Model | Current fields | Constraints / relations |
 |---|---|---|
 | Reservation | id, reservationNumber, guestId, roomTypeId, checkInDate, checkOutDate, guestCount, nightlyRateCentavos, totalAmountCentavos, status, holdExpiresAt?, createdAt, updatedAt | Unique reference; restrictive Guest and RoomType FKs; indexes on guestId, roomTypeId/checkInDate/checkOutDate, status/holdExpiresAt |
+| ReservationAccessToken | id, reservationId, tokenHash, expiresAt, usedAt?, createdAt | Restrictive Reservation FK; unique tokenHash; reservationId/createdAt and expiresAt indexes |
+| ReservationAccessSession | id, reservationId, tokenHash, expiresAt, revokedAt?, createdAt | Restrictive Reservation FK; unique tokenHash; reservationId and expiresAt indexes |
 | ReservationGuest | id, reservationId, firstName, lastName, createdAt | Restrictive Reservation FK; reservationId index |
 | RoomAssignment | id, reservationId, roomId, assignedAt, releasedAt?, createdAt | Restrictive Reservation/Room FKs; reservationId and roomId indexes |
 | RoomBlock | id, roomId, startDate, endDate, reason, canceledAt?, createdAt, updatedAt | Restrictive Room FK; roomId/startDate/endDate index |
@@ -164,8 +171,10 @@ one configured property and shared positive rate/capacity bounds at runtime.
 
 ## 7. Payment Models
 
-Schema foundation is present; payment business functionality is
-**PLANNED — NOT IMPLEMENTED** (Phase 7, awaiting approval). Current scalar field groups:
+Phase 7 is IN PROGRESS. Step 7.1 derives read-only booking-level payment
+summaries from these existing models without changing the schema. Payment
+collection, provider verification and refund writes remain future work.
+Current scalar field groups:
 
 | Model | Current fields | Constraints / relations |
 |---|---|---|
@@ -181,6 +190,29 @@ CANCELLED. Currency defaults PHP; amounts are integer centavos.
 Reservation and payment statuses are independent. Future services must verify
 provider evidence, prevent duplicate effects, distinguish individual payment
 records from aggregate summaries, and limit refunds. Never store card details.
+
+### Phase 7.1 payment semantics
+
+No schema changes are introduced by Step 7.1.
+
+Payment.amountCentavos represents one collection or payment, not the booking's
+total. Completed receipts can combine into a partially paid or fully paid
+booking summary.
+
+Completed refunds reduce net paid amounts once. Pending refunds reserve
+refundable amounts; failed/cancelled refunds do not reduce collected money.
+
+The existing PARTIALLY_PAID value on an individual Payment record is treated
+as ambiguous legacy data requiring review. New booking-level summaries are
+derived separately.
+
+Cancelled, expired and checked-out bookings return null for balance-due and
+overpayment obligations until the applicable settlement rules are evaluated.
+Their original booked totals remain historical snapshots.
+
+This is a read-only interpretation of existing records, not a collection/refund
+write. Inconsistent records and unverified settled-provider evidence require
+review; the summary does not infer verified PayMongo payment.
 
 ## 8. NFC Models
 
@@ -210,8 +242,9 @@ trust card UID alone or put secret keys into credentialReference or AccessLog.
 | AuditLog | id, actorUserId?, action, entityType, entityId?, detailsJson?, createdAt | Optional User actor FK with Restrict; indexes on actorUserId, entityType/entityId, createdAt |
 | SystemSetting | id, key, value, description?, updatedByUserId?, createdAt, updatedAt | Unique key; optional User updater FK with Restrict; updatedByUserId index |
 
-Administrative services, audit-event capture, settings validation, and retention
-policy are future work. Store sanitized details only; schema presence does not
+Reservation operations now capture transaction-scoped audit events. Full
+administrative/audit APIs, settings validation and retention policy remain
+future work. Store sanitized details only; schema presence does not
 prove append-only auditing or security enforcement.
 
 ## 10. Constraints and Indexes
@@ -281,16 +314,14 @@ after commit and is not rolled back with database writes.
 
 Phase 4 also uses transactions for protected room/type updates, block conflicts,
 image primary selection and record deletion. File operations use compensation,
-not SQL rollback. Future booking/payment operations include:
+not SQL rollback. Phase 6 now transactionally acquires reservations, manages
+assignments/expiration/cancellation and records stay changes with audit history.
+Step 7.1 JWT ownership checks and financial reads share a read transaction.
+Future or separately approved booking/payment operations include:
 
-- Creating a reservation and inventory hold.
-- Confirming inventory.
 - Changing stay dates or room type.
-- Assigning or reassigning a room.
-- Adding inventory-reducing blocks.
 - Processing a payment event.
 - Recording a refund outcome.
-- Checking out and recording follow-up work.
 
 Inventory reads and writes must use a concurrency-safe strategy.
 
@@ -338,8 +369,8 @@ PostgreSQL deployment remains separate future compatibility work.
 ## 15. Informational Availability Queries
 
 AvailabilityModule adds read-only search and server-calculated nightly/stay
-pricing without a schema change: the current schema still has 25 models and
-four migrations. It counts usable active rooms minus active dated blocks and
+pricing without a schema change. The current schema has 27 models and five
+migrations because Phase 6 separately added private-access records. It counts usable active rooms minus active dated blocks and
 inventory-holding reservations per night. PENDING records with null or future
 holdExpiresAt hold capacity; expired pending holds do not. It does not separately
 subtract assignments and double-count their reservations.
@@ -347,8 +378,7 @@ subtract assignments and double-count their reservations.
 This type-level nightly calculation differs from InventorySafetyService's
 physical-room eligibility check. A positive nightly count does not prove a
 single physical room can cover the complete stay, and neither check creates a
-booking/hold. Full reservation allocation, pricing snapshots at booking time,
-and safe inventory acquisition remain future implementation. Backend portions
-of Phase 5 Steps 4–5 are owner-confirmed complete; frontend integration remains
-in progress. See
+booking/hold. Separate Phase 6 acquisition now checks whole-stay allocation
+and creates trusted price snapshots transactionally. Phase 5 search and
+frontend quote integration are owner-confirmed complete. See
 [availability contract](API.md#5-implemented-room-management-and-availability).

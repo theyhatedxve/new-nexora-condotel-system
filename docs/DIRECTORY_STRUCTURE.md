@@ -9,21 +9,18 @@ This guide maps the system's directories to their responsibilities and related
 documentation. Paths are relative to the `NEXORA/` repository root at
 `D:\Web-JSX\NEXORA`.
 
-The current structure below was inspected on 2026-10-31. Runtime artifacts are
+The selected source/documentation structure below was inspected on 2026-11-01. Runtime artifacts are
 identified without exposing their contents. File presence does not establish
 that a feature has been tested or deployed. The [approved architecture v2.1](NEXORA_ARCHITECTURE_V2.1.md)
 defines system scope; the [development reference](AGENTS.md) records current scope and approval gates.
 The [system overview](README.md) describes the product without development logs.
 
-Phases 1–4 are COMPLETED per owner instruction. Phase 3 has eight completed
-steps and Phase 4 has seven. Phase 5 Steps 1–3 are complete; Steps 4–5 backend
-work is complete and frontend integration is in progress. Steps 6–7 remain
-pending; Phase 6 onward awaits explicit approval. Earlier
-Phase 3 acceptance was based on the owner-reported 23/23 checks, full regression,
-build, Prisma validation, and preserved development data. Phase 4 source/test fixtures were
-inspected; no new pass count is claimed. This task did not rerun application checks. Phase 2's initial 24 models remain; Phase 3 adds EmailVerificationToken
-for **25 current models**. See [AGENTS.md](AGENTS.md) for the completion checklist
-and [security](SECURITY.md#14-security-acceptance-checks) for evidence boundaries.
+Phases 1–6 are owner-confirmed complete. Phase 7 is IN PROGRESS: Step 7.1 is
+prepared/verified in the review copy, with owner-local verification pending;
+Steps 7.2–7.8 are NOT STARTED. The current schema has 27 models and five
+migrations; Step 7.1 adds no schema change. See [AGENTS.md](AGENTS.md) for the
+checkpoint and reported-versus-executed verification boundaries. This update
+ran no application checks or database operations.
 
 ## 2. Current Directory Structure
 
@@ -43,6 +40,8 @@ NEXORA/
 │   │   │   ├── 20261030134255_add_email_verification_tokens/
 │   │   │   │   └── migration.sql
 │   │   │   ├── 20261031_phase4_step6_room_block_cancellation/
+│   │   │   │   └── migration.sql
+│   │   │   ├── 20261101070000_reservation_private_access/
 │   │   │   │   └── migration.sql
 │   │   │   └── migration_lock.toml
 │   │   └── schema.prisma
@@ -109,11 +108,57 @@ NEXORA/
 │   │   │       ├── room-rate-capacity.service.ts
 │   │   │       └── room-rate-capacity.spec.ts
 │   │   ├── generated/
-│   │   │   └── prisma/                  # Generated contents omitted
+│   │   │   └── prisma/  # Generated contents omitted
+│   │   ├── payments/
+│   │   │   ├── payment-summary.http.spec.ts
+│   │   │   ├── payment-summary.service.ts
+│   │   │   ├── payment-summary.spec.ts
+│   │   │   ├── payment-summary.ts
+│   │   │   ├── payments.controller.ts
+│   │   │   └── payments.module.ts
 │   │   ├── prisma/
 │   │   │   ├── prisma.module.ts
 │   │   │   ├── prisma.service.ts
 │   │   │   └── seed.ts
+│   │   ├── reservations/
+│   │   │   ├── dto/
+│   │   │   │   ├── assign-room.dto.ts
+│   │   │   │   ├── booking-access.dto.ts
+│   │   │   │   ├── cancel-reservation.dto.ts
+│   │   │   │   ├── create-reservation.dto.ts
+│   │   │   │   ├── expire-holds.dto.ts
+│   │   │   │   └── reservation-stay.dto.ts
+│   │   │   ├── booking-access-email.service.ts
+│   │   │   ├── booking-access.config.ts
+│   │   │   ├── booking-access.controller.ts
+│   │   │   ├── booking-access.http.spec.ts
+│   │   │   ├── booking-access.service.ts
+│   │   │   ├── cancellation-policy.ts
+│   │   │   ├── inventory-write.spec.ts
+│   │   │   ├── inventory-write.ts
+│   │   │   ├── reservation-acquisition.service.ts
+│   │   │   ├── reservation-acquisition.spec.ts
+│   │   │   ├── reservation-cancellation.controller.ts
+│   │   │   ├── reservation-cancellation.http.spec.ts
+│   │   │   ├── reservation-cancellation.service.ts
+│   │   │   ├── reservation-journeys.http.spec.ts
+│   │   │   ├── reservation-lifecycle.controller.ts
+│   │   │   ├── reservation-lifecycle.http.spec.ts
+│   │   │   ├── reservation-lifecycle.service.ts
+│   │   │   ├── reservation-lifecycle.ts
+│   │   │   ├── reservation-stay.controller.ts
+│   │   │   ├── reservation-stay.http.spec.ts
+│   │   │   ├── reservation-stay.service.ts
+│   │   │   ├── reservation-validation.service.ts
+│   │   │   ├── reservation-validation.spec.ts
+│   │   │   ├── reservations.controller.ts
+│   │   │   ├── reservations.http.spec.ts
+│   │   │   ├── reservations.module.ts
+│   │   │   ├── room-allocation.ts
+│   │   │   ├── room-assignments.controller.ts
+│   │   │   ├── room-assignments.http.spec.ts
+│   │   │   ├── room-assignments.service.ts
+│   │   │   └── stay-payment-policy.ts
 │   │   ├── room-blocks/
 │   │   │   ├── dto/
 │   │   │   │   ├── create-room-block.dto.ts
@@ -178,7 +223,7 @@ NEXORA/
 │   ├── tsconfig.json
 │   ├── vitest.config.e2e.ts
 │   └── vitest.config.ts
-├── backups/                         # Local contents omitted
+├── backups/  # Local contents omitted
 ├── docs/
 │   ├── AGENTS.md
 │   ├── API.md
@@ -241,6 +286,8 @@ NEXORA/
 │       │   │   ├── react.svg
 │       │   │   └── vite.svg
 │       │   ├── components/
+│       │   │   ├── AvailabilitySearch.css
+│       │   │   ├── AvailabilitySearch.jsx
 │       │   │   ├── BackendStatus.jsx
 │       │   │   ├── Footer.jsx
 │       │   │   ├── Navbar.jsx
@@ -251,13 +298,21 @@ NEXORA/
 │       │   ├── layouts/
 │       │   │   └── GuestLayout.jsx
 │       │   ├── pages/
+│       │   │   ├── BookingAccess.jsx
+│       │   │   ├── Checkout.jsx
 │       │   │   ├── Home.jsx
+│       │   │   ├── MyBooking.jsx
 │       │   │   ├── RoomDetails.jsx
 │       │   │   └── Rooms.jsx
 │       │   ├── services/
 │       │   │   ├── api.js
+│       │   │   ├── availabilityApi.js
+│       │   │   ├── bookingAccessApi.js
+│       │   │   ├── reservationsApi.js
 │       │   │   └── roomTypesApi.js
 │       │   ├── styles/
+│       │   │   ├── availability.css
+│       │   │   ├── checkout.css
 │       │   │   ├── global.css
 │       │   │   └── tokens.css
 │       │   ├── utils/
@@ -274,7 +329,7 @@ NEXORA/
 │       ├── package.json
 │       ├── README.md
 │       └── vite.config.js
-├── storage/                         # Local contents omitted
+├── storage/  # Local contents omitted
 ├── .gitignore
 └── README.md
 ```
@@ -290,14 +345,16 @@ NEXORA/
 | Frontend `src/services/` | HTTP client configuration and API access | [API contracts](API.md), [coding patterns](CODING_PATTERNS.md) |
 | Frontend `src/styles/`, `src/assets/`, and `public/` | Shared CSS, imported assets, and static public files | [Design guidelines](design_guidelines.md) |
 | `backend/src/` | API bootstrap, modules, controllers, and services | [System design](SYSTEM_DESIGN.md), [API contracts](API.md), [technical plan](TECHNICAL_PLAN.md) |
-| `backend/src/availability/` | Public read-only date/capacity search and backend stay-price quote; frontend integration remains in progress | [API](API.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
+| `backend/src/payments/` | Read-only payment-summary calculation, JWT/ownership service, controller/module and two test suites | [API](API.md#7-payments-and-webhooks), [payment semantics](DATABASE_SCHEMA.md#phase-71-payment-semantics), [security](SECURITY.md#phase-71-payment-summary-authorization) |
+| `backend/src/reservations/` | Implemented checkout, private access, assignments, lifecycle, cancellation and stay APIs; private-session payment-summary route | [Current contracts](AGENTS.md), [business flows](BUSINESS_FLOWS.md) |
+| `backend/src/availability/` | Public read-only date/capacity search and backend stay-price quote; guest search/quote integration is implemented | [API](API.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `frontend/guest-web/src/layouts/`, `hooks/`, `services/`, and `utils/` | Shared guest layout, connected room metadata, image URL handling, and nightly-rate formatting | [System design](SYSTEM_DESIGN.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `backend/src/auth/` | Auth, registration, SMTP delivery, verification, DTOs, and security tests | [Implemented API](API.md), [security](SECURITY.md) |
 | `backend/src/common/` | Public/role decorators, global guards, and reusable OwnershipModule/OwnershipService | [Security](SECURITY.md), [coding patterns](CODING_PATTERNS.md) |
 | `backend/src/room-types/`, `rooms/`, `amenities/`, `room-images/`, `room-blocks/` | Implemented room-management modules, DTOs, controllers, services, and isolated tests | [API](API.md), [security](SECURITY.md) |
 | `backend/src/common/validation/` and `common/inventory/` | Shared numeric/date validation and transaction-scoped room eligibility; no public booking endpoint | [Database safety](DATABASE_SCHEMA.md), [development reference](AGENTS.md) |
 | `backend/src/prisma/` | NestJS database provider, connection lifecycle, and guarded development seed | [Database schema](DATABASE_SCHEMA.md), [coding patterns](CODING_PATTERNS.md) |
-| `backend/prisma/` | All 25 model definitions and four migrations | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
+| `backend/prisma/` | All 27 model definitions and five migrations | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `backend/src/generated/prisma/` | Prisma-generated client used by backend code; regenerate through Prisma tooling | [Database schema](DATABASE_SCHEMA.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/src/*.spec.ts` and `backend/test/` | Colocated unit tests and separate end-to-end tests using Vitest configuration | [Implementation guide](IMPLEMENTATION_GUIDE.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/test/database/` | Database integrity tests using an existing migrated `backend/step10.test.db`; covers connectivity, constraints, relations, rollback, and persistence | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
@@ -307,14 +364,15 @@ NEXORA/
 
 Both frontend applications communicate with the shared backend API. Database
 access belongs in the backend. Backend authentication and room management are implemented; placeholder screens and
-database models do not establish frontend authentication integration, booking,
-payment, or physical NFC functionality. Ownership helpers must be called by
+database models alone do not establish frontend authentication, financial
+collection or physical NFC functionality. Phase 6 booking APIs and guest
+checkout/private access are implemented; payment summaries are read-only. Ownership helpers must be called by
 future business services explicitly.
 
 Isolated suite database paths are documented in the
-[implementation guide](IMPLEMENTATION_GUIDE.md#15-command-guidance). The guest frontend has no availability request service or date/guest search and
-searched-stay quote UI yet. The unused backend/src/auth/verify-email.dto.ts was
-removed before this audit; the controller imports
+[implementation guide](IMPLEMENTATION_GUIDE.md#15-command-guidance). The guest frontend includes availability search, searched-stay quotes, checkout
+and private booking-access pages. The unused backend/src/auth/verify-email.dto.ts was
+removed before the earlier audit; the controller imports
 backend/src/auth/dto/verify-email.dto.ts. This task performed no source cleanup.
 
 ## 4. Planned Structure and Placement Rules
@@ -326,10 +384,11 @@ needs them:
 - Guest `layouts/`, `hooks/`, and `utils/` now exist. Add `routes/` or other
   frontend directories only when required; existing route declarations are in App.jsx.
 - Backend future feature directories: `users/`, `guests/`,
-  `reservations/`, `payments/`, `nfc/`, `dashboard/`, `reports/`, `uploads/`,
+  `nfc/`, `dashboard/`, `reports/`, `uploads/`,
   `settings/`, and `audit/`.
 - Backend `auth/`, `room-types/`, `rooms/`, `amenities/`, `room-images/`,
-  `room-blocks/`, and `common/` already exist; add further shared concerns only when needed.
+  `room-blocks/`, `availability/`, `reservations/`, `payments/`, and `common/`
+  already exist; add further shared concerns only when needed.
 
 Keep frontend source in JavaScript/JSX and backend source in TypeScript. Place
 business logic in backend services, follow the existing naming conventions, and

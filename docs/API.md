@@ -2,16 +2,16 @@
 
 ## 1. Contract Status
 
-Phases 1–4 are completed per project-owner instruction; Phase 4 has seven steps.
-Phase 5 is IN PROGRESS: Steps 1–3 are complete; Steps 4–5 have completed
-backend work and frontend integration in progress. Steps 6–7 remain pending.
-Phase 6 onward is NOT STARTED / AWAITING APPROVAL. These are owner-confirmed
-milestones; source inspection does not independently verify acceptance tests.
+Phases 1–6 are owner-confirmed complete, including Phase 6 (10/10).
+Phase 7 is IN PROGRESS. Step 7.1 is prepared and verified in the review copy;
+owner-local verification is pending. Steps 7.2–7.8 are NOT STARTED.
 
-Section 4 describes implemented auth/health controllers. Section 5 describes
-registered room, amenity, image, status, block, and availability controllers.
-Booking, payments, guest/staff management, NFC, reports, and settings APIs remain
-planned. See [acceptance boundaries](SECURITY.md#14-security-acceptance-checks).
+Sections 4–5 describe auth/health and room/availability contracts. Section 6
+records implemented reservation workflows; section 7 describes read-only payment
+summaries. Collection writes, Hosted Checkout, verified webhooks and refund
+processing remain scheduled Phase 7 work. Current acceptance evidence and
+limitations are maintained in [AGENTS.md](AGENTS.md). No application checks ran
+for this documentation update.
 
 ## 2. General Conventions
 
@@ -49,7 +49,9 @@ or NFC cryptographic material.
 Guest booking verification must provide scoped access.
 A reservation reference alone must not grant access.
 
-The exact accountless verification mechanism remains TBD.
+Implemented accountless verification uses an emailed single-use link and scoped
+booking session; see [the current handoff](AGENTS.md). JWT summaries use linked
+guest ownership separately. Neither method grants payment-write permissions.
 
 ## 4. Implemented Authentication and Health Routes
 
@@ -132,7 +134,8 @@ Origin; ownership checks return 404 for inaccessible or missing private records.
 not a custom error envelope; section 10 describes current exception handling. See
 [ownership enforcement](SECURITY.md#3-authorization) and
 [registration delivery limits](SECURITY.md#15-production-hardening-and-open-concerns).
-Guest accounts remain optional; complete accountless booking is future scope.
+Guest accounts remain optional; accountless booking and scoped email-link access
+are implemented as recorded in section 6.
 
 ## 5. Implemented Room Management and Availability
 
@@ -244,15 +247,15 @@ activity, category/capacity, immediate/future status, dated blocks, and assignme
 overlap; it exposes no controller. The check reserves nothing. Future writers
 must check and write in one transaction. Current protection conservatively
 includes PENDING assignments without checking hold expiry; aggregate unassigned
-inventory and the complete reservation acquisition workflow remain future work.
+inventory is now acquired by the separate Phase 6 reservation writer; see
+[implemented reservation workflows](AGENTS.md#phase-6--reservation-system-completed--1010).
 
 ### Public date/capacity availability and pricing
 
-Backend implementation for Steps 4–5 is owner-confirmed complete. Seven quick
-rule checks were reported from another repository copy; a permanent availability
-suite and successful local build/lint are not yet verified. See
-[reported verification](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45).
-Frontend search and searched-stay quote integration remain in progress.
+Phase 5 is owner-confirmed complete. The guest search form requests this
+endpoint and displays searched-stay quotes. Historical quick-check reports
+remain in [the implementation guide](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45);
+they are separate from current review-copy and owner-local verification.
 
 GET /api/availability is registered through AvailabilityModule and marked
 @Public(). Throttle: 30 requests per 60,000 ms; no controller-level Origin
@@ -285,54 +288,66 @@ The pure hasRoomEveryNight calculator requires positive remaining room count
 on every stay night. This does not prove the same physical room is available
 for the entire stay; the search does not account for a feasible assignment
 across changing blocks. It reserves nothing and does not guarantee a future
-booking succeeds. Booking creation and safe acquisition remain unimplemented.
+booking succeeds. Booking creation uses the separate transactional reservation writer.
 
-Guest room listing/details currently call metadata/image/amenity endpoints only,
-and format backend nightly rates. A search form, availability request, and
-searched-stay total display were not found in the inspected guest pages.
-Only the backend portions of Steps 4–5 are owner-confirmed complete. Their
-frontend integration remains in progress; no end-to-end search pass is claimed.
+Guest room search and checkout now request backend availability and display
+stay prices; room details also show the nightly base rate. The backend
+reservation writer rechecks inventory/prices when creating a booking. Source
+inspection is separate from a fresh browser acceptance run.
 
 ## 6. Reservations
 
-**PLANNED — NOT IMPLEMENTED.** No reservation controller or booking-write API
-is registered. Architecture v2.1 illustrates /api/reservations,
-/api/reservations/:id, and check-in/check-out paths; these are design examples,
-not current callable contracts. Final methods, DTOs, response projections,
-booking-verification credentials, cancellation contracts, and errors require
-approval in Phase 6. No proposed booking JSON is an implemented input schema.
+Phase 6 reservation workflows are implemented and owner-confirmed complete.
+Current routes, permissions and limitations are recorded in [AGENTS.md](AGENTS.md).
 
-Required responsibilities:
+Implemented areas include Pay at Property booking creation, private email-link
+access, room assignment history, hold expiration, unpaid cancellation, and
+staff check-in/check-out.
 
-- Support optional accounts and authorized accountless guest checkout.
-- Validate real stay dates/capacity and calculate trusted integer-centavo prices.
-- Recheck and acquire inventory transactionally, including holds, blocks, and
-  protected assignments; preserve agreed price snapshots and history.
-- Scope guest records through ownership or an approved private accountless
-  verification mechanism; explicit staff permissions govern operational actions.
-- Support assignment, cancellation, check-in/out, and hold expiry under approved
-  policies. Reservation and payment states remain independent.
-
-The implemented availability endpoint and ownership/inventory helpers do not
-create these workflows. A reference alone is not a booking-access credential.
+Reservation and payment statuses remain separate. A reservation number alone
+does not authorize private access.
 
 ## 7. Payments and Webhooks
 
-**PLANNED — NOT IMPLEMENTED.** No payment/refund/webhook controller is registered.
-Architecture v2.1 illustrates /api/payments/checkout and /api/webhooks/paymongo;
-methods, DTOs, provider payload mapping, and response contracts are TBD for the
-approved payment phase. Refund and collection responsibilities below do not
-imply additional implemented route paths.
+Phase 7 is IN PROGRESS.
 
-PayMongo Hosted Checkout must use backend-calculated amounts and verified
-webhook evidence. Validate signature, event identity, reservation association,
-amount/currency, and duplicate processing before changing financial state.
-A browser return URL is not payment evidence; never store raw card details.
-Pay at Property collections require authorized staff recording. Refunds require
-Manager/Administrator permission and preservation of payment/refund history.
-Eligible Pay at Property bookings are intended to be Confirmed while Unpaid,
-subject to still-unresolved arrival cutoff, cancellation, and no-show policies.
-See [business flows](BUSINESS_FLOWS.md) and [security](SECURITY.md#7-payment-security).
+Step 7.1 introduces read-only payment summaries:
+
+| Method | Route | Authorization |
+|---|---|---|
+| GET | /api/payments/reservations/:reservationId/summary | JWT; explicit staff roles or linked guest ownership |
+| GET | /api/reservations/access/payment-summary | Valid, unexpired private booking session |
+
+Responses use the data envelope and Cache-Control: no-store. They expose
+booking-level totals, not receipt identifiers, staff identities or provider
+references.
+
+Summary fields include reservationNumber, reservationStatus, currency,
+bookedTotalCentavos, collectedCentavos, refundedCentavos,
+pendingRefundCentavos, netPaidCentavos, balanceDueCentavos,
+overpaidCentavos, hasPendingPayment, status and requiresReview.
+
+Missing/invalid JWT authentication returns 401. Missing or inaccessible
+JWT-scoped records return the same private 404. Invalid accountless sessions
+retain the existing private-access 404 behavior. Ambiguous financial records
+return 409.
+
+Hosted Checkout, verified webhooks, collection writes and refund processing
+remain scheduled Phase 7 work. No browser return establishes payment success.
+
+The JWT route explicitly permits ADMIN, MANAGER, RECEPTIONIST and GUEST;
+OwnershipService then permits the explicit staff allowlist or the linked guest.
+Vary is Authorization, Origin for JWT summaries and Cookie, Origin for private
+sessions. The accountless route retains its 30/minute throttle. Neither route
+accepts client-supplied financial totals or grants a write capability.
+
+Booking-summary status is UNPAID, PARTIALLY_PAID, PAID, REFUNDED or
+REVIEW_REQUIRED. Pending refunds/excess collections can return a summary flagged
+requiresReview; inconsistent legacy receipts or unsupported settled-provider
+evidence fail with 409. These are distinct outcomes. Closed-booking obligation
+fields can be null; see [payment semantics](DATABASE_SCHEMA.md#phase-71-payment-semantics).
+Step 7.1 review-copy evidence and owner-local verification limits are recorded
+in [AGENTS.md](AGENTS.md#i-phase-7--payment-system-in-progress).
 
 ## 8. Users, Guests, NFC, and Operations
 
@@ -379,7 +394,7 @@ Do not treat a proposed future envelope as an implemented contract.
 | 401 | Missing/invalid authentication, rejected credentials/session, or well-formed invalid verification credential |
 | 403 | Role denial or disallowed/missing auth POST Origin |
 | 404 | Record unavailable; ownership checks also hide private-record existence |
-| 409 | Existing room/amenity conflicts, protected changes, or invalid operational transitions; booking conflicts are future work |
+| 409 | Existing room/amenity conflicts, protected changes, or invalid operational transitions; reservation allocation conflicts are also implemented |
 | 413 | Oversized image input |
 | 429 | Throttler limit reached |
 | 500 | Unexpected error or required single-property/configuration invariant failure |

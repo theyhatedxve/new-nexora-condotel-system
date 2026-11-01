@@ -3,9 +3,12 @@
 **Last synchronized:** 2026-11-01. Paths are relative to D:\Web-JSX\NEXORA.
 **Current checkpoint:** Phases 1–6 are COMPLETED per owner confirmation,
 including Phase 3 (8/8), Phase 4 (7/7), Phase 5 (7/7) and Phase 6 (10/10).
-**Next phase:** Phase 7 — Payment System, NOT STARTED / AWAITING APPROVAL.
-Review the existing reservation/payment boundaries and approve the Phase 7
-step plan before implementing payment collection, hosted checkout or webhooks.
+**Current phase:** Phase 7 — Payment System: IN PROGRESS.
+**Step 7.1:** Payment records/policies and read-only summary foundation —
+prepared and verified in the review copy; owner-local verification pending.
+**Next work:** Complete owner-local verification of Step 7.1; Steps 7.2–7.8
+remain NOT STARTED. Collection writes, provider requests and refund processing
+are not implemented by this read-only foundation.
 
 ## A. Project Identity and Architecture
 
@@ -28,7 +31,8 @@ step plan before implementing payment collection, hosted checkout or webhooks.
   private email-link booking access are implemented. A booking number alone is
   not private authorization. Existing account holders can use the same email
   access flow; automatic User/Guest linking and a JWT booking-list API are not
-  established by the inspected checkout. Payment processing and NFC remain future work.
+  established by the inspected checkout. Read-only payment summaries are now
+  implemented; payment processing and NFC remain future work.
 - Never publish real .env contents, credentials, raw tokens, password hashes,
   private guest records, database contents, or NFC cryptographic material.
 
@@ -172,7 +176,8 @@ and SMTP delivery were not executed. No new test pass count is claimed.
 | 4 — Room Management | COMPLETED — 7/7 | Room types, physical rooms, amenities, images, rates/capacity, operational states, blocks and eligibility helpers |
 | 5 — Guest Website | COMPLETED — 7/7 | Homepage, room browsing/details, integrated availability search, server-priced stay display, feedback and responsive/keyboard work |
 | 6 — Reservation System | COMPLETED — 10/10 | Registered reservation API, guest checkout/private access, assignment history, lifecycle/expiration, cancellation, staff stays and accepted regression work |
-| 7–12 | NOT STARTED / AWAITING APPROVAL | Payments; admin operations; NFC; reports/settings; integrated testing/security; deployment |
+| 7 — Payment System | IN PROGRESS | Step 7.1 prepared/verified in review copy; owner-local verification pending; Steps 7.2–7.8 NOT STARTED |
+| 8–12 | NOT STARTED / AWAITING APPROVAL | Admin operations; NFC; reports/settings; integrated testing/security; deployment |
 
 ### Phase 1 — Project Foundation
 
@@ -374,6 +379,7 @@ not an exemption from the route's input, Origin, cookie or throttle rules.
 | POST /api/reservations/access/exchange | Public; allowed Origin, 5/minute; 200 and scoped cookie |
 | GET /api/reservations/access/current | Valid booking cookie, 30/minute; 200 limited private view; Vary: Cookie, Origin |
 | POST /api/reservations/access/logout | Public; allowed Origin, 10/minute; 204 and cookie clearing |
+| GET /api/reservations/access/payment-summary | Added by Step 7.1; valid private session, 30/minute; 200 booking-level financial summary |
 | GET /api/reservations/:reservationId/assignments | Staff; 200 assignment history |
 | POST /api/reservations/:reservationId/assignments | Staff; AssignRoomDto; 201 |
 | POST /api/reservations/:reservationId/assignments/:assignmentId/reassign | Staff; AssignRoomDto; 201 |
@@ -410,12 +416,21 @@ presence. No application test, build, lint, browser check, SMTP send, migration
 or seed was executed for this documentation update. Production acceptance,
 real SMTP/cookies, PostgreSQL behavior and physical hardware remain separate.
 
+### Phase 7 — Payment System (In Progress)
+
+Step 7.1 — Payment records/policies and read-only summary foundation is prepared
+and verified in the review copy, with owner-local verification pending.
+Steps 7.2–7.8 remain NOT STARTED. Source contracts, the supplied verification
+report and the next boundary are recorded in section I. No new phase/step is
+marked owner-locally complete by that review report.
+
 ## D. Backend Structure
 
 | Location / module | Responsibility |
 |---|---|
 | backend/src/main.ts | Nest bootstrap, startup rejection handler, cookie parsing, ValidationPipe, CORS, /api prefix, port 3000 |
 | backend/src/availability/ | Public search controller/DTO, service, pure nightly calculator; read-only availability and stay-price quote |
+| backend/src/payments/ | PaymentsModule/controller, shared calculator, PaymentSummaryService and two summary suites; imported through ReservationsModule and exports the summary service |
 | backend/src/reservations/ | Registered ReservationsModule; checkout, booking access/email, assignments, lifecycle, cancellation and stay controllers/services; DTOs, policies, inventory helpers and ten spec files |
 | backend/src/app.module.ts | Registers Prisma, auth, room management, availability and ReservationsModule; global throttling/JWT/role guards |
 | backend/src/auth/ | AuthModule, controller, password/session/registration/verification/SMTP services; DTOs and security tests |
@@ -439,6 +454,7 @@ registered business controllers. Full current directory map: docs/DIRECTORY_STRU
 ## E. Database Architecture and Safety
 
 - Current schema: **27 Prisma models and five migrations** under backend/prisma/.
+  Step 7.1 reuses existing Payment/Refund/Reservation records without a schema change.
   Phase 6 private access adds ReservationAccessToken and ReservationAccessSession
   to the prior 25 models. Both reference Reservation with restrictive deletion;
   unique tokenHash values and expiry/lookup indexes support scoped access.
@@ -490,7 +506,10 @@ in section C. Never redirect them to development data.
 - Ownership helpers protect linked-account records only when explicitly used.
   Current private booking access instead uses a reservation-scoped email/cookie
   capability. Staff reservation operations enforce staff JWTs separately; neither
-  a booking reference nor the booking cookie grants staff powers.
+  a booking reference nor the booking cookie grants staff powers. Step 7.1 JWT
+  summaries reuse OwnershipService with an optional transaction client so record
+  authorization and financial reads share the same transaction. Accountless
+  summaries derive their booking number only from the verified cookie session.
 - ADMIN/MANAGER manage room/amenity/image data; reception can read physical rooms
   and blocks. Public room-type/image reads exclude inactive types. Uploads are
   decoded and re-encoded, use guarded storage paths and omit internal file paths.
@@ -540,6 +559,24 @@ Existing commands, from the relevant application directory:
 
 ## H. Latest System Changes and Added Files
 
+### Step 7.1 additions and updates
+
+| Path | Change |
+|---|---|
+| backend/src/payments/payment-summary.ts | Pure booking-level calculation of collections, refunds, balances, review flags and derived status |
+| backend/src/payments/payment-summary.service.ts | Read transactions, explicit staff/guest ownership, verified-session lookup and safe aggregate projections |
+| backend/src/payments/payments.controller.ts and payments.module.ts | JWT summary route; module imports OwnershipModule/PrismaModule and exports PaymentSummaryService |
+| backend/src/payments/payment-summary.spec.ts and payment-summary.http.spec.ts | New calculation and HTTP authorization/privacy test sources |
+| backend/src/common/ownership/ownership.service.ts | Optional transaction-scoped database argument for assertReservationAccess; default callers retain their existing behavior |
+| backend/src/reservations/booking-access.controller.ts and reservations.module.ts | Adds private-session summary route and imports PaymentsModule |
+| backend/src/reservations/stay-payment-policy.ts | Reuses shared summary calculation; retains provider/refund history restrictions before check-in/out |
+
+These are read-only financial additions. No schema migration, collection,
+provider request or refund processing is added. Detailed review-copy evidence
+is recorded in section I.
+
+### Completed Phase 6 implementation record
+
 Phase 6 source changes through 22a4319 were inspected against the previous
 reservation-foundation checkpoint. Existing inventory/validation helpers remain;
 the following additions connect them to guest and staff workflows.
@@ -570,40 +607,83 @@ the following additions connect them to guest and staff workflows.
 All 62 direct dependency entries were rechecked against installed metadata and
 lockfiles; documented versions still match. Phase 6 uses the existing approved
 stack without a new dependency entry. Database documentation in this handoff is
-updated to 27 models/five migrations. This task edits only docs/AGENTS.md;
-other Markdown files may retain older counts/status/API descriptions. Keep
+updated to 27 models/five migrations. This update synchronizes the six requested documents: AGENTS.md, API.md,
+DATABASE_SCHEMA.md, SECURITY.md, BUSINESS_FLOWS.md and DIRECTORY_STRUCTURE.md.
+Other Markdown files may retain older status/API descriptions. Keep
 project Markdown under docs/, with only README.md at the repository root.
 
-## I. Next Phase — Phase 7: Payment System
+## I. Phase 7 — Payment System (In Progress)
 
-**Phase 6: COMPLETED — 10/10 per owner confirmation.** The next phase in
-Architecture v2.1 section 16 is **Phase 7 — Payment System**, currently
-**NOT STARTED / AWAITING APPROVAL**. No additional Phase 6 step is pending in
-the owner's accepted checklist; the operational limits above remain relevant.
+Phase 7 — Payment System: **IN PROGRESS**.
 
-Prepare and approve the detailed Phase 7 plan around:
+**Step 7.1 — Payment records/policies and read-only summary foundation:**
+prepared and verified in the review copy; **owner-local verification pending**.
+Steps 7.2–7.8 remain **NOT STARTED**. Phases 1–6 remain owner-confirmed complete.
 
-- Backend-calculated PayMongo Hosted Checkout and trusted reservation association.
-- Verified webhook signatures/events, amount/currency checks and duplicate-safe
-  processing; browser returns are not payment evidence.
-- Authorized Pay at Property collection records that satisfy existing stay gates.
-- Payment/reservation status separation, financial audit history and approved
-  refunds/fees. Preserve stored reservation price snapshots.
-- Expired holds, late/duplicate/failed provider events, retry/reconciliation rules
-  and isolated provider test-mode verification.
+### Read-only contracts and semantics
 
-Review current stay-payment and cancellation boundaries first: unpaid booking
-confirmation does not authorize check-in; stay endpoints require full recorded
-payment, and cancellation with any financial history requires review. Public
-PayMongo flows, payment recording/refund endpoints and real provider processing
-are not implemented by Phase 6 or its synthetic payment fixtures.
+- GET /api/payments/reservations/:reservationId/summary requires JWT and explicit
+  ADMIN/MANAGER/RECEPTIONIST permission or linked GUEST ownership. Missing/invalid
+  authentication returns 401; inaccessible/missing private records share 404.
+- GET /api/reservations/access/payment-summary uses a valid private booking
+  session. Its booking number comes from that verified session, not a request
+  identifier. Invalid sessions keep private-access 404 behavior.
+- Both routes return a data envelope with Cache-Control: no-store. They expose
+  aggregate booking totals without payment/provider IDs, references or staff
+  identities. They grant no financial mutation permissions.
+- Summaries include reservationNumber, reservationStatus, currency,
+  bookedTotalCentavos, collectedCentavos, refundedCentavos, pendingRefundCentavos,
+  netPaidCentavos, balanceDueCentavos, overpaidCentavos, hasPendingPayment,
+  status and requiresReview. Amounts use integer PHP centavos.
+- Payment.amountCentavos is an individual collection, not the booking total.
+  Completed receipts combine; pending/failed attempts do not count as collected.
+  Completed refunds reduce net paid once; pending refunds reserve refundable
+  amounts. Failed/cancelled refunds do not reduce collected funds.
+- Individual PARTIALLY_PAID receipts and inconsistent/unverified provider
+  evidence require financial review (409). A derived PARTIALLY_PAID booking
+  summary is separate from that ambiguous legacy receipt status.
+- Pending refunds and excess collections can return REVIEW_REQUIRED and
+  requiresReview. CANCELLED/EXPIRED/CHECKED_OUT bookings return null for
+  balance/overpayment obligations; historical booked totals remain intact.
+- Check-in/out uses the shared calculation while retaining conservative
+  provider/refund restrictions. No new collection/refund/payment-status write
+  or provider verification is established by these summaries.
 
-Production hosting/domains, PostgreSQL migration verification and physical NFC
-hardware remain separate approved phases/decisions. This documentation update
-authorizes no new code, dependency installation, database change, commit, push
-or deployment.
+### Supplied review-copy evidence — not rerun in this workspace
+
+The owner-supplied implementation report states:
+
+| Check | Reported review-copy result |
+|---|---|
+| New payment suites | 29 tests passed across two files |
+| Combined affected regression and ownership suites | 313 tests passed across 19 files |
+| TypeScript, targeted lint and backend build | Passed |
+| backend/dev.db | Hash unchanged in the review copy |
+| Schema migration / collection / provider requests / refund processing | None |
+
+These results are attributed to the supplied review-copy report, not independently
+executed by this documentation update. Owner-local verification remains pending.
+This task inspected code/documentation only; it ran no application tests, build,
+lint, migration, payment collection, provider request or refund processing, and
+did not read database contents or recalculate its hash.
+
+### Next boundary
+
+Complete owner-local Step 7.1 verification and record actual results before
+marking that acceptance complete. Steps 7.2–7.8 remain NOT STARTED; detailed
+implementation follows the approved Phase 7 plan. Hosted Checkout, verified
+webhooks, collection writes and refund processing remain scheduled work.
+No browser return establishes payment success. Review current stay-payment and
+unpaid-cancellation rules when adding financial writes; preserve reservation
+snapshots and private access boundaries.
+
+Production hosting/domains, PostgreSQL compatibility and physical NFC hardware
+remain separate phases/decisions. This documentation update authorizes no code,
+dependency installation, database change, commit, push or deployment.
 
 Related references: [architecture](NEXORA_ARCHITECTURE_V2.1.md), [API](API.md),
-[database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md),
-[security](SECURITY.md), [directory map](DIRECTORY_STRUCTURE.md), and
+[payment semantics](DATABASE_SCHEMA.md#phase-71-payment-semantics),
+[security](SECURITY.md#phase-71-payment-summary-authorization),
+[business flows](BUSINESS_FLOWS.md#phase-71-payment-summary-foundation),
+[directory map](DIRECTORY_STRUCTURE.md), and
 [architecture review items](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items).

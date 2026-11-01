@@ -1,15 +1,16 @@
 # NEXORA — Business Flows
 
-Phases 1 and 2 are COMPLETED; Phase 3 is COMPLETED — 8/8 steps based on
-owner acceptance. Phase 4 room management is completed (7/7); Phase 5 is in progress: Steps 1–3 complete; Steps 4–5 backend complete, frontend
-in progress; Steps 6–7 pending. Phase 6 onward is NOT STARTED / AWAITING APPROVAL. Booking/payment/NFC workflows below remain
-intended operations. Room metadata, permitted statuses, and dated room blocks
-are implemented; that does not make the complete stay journey operational. This task ran no application tests.
+Phases 1–6 are owner-confirmed complete. Phase 7 is IN PROGRESS with the
+read-only payment-summary foundation prepared/verified in the review copy;
+owner-local verification is pending. Payment collection/provider/refund writes
+and NFC integration remain future work. Current routes, permissions and
+operational limits are recorded in [AGENTS.md](AGENTS.md). No application tests
+ran for this documentation update.
 
 ### Implemented optional account and session flow
 
 1. Guest may register with first/last name, email, and password; account creation
-   remains optional for future booking.
+   remains optional for booking.
 2. Backend assigns GUEST and transactionally creates the PENDING user, linked
    guest profile, and hashed email-verification credential.
 3. After commit, SMTP sends a verification link valid for 30 minutes. Delivery
@@ -23,18 +24,16 @@ are implemented; that does not make the complete stay journey operational. This 
 
 Private record access must explicitly call OwnershipService using the trusted
 identity and allowed staff roles. Cross-guest and missing records return 404;
-roles do not imply record ownership. Full guest/reservation APIs and private
-accountless booking verification remain future work. See [API](API.md) for
+roles do not imply record ownership. Private accountless booking access now
+uses a scoped email-link/session flow; reservation numbers alone are insufficient. See [API](API.md) for
 contracts and [security](SECURITY.md) for acceptance and delivery limits.
 
 ## 1. Room Search
 
 The public backend endpoint GET /api/availability implements date/capacity
-validation and informational nightly availability/stay pricing. Frontend search
-inputs, request/results integration, and searched-stay total display remain in
-progress. Existing room listing/detail pages fetch metadata and nightly base
-rates. The diagram below describes the intended connected search journey;
-it is not yet a completed browser workflow. No booking is created by search.
+validation and informational nightly availability/stay pricing. Connected guest
+search and checkout display backend-calculated prices. Listing/detail pages also
+fetch metadata and nightly base rates. No booking is created by search.
 
 ```text
 Guest selects dates and guest count
@@ -50,7 +49,8 @@ Search does not guarantee inventory until the backend safely acquires it.
 
 ## 2. Guest Booking
 
-**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+Accountless Pay at Property checkout is implemented. Selecting an online
+payment method remains future Phase 7 work.
 
 ```text
 Select room type
@@ -95,7 +95,8 @@ Do not create duplicate sessions blindly after a network timeout.
 
 ## 4. Pay at Property
 
-**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+Booking confirmation is implemented; collection writes in steps 6–7 below
+remain future work. Step 7.1 already derives read-only summaries.
 
 1. Guest selects Pay at Property.
 2. Backend validates booking details and inventory.
@@ -108,11 +109,24 @@ Do not create duplicate sessions blindly after a network timeout.
 
 Arrival cutoffs and no-show rules remain TBD.
 
+### Phase 7.1 payment-summary foundation
+
+Payment summaries distinguish completed individual receipts from the booking's
+overall payment state. Pending and failed attempts do not count as collected.
+
+Active booking balances use the stored booking total and net completed
+collections. Pending refunds and excess collections require review.
+
+Existing check-in/out operations reuse the shared calculation while retaining
+their conservative restrictions on provider and refund histories. Payment
+recording and verified online processing remain later Phase 7 steps.
+
 ## 5. Hold Expiration
 
-The availability reader already excludes expired PENDING holds. Hold creation,
-cleanup/state transitions, and late-payment reconciliation below are
-**PLANNED — NOT IMPLEMENTED** booking/payment work.
+The availability reader excludes expired PENDING holds. Phase 6 acquisition
+and staff lifecycle actions now expire eligible holds, release assignments and
+record audit history transactionally. Late-payment reconciliation remains
+planned Phase 7 work.
 
 1. Compare holdExpiresAt with backend time.
 2. Exclude expired holds from current inventory calculations.
@@ -128,7 +142,7 @@ Do not silently revive an expired booking.
 
 ## 6. Room Assignment
 
-**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+Staff assignment, reassignment, release and historical reads are implemented.
 
 1. Verify staff permission.
 2. Verify the reservation is eligible.
@@ -141,7 +155,8 @@ Do not assign a room based only on its current Ready status.
 
 ## 7. Check-in
 
-**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+Staff check-in is implemented with identity, room, assignment and full
+recorded-payment gates. NFC issuance in step 9 remains future work.
 
 1. Verify staff permission.
 2. Find the reservation.
@@ -153,11 +168,14 @@ Do not assign a room based only on its current Ready status.
 8. Record check-in and update operational state.
 9. Issue approved NFC access or an explicitly simulated assignment.
 
-The required payment condition for check-in must be agreed as policy.
+Current check-in/out requires full valid recorded Pay at Property payment.
+Payment recording itself remains future Phase 7 work.
 
 ## 8. Check-out
 
-**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+Staff check-out is implemented with payment/occupancy checks, assignment
+release, CLEANING status and audit history. Device revocation actions in the
+diagram remain future work; active card access blocks unsafe checkout.
 
 ```text
 Authorized checkout
@@ -177,14 +195,16 @@ Housekeeping verifies room
 Room becomes Ready
 ```
 
-Persist device-revocation intent with the checkout outcome.
+Planned NFC integration must persist device-revocation intent with the checkout outcome.
 
 Do not show a credential as physically revoked until the selected hardware
 provides the required confirmation.
 
 ## 9. Cancellation and Refund
 
-**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+Staff unpaid cancellation is implemented. Any Payment record requires
+financial review; guest self-service cancellation and refund processing are
+not granted by the private-access session. Refund steps below remain planned.
 
 1. Verify ownership or staff permission.
 2. Evaluate the approved cancellation policy.
@@ -198,7 +218,8 @@ provides the required confirmation.
 
 Cancellation does not automatically mean refund success.
 
-Cancellation fees and refund rules remain TBD.
+The current unpaid pre-check-in cancellation policy has no fee/refund and
+requires no Payment records. Prepaid fees and refund rules need separate approval.
 
 ## 10. Maintenance Block
 
@@ -209,9 +230,9 @@ read. Canceled blocks cannot be edited or canceled twice. Checks and writes shar
 a transaction. The reusable inventory service rejects active dated blocks but
 ignores canceled ones. It reserves no inventory.
 
-The complete operational workflow below additionally requires future aggregate
-unassigned-reservation capacity checks and audit/event integration; do not infer
-those from the existing per-room conflict checks.
+Phase 6 adds whole-stay commitment checks for assigned and unassigned
+reservations during block create/edit, within the same serialized transaction.
+Do not infer financial or device actions from those inventory checks.
 
 1. Authorized staff selects a room and date interval.
 2. Backend validates the interval.
@@ -251,8 +272,9 @@ Offline revocation behavior depends on hardware.
 
 ## 13. Business Acceptance Checks
 
-The following are target acceptance criteria for their respective future
-workflows, not a report that those journeys passed.
+The following are acceptance criteria for implemented or planned workflows.
+Owner-confirmed Phase 6 completion and supplied review-copy results are recorded
+in AGENTS.md; this list is not a new execution report.
 
 - Accountless guest can complete an authorized booking.
 - A guest cannot read another guest's booking.
