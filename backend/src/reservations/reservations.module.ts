@@ -30,13 +30,27 @@ import {
   BookingAccessEmailService,
 } from './booking-access-email.service.js';
 
+import {
+  InventorySafetyModule,
+} from '../common/inventory/inventory-safety.module.js';
+
+import {
+  RoomAssignmentsController,
+} from './room-assignments.controller.js';
+
+import {
+  RoomAssignmentsService,
+} from './room-assignments.service.js';
+
 @Module({
   imports: [
     PrismaModule,
+    InventorySafetyModule,
   ],
   controllers: [
     ReservationsController,
     BookingAccessController,
+    RoomAssignmentsController,
   ],
   providers: [
     RoomRateCapacityService,
@@ -44,6 +58,7 @@ import {
     ReservationAcquisitionService,
     BookingAccessService,
     BookingAccessEmailService,
+    RoomAssignmentsService,
   ],
 })
 export class ReservationsModule {}
