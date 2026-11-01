@@ -42,6 +42,14 @@ import {
   RoomAssignmentsService,
 } from './room-assignments.service.js';
 
+import {
+  ReservationLifecycleController,
+} from './reservation-lifecycle.controller.js';
+
+import {
+  ReservationLifecycleService,
+} from './reservation-lifecycle.service.js';
+
 @Module({
   imports: [
     PrismaModule,
@@ -51,6 +59,7 @@ import {
     ReservationsController,
     BookingAccessController,
     RoomAssignmentsController,
+    ReservationLifecycleController,
   ],
   providers: [
     RoomRateCapacityService,
@@ -59,6 +68,7 @@ import {
     BookingAccessService,
     BookingAccessEmailService,
     RoomAssignmentsService,
+    ReservationLifecycleService,
   ],
 })
 export class ReservationsModule {}

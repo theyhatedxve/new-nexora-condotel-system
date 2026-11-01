@@ -30,6 +30,10 @@ import {
   type Stay,
 } from './room-allocation.js';
 
+import {
+  expirePendingHoldsInTx,
+} from './reservation-lifecycle.js';
+
 export const HOLD_DURATION_MS = 15 * 60 * 1000;
 
 function retryable(error: unknown): boolean {
@@ -159,17 +163,10 @@ export class ReservationAcquisitionService {
 
             // Expiration is part of this transaction.
             // A later failure also rolls this update back.
-            await tx.reservation.updateMany({
-              where: {
+            await expirePendingHoldsInTx(tx, {
+                propertyId: stay.propertyId,
                 roomTypeId: stay.roomTypeId,
-                status: 'PENDING',
-                holdExpiresAt: {
-                  lte: now,
-                },
-              },
-              data: {
-                status: 'EXPIRED',
-              },
+                now,
             });
 
             const rooms = await tx.room.findMany({
