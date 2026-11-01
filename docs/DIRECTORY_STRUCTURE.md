@@ -2,6 +2,9 @@
 
 ## 1. Purpose and Scope
 
+Project Markdown documentation belongs in docs/. README.md is the only
+Markdown file kept directly in the NEXORA repository root.
+
 This guide maps the system's directories to their responsibilities and related
 documentation. Paths are relative to the `NEXORA/` repository root at
 `D:\Web-JSX\NEXORA`.
@@ -273,8 +276,6 @@ NEXORA/
 │       └── vite.config.js
 ├── storage/                         # Local contents omitted
 ├── .gitignore
-├── AGENTS.md
-├── NEXORA_ARCHITECTURE_V2.1.md
 └── README.md
 ```
 
@@ -344,8 +345,8 @@ Follow the approval and verification process in the
 | Document | How it relates to this guide |
 |---|---|
 | [README.md](README.md) | Product-focused system overview and intended user experiences |
-| [AGENTS.md](AGENTS.md) | Phase completion checklist and agent handoff; kept synchronized with the root copy |
-| [NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md) | Authoritative approved architecture baseline; root file is a reference copy |
+| [AGENTS.md](AGENTS.md) | Phase completion checklist and current agent handoff; maintained only in docs/ |
+| [NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md) | Authoritative approved architecture baseline; maintained only in docs/ |
 | [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) | Explains system boundaries and the responsibilities behind the directories |
 | [TECHNICAL_PLAN.md](TECHNICAL_PLAN.md) | Defines the intended expanded layout, naming, request lifecycle, and roadmap |
 | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) | Explains the models and constraints represented in `backend/prisma/` |

@@ -1,29 +1,31 @@
 # NEXORA — Development Reference and Completion Checklist
 
-**Last synchronized:** 2026-10-31. Paths below are relative to D:\Web-JSX\NEXORA.
-**Current checkpoint:** Phases 1–4 and Phase 5 Steps 1–3 are complete. Phase 5
-Steps 4–5: backend complete; frontend in progress. Steps 6–7 remain pending.
-Phase 6 onward is NOT STARTED / AWAITING APPROVAL. This is documentation maintenance,
-not authorization to implement, migrate, install, commit, push, or deploy.
+**Last synchronized:** 2026-11-01. Paths are relative to D:\Web-JSX\NEXORA.
+**Current checkpoint:** Phases 1–5 are COMPLETED, including Phase 3 (8/8),
+Phase 4 (7/7), and Phase 5 (7/7), as confirmed by the project owner.
+**Next phase:** Phase 6 — Reservation System; NOT STARTED / AWAITING APPROVAL.
 
-## A. Project Identity
+## A. Project Identity and Architecture
 
-- NEXORA is a one-property Condotel Management System, a modular monolith.
-- docs/NEXORA_ARCHITECTURE_V2.1.md is the authoritative approved baseline.
-  The root architecture file is a reference copy, not a competing authority.
-  Preserve original design decisions; current contracts/schema are documented in docs/API.md and
-  docs/DATABASE_SCHEMA.md rather than inferred from historical examples.
-- Development environment: Windows 11, VS Code, PowerShell. Commands below use
-  the existing npm projects in backend/, frontend/guest-web/, and frontend/admin-web/.
-- Backend: NestJS/Express, TypeScript, ESM, Prisma 7, SQLite development database.
-  PostgreSQL is the recommended production target, requiring a final decision
-  and its own migration/acceptance work.
-- Both frontends: React, JavaScript/JSX, Vite, React Router, Axios, plain CSS,
-  Lucide React. Do not introduce frontend TypeScript or replace Vitest with Jest.
-- Guest accounts are optional. Accountless booking remains required when booking
-  is implemented; backend registration does not make booking operational.
-- Never publish credentials, actual .env contents, raw tokens, password hashes,
-  SMTP secrets, private guest data, or database/backup contents in documentation.
+- NEXORA is a Condotel Management System for one property, built as a modular
+  monolith. Separate guest and admin frontends share one NestJS REST API.
+- [docs/NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md)
+  is the authoritative architecture. Preserve its scope, business requirements,
+  KISS principle, and twelve-phase sequence. Project documentation lives in
+  docs/; only README.md remains at the repository root. The checkpoint above
+  supersedes older progress descriptions
+  in supporting documents; it does not change architecture requirements.
+- Both frontends use React, JavaScript/JSX, Vite, React Router, Axios, plain CSS,
+  and Lucide React. Frontends communicate through the API, never directly with
+  the database. Installed @types packages do not authorize frontend TypeScript.
+- Backend: Node.js, NestJS/Express, TypeScript, ESM, Prisma, DTO validation,
+  JWT/Passport, Argon2id, and explicit role/ownership enforcement.
+- SQLite is used for development. PostgreSQL is recommended for production,
+  subject to the production decision and separate migration verification.
+- Guest accounts are optional; accountless booking is a Phase 6 requirement.
+  Phase 5 completion does not establish booking, payment, or NFC operations.
+- Never publish real .env contents, credentials, raw tokens, password hashes,
+  private guest records, database contents, or NFC cryptographic material.
 
 ## B. Installed Dependencies and Exact Versions
 
@@ -137,8 +139,8 @@ are separate manifest constraints and do not establish what is installed.
 **Inventory totals:** Backend: 42 (20 runtime + 22 development); Guest frontend: 10 (5 runtime + 5 development); Admin frontend: 10 (5 runtime + 5 development). Total: 62 verified direct entries.
 
 Backend override: multer = 2.5.0. Multer is also a direct runtime dependency;
-@types/multer and sharp support the room-image module. No package was installed,
-removed, or upgraded for this documentation task.
+@types/multer and sharp support the room-image module. The current manifests retain the same 62 direct entries; this update verifies
+installed versions rather than recording new installations.
 
 Reproduce from each application's directory in PowerShell:
 
@@ -153,183 +155,92 @@ install merely to inspect versions. package.json ranges alone are insufficient.
 
 ## C. Completed Project Phases
 
-| Phase | Status | Evidence basis |
+Completion is owner-confirmed. Source and package metadata were inspected for
+this update; application tests, builds, lint, browser checks, migrations, seeds,
+and SMTP delivery were not executed. No new test pass count is claimed.
+
+| Phase | Status | Delivered scope |
 |---|---|---|
-| Phase 1 — Foundation | COMPLETED | Owner-accepted foundation; React apps, API health, manifests/configuration inspected |
-| Phase 2 — Database Architecture | COMPLETED | Owner-accepted foundation; schema, adapter, migrations, seed, isolated test source inspected |
-| Phase 3 — Authentication and Authorization | COMPLETED — 8/8 steps | Owner's previously reported 23/23 acceptance; current source/tests inspected |
-| Phase 4 — Room Management | COMPLETED — 7/7 steps | Owner's completion instruction; all seven implementation areas and test source inspected |
-| Phase 5 — Guest Website | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending | Owner-confirmed; source/integration limits below |
-| Phase 6 onward | NOT STARTED / AWAITING APPROVAL | Future business implementation is not authorized by this task |
+| 1 — Project Foundation | COMPLETED | Separate React applications, NestJS backend, API connectivity and project configuration |
+| 2 — Database Foundation | COMPLETED | Prisma/SQLite schema, migrations, relationships, guarded seed and integrity-test foundation |
+| 3 — Authentication & RBAC | COMPLETED — 8/8 | Accounts, secure sessions, explicit roles, ownership and email verification |
+| 4 — Room Management | COMPLETED — 7/7 | Room types, physical rooms, amenities, images, rates/capacity, operational states, blocks and eligibility helpers |
+| 5 — Guest Website | COMPLETED — 7/7 | Homepage, room browsing/details, integrated availability search, server-priced stay display, feedback and responsive/keyboard work |
+| 6 — Reservation System | NOT STARTED / AWAITING APPROVAL | Next phase in Architecture v2.1 |
+| 7–12 | NOT STARTED / AWAITING APPROVAL | Payments; admin operations; NFC; reports/settings; integrated testing/security; deployment |
 
-Checked implementation items below describe repository source and accepted
-milestones. No application test suite, build, migration, seed, database query,
-or SMTP send ran in this documentation task. No fresh pass count is claimed.
+### Phase 1 — Project Foundation
 
-### Phase 1 — Foundation
+- [x] Separate guest/admin React/Vite applications with layouts and routing.
+- [x] NestJS API, public GET /api/health, /api prefix and Axios connectivity.
+- [x] Package scripts, styles, environment templates and documentation foundation.
 
-- [x] Separate React/Vite guest and admin starter applications with navigation,
-  styles, Axios clients, environment examples, and backend status components.
-- [x] NestJS TypeScript API and public GET /api/health, global /api prefix,
-  development CORS configuration, package scripts, Git and documentation foundations.
-- [x] Foundation build/connectivity results previously owner-confirmed. Frontend
-  sign-in screens and connected operational management screens are not implied.
+### Phase 2 — Database Foundation
 
-### Phase 2 — Database Architecture
+- [x] Prisma models, relationships, CUID identifiers and initial migration.
+- [x] Integer-centavo money, Philippine stay-date semantics and UTC event timestamps.
+- [x] NestJS database provider, guarded seed and isolated integrity-test foundation.
+- [x] Original 23 core models plus RoomTypeAmenity established 24 models;
+  EmailVerificationToken subsequently brought the current total to 25.
 
-- [x] Prisma/SQLite setup; CUID identifiers, PascalCase models/camelCase fields,
-  centavo money amounts, Philippine date labels, UTC event timestamps.
-- [x] Property/room, identity/guest, reservation, payment, NFC, audit, and settings
-  schema: original 24 models including RoomTypeAmenity.
-- [x] Initial migration, Prisma generated-client/NestJS provider integration,
-  guarded development seed, isolated database integrity tests and review.
-- [x] Phase 3 added EmailVerificationToken (25 current models); Phase 4 added
-  RoomBlock.canceledAt without increasing the model count. See section E.
+### Phase 3 — Authentication & RBAC (8/8)
 
-### Phase 3 — Authentication and Authorization (8/8)
+- [x] Step 1 — Account and session contracts.
+- [x] Step 2 — Argon2id password hashing and verification.
+- [x] Step 3 — ACTIVE-only login, JWTs, refresh rotation and replay protection.
+- [x] Step 4 — Logout and refresh-family revocation.
+- [x] Step 5 — Global JWT and explicit role guards.
+- [x] Step 6 — Guest/reservation ownership helpers and staff allowlists.
+- [x] Step 7 — Optional registration, email verification and resend.
+- [x] Step 8 — Authentication/security testing accepted by the owner.
 
-- [x] Step 1 — Account and Session Contracts: registration/login/refresh/logout,
-  PENDING/ACTIVE/DISABLED account states, public/protected route contracts.
-- [x] Step 2 — Password Hashing: Argon2id service, verification, salt/parameter tests.
-- [x] Step 3 — Login and Refresh Rotation: ACTIVE-only JWTs, 900-second access
-  lifetime, seven-day HttpOnly refresh cookies, hashed credentials, independent
-  login families, replay detection, transactional concurrent-consumption protection.
-- [x] Step 4 — Logout and Session Revocation: current family revocation and cookie
-  clearing; other device families remain separate. Access JWTs may remain valid
-  until expiry while the user is ACTIVE; logout does not blacklist them.
-- [x] Step 5 — Role-Based Guards: global throttle/JWT/roles guards; @Public(),
-  @Roles(), explicit ADMIN/MANAGER/RECEPTIONIST/GUEST permissions, no ADMIN bypass.
-- [x] Step 6 — Ownership Checks: OwnershipModule/OwnershipService, linked guest and
-  reservation checks, explicit staff allowlists, private 404 responses, isolated tests.
-- [x] Step 7 — Optional Guest Registration: server-assigned GUEST; transactional
-  PENDING User/Guest/token creation; hashed 30-minute single-use verification;
-  activation, duplicate protection, resend, post-commit SMTP delivery.
-- [x] Step 8 — Authentication and Security Testing: owner previously reported
-  23/23 acceptance checks, full Vitest regression, NestJS build, Prisma validation,
-  and preserved development data. The HTTP fixture has 17 named cases; do not
-  equate that file's case count with the owner's overall acceptance checklist.
-
-Important files: backend/src/auth/, backend/src/common/guards/,
-backend/src/common/decorators/, backend/src/common/ownership/. API endpoints:
-POST /api/auth/register, GET /api/auth/verify-email,
-POST /api/auth/resend-verification, POST /api/auth/login,
-POST /api/auth/refresh, POST /api/auth/logout. GET /api/auth-check is diagnostic;
-/api/security-test/* exists only in test fixtures. Auth DTOs and detailed
-responses/rate limits are in docs/API.md; acceptance boundaries in docs/SECURITY.md.
+The historical 23/23 acceptance result remains owner-reported. It is not a new
+execution result or the case count of the HTTP test file.
 
 ### Phase 4 — Room Management (7/7)
 
-- [x] **Step 1 — Room-Type Management:** RoomTypesModule/controller/service and
-  create/update DTOs in backend/src/room-types/. Public active-type list/detail;
-  ADMIN/MANAGER creation/update. Exactly one configured property is required.
-  Duplicate names conflict; deactivation/capacity reduction checks protected
-  upcoming reservations. room-types.spec.ts uses phase4.step1.test.db.
-- [x] **Step 2 — Physical-Room Management:** RoomsModule/RoomsService in
-  backend/src/rooms/. Staff list/detail; ADMIN/MANAGER creation/update; unique
-  trimmed room numbers, active room-type membership, defaults READY/active.
-  Reclassification/deactivation cannot displace protected unreleased assignments.
-  rooms.spec.ts uses phase4.step2.test.db; authorization tests inspect role metadata.
-- [x] **Step 3 — Amenity Management:** AmenitiesModule with catalog and room-type
-  attachment controllers. Public reads; ADMIN/MANAGER writes/detach. Normalized
-  names, case-insensitive duplicate check, composite join identity, explicit 404/409.
-  amenities.spec.ts uses phase4.step3.test.db; authorization source is present.
-- [x] **Step 4 — Approved Room Image Uploads:** RoomImagesModule, ImageValidationService,
-  ImageStorageService, and DTO in backend/src/room-images/. One multipart file,
-  5 MiB maximum, decoded JPEG/PNG/WebP, 20-million-pixel input limit, re-encoded
-  WebP without copying source metadata. Controlled public file delivery, primary
-  image selection/replacement, staged deletion and failure recovery. Real storage
-  tests use phase4.step4.test.db and temporary storage; role tests are present.
-- [x] **Step 5 — Rate and Capacity Validation:** RoomRateCapacityService in
-  backend/src/common/validation/ enforces integer capacity/rate in 1..2147483647;
-  amounts are centavos, not floating-point currency. Guest count cannot exceed
-  capacity. Updating current room rates does not rewrite Reservation's stored
-  nightlyRateCentavos/totalAmountCentavos. Unit tests and phase4.step5.test.db
-  snapshot integration tests exist.
-- [x] **Step 6 — Operational States and Dated Room Blocks:** RoomStatusController/
-  RoomStatusService and RoomBlocksModule. Manual statuses exclude OCCUPIED;
-  reception may only switch READY/CLEANING; ADMIN/MANAGER can make permitted
-  manual transitions. Checked-in assignments are protected. Philippine calendar
-  dates use arrival-inclusive/end-exclusive ranges. Blocks reject active-block
-  overlaps and protected unreleased assignment overlaps. Cancellation preserves
-  the row via canceledAt; canceled blocks cannot be edited or canceled twice.
-  Additive migration: 20261031_phase4_step6_room_block_cancellation.
-  Room-block tests use phase4.step6.test.db; authorization source is present.
-- [x] **Step 7 — Inventory Safety and Regression Testing:** InventorySafetyModule/
-  InventorySafetyService in backend/src/common/inventory/. Checks property scope,
-  active room/type, matching category, capacity, operational status, active dated
-  blocks, and overlapping protected unreleased assignments. IMMEDIATE requires
-  READY and dates including today in Asia/Manila; FUTURE can permit CLEANING or
-  OCCUPIED when no dated conflict exists, but rejects MAINTENANCE/OUT_OF_SERVICE.
-  phase4.step7.test.db tests include adjacent dates, canceled blocks, snapshots,
-  and a test-only concurrent assignment writer that commits at most one conflict.
+- [x] Step 1 — Room-type management.
+- [x] Step 2 — Physical-room management.
+- [x] Step 3 — Amenities and room-type links.
+- [x] Step 4 — Validated image upload, WebP storage, primary-image management
+  and controlled public delivery.
+- [x] Step 5 — Rate/capacity validation and preservation of booking price snapshots.
+- [x] Step 6 — Operational room states and dated room blocks with cancellation history.
+- [x] Step 7 — Reusable inventory eligibility checks and accepted regression work.
 
-Step 7 is a reusable eligibility service, **not a public availability or booking
-endpoint**. assertEligible() is read-only and reserves nothing; future assignment
-writers must call assertEligibleInTx() within the same transaction as the write.
-excludeReservationId is a trusted internal exception, not public input. Current
-checks conservatively protect PENDING assignments without filtering hold expiry;
-unassigned room-type inventory/holds and complete booking concurrency remain
-future integration work. No independent Phase 4 test run/pass count is available
-from this task; test-source presence does not prove production readiness.
+InventorySafetyService checks physical-room eligibility and reserves nothing.
+Future assignment writers must use assertEligibleInTx with their write in the
+same transaction. Existing PENDING-assignment checks are conservative and do
+not filter hold expiry. Full booking acquisition remains Phase 6 work.
 
-### Phase 5 — Guest Website (3 fully completed steps; 2 partially complete)
+### Phase 5 — Guest Website (7/7)
 
-- [x] **Step 1 — Shared Guest Layout:** GuestLayout renders navigation, backend
-  status, outlet, footer, and a skip link. Navbar supports a collapsible menu;
-  styles/tokens.css and global.css supply shared visual foundations.
-- [x] **Step 2 — Homepage:** Home.jsx provides the NEXORA hero, feature cards,
-  room-browsing calls to action, and links to /rooms.
-- [x] **Step 3 — Room Listing and Details:** /rooms uses useRoomTypes and RoomCard;
-  /rooms/:id uses useRoomDetails, galleries, and amenities. roomTypesApi.js fetches
-  public room types, images, and amenities; hooks suppress stale responses.
-- [ ] **Step 4 — Date and Capacity Search: PARTIALLY COMPLETE.** Backend complete,
-  owner-confirmed: AvailabilityModule exposes GET /api/availability with checkIn,
-  checkOut, and guests; validates dates/capacity and accounts for active inventory,
-  dated blocks, and inventory-holding reservations. Frontend date/guest inputs,
-  availability requests, results, and integration remain in progress.
-- [ ] **Step 5 — Backend-Calculated Pricing Display: PARTIALLY COMPLETE.** Backend
-  complete, owner-confirmed: AvailabilityService returns nights, nightlyRateCentavos,
-  and totalAmountCentavos. Current cards/details display baseRateCentavos per night
-  using formatMoney.js; displaying the searched-stay quote in the frontend remains
-  in progress. A nightly-rate display is not completion of the whole step.
-- [ ] **Step 6 — Loading, Empty, and Failure States:** Pending overall acceptance.
-  Existing messages and optional image/amenity fallbacks are partial implementation
-  evidence, not confirmation that the full step is complete.
-- [ ] **Step 7 — Responsive and Keyboard Verification:** Pending. Navigation
-  attributes, skip links, focus styles, and responsive CSS exist; no new browser
-  or keyboard acceptance pass was performed in this documentation task.
+- [x] Step 1 — Shared guest layout: navigation, backend status, outlet, footer,
+  skip link and shared styles.
+- [x] Step 2 — Homepage with NEXORA information and room-browsing links.
+- [x] Step 3 — Connected room listing/detail routes, images and amenities.
+- [x] Step 4 — Date and capacity search: Rooms.jsx calls availabilityApi.js,
+  which requests GET /api/availability with checkIn, checkOut and guests.
+  Input checks, request cancellation, stale-result reset and result feedback
+  are present in the routed page.
+- [x] Step 5 — Backend-calculated pricing display: search results show nights,
+  nightlyRateCentavos and totalAmountCentavos using formatPesos. The browser
+  displays the quote; AvailabilityService calculates trusted prices.
+- [x] Step 6 — Loading, empty and failure states: room-list/detail retries,
+  not-found handling, optional photo/amenity fallbacks, search errors and
+  no-match/unavailable results.
+- [x] Step 7 — Responsive and keyboard work: mobile menu, labels and ARIA state,
+  skip link, route-change focus, Escape-to-close menu behavior, visible focus,
+  responsive rules and reduced-motion styling. Overall completion is accepted
+  from the owner; no fresh device/browser acceptance run is claimed here.
 
-**Evidence and next work:** The owner's latest clarification supersedes earlier
-5/7 completion claims: only Steps 1–3 are fully complete. Backend portions of
-Steps 4–5 are complete; their frontend portions are still in progress. Current
-Rooms.jsx and RoomDetails.jsx have no date/guest search form, availability API
-request, or searched-stay total. roomTypesApi.js currently fetches room metadata
-only. No dedicated availability test file or frontend test script was found;
-this documentation task ran no application tests, builds, migrations, or seeds.
-
-Availability is informational and reserves nothing. The nightly capacity check
-does not prove one physical room is available for a whole stay or acquire
-inventory. Complete allocation and booking writes remain Phase 6 scope.
-Finish frontend integration for Steps 4–5, then complete/verify Steps 6–7 under
-the approved workflow. Phase 5 remains in progress; Phase 6 onward is
-NOT STARTED / AWAITING APPROVAL.
-
-### Latest backend availability verification report
-
-For Phase 5 Steps 4–5, the owner reports seven quick date/inventory checks passed
-in another repository copy and the temporary test file was removed. Permanent
-availability tests were promised separately and are not present in the inspected
-availability directory. The report did not complete the full build because
-Prisma-generated types could not be obtained in that sandbox. Its 109 reported
-TypeScript diagnostics do not independently establish whether the new code is
-correct. Local npm run build and npm run lint results remain outstanding.
-
-This task recorded that report without executing those checks or generating a
-Prisma client. Full details and safe command context are in
-docs/IMPLEMENTATION_GUIDE.md under Reported backend checks for Steps 4–5.
-Steps 4–5 backend implementation is complete per owner confirmation; frontend
-integration is still in progress. Do not mark permanent tests, full build/lint,
-frontend completion, or the entire Phase 5 complete from this report alone.
+Public guest routes remain /, /rooms and /rooms/:id. Availability is
+informational: search creates neither a hold nor a booking, and nightly
+room-type capacity does not prove one physical room covers an entire stay.
+No permanent availability test file or frontend test script was found in the
+inspected locations. This is a coverage limitation, not a reversal of the
+owner's Phase 5 completion. Historical sandbox diagnostics are not current
+build/lint results; future verification must record actual command outcomes.
 
 ## D. Backend Structure
 
@@ -358,138 +269,143 @@ registered business controllers. Full current directory map: docs/DIRECTORY_STRU
 
 ## E. Database Architecture and Safety
 
-- Prisma CLI/client/adapter are 7.10.1. SQLite runtime uses PrismaBetterSqlite3.
-  PrismaService hardcodes file:./dev.db relative to the process working directory:
-  run from backend/ to target D:\Web-JSX\NEXORA\backend\dev.db. A nearby source
-  comment still says prisma/dev.db; the literal adapter setting is authoritative.
-- CLI config is backend/prisma7.config.ts; schema path prisma/schema.prisma,
-  migration path prisma/migrations/, datasource from DATABASE_URL. Verify the
-  resolved CLI path matches the intended database; never assume a relative URL
-  has the same base as the runtime adapter. Do not print actual environment values.
-- Four inspected migrations: 20261027150551_init (24 models),
-  20261029133315_add_refresh_token_family (nullable familyId/index),
-  20261030134255_add_email_verification_tokens (25th model), and
-  20261031_phase4_step6_room_block_cancellation (nullable canceledAt; existing
-  rows remain active). No migration was applied during this documentation task.
-- Follow an additive migration policy: inspect schema and SQL, approve each
-  change/target, test on disposable data, retain history, validate compatibility,
-  back up, and verify results. Never reset, overwrite, replace, or seed backend/dev.db
-  during ordinary testing. Production PostgreSQL requires separate verified SQL.
-- Existing local backups/ and database backups are not source artifacts or proof
-  that restoration works. Before an approved database change, take a consistent
-  SQLite backup using the SQLite backup API or an approved offline procedure
-  accounting for WAL/journal files. Verify integrity_check returns ok on a
-  read-only connection to the backup and confirm restoration on a disposable copy.
-  Record safe hashes/counts when authorized, without exposing private rows.
-- Preserve stored reservation price snapshots. RoomBlock.canceledAt (one l)
-  preserves canceled history; active inventory checks require canceledAt: null.
-  Transactional room/block changes protect relevant assignments; a database index
-  alone does not enforce interval exclusion or guarantee full booking safety.
+- Current schema: 25 Prisma models and four migrations under backend/prisma/.
+  Preserve the original foundation and accepted extensions, including
+  RefreshToken.familyId, EmailVerificationToken and RoomBlock.canceledAt.
+- Migration history: 20261027150551_init,
+  20261029133315_add_refresh_token_family,
+  20261030134255_add_email_verification_tokens, and
+  20261031_phase4_step6_room_block_cancellation.
+- PrismaService uses the fixed runtime URL file:./dev.db relative to the
+  process directory; run the backend from backend/. Prisma CLI reads
+  DATABASE_URL through backend/prisma7.config.ts. Verify their resolved targets
+  before database work; do not infer the target from source comments alone.
+- Keep development data intact. Use isolated test databases and temporary image
+  storage. Never substitute dev.db for a test target, reset it, or seed it as
+  part of ordinary testing. Back up consistently and verify recovery before
+  approved schema/data changes.
+- Use additive, reviewed migrations; SQLite SQL is not a PostgreSQL migration
+  strategy. Do not edit generated Prisma client files manually.
+- Guest is a stay/contact record; User is an optional login identity. RoomType
+  describes category/rate/capacity; Room describes a physical unit. Reservation
+  and payment status are independent. Operational status alone is not dated
+  availability. Preserve assignment, cancellation and financial history.
+- Stay intervals are arrival-inclusive and departure-exclusive. Preserve stored
+  reservation price snapshots; current rate changes must not rewrite them.
 
-| Test area | Existing migrated isolated database under backend/ |
+Existing fixture targets under backend/ include step3.auth.test.db,
+step6.ownership.test.db, step7.registration.test.db, step8.security.test.db,
+step10.test.db, and phase4.step1.test.db through phase4.step7.test.db.
+Inspect suite configuration and ensure the required isolated schema exists
+before running tests; this list does not assert that each fixture is provisioned.
+
+## F. Security and Remaining Review Items
+
+- Enforce JWT identity and ACTIVE status in the backend. @Public() does not
+  bypass throttling, DTO validation or controller-specific Origin checks.
+  ADMIN has no automatic role/ownership bypass. Missing authentication is 401,
+  denied role/Origin is 403, and inaccessible private records use 404.
+- Auth POSTs require an allowlisted Origin. Refresh cookies are HttpOnly,
+  SameSite=Strict, Path=/api/auth and Secure in production. Logout revokes the
+  refresh family; an existing access JWT can remain valid until expiry.
+- OwnershipModule must be explicitly used by future guest/reservation services;
+  helper presence does not protect a future endpoint automatically.
+- ADMIN/MANAGER manage room/amenity/image data; reception can read physical rooms
+  and blocks. Public room-type/image reads exclude inactive types. Uploads are
+  decoded and re-encoded, use guarded storage paths and omit internal file paths.
+- **Owner review required:** Architecture v2.1 gives reception room/rate
+  management View permission, while RoomStatusService permits READY/CLEANING
+  transitions. Preserve both the approved baseline and accurate implementation
+  description until the intended housekeeping exception is decided.
+- Remaining operational review includes duplicate bootstrap CORS registration,
+  deployed cookies/origins, email-link prefetch, SMTP failure monitoring,
+  durable image storage/recovery, HTTPS, PostgreSQL compatibility and backups.
+- The legacy backend/test/app.e2e-spec.ts expects Hello World! and imports the
+  real AppModule without isolating Prisma. Review it before using test:e2e as
+  release evidence. Existing model records and admin placeholders do not
+  implement payments, check-in/out, reporting or real NFC door access.
+
+## G. Coding and Verification Workflow
+
+1. Follow KISS and the approved stack. Use focused NestJS controllers/services,
+   React composition and existing shared date/rate/inventory helpers.
+2. Preserve ESM .js suffixes for backend local imports, import type for types,
+   existing Vitest tooling and the JavaScript/JSX frontend convention.
+3. Validate DTOs, project response fields, calculate prices on the server and
+   enforce roles/ownership in backend services. Never trust client prices,
+   privileged statuses, identities or property scope.
+4. Inspect existing changes and approve the specific implementation scope before
+   coding. Finish and verify that scope before advancing phases. Documentation
+   maintenance does not authorize new business features, migrations or deployment.
+5. Use isolated tests appropriate to the change. Distinguish source inspection,
+   owner-reported acceptance and executed results. Record real failures and limits.
+6. Keep credentials/private data out of source, documentation and logs. Avoid
+   destructive resets, automatic commits, pushes and deployments.
+
+Existing commands, from the relevant application directory:
+
+| Application | Scripts / command | Effect |
+|---|---|---|
+| Backend | npm run lint | Checks backend source/tests using Oxlint |
+| Backend | npm run test | Runs Vitest suites; isolated fixture data/storage may change |
+| Backend | npm run build | Writes NestJS build output |
+| Backend | npx prisma validate --config prisma7.config.ts | Validates schema/config; does not apply migrations |
+| Guest/admin frontend | npm run dev, npm run build, npm run lint, npm run preview | Development, build, lint and preview; no frontend test script is declared |
+
+## H. Latest System Changes and Documentation Update
+
+| Area / path | Current change or update |
 |---|---|
-| Auth/login/logout | step3.auth.test.db |
-| Ownership | step6.ownership.test.db |
-| Registration | step7.registration.test.db |
-| HTTP security | step8.security.test.db |
-| Foundation integrity | step10.test.db |
-| Room types / physical rooms / amenities | phase4.step1.test.db / phase4.step2.test.db / phase4.step3.test.db |
-| Images / rate snapshots | phase4.step4.test.db / phase4.step5.test.db |
-| Status/blocks / inventory regression | phase4.step6.test.db / phase4.step7.test.db |
+| frontend/guest-web/src/pages/Rooms.jsx | Routed search form now integrates availability requests, validates dates/guest count, resets stale searches, cancels requests and displays server-priced results |
+| frontend/guest-web/src/services/availabilityApi.js | Axios availability query with AbortSignal and response-array validation |
+| frontend/guest-web/src/styles/availability.css | Search/result presentation and responsive rules used by Rooms.jsx |
+| frontend/guest-web/src/hooks/useRoomTypes.js and useRoomDetails.js | Retry actions, stale-response handling and optional media/amenity fallbacks |
+| frontend/guest-web/src/pages/RoomDetails.jsx | Connected detail presentation with retry and not-found states |
+| frontend/guest-web/src/components/Navbar.jsx | Accessible mobile menu state and Escape/focus handling |
+| frontend/guest-web/src/layouts/GuestLayout.jsx | Skip-link target and focus movement after route changes |
+| frontend/guest-web/src/styles/global.css | Feedback, keyboard focus, mobile layouts and reduced-motion styling |
+| frontend/guest-web/src/components/AvailabilitySearch.jsx and AvailabilitySearch.css | Additional search component files exist; the current routed Rooms.jsx implements its own search form and does not import this component |
+| backend/src/availability/ | Existing public query and server quote calculation now have a connected guest-page caller; no new booking write is implied |
+| docs/AGENTS.md | Current Phases 1–5 completion, all seven Phase 5 checklist items, installed dependencies, source changes and Phase 6 boundary; consolidated from the former root copy |
 
-These names are inspected test targets, not a claim that each local file is
-currently provisioned or migrated. Suites check isolation from dev.db. Tests
-write synthetic records and image tests use temporary filesystem storage.
+Dependency manifests retain the same 62 direct entries; the guest integration
+uses the existing Axios/React stack. The schema still has 25 models/four
+migrations. Removed superseded frontend-in-progress statements, repeated status
+summaries and the long historical sandbox/temporary-test narrative; retained
+system requirements, accepted milestones and relevant security/test limitations.
 
-## F. Authentication and Security Rules
+Documentation is consolidated under docs/. The latest root handoff was moved
+into this file, replacing the older duplicate; its Phase 5 completion and
+dependency inventory are preserved. The duplicate root architecture was removed
+after confirming its core requirements match the authoritative docs copy.
+Other supporting documents may retain an earlier phase checkpoint until their
+next status synchronization.
 
-- JWT identity and current ACTIVE status are backend-enforced. @Public() bypasses
-  JWT/roles, not throttling or DTO validation. ADMIN has no implicit role or
-  ownership bypass. Missing authentication is 401; wrong role/Origin is 403;
-  inaccessible private records use 404. Staff permissions must be explicit.
-- Auth POSTs require a configured allowlisted Origin. Email verification GET is
-  public without that Origin check, consumes a single-use credential, and sets
-  no-store/no-referrer headers. Refresh cookies are HttpOnly, SameSite Strict,
-  scoped to /api/auth, Secure in production; raw credentials never enter JSON.
-- Room/amenity/image writes require ADMIN or MANAGER. Physical-room/block reads
-  also permit RECEPTIONIST. Reception's status permission is limited by service
-  transitions. Public reads hide inactive room types and their images/links.
-- Uploads validate decoded content rather than filenames/MIME alone; SVG and
-  unsupported/corrupt images fail. Storage uses generated keys and guarded paths,
-  outside a blanket static directory. Public responses omit internal file paths.
-- main.ts still registers CORS twice; startup now uses void bootstrap().catch
-  and sets a failing process exit code on rejection. The legacy test/app.e2e-spec.ts still expects Hello World!; it does not
-  isolate Prisma. Do not confuse it with the accepted HTTP security suite.
-- Production work includes email-prefetch-safe verification, SMTP failure
-  monitoring, durable image storage and orphan/pending-delete recovery, HTTPS,
-  deployed CORS/cookie checks, PostgreSQL compatibility, backups and observability.
-  backend/.env.example currently only documents PORT and omits other required
-  configuration names; no environment file was changed here.
+## I. Next Phase — Phase 6: Reservation System
 
-## G. Coding Standards and Development Workflow
+Architecture v2.1 section 16 places Reservation System after Guest Website and
+before Payment System. **Status: NOT STARTED / AWAITING APPROVAL.**
 
-1. Follow KISS: readable TypeScript, clear responsibilities, focused Nest modules,
-   minimal dependencies; preserve the approved JavaScript/JSX frontends.
-2. Use ESM .js suffixes for local backend TypeScript imports; use import type for
-   type-only dependencies. Preserve Vitest and existing package scripts.
-3. Validate untrusted DTOs and enforce rules in services. Use integer centavos,
-   explicit projections, restrictive historical FKs, transactions and safe errors.
-   Never trust client prices, roles, property scope, or record ownership.
-4. Use the shared date/rate/capacity/inventory helpers instead of duplicating
-   authoritative rules. Snapshot price fields are not current-rate calculations.
-5. Inspect existing working changes; propose scope, obtain specific approval,
-   implement only that scope, run meaningful isolated checks, review diff, record
-   actual results, update documentation, and request approval before advancing.
-6. Test fixtures must use dedicated databases/storage. Review generated migration
-   SQL and protect development data before any authorized database change.
-7. Give Windows PowerShell instructions with working directory, prerequisites,
-   write effects, expected outputs, and troubleshooting. Do not claim execution
-   from command examples. No destructive reset, auto-commit, push, or deployment.
+Planned scope from the architecture:
 
-Existing backend commands (not run for this documentation update):
+- Guest checkout, with optional accounts and protected accountless access.
+- Inventory holds and transaction-safe booking acquisition.
+- Physical-room assignments and assignment history.
+- Approved booking statuses and lifecycle transitions.
+- Cancellation under the property's approved policy.
+- Check-in and check-out workflows.
 
-```powershell
-Set-Location D:\Web-JSX\NEXORA\backend
-npx prisma validate --config prisma7.config.ts
-npm run lint
-npm run test -- src/common/inventory/inventory-safety.spec.ts
-npm run test
-npm run build
-```
+Before implementation, approve the detailed Phase 6 plan, hold duration,
+accountless verification and unresolved lifecycle/property policies. Reuse
+current ownership, pricing, date and inventory helpers; do not treat a search
+result as acquired inventory. The pass condition is trusted stored prices,
+authorized private access and booking/assignment writes that cannot oversell.
 
-Validation/lint read sources; tests mutate isolated fixture databases/storage;
-build writes output. Provisioning/migrating test files is a separate approved
-operation. npm run test:e2e selects the stale legacy fixture separately and
-must be reviewed before use. Frontend directories provide dev/build/lint/preview
-scripts; no frontend test script is declared.
+Phase 7 — Payment System follows Phase 6. PayMongo Hosted Checkout, verified
+webhooks, Pay at Property collections and refunds remain future implementation.
+No Phase 6 or later code is authorized by this documentation update.
 
-### Architecture discrepancy requiring owner review
-
-Architecture v2.1 lists reception room/rate management as View, but the current
-room-status controller/service permits RECEPTIONIST READY/CLEANING transitions.
-Do not silently change the baseline or assume the exception is approved. See
-docs/TECHNICAL_PLAN.md section 11 for the review record and remaining gaps.
-This audit leaves the owner-confirmed milestone checkpoint unchanged.
-
-## H. Current Project Status and Next Boundary
-
-Phases 1–4 are complete as directed by the project owner on October 31, 2026.
-Phase 4 has seven completed steps; source and test fixtures substantiate the
-listed implementation areas. Application tests/builds were not rerun here and
-no new successful-test count is inferred.
-
-Phase 5 is IN PROGRESS: Steps 1–3 are complete; Steps 4–5 have completed backend
-work and frontend work in progress. Steps 6–7 remain pending.
-The guest website now has a shared layout, homepage, connected room listing and
-detail screens. Search-form/stay-total integration is not evident in current
-frontend source. Phase 6 onward is NOT STARTED / AWAITING APPROVAL.
-Existing guest/admin screens do not establish connected booking,
-payments, financial reporting, check-in/out, or NFC door hardware functionality.
-Inventory helpers reserve nothing. The new public availability endpoint is
-informational and exposes no booking-write operation.
-
-Maintain docs/AGENTS.md and the root AGENTS.md consistently. docs/README.md is
-exclusively the product overview: no phase tables, completion logs, test counts,
-or development checklists. Use docs/IMPLEMENTATION_GUIDE.md for progress and
-commands, docs/API.md for contracts, docs/SECURITY.md for controls/limits,
-and docs/DATABASE_SCHEMA.md for the current 25-model schema and migration history.
+Related references: [API](API.md), [database schema](DATABASE_SCHEMA.md),
+[implementation guide](IMPLEMENTATION_GUIDE.md),
+[security](SECURITY.md), [directory map](DIRECTORY_STRUCTURE.md), and
+[architecture review items](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items).

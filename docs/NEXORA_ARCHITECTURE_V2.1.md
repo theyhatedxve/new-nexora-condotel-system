@@ -1,6 +1,6 @@
 # NEXORA — Final Condotel Management System Architecture
 
-> **Authoritative file:** docs/NEXORA_ARCHITECTURE_V2.1.md; the repository-root file is a reference copy.
+> **Authoritative file:** docs/NEXORA_ARCHITECTURE_V2.1.md. Project documentation is maintained in docs/; only README.md remains at the repository root.
 > **Master architecture blueprint:** Version 2.1  
 > **Status:** Approved architecture v2.1; historical baseline with current progress addendum below.
 > **Intended readers:** Codex, other AI coding assistants, developers, reviewers.  

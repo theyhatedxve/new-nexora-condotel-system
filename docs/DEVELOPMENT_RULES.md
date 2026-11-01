@@ -81,6 +81,10 @@ Never commit local environment files.
 
 ## 8. Documentation
 
+Keep project Markdown documentation in docs/, including AGENTS.md and the
+authoritative architecture. README.md is the only Markdown file in the NEXORA
+repository root. Do not maintain duplicate root copies of documentation.
+
 Update the README as the project develops.
 
 Document important implementation decisions.
