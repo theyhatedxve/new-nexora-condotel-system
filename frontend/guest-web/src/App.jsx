@@ -10,6 +10,9 @@ import "./styles/global.css";
 
 import Checkout from "./pages/Checkout.jsx";
 
+import BookingAccess from "./pages/BookingAccess.jsx";
+import MyBooking from "./pages/MyBooking.jsx";
+
 function App() {
   return (
     <BrowserRouter>
@@ -21,6 +24,15 @@ function App() {
           <Route
             path="/checkout/:roomTypeId"
             element={<Checkout />}
+          />
+          <Route
+            path="/booking-access"
+            element={<BookingAccess />}
+          />
+
+          <Route
+            path="/my-booking"
+            element={<MyBooking />}
           />
         </Route>
       </Routes>

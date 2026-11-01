@@ -276,9 +276,41 @@ model Reservation {
   payments         Payment[]
   cardAssignments  CardAssignment[]
 
+  accessTokens   ReservationAccessToken[]
+  accessSessions ReservationAccessSession[]
+
   @@index([guestId])
   @@index([roomTypeId, checkInDate, checkOutDate])
   @@index([status, holdExpiresAt])
+}
+
+
+model ReservationAccessToken {
+  id            String    @id @default(cuid())
+  reservationId String
+  tokenHash     String    @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+
+  @@index([reservationId, createdAt])
+  @@index([expiresAt])
+}
+
+model ReservationAccessSession {
+  id            String    @id @default(cuid())
+  reservationId String
+  tokenHash     String    @unique
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+
+  @@index([reservationId])
+  @@index([expiresAt])
 }
 
 // ========================================

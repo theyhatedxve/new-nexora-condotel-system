@@ -24,15 +24,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  //Frontend to Backend CORS configuration
-  app.enableCors({
-    origin: [
-      'http://localhost:5173',  // Allow requests from the guest-web frontend
-      'http://localhost:5174',  // Allow requests from the admin-web frontend
-
-    ] 
-  })
-
   // All routes will start with /api
   app.setGlobalPrefix('api');
 

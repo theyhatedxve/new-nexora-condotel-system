@@ -66,6 +66,13 @@ function Navbar() {
         >
           Rooms
         </NavLink>
+
+        <NavLink
+          to="/my-booking"
+          onClick={closeMenu}
+        >
+          My Booking
+        </NavLink>
       </nav>
     </header>
   );

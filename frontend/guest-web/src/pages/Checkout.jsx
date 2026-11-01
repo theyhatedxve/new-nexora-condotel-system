@@ -286,6 +286,15 @@ function CheckoutForm({
           >
             Return to rooms
           </Link>
+
+          <br />
+
+          <Link
+          className="checkout-link"
+          to="/booking-access"
+          >
+          Request private booking access
+          </Link>
         </section>
       </main>
     );
