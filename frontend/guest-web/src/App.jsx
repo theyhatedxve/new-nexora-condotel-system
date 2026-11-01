@@ -8,6 +8,8 @@ import RoomDetails from "./pages/RoomDetails";
 import "./styles/tokens.css";
 import "./styles/global.css";
 
+import Checkout from "./pages/Checkout.jsx";
+
 function App() {
   return (
     <BrowserRouter>
@@ -16,6 +18,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/rooms" element={<Rooms />} />
           <Route path="/rooms/:id" element={<RoomDetails />} />
+          <Route
+            path="/checkout/:roomTypeId"
+            element={<Checkout />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

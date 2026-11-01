@@ -443,12 +443,25 @@ function Rooms() {
                       </div>
 
                       {result.available ? (
-                        <Link
-                          className="outline-button"
-                          to={`/rooms/${result.id}`}
-                        >
-                          View Room Details
-                        </Link>
+                        <div className="availability-booking-actions">
+                          <Link
+                            className="outline-button"
+                            to={`/rooms/${result.id}`}
+                          >
+                            View Room Details
+                          </Link>
+
+                          <Link
+                            className="outline-button"
+                            to={`/checkout/${result.id}?${new URLSearchParams({
+                              checkIn,
+                              checkOut,
+                              guests: String(guests),
+                            }).toString()}`}
+                          >
+                            Book — Pay at Property
+                          </Link>
+                        </div>
                       ) : (
                         <p className="availability-unavailable">
                           Not available for these dates.

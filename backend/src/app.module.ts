@@ -21,6 +21,11 @@ import { RoomImagesModule } from './room-images/room-images.module.js';
 import { RoomBlocksModule } from './room-blocks/room-blocks.module.js';
 
 import { AvailabilityModule } from './availability/availability.module.js';
+
+import {
+  ReservationsModule,
+} from './reservations/reservations.module.js';
+
 @Module({
   imports: [PrismaModule, ThrottlerModule.forRoot([
     {
@@ -35,6 +40,7 @@ import { AvailabilityModule } from './availability/availability.module.js';
   RoomImagesModule, 
   RoomBlocksModule,
   AvailabilityModule,
+  ReservationsModule,
 ],
   controllers: [AppController],
   providers: [AppService, {

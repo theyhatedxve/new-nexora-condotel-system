@@ -210,6 +210,12 @@
   overflow-wrap: anywhere;
 }
 
+.availability-booking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
 @media (max-width: 700px) {
   .availability-fields {
     grid-template-columns: minmax(0, 1fr);
