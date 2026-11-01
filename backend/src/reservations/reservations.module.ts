@@ -66,10 +66,15 @@ import {
   ReservationStayService,
 } from './reservation-stay.service.js';
 
+import {
+  PaymentsModule,
+} from '../payments/payments.module.js';
+
 @Module({
   imports: [
     PrismaModule,
     InventorySafetyModule,
+    PaymentsModule,
   ],
   controllers: [
     ReservationsController,

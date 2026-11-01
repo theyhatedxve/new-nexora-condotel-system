@@ -6,10 +6,10 @@ import type {
   Prisma,
 } from '../generated/prisma/client.js';
 
-// Read-only eligibility check.
-// Payment creation and verification belong to Phase 7.
-//
-// Call inside the same transaction as the stay operation.
+import {
+  calculatePaymentSummary,
+} from '../payments/payment-summary.js';
+
 export async function requireFullRecordedPayment(
   tx: Prisma.TransactionClient,
   reservationId: string,
@@ -21,24 +21,21 @@ export async function requireFullRecordedPayment(
       reservationId,
     },
     include: {
-      refunds: {
-        select: {
-          id: true,
-        },
-      },
+      refunds: true,
     },
   });
 
-  const needsFinancialReview = payments.some(
-    (payment) =>
-      payment.method !== 'PAY_AT_PROPERTY' ||
-      payment.refunds.length > 0 ||
-      [
-        'PARTIALLY_PAID',
-        'PARTIALLY_REFUNDED',
-        'REFUNDED',
-      ].includes(payment.status),
-  );
+  const needsFinancialReview =
+    payments.some(
+      (payment) =>
+        payment.method !== 'PAY_AT_PROPERTY' ||
+        payment.refunds.length > 0 ||
+        [
+          'PARTIALLY_PAID',
+          'PARTIALLY_REFUNDED',
+          'REFUNDED',
+        ].includes(payment.status),
+    );
 
   if (needsFinancialReview) {
     throw new ConflictException(
@@ -46,45 +43,23 @@ export async function requireFullRecordedPayment(
     );
   }
 
-  let paid = 0;
-
-  const completedPayments = payments.filter(
-    (payment) => payment.status === 'PAID',
-  );
-
-  for (const payment of completedPayments) {
-    if (
-      payment.currency !== 'PHP' ||
-      !payment.paidAt ||
-      payment.paidAt > now ||
-      !Number.isSafeInteger(
-        payment.amountCentavos,
-      ) ||
-      payment.amountCentavos <= 0 ||
-      payment.provider ||
-      payment.providerCheckoutId ||
-      payment.providerPaymentId
-    ) {
-      throw new ConflictException(
-        'A paid record is incomplete or requires financial review.',
-      );
-    }
-
-    paid += payment.amountCentavos;
-  }
+  const summary =
+    calculatePaymentSummary(
+      totalAmountCentavos,
+      'CONFIRMED',
+      payments,
+      now,
+    );
 
   if (
-    !Number.isSafeInteger(
-      totalAmountCentavos,
-    ) ||
     totalAmountCentavos <= 0 ||
-    !Number.isSafeInteger(paid) ||
-    paid < totalAmountCentavos
+    summary.requiresReview ||
+    summary.balanceDueCentavos !== 0
   ) {
     throw new ConflictException(
       'Full recorded payment is required. Payment recording is implemented in Phase 7.',
     );
   }
 
-  return paid;
+  return summary.netPaidCentavos;
 }

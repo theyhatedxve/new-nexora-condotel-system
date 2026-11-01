@@ -9,6 +9,10 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 
 import type { UserRole } from '../decorators/roles.decorator.js';
 
+import type {
+  Prisma,
+} from '../../generated/prisma/client.js';
+
 // This is the trusted identity returned by JwtStrategy.
 // Never build it from request body or query parameters.
 export interface AuthenticatedUser {
@@ -87,23 +91,33 @@ export class OwnershipService {
     user: AuthenticatedUser | null | undefined,
     reservationId: string,
     allowedStaffRoles: readonly UserRole[] = [],
+    db: Pick<
+      Prisma.TransactionClient,
+      'reservation'
+    > = this.prisma,
   ): Promise<void> {
-    const authenticatedUser = this.requireIdentity(user);
+    const authenticatedUser =
+      this.requireIdentity(user);
 
-    const reservation = await this.prisma.reservation.findUnique({
-      where: { id: reservationId },
-      select: {
-        id: true,
-        guest: {
-          select: {
-            userId: true,
+    const reservation =
+      await db.reservation.findUnique({
+        where: {
+          id: reservationId,
+        },
+        select: {
+          id: true,
+          guest: {
+            select: {
+              userId: true,
+            },
           },
         },
-      },
-    });
+      });
 
     if (!reservation) {
-      throw new NotFoundException('Record not found.');
+      throw new NotFoundException(
+        'Record not found.',
+      );
     }
 
     if (
@@ -117,11 +131,14 @@ export class OwnershipService {
 
     if (
       authenticatedUser.role === 'GUEST' &&
-      reservation.guest.userId === authenticatedUser.id
+      reservation.guest.userId ===
+        authenticatedUser.id
     ) {
       return;
     }
 
-    throw new NotFoundException('Record not found.');
+    throw new NotFoundException(
+      'Record not found.',
+    );
   }
 }

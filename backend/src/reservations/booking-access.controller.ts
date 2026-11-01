@@ -33,11 +33,18 @@ import {
   ExchangeBookingAccessDto,
 } from './dto/booking-access.dto.js';
 
+import {
+  PaymentSummaryService,
+} from '../payments/payment-summary.service.js';
+
 @Public()
 @Controller('reservations/access')
 export class BookingAccessController {
   constructor(
-    private readonly access: BookingAccessService,
+    private readonly access:
+        BookingAccessService,
+    private readonly summaries:
+        PaymentSummaryService,
   ) {}
 
   private checkOrigin(
@@ -158,5 +165,29 @@ export class BookingAccessController {
       BOOKING_COOKIE,
       bookingCookieOptions(),
     );
+  }
+
+  @Get('payment-summary')
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Cookie, Origin')
+  @Throttle({
+    default: {
+      limit: 30,
+      ttl: 60_000,
+    },
+  })
+  async paymentSummary(
+    @Req() request: Request,
+  ) {
+    const booking = await this.access.current(
+      request.cookies?.[BOOKING_COOKIE],
+    );
+  
+    return {
+      data: await this.summaries
+        .forVerifiedBookingNumber(
+          booking.reservationNumber,
+        ),
+    };
   }
 }
