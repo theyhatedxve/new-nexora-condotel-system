@@ -232,7 +232,8 @@ function CheckoutForm({
 
           <p>
             No payment has been collected.
-            Payment is due at the property.
+            Full payment is required at the property
+            before check-in.
           </p>
 
           <dl className="checkout-summary">
