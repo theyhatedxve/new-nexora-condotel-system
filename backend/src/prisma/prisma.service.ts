@@ -1,5 +1,6 @@
 
 import 'dotenv/config';
+import { isAbsolute } from 'node:path';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { PrismaClient } from '../generated/prisma/client.js';
@@ -10,12 +11,13 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
-    // Prisma CLI resolves file:./dev.db relative to prisma/schema.prisma.
-    // The runtime adapter resolves its URL from the process directory.
-    // NestJS runs from backend/, so specify prisma/dev.db explicitly.
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./dev.db',
-    });
+    // Preserve the existing backend/dev.db default.
+    // An explicit absolute override supports an isolated smoke-test database.
+    const runtimeUrl = process.env.NEXORA_RUNTIME_DATABASE_URL;
+    if (runtimeUrl && (!runtimeUrl.startsWith('file:') || !isAbsolute(runtimeUrl.slice(5)))) {
+      throw new Error('NEXORA_RUNTIME_DATABASE_URL must use an absolute file: path.');
+    }
+    const adapter = new PrismaBetterSqlite3({ url: runtimeUrl ?? 'file:./dev.db' });
 
     super({ adapter });
   }

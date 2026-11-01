@@ -21,6 +21,8 @@ import {
   calculatePaymentSummary,
 } from './payment-summary.js';
 
+import { paymentEvidenceSelect } from './payment-evidence.js';
+
 @Injectable()
 export class PaymentSummaryService {
   constructor(
@@ -112,6 +114,7 @@ export class PaymentSummaryService {
           payments: {
             include: {
               refunds: true,
+              events: { select: paymentEvidenceSelect },
             },
           },
         },

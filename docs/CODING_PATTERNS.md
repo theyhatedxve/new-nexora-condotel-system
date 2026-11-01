@@ -354,3 +354,17 @@ request controls, results, and searched-stay quote display remain in progress.
 Do not duplicate booking pricing in frontend hooks or infer that metadata fetches
 complete an availability integration. Quote/search is informational; booking
 must safely acquire inventory and revalidate prices in its own future workflow.
+
+
+## Phase 7.2 — Implemented checkout pattern
+
+Controllers handle DTOs, Origin checks and transport. CheckoutService separates booking authorization, quoting, request reservation, provider invocation and outcome persistence into focused methods. PaymongoAdapter contains provider-specific configuration, payload mapping, timeouts and response validation.
+
+Shared payment calculations and ownership checks are reused. Booking access and checkout share one token/session verification helper. Durable database state controls concurrency across clients; no in-memory business lock is used. The provider is mocked in automated tests. No generic gateway framework, repository wrapper or message broker is added.
+
+
+## Phase 7.3 — Focused webhook processing
+
+WebhooksController handles transport. The signature helper verifies bytes; the payload helper validates provider shape and normalizes only financial facts. PaymongoWebhookService owns durable matching, review and transactional effects. payment-evidence.ts centralizes proof projection and matching for summaries, checkout and stay eligibility.
+
+The existing Prisma transaction wrapper, payment calculator and authorization boundaries are reused. No SDK dependency, generic gateway framework, broker, repository layer, new schema or in-memory financial lock is introduced. Existing local formatting/comments are preserved in changed summary and stay files.

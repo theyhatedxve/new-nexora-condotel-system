@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import { getAllowedOrigins } from './auth/auth.config.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
 
 

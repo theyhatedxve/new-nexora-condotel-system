@@ -284,3 +284,27 @@ in AGENTS.md; this list is not a new execution report.
 - Conflicting requests cannot oversell inventory.
 - Checkout preserves history and starts required follow-up work.
 - Simulated NFC behavior is clearly identified.
+
+
+## Phase 7.2 — Confirmed booking to test Hosted Checkout
+
+1. Verify staff/owner JWT access or the private booking session.
+2. Require a confirmed booking with remaining stay dates and a valid positive backend-calculated balance.
+3. Reserve a PENDING Payment and durable checkout request in a short serialized transaction.
+4. Create the PayMongo test session outside the transaction.
+5. Persist a READY link, or UNKNOWN outcome requiring review. A repeated request must not create another session.
+6. Guest follows the validated hosted link. Both return outcomes display payment verification pending.
+
+This step uses existing confirmed bookings. Pending-hold checkout and provider-session expiry coordination are not implemented here. PayMongo sessions must not be assumed to inherit NEXORA hold expiry. Collections, refunds, verified payment success and automated reconciliation remain later Phase 7 steps.
+
+
+## Phase 7.3 — Verified capture to recorded payment
+
+1. Verify the test webhook signature over exact bytes, then validate the event envelope.
+2. In the existing serialized write transaction, deduplicate the event and match the stored checkout claim.
+3. Verify provider IDs, gross PHP amount and reference; durably retain mismatches for review.
+4. Record a genuine capture, verified event and audit atomically. Never change reservation status here.
+5. Retain late/closed/ended booking captures for review; never revive inventory or promise automatic refunds.
+6. Guest pages read the protected summary. Reception still performs authorized check-in after the existing inventory, assignment and full-payment checks.
+
+A callback arriving before checkout creation returns cannot be overwritten by READY persistence. Repeated events do not repeat money or payment audit writes. Failed review events are not automatically replayed in this step.

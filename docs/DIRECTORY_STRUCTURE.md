@@ -431,3 +431,43 @@ this guide.
 Exclude dependency contents, build output, secrets, and local database contents
 from directory documentation. Use the [root README](../README.md) for the public system overview
 and the [implementation guide](IMPLEMENTATION_GUIDE.md) for verification steps.
+
+
+## Phase 7.2 source additions
+
+- backend/prisma/migrations/20261101090000_payment_checkout_attempts/migration.sql
+- backend/src/reservations/booking-access-security.ts
+- backend/src/payments/dto/create-checkout.dto.ts
+- backend/src/payments/paymongo.adapter.ts
+- backend/src/payments/checkout.service.ts
+- backend/src/payments/paymongo.adapter.spec.ts
+- backend/src/payments/checkout.http.spec.ts
+- backend/src/payments/checkout-migration.spec.ts
+- backend/src/prisma/prisma-runtime.spec.ts
+- backend/scripts/seed-checkout-demo.mjs
+- frontend/guest-web/src/components/BookingPayment.jsx
+- frontend/guest-web/src/services/bookingPaymentsApi.js
+- frontend/guest-web/src/pages/PaymentReturn.jsx
+
+Existing MyBooking.jsx and App.jsx connect the payment component and /payment-return route. Generated Prisma client output is regenerated through the approved CLI, not manually copied.
+
+
+## Phase 7.3 — Source additions and integrations
+
+- backend/src/main.ts
+- backend/src/payments/payments.module.ts
+- backend/src/payments/paymongo-webhook.signature.ts
+- backend/src/payments/paymongo-webhook.payload.ts
+- backend/src/payments/paymongo-webhook.service.ts
+- backend/src/payments/webhooks.controller.ts
+- backend/src/payments/payment-evidence.ts
+- backend/src/payments/payment-summary.ts
+- backend/src/payments/payment-summary.service.ts
+- backend/src/payments/checkout.service.ts
+- backend/src/payments/paymongo-webhook.http.spec.ts
+- backend/src/reservations/stay-payment-policy.ts
+- frontend/guest-web/src/components/BookingPayment.jsx
+- frontend/guest-web/src/pages/PaymentReturn.jsx
+- frontend/guest-web/src/services/bookingPaymentsApi.js
+
+No Prisma schema/client regeneration or migration is required for Step 7.3 on an already completed Step 7.2 installation.

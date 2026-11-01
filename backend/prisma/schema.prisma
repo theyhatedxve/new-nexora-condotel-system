@@ -284,6 +284,9 @@ model Reservation {
   @@index([status, holdExpiresAt])
 }
 
+// ========================================
+// RESERVATION GUEST
+// ========================================
 
 model ReservationAccessToken {
   id            String    @id @default(cuid())
@@ -312,10 +315,6 @@ model ReservationAccessSession {
   @@index([reservationId])
   @@index([expiresAt])
 }
-
-// ========================================
-// RESERVATION GUEST
-// ========================================
 
 model ReservationGuest {
   id            String @id @default(cuid())
@@ -411,6 +410,12 @@ enum RefundStatus {
   CANCELLED
 }
 
+enum PaymentCheckoutState {
+  CREATING
+  READY
+  UNKNOWN
+}
+
 model Payment {
   id            String @id @default(cuid())
   reservationId String
@@ -429,6 +434,12 @@ model Payment {
 
   // Staff or provider payment reference.
   referenceNumber String?
+
+  // Durable Hosted Checkout creation state; not payment success.
+  checkoutRequestKeyHash String? @unique
+  checkoutRequestFingerprint String?
+  checkoutState PaymentCheckoutState?
+  checkoutUrl String?
 
   // Set only after verified or recorded payment.
   paidAt DateTime?

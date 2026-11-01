@@ -8,6 +8,12 @@ import type {
   ReservationStatus,
 } from '../generated/prisma/client.js';
 
+import {
+  hasPaymentReview,
+  hasVerifiedPaymongoEvidence,
+  type PaymentEvidence,
+} from './payment-evidence.js';
+
 export type SummaryPayment = Pick<
   Payment,
   | 'method'
@@ -19,6 +25,8 @@ export type SummaryPayment = Pick<
   | 'providerCheckoutId'
   | 'providerPaymentId'
 > & {
+  id?: string;
+  events?: PaymentEvidence[];
   refunds: Pick<
     Refund,
     'amountCentavos' | 'status'
@@ -98,14 +106,13 @@ export function calculatePaymentSummary(
       continue;
     }
 
-    // Verified PayMongo evidence will be integrated
-    // in Step 7.3. It is not inferred here.
+    const verifiedMethod = payment.method === 'PAY_AT_PROPERTY'
+      ? !payment.provider && !payment.providerCheckoutId && !payment.providerPaymentId
+      : payment.method === 'PAYMONGO' && hasVerifiedPaymongoEvidence(payment);
+
     if (
-      payment.method !== 'PAY_AT_PROPERTY' ||
+      !verifiedMethod ||
       payment.currency !== 'PHP' ||
-      payment.provider ||
-      payment.providerCheckoutId ||
-      payment.providerPaymentId ||
       !payment.paidAt ||
       !Number.isFinite(
         payment.paidAt.getTime(),
@@ -199,6 +206,7 @@ export function calculatePaymentSummary(
   ].includes(reservationStatus);
 
   const requiresReview =
+    payments.some(hasPaymentReview) ||
     pendingRefund > 0 ||
     netPaid > bookedTotalCentavos ||
     (

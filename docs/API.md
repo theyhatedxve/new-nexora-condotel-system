@@ -444,3 +444,32 @@ Current features and future contracts must be tested according to their scope:
 7. Conflicting inventory requests.
 8. Unexpected provider events.
 9. Response fields that must remain private.
+
+
+## Phase 7.2 — Implemented test-mode checkout routes
+
+This section supersedes older planned-status descriptions for Hosted Checkout creation only. Verified webhook handling and payment success remain Step 7.3 work.
+
+| Method | Route | Authorization |
+|---|---|---|
+| GET | /api/payments/reservations/:reservationId/checkout | JWT, shared ownership checks and explicit staff roles |
+| POST | /api/payments/reservations/:reservationId/checkout | Same authorization, allowed Origin, 5 requests/minute |
+| GET | /api/reservations/access/checkout | Valid private booking session; 30 requests/minute |
+| POST | /api/reservations/access/checkout | Valid private booking session, allowed Origin, 5 requests/minute |
+
+POST accepts only a UUID v4 requestId. Amount, currency, methods and return URLs come from backend policy. Responses use the data envelope, Cache-Control: no-store, and contain state, amountCentavos and checkoutUrl. GET may return NONE; other states are CREATING, READY or UNKNOWN. Only READY returns a validated PayMongo HTTPS URL.
+
+The same reserved request identifier reuses its stored attempt. A different identifier cannot create another attempt while one is pending. GET retrieves the existing link for the authorized booking. Changes to the fingerprint or outstanding amount require review. Browser returns never mark payment paid.
+
+
+## Phase 7.3 — Verified test webhooks (current contract)
+
+POST /api/webhooks/paymongo authenticates the original raw JSON bytes using the Paymongo-Signature test-mode te HMAC-SHA256 and backend-only PAYMONGO_TEST_WEBHOOK_SECRET. This route does not require a browser Origin, JWT or private booking cookie. It retains a dedicated 120 requests/minute throttler limit. Other payment routes retain their existing authorization.
+
+Only checkout_session.payment.paid updates money. A matching durable checkout claim, local Payment.id reference_number, provider checkout/payment IDs, exactly one paid receipt, exact gross integer amount and PHP currency are required. Both signature and event must be test mode. Provider billing/card data is discarded.
+
+Successful acknowledgments return HTTP 200, Cache-Control: no-store and { data: { received: true, outcome } }, with outcome PROCESSED, DUPLICATE, IGNORED or REVIEW_REQUIRED. Failed signatures return 401; malformed or live envelopes return 400; missing secret or failed database commit returns 503. A signed mismatch is acknowledged only after its durable FAILED review record is committed.
+
+A signature timestamp outside a five-minute window is retained for review without settling money. Existing processed duplicates are acknowledged without applying money again. Event creation time is stored independently and is not used as a delivery expiry.
+
+Checkout responses can now include PAID with checkoutUrl null for verified receipt completion. The guest rereads the authorized summary before displaying full booking payment. Return-page query parameters never authorize or establish success.

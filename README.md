@@ -87,3 +87,13 @@ The initial system serves a single condotel property. Its focus is guest
 booking, reception workflows, room management, payment handling, and property
 administration. Physical NFC access depends on hardware selection and
 integration testing.
+
+
+## Test-mode online checkout
+
+Verified booking guests can prepare and resume a PayMongo test checkout link from My Booking. Returning from the hosted page does not confirm payment. Verified online payment processing is a subsequent integration step.
+
+
+## Verified test-mode payment recording
+
+Step 7.3 adds signed PayMongo test webhook processing. Guest pages read protected backend payment summaries; browser returns alone never establish payment success. Reception still completes check-in. See docs/AGENTS.md for verification results and pending owner/provider acceptance.

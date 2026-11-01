@@ -394,3 +394,25 @@ the temporary file was removed. This does not replace permanent regression
 coverage or a successful local build/lint. See
 [the backend verification report](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45)
 for the reported Prisma-generation limitation and outstanding checks.
+
+
+## Phase 7.2 — Hosted Checkout security boundary
+
+Only backend test credentials are accepted. Return URLs must use the configured guest origin and /payment-return path; HTTP is allowed only for local development. Returned checkout URLs must use HTTPS on checkout.paymongo.com without embedded credentials or a custom port.
+
+JWT operations reuse OwnershipService inside the inventory transaction. Private-session operations reuse requireBookingSession inside that transaction. A booking reference or query-string booking ID grants no access. Existing booking access and checkout now share the same token/session validation helper.
+
+Creation is reserved durably before contacting PayMongo. No network call holds a database transaction. Unknown outcomes, process interruptions and persistence failures block blind replacement attempts. Keys, raw provider errors, checkout URLs and payment payloads are not written to logs or audit details. Audits record requested/ready/unknown transitions with a trusted actor where applicable.
+
+No browser callback, checkout URL or READY response is evidence of payment. No paid status, paidAt, reservation confirmation or refund is created by Step 7.2.
+
+
+## Phase 7.3 — Webhook trust boundary
+
+Nest bootstrap enables rawBody capture. Verification uses the timestamp plus a period plus the original bytes, HMAC-SHA256 and timingSafeEqual. Duplicate signature fields, missing test signatures, nonempty live signatures and live envelopes fail closed. The webhook signing secret is separate from the API secret and never belongs in VITE_* or committed source.
+
+Five-minute delivery timestamp tolerance is a conservative application choice. Authenticated stale deliveries remain durable review work; there is no automatic stale-event replay in this step. Correct the server clock and use the later reconciliation workflow instead of bypassing verification.
+
+PaymentEvent uniqueness and withInventoryWrite serialize competing callbacks across SQLite clients. Payment, proof and audit commit together. Commit failure yields 503 so the provider can retry; it is never swallowed into a success acknowledgment. Safe warnings contain only validated event IDs, never raw provider errors, bodies or credentials.
+
+A PAID row without matching processed signature-verified evidence cannot satisfy an online payment summary or Policy A. Receiving money never revives cancelled/expired reservations or automatically checks in a guest. Refund-history restrictions in the stay gate remain until the authorized refund step. Live mode, staff review tooling and production monitoring remain later work.

@@ -4,11 +4,9 @@
 **Current checkpoint:** Phases 1–6 are COMPLETED per owner confirmation,
 including Phase 3 (8/8), Phase 4 (7/7), Phase 5 (7/7) and Phase 6 (10/10).
 **Current phase:** Phase 7 — Payment System: IN PROGRESS.
-**Step 7.1:** Payment records/policies and read-only summary foundation —
-prepared and verified in the review copy; owner-local verification pending.
-**Next work:** Complete owner-local verification of Step 7.1; Steps 7.2–7.8
-remain NOT STARTED. Collection writes, provider requests and refund processing
-are not implemented by this read-only foundation.
+**Steps 7.1–7.2:** Accepted for advancement by owner instruction; provider smoke result not independently observed.
+**Step 7.3:** Installed; 398 tests across 25 files passed; actual verified PayMongo test receipt confirmed. Provider HTTP acknowledgment, manual redelivery and final owner acceptance remain unconfirmed.
+**Steps 7.4–7.8:** NOT STARTED.
 
 ## A. Project Identity and Architecture
 
@@ -32,7 +30,8 @@ are not implemented by this read-only foundation.
   not private authorization. Existing account holders can use the same email
   access flow; automatic User/Guest linking and a JWT booking-list API are not
   established by the inspected checkout. Read-only payment summaries are now
-  implemented; payment processing and NFC remain future work.
+  implemented. Test-mode Hosted Checkout and verified webhook receipt processing
+  are installed; live payments, staff collection, refunds and NFC remain later work.
 - Never publish real .env contents, credentials, raw tokens, password hashes,
   private guest records, database contents, or NFC cryptographic material.
 
@@ -164,9 +163,11 @@ install merely to inspect versions. package.json ranges alone are insufficient.
 
 ## C. Completed Project Phases
 
-Completion is owner-confirmed. Source and package metadata were inspected for
-this update; application tests, builds, lint, browser checks, migrations, seeds,
-and SMTP delivery were not executed. No new test pass count is claimed.
+Phases 1–6 are owner-confirmed complete. Historical inspection and review-copy
+notes below are attributed to those earlier handoffs. The current Step 7.3
+local test/build/lint and manual provider results are recorded in the final
+checkpoint section. Email/private-booking UI observations are owner-reported;
+full browser and production acceptance remain separate.
 
 | Phase | Status | Delivered scope |
 |---|---|---|
@@ -176,7 +177,7 @@ and SMTP delivery were not executed. No new test pass count is claimed.
 | 4 — Room Management | COMPLETED — 7/7 | Room types, physical rooms, amenities, images, rates/capacity, operational states, blocks and eligibility helpers |
 | 5 — Guest Website | COMPLETED — 7/7 | Homepage, room browsing/details, integrated availability search, server-priced stay display, feedback and responsive/keyboard work |
 | 6 — Reservation System | COMPLETED — 10/10 | Registered reservation API, guest checkout/private access, assignment history, lifecycle/expiration, cancellation, staff stays and accepted regression work |
-| 7 — Payment System | IN PROGRESS | Step 7.1 prepared/verified in review copy; owner-local verification pending; Steps 7.2–7.8 NOT STARTED |
+| 7 — Payment System | IN PROGRESS | Steps 7.1–7.2 accepted for advancement; Step 7.3 locally verified with an actual verified test receipt; final manual acceptance pending; Steps 7.4–7.8 NOT STARTED |
 | 8–12 | NOT STARTED / AWAITING APPROVAL | Admin operations; NFC; reports/settings; integrated testing/security; deployment |
 
 ### Phase 1 — Project Foundation
@@ -191,7 +192,8 @@ and SMTP delivery were not executed. No new test pass count is claimed.
 - [x] Integer-centavo money, Philippine stay-date semantics and UTC event timestamps.
 - [x] NestJS database provider, guarded seed and isolated integrity-test foundation.
 - [x] Original 23 core models plus RoomTypeAmenity established 24 models;
-  EmailVerificationToken subsequently brought the current total to 25.
+  EmailVerificationToken subsequently brought that historical total to 25;
+  Phase 6 private-access models bring the current total to 27.
 
 ### Phase 3 — Authentication & RBAC (8/8)
 
@@ -278,8 +280,9 @@ by this AGENTS.md-only update.
 
 #### Booking policies and current operational limits
 
-- PayMongo-style holds last 15 minutes in the acquisition foundation; no public
-  PayMongo payment flow exists yet. Expired holds stop reducing searchable
+- PayMongo-style holds last 15 minutes in the acquisition foundation. The
+  Step 7.2 test checkout targets existing CONFIRMED bookings; it does not add a
+  public PayMongo reservation-creation flow. Expired holds stop reducing searchable
   inventory immediately, independently of persisted cleanup status.
 - Pay at Property booking creates CONFIRMED inventory commitments without
   recording payment. Prices are recalculated by the backend at creation and
@@ -292,21 +295,21 @@ by this AGENTS.md-only update.
   Any existing payment record requires financial review. Detailed prepaid fees,
   refunds, arrival/no-show cutoffs and provider settlement policies remain
   separate Phase 7/property decisions.
-- Both staff check-in and check-out require full valid recorded Pay at Property
-  payment. This is read-only eligibility against existing records: these
-  endpoints do not collect/verify money or create Payment records. Synthetic
-  paid fixtures in tests are not a production payment-recording workflow.
+- Both staff check-in and check-out require full valid recorded payment.
+  PayMongo receipts count only with matching processed, signature-verified test
+  evidence; review flags block eligibility. Stay endpoints remain read-only
+  financial consumers and never collect money or automatically check guests in.
 
 #### Checkout and private access
 
 ReservationsModule is registered in AppModule and imports PrismaModule and
-InventorySafetyModule. Public checkout selects CONFIRMED policy on the backend;
+InventorySafetyModule and PaymentsModule. Public checkout selects CONFIRMED policy on the backend;
 clients cannot supply privileged price/status/policy fields. Origin checks,
 DTO validation, throttling and no-store responses remain applicable to public
 reservation controllers.
 
 Guest routes now include /checkout/:roomTypeId, /booking-access and /my-booking,
-in addition to /, /rooms and /rooms/:id. Rooms.jsx preserves selected dates and
+and /payment-return, in addition to /, /rooms and /rooms/:id. Rooms.jsx preserves selected dates and
 guest count in the checkout link. Checkout.jsx rechecks availability, collects
 guest details, displays backend prices and confirms the returned booking.
 Duplicate clicks are blocked. Network/unknown outcomes lock resubmission and
@@ -418,11 +421,10 @@ real SMTP/cookies, PostgreSQL behavior and physical hardware remain separate.
 
 ### Phase 7 — Payment System (In Progress)
 
-Step 7.1 — Payment records/policies and read-only summary foundation is prepared
-and verified in the review copy, with owner-local verification pending.
-Steps 7.2–7.8 remain NOT STARTED. Source contracts, the supplied verification
-report and the next boundary are recorded in section I. No new phase/step is
-marked owner-locally complete by that review report.
+Steps 7.1–7.2 are accepted for advancement. Step 7.3 source is installed,
+current local checks passed and an actual verified test receipt is confirmed. Steps
+7.4–7.8 are NOT STARTED. See section I and the final checkpoint for the
+financial contracts, attributed historical reports and current execution results.
 
 ## D. Backend Structure
 
@@ -430,7 +432,7 @@ marked owner-locally complete by that review report.
 |---|---|
 | backend/src/main.ts | Nest bootstrap, startup rejection handler, cookie parsing, ValidationPipe, CORS, /api prefix, port 3000 |
 | backend/src/availability/ | Public search controller/DTO, service, pure nightly calculator; read-only availability and stay-price quote |
-| backend/src/payments/ | PaymentsModule/controller, shared calculator, PaymentSummaryService and two summary suites; imported through ReservationsModule and exports the summary service |
+| backend/src/payments/ | Summary/checkout services and controllers, test PayMongo adapter, raw-body webhook verification, payment evidence and six test files; imported through ReservationsModule |
 | backend/src/reservations/ | Registered ReservationsModule; checkout, booking access/email, assignments, lifecycle, cancellation and stay controllers/services; DTOs, policies, inventory helpers and ten spec files |
 | backend/src/app.module.ts | Registers Prisma, auth, room management, availability and ReservationsModule; global throttling/JWT/role guards |
 | backend/src/auth/ | AuthModule, controller, password/session/registration/verification/SMTP services; DTOs and security tests |
@@ -453,8 +455,9 @@ registered business controllers. Full current directory map: docs/DIRECTORY_STRU
 
 ## E. Database Architecture and Safety
 
-- Current schema: **27 Prisma models and five migrations** under backend/prisma/.
-  Step 7.1 reuses existing Payment/Refund/Reservation records without a schema change.
+- Current schema: **27 Prisma models and six migration source directories** under backend/prisma/.
+  Step 7.2 adds nullable checkout-attempt fields and a unique request-key index;
+  Steps 7.1 and 7.3 need no new schema or migration.
   Phase 6 private access adds ReservationAccessToken and ReservationAccessSession
   to the prior 25 models. Both reference Reservation with restrictive deletion;
   unique tokenHash values and expiry/lookup indexes support scoped access.
@@ -465,11 +468,13 @@ registered business controllers. Full current directory map: docs/DIRECTORY_STRU
   20261029133315_add_refresh_token_family,
   20261030134255_add_email_verification_tokens, and
   20261031_phase4_step6_room_block_cancellation, and
-  20261101070000_reservation_private_access (two additive access tables/indexes).
-  Migration presence is verified from files; no development/production migration
-  was applied or database inspected during this update.
-- PrismaService uses the fixed runtime URL file:./dev.db relative to the
-  process directory; run the backend from backend/. Prisma CLI reads
+  20261101070000_reservation_private_access (two additive access tables/indexes), and
+  20261101090000_payment_checkout_attempts.
+  No migration was applied to any dev.db. Current tests apply the existing SQL
+  only to disposable synthetic databases; no new migration was introduced.
+- PrismaService defaults to file:./dev.db relative to the process directory.
+  Manual testing must explicitly set NEXORA_RUNTIME_DATABASE_URL to an absolute
+  file: URL for a fresh isolated database. Run the backend from backend/. Prisma CLI reads
   DATABASE_URL through backend/prisma7.config.ts. Verify their resolved targets
   before database work; do not infer the target from source comments alone.
 - Keep development data intact. Use isolated test databases and temporary image
@@ -526,9 +531,10 @@ in section C. Never redirect them to development data.
 - The legacy backend/test/app.e2e-spec.ts expects Hello World! and imports the
   real AppModule without isolating Prisma. Review it before using test:e2e as
   release evidence. Check-in/out APIs now exist, but admin operational screens,
-  payment recording, financial reporting and real NFC access remain later work.
-  Stay-payment eligibility reads existing receipts without creating or verifying
-  them; suspicious provider/refund records require Phase 7 financial review.
+  staff collections, refunds, financial reporting and real NFC access remain
+  later work. Test PayMongo receipt recording now belongs to the verified
+  webhook service. Stay-payment eligibility consumes its stored proof without
+  performing provider calls; suspicious provider/refund records require review.
 
 ## G. Coding and Verification Workflow
 
@@ -616,9 +622,11 @@ project Markdown under docs/, with only README.md at the repository root.
 
 Phase 7 — Payment System: **IN PROGRESS**.
 
-**Step 7.1 — Payment records/policies and read-only summary foundation:**
-prepared and verified in the review copy; **owner-local verification pending**.
-Steps 7.2–7.8 remain **NOT STARTED**. Phases 1–6 remain owner-confirmed complete.
+**Steps 7.1–7.2:** accepted for advancement by owner instruction.
+**Step 7.3:** installed, locally verified and actual verified test receipt
+confirmed. Provider HTTP acknowledgment, manual redelivery and final owner
+acceptance remain unconfirmed. Steps 7.4–7.8 remain **NOT STARTED**.
+Phases 1–6 remain owner-confirmed complete.
 
 ### Read-only contracts and semantics
 
@@ -661,25 +669,23 @@ The owner-supplied implementation report states:
 | backend/dev.db | Hash unchanged in the review copy |
 | Schema migration / collection / provider requests / refund processing | None |
 
-These results are attributed to the supplied review-copy report, not independently
-executed by this documentation update. Owner-local verification remains pending.
-This task inspected code/documentation only; it ran no application tests, build,
-lint, migration, payment collection, provider request or refund processing, and
-did not read database contents or recalculate its hash.
+These are historical review-copy results. The current local checks below
+supersede the earlier owner-local testing gap for the affected suites. Actual
+provider evidence is recorded separately in the final checkpoint. No development
+database contents or secret values are displayed in the verification output.
 
 ### Next boundary
 
-Complete owner-local Step 7.1 verification and record actual results before
-marking that acceptance complete. Steps 7.2–7.8 remain NOT STARTED; detailed
-implementation follows the approved Phase 7 plan. Hosted Checkout, verified
-webhooks, collection writes and refund processing remain scheduled work.
-No browser return establishes payment success. Review current stay-payment and
-unpaid-cancellation rules when adding financial writes; preserve reservation
-snapshots and private access boundaries.
+Actual isolated PayMongo test receipt processing is verified. Record any
+remaining provider acknowledgment/redelivery observations and owner acceptance
+for Step 7.3. Do not advance to Step 7.4. Hosted Checkout and verified test-webhook receipt
+writes are installed; staff collections and refunds remain future steps.
+No browser return establishes payment success. Preserve reservation snapshots,
+private access boundaries and the existing unpaid-cancellation restrictions.
 
 Production hosting/domains, PostgreSQL compatibility and physical NFC hardware
-remain separate phases/decisions. This documentation update authorizes no code,
-dependency installation, database change, commit, push or deployment.
+remain separate phases/decisions. The Step 7.3 verification introduces no new
+application code, dependency, schema, commit, push or deployment.
 
 Related references: [architecture](NEXORA_ARCHITECTURE_V2.1.md), [API](API.md),
 [payment semantics](DATABASE_SCHEMA.md#phase-71-payment-semantics),
@@ -687,3 +693,110 @@ Related references: [architecture](NEXORA_ARCHITECTURE_V2.1.md), [API](API.md),
 [business flows](BUSINESS_FLOWS.md#phase-71-payment-summary-foundation),
 [directory map](DIRECTORY_STRUCTURE.md), and
 [architecture review items](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items).
+
+
+## Phase 7.2 — Test-mode Hosted Checkout handoff
+
+Step 7.1 is accepted based on the owner instruction to advance. Step 7.2 source is installed, and its affected suites passed in the current Step 7.3 verification. Its earlier review-copy evidence follows for context. The later isolated provider test produced a matching checkout and verified paid receipt; see the final checkpoint. Steps 7.4–7.8 remain not started.
+
+Current schema: 27 models and six migration source directories. Step 7.2 adds four nullable Payment fields and a unique request-key hash index; it adds no model. No migration was applied to backend/dev.db.
+
+Review evidence: 36 new checkout/migration/runtime tests; affected regression total 349 tests across 23 files. Backend build, guest build and targeted lint passed. Provider calls in automated tests are mocked. The fresh synthetic demo initializer and absolute runtime override were verified.
+
+Prisma CLI migrate deploy failed in this environment with a schema-engine error. No CLI deployment success is claimed. The test-only demo initializer applies migration SQL directly to a fresh, specifically named SQLite file and does not create Prisma deployment history.
+
+Checkout targets existing CONFIRMED bookings with remaining stay dates. CREATING/READY/UNKNOWN are checkout-link states, never payment success. The adapter only permits test credentials. Normal database access still defaults to backend/dev.db; isolated manual testing must set NEXORA_RUNTIME_DATABASE_URL to an absolute file: path.
+
+
+## Phase 7.3 — Verified test webhook handoff (current checkpoint)
+
+This checkpoint supersedes earlier planned-status descriptions. On 2026-11-01,
+all 25 prepared-manifest destinations matched the repository byte-for-byte:
+15 source/test files and 10 Markdown files. No reinstallation or application
+code change was needed. The owner approved local verification and updates to
+AGENTS.md and IMPLEMENTATION_GUIDE.md. Steps 7.4–7.8 remain not started.
+
+Installed Step 7.3 behavior:
+
+- POST /api/webhooks/paymongo uses Nest raw-body capture, the backend-only
+  PAYMONGO_TEST_WEBHOOK_SECRET, HMAC-SHA256 and timingSafeEqual. This secret is
+  separate from PAYMONGO_TEST_SECRET_KEY. Only verified test-mode
+  checkout_session.payment.paid events can establish a receipt.
+- Matching requires the durable checkout attempt, local Payment.id reference,
+  provider session/payment IDs, exact integer gross centavos and PHP currency.
+- Payment, sanitized PaymentEvent proof and audit are one transaction.
+  Unique provider identifiers, the conditional payment update and SQLite write
+  serialization prevent duplicate receipt effects across clients. Database
+  persistence failure returns retryable HTTP 503.
+- Early verified payment survives checkout creation finishing later. Mismatched,
+  stale, late and conflicting events remain for review. Receipt recording never
+  revives CANCELLED/EXPIRED reservations or automatically checks guests in.
+- payment-evidence.ts feeds summaries and stay-payment policy. BookingPayment,
+  My Booking and PaymentReturn use authenticated backend records; return URL
+  parameters never establish success.
+
+Current local execution results:
+
+| Check | Result / isolation |
+|---|---|
+| Webhook HTTP suite in backend/ | 25 tests passed, 1 file; disposable databases and mocked provider |
+| Affected regression plus inventory safety | 373 tests passed, 24 files; disposable backend copy and synthetic databases, excluding the already-run webhook file |
+| Combined distinct coverage | 398 tests passed across 25 files, including 24 inventory safety cases |
+| Backend TypeScript | tsc --noEmit --incremental false passed |
+| Backend and guest builds | npm.cmd run build passed in both applications |
+| Targeted backend and guest lint | Passed; no autofix |
+
+The five required legacy fixtures exist, including phase4.step7.test.db,
+but lack the newer checkout columns. Their schema metadata was inspected
+read-only. Original fixtures were left untouched. Regression used fresh
+synthetic fixtures in a temporary backend copy, applying only existing migration
+SQL; neither development data nor old fixture data was copied. Missing dedicated
+fixtures remain a stop condition. This is affected coverage, not a full-suite,
+browser or PostgreSQL acceptance claim. The legacy app.e2e-spec.ts was not run.
+
+No new schema/migration: 27 models, six migration sources. Neither dev.db was
+opened by an application or test; both retained their size and modification
+time. Credentials were checked locally without printing their values; raw guest
+details were excluded from diagnostic output. No live payment, refund, staff
+collection, commit, push or deployment was performed. Existing dependency
+manifests and application source remain intact. The owner registered the test
+webhook during the manual phase below.
+
+Actual isolated provider test evidence (2026-11-01):
+
+- A fresh manual database was created with the existing guarded initializer.
+  The backend used its explicit absolute NEXORA_RUNTIME_DATABASE_URL. This
+  fixture is retained for owner review, separately from the removed automated
+  test workspaces. No dev.db was migrated, seeded, reset or replaced.
+- The owner confirmed the public health response, test-mode webhook registration,
+  booking-access email delivery, private My Booking access and the displayed
+  full-payment message. Configuration values, access links and the temporary
+  public endpoint address are not reproduced here.
+- Read-only verification of the isolated database found one PAID receipt, one
+  PROCESSED signature-verified checkout_session.payment.paid event and one
+  payment.paid audit. The production evidence helper accepted the exact local
+  reference, provider IDs, gross amount, currency and test-mode proof. There
+  was no payment review flag. All current fixture bookings remained CONFIRMED.
+- The owner-supplied checkout record has livemode=false and one paid payment.
+  Its session ID, local Payment.id reference and paid payment ID/amount/currency
+  match the stored receipt. Only comparison results were printed; no raw
+  checkout payload or identifying values were copied into documentation.
+- The supplied file is a checkout_session resource, not a delivery log: it
+  contains no webhook HTTP response status. Provider HTTP acknowledgment and
+  actual manual redelivery were not independently observed. Retry/concurrent
+  duplicate safety is supported by the passed automated webhook cases; no
+  manual provider replay success is claimed.
+
+Remaining checklist:
+
+- [x] Confirm prepared files are installed without replacing existing changes.
+- [x] Execute current isolated webhook/regression, type, build and lint checks.
+- [x] Configure an explicitly isolated runtime and privately set separate test credentials.
+- [x] Verify an actual signed test event and matching backend receipt/event/audit.
+- [x] Confirm the supplied provider checkout matches the stored verified receipt.
+- [x] Verify basic retry/concurrent duplicate safety in isolated automated tests.
+- [x] Record provider evidence without raw private payloads.
+- [ ] Independently observe the provider delivery HTTP response and manual redelivery, if available.
+- [ ] Obtain final owner acceptance; Step 7.4 remains outside this task.
+
+Basic event uniqueness and atomic receipt/event/audit writes are required safety within Step 7.3. Expanded retry/recovery and reconciliation are still Steps 7.4 and 7.7. Do not mark them complete from these tests.

@@ -10,6 +10,12 @@ import {
   calculatePaymentSummary,
 } from '../payments/payment-summary.js';
 
+import {
+  hasVerifiedPaymongoEvidence,
+  paymentEvidenceSelect,
+} from '../payments/payment-evidence.js';
+
+// Read inside the same inventory transaction as the stay transition.
 export async function requireFullRecordedPayment(
   tx: Prisma.TransactionClient,
   reservationId: string,
@@ -22,13 +28,14 @@ export async function requireFullRecordedPayment(
     },
     include: {
       refunds: true,
+      events: { select: paymentEvidenceSelect },
     },
   });
 
   const needsFinancialReview =
     payments.some(
       (payment) =>
-        payment.method !== 'PAY_AT_PROPERTY' ||
+        (payment.method === 'PAYMONGO' && !hasVerifiedPaymongoEvidence(payment)) ||
         payment.refunds.length > 0 ||
         [
           'PARTIALLY_PAID',
@@ -39,7 +46,7 @@ export async function requireFullRecordedPayment(
 
   if (needsFinancialReview) {
     throw new ConflictException(
-      'These payment records require Phase 7 financial review.',
+      'These payment records require financial review.',
     );
   }
 
@@ -57,7 +64,7 @@ export async function requireFullRecordedPayment(
     summary.balanceDueCentavos !== 0
   ) {
     throw new ConflictException(
-      'Full recorded payment is required. Payment recording is implemented in Phase 7.',
+      'Full recorded payment is required.',
     );
   }
 

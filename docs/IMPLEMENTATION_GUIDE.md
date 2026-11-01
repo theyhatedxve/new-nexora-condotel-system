@@ -21,7 +21,8 @@ Documentation approval does not authorize all application phases.
 
 ## 2. Preflight Review
 
-Current accepted milestones (documentation synchronized 2026-10-31):
+Current accepted milestones (synchronized 2026-11-01; this table and the final
+Step 7.3 record supersede older status narratives):
 
 | Phase | Status |
 |---|---|
@@ -29,8 +30,10 @@ Current accepted milestones (documentation synchronized 2026-10-31):
 | Phase 2 | COMPLETED |
 | Phase 3 | COMPLETED — 8/8 steps |
 | Phase 4 | COMPLETED — 7/7 steps |
-| Phase 5 | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
-| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
+| Phase 5 | COMPLETED — 7/7 steps, owner-confirmed |
+| Phase 6 | COMPLETED — 10/10 steps, owner-confirmed |
+| Phase 7 | IN PROGRESS — Steps 7.1–7.2 accepted for advancement; Step 7.3 locally verified with an actual verified test receipt; final manual acceptance pending |
+| Phases 8–12 | NOT STARTED / AWAITING APPROVAL |
 
 Phase 1 delivered the two React JavaScript/JSX foundations and connected NestJS
 API. Phase 2 delivered the 24-model foundation, migrations, Prisma/NestJS
@@ -40,7 +43,8 @@ Phase 4 is completed per owner instruction, with room management, validated imag
 uploads, shared numeric/date validation, status/blocks, and inventory safety.
 The owner reports 23/23 final acceptance checks passed without reported errors,
 including HTTP security, full Vitest regression, build, Prisma validation, and
-development database preservation. No fresh application checks ran in this task.
+development database preservation. That historical report is separate from
+the fresh Step 7.3 checks recorded at the end of this guide.
 See [security evidence and limits](SECURITY.md#14-security-acceptance-checks).
 
 
@@ -248,7 +252,10 @@ Bookings preserve trusted prices and cannot oversell inventory.
 
 ## 9. Phase 07 — Payment System
 
-**Status: NOT STARTED / AWAITING APPROVAL.**
+**Status: IN PROGRESS. Steps 7.1–7.2 accepted for advancement; Step 7.3
+installed, locally verified and actual verified test receipt confirmed.
+Provider HTTP acknowledgment, manual redelivery and final owner acceptance
+remain unconfirmed. Steps 7.4–7.8 have not started.**
 
 Steps:
 
@@ -373,7 +380,8 @@ npm run test
 npm run build
 ```
 
-These commands were not executed during this documentation task. Prisma
+These examples do not authorize a full-suite run. Actual Step 7.3 commands and
+results are recorded below; Prisma CLI validation/migration was not run. Prisma
 validation reads the schema/configuration and does not create tables. The
 security command executes the real HTTP suite; npm run test uses Vitest's
 **/*.spec.ts selection and includes isolated database suites. Tests mutate
@@ -417,3 +425,122 @@ Unresolved issues:
 Next proposed step:
 Approval required before advancement:
 ```
+
+
+## Phase 7.3 — Current handoff and verification
+
+On 2026-11-01, all 25 prepared-manifest files were confirmed installed and
+byte-identical to the reference package. No application source replacement,
+dependency installation, schema change or new migration was needed. The owner
+approved verification and updates to this guide and AGENTS.md. Preserve all
+other existing working-tree changes. Do not advance to Step 7.4.
+
+Actual local results: **398 distinct tests passed across 25 files**. Backend
+type checking/build, guest build and targeted backend/guest lint also passed.
+This supersedes the review-copy report of 374 tests. The later manual test
+confirmed an actual verified test receipt as detailed below; full browser
+acceptance and PostgreSQL behavior remain unverified.
+
+Isolation and working directories:
+
+- The 25 webhook cases ran from the real backend/ and created disposable
+  databases with mocked provider calls.
+- The five legacy fixtures required by affected regression are present,
+  including phase4.step7.test.db, but lack newer checkout columns. Original
+  fixtures were inspected for schema only and left untouched. Regression ran
+  from a disposable backend copy with identical source and fresh synthetic
+  fixtures created using the six existing migration SQL sources. No old
+  fixture or development data was copied. Stop a legacy suite if its dedicated
+  fixture is missing; never substitute dev.db.
+- The regression command excluded the already-run webhook file and added
+  inventory safety: 373 tests passed across 24 files, including all 24
+  previously unverified inventory cases. This is not a full-suite pass.
+- Test processes used an absolute isolated NEXORA_RUNTIME_DATABASE_URL guard;
+  no fallback runtime database was created. Neither dev.db was opened by an
+  application/test, and both retained their size and modification time.
+- Builds wrote generated output only. Lint used no autofix. Temporary test
+  databases and the disposable verification copy were removed afterward.
+
+Executed commands (PowerShell uses npm.cmd to avoid the blocked npm.ps1 shim):
+
+```powershell
+# Real backend/: disposable webhook fixtures, provider mocked.
+npm.cmd run test -- src/payments/paymongo-webhook.http.spec.ts
+
+# Disposable backend copy/: fresh dedicated synthetic fixtures; no dev.db.
+npm.cmd run test -- src/payments src/prisma src/reservations src/room-types src/rooms src/room-blocks src/common/validation/room-rate-capacity.spec.ts src/common/inventory/inventory-safety.spec.ts --exclude src/payments/paymongo-webhook.http.spec.ts
+
+# Real backend/: type check and generated build output.
+.\node_modules\.bin\tsc.cmd --noEmit --incremental false
+npm.cmd run build
+
+# Real frontend/guest-web/: generated guest build output.
+npm.cmd run build
+```
+
+Targeted Oxlint checked the 12 installed Step 7.3 backend source/test paths
+with --type-aware, plus BookingPayment.jsx, PaymentReturn.jsx and
+bookingPaymentsApi.js in the guest frontend. All passed. The legacy
+backend/test/app.e2e-spec.ts was not run because it imports AppModule without
+isolating Prisma.
+
+Installed behavior is documented in AGENTS.md and API.md: raw-body test
+signature verification, exact local/provider/amount/currency matching,
+atomic receipt/event/audit writes, duplicate safety, early-payment preservation,
+review retention, verified-record consumers and retryable persistence errors.
+Basic duplicate safety is mandatory Step 7.3 protection; it does not complete
+the expanded Step 7.4 or Step 7.7 work.
+
+Manual setup procedure and acceptance (steps 1–4 exercised; current evidence
+and remaining limits follow):
+
+1. Prepare a fresh synthetic runtime database and set its absolute
+   NEXORA_RUNTIME_DATABASE_URL in the server's own terminal before startup.
+   The existing seed-checkout-demo.mjs accepts only a new absolute path ending
+   in phase7.step2.manual.test.db and refuses an existing file. Never run it
+   against any dev.db or use a private session from another database.
+2. Privately configure backend-only test credentials. PAYMONGO_TEST_WEBHOOK_SECRET
+   is the endpoint signing secret, separate from PAYMONGO_TEST_SECRET_KEY.
+   Never paste either value into chat, logs or documentation.
+3. Expose only the isolated test backend through the chosen reachable endpoint
+   and register POST /api/webhooks/paymongo for test-mode
+   checkout_session.payment.paid. Do not register a live endpoint.
+4. Create checkout through NEXORA, complete a provider test transaction and
+   verify backend receipt/event/audit records. Returning to /payment-return
+   alone proves nothing; cancelled/expired bookings must never be revived and
+   check-in remains a staff action.
+5. Verify redelivery does not duplicate collection, record the actual delivery
+   outcome without private payloads, and obtain owner acceptance. Step 7.4
+   remains outside this task.
+
+No provider registration, real-secret inspection, actual provider payment,
+refund, staff collection, migration of development data, commit, push or
+deployment was performed during local verification.
+
+Subsequent isolated manual evidence (2026-11-01):
+
+- The guarded initializer created a fresh manual fixture, and the owner started
+  the backend with its explicit absolute runtime override. The fixture is
+  retained for review. Test credentials were configured privately; local
+  diagnostics output only format/presence results and safe error codes.
+- The owner confirmed public health access and registered the test webhook.
+  Gmail booking-link delivery and private My Booking access were confirmed
+  by the owner. No credential, email address, private link or public tunnel
+  address is recorded here.
+- Read-only database checks found exactly one PAID receipt, one signature-verified
+  PROCESSED checkout_session.payment.paid event and one payment.paid audit.
+  The installed evidence helper confirmed the exact reference/provider/amount/
+  currency/test-mode match, with no review flag. Fixture bookings remained
+  CONFIRMED. The owner reported the full-payment message.
+- The owner's pasted test checkout has one paid payment and matches the stored
+  provider session, local payment reference, provider payment ID, gross amount
+  and currency. This validates the supplied checkout against the backend proof,
+  rather than treating return URL parameters as payment authority.
+- The pasted checkout resource does not include a webhook delivery response
+  code. That HTTP acknowledgment and actual manual provider redelivery remain
+  unobserved. Automated duplicate/concurrent-client tests passed; they are not
+  represented as manual provider replay results.
+
+Next boundary: record any remaining delivery/redelivery observations and final
+owner acceptance. Step 7.4 has not started and is not authorized by this task.
+No application code, dependency or schema changes were needed for the manual test.

@@ -296,3 +296,8 @@ backups/recovery, and PostgreSQL compatibility. Existing Phase 3 23/23 and seven
 quick availability checks remain reported evidence, not test executions in this
 audit. See [verification context](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45)
 and [security concerns](SECURITY.md#15-production-hardening-and-open-concerns).
+
+
+## Phase 7.3 — Implemented runtime configuration
+
+PAYMONGO_TEST_WEBHOOK_SECRET is consumed only by backend signature verification. PAYMONGO_TEST_SECRET_KEY remains the separate test API credential. Normal Prisma runtime still defaults to backend/dev.db; isolated manual runs must explicitly set NEXORA_RUNTIME_DATABASE_URL to an absolute file: test path before startup. Webhook registration requires a publicly reachable HTTPS endpoint; local automated tests use signed synthetic events and no provider network calls.

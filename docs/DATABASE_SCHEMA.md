@@ -382,3 +382,26 @@ booking/hold. Separate Phase 6 acquisition now checks whole-stay allocation
 and creates trusted price snapshots transactionally. Phase 5 search and
 frontend quote integration are owner-confirmed complete. See
 [availability contract](API.md#5-implemented-room-management-and-availability).
+
+
+## Phase 7.2 — Additive checkout-attempt fields
+
+Migration: 20261101090000_payment_checkout_attempts. Current total is 27 models and six migration sources.
+
+| Payment field | Type | Purpose |
+|---|---|---|
+| checkoutRequestKeyHash | nullable unique String | SHA-256 request identifier hash |
+| checkoutRequestFingerprint | nullable String | Booking, actor/context and backend quote fingerprint |
+| checkoutState | nullable PaymentCheckoutState | CREATING, READY or UNKNOWN |
+| checkoutUrl | nullable String | Provider-validated hosted URL; never log it |
+
+Existing rows retain null in all four fields. Payment status remains PENDING until verified payment evidence is processed. There is no automatic deletion/expiry of request keys in this step; they remain with payment history. Migration preservation and non-null key uniqueness are tested on disposable data. PostgreSQL migration verification remains separate.
+
+
+## Phase 7.3 — Verified evidence without schema changes
+
+PaymentEvent.providerEventId is the existing unique delivery key. payloadJson stores only version 1 proof: normalized event fingerprint, livemode false, local payment reference, checkout session ID, provider payment ID, gross amount and currency. Raw bodies, headers, signatures, billing/card data and checkout URLs are not retained there.
+
+A successful serialized transaction sets Payment.status PAID, records local verification time as paidAt, binds provider IDs, clears checkoutUrl, creates a signatureVerified PROCESSED event and appends one payment audit. providerCreatedAt retains the event timestamp. It does not create a second Payment receipt for retries.
+
+Signed mismatches use FAILED plus safe reason codes. Late/closed-booking capture is recorded truthfully with PROCESSED and BOOKING_REVIEW_REQUIRED; the reservation is unchanged. Event-ID conflicts retain the original proof and mark EVENT_ID_CONFLICT. Shared summaries require processed matching evidence for PayMongo receipts and surface linked review flags.
