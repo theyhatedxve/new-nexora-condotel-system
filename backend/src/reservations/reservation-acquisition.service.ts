@@ -34,6 +34,10 @@ import {
   expirePendingHoldsInTx,
 } from './reservation-lifecycle.js';
 
+import {
+  UNPAID_CANCELLATION_POLICY,
+} from './cancellation-policy.js';
+
 export const HOLD_DURATION_MS = 15 * 60 * 1000;
 
 function retryable(error: unknown): boolean {
@@ -274,7 +278,7 @@ export class ReservationAcquisitionService {
 
             // The guest and reservation commit together.
             // No payment or room assignment is created.
-            return tx.reservation.create({
+            const result = await tx.reservation.create({
               data: {
                 reservationNumber:
                   `NX-${randomUUID()}`,
@@ -328,6 +332,21 @@ export class ReservationAcquisitionService {
                 totalAmountCentavos: true,
               },
             });
+
+            await tx.auditLog.create({
+            data: {
+                actorUserId: null,
+                action:
+                'reservation.cancellation_policy_recorded',
+                entityType: 'Reservation',
+                entityId: result.id,
+                detailsJson: JSON.stringify(
+                UNPAID_CANCELLATION_POLICY,
+                ),
+            },
+            });
+
+            return result;
           },
           {
             maxWait: 1000,

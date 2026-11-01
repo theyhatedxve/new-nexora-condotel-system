@@ -280,6 +280,12 @@ function CheckoutForm({
             for assistance with your booking.
           </p>
 
+          <p>
+            Unpaid reservations can be cancelled
+            without a cancellation fee before check-in.
+            Contact the property to request cancellation.
+          </p>
+
           <Link
             className="checkout-link"
             to="/rooms"
@@ -404,9 +410,12 @@ function CheckoutForm({
                 <input type="checkbox" required />
 
                 <span>
-                  I understand that availability and the
-                  final price are checked when I confirm,
-                  and payment is due at the property.
+                    I understand that availability and the
+                    final price are checked when I confirm,
+                    and payment is due at the property.
+                    Unpaid reservations can be cancelled
+                    without a cancellation fee before check-in.
+                    Contact the property to request cancellation.
                 </span>
               </label>
 
