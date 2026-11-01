@@ -423,18 +423,39 @@ describe('Phase 4 Step 6 — Room Operations', () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
-  it('allows future blocks after an assignment is released', async () => {
-    await prisma.roomAssignment.update({
-      where: { id: assignmentId },
-      data: { releasedAt: new Date() },
-    });
+  it(
+    'protects the booking inventory after an assignment is released',
+    async () => {
+      await prisma.roomAssignment.update({
+        where: {
+          id: assignmentId,
+        },
+        data: {
+          releasedAt: new Date(),
+        },
+      });
 
-    const created = await blocks.create(roomId, {
-      startDate: phDate(26),
-      endDate: phDate(29),
-      reason: 'Maintenance after reassignment',
-    });
+      const before = await prisma.roomBlock.count({
+        where: {
+          roomId,
+        },
+      });
 
-    expect(created.id).toBeTruthy();
-  });
+      await expect(
+        blocks.create(roomId, {
+          startDate: phDate(26),
+          endDate: phDate(29),
+          reason: 'Maintenance after reassignment',
+        }),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(
+        await prisma.roomBlock.count({
+          where: {
+            roomId,
+          },
+        }),
+      ).toBe(before);
+    },
+  );
 });

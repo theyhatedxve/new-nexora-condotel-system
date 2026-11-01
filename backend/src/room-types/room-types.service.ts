@@ -14,6 +14,11 @@ import type { UpdateRoomTypeDto } from './dto/update-room-type.dto.js';
 
 import { RoomRateCapacityService } from '../common/validation/room-rate-capacity.service.js';
 
+import {
+  withInventoryWrite,
+  assertInventoryCommitments,
+} from '../reservations/inventory-write.js';
+
 const publicFields = {
   id: true,
   name: true,
@@ -151,7 +156,7 @@ export class RoomTypesService {
     try {
       // A transaction keeps the existing-record lookup,
       // booking checks, and update together.
-      return await this.prisma.$transaction(async (tx) => {
+      return await withInventoryWrite(this.prisma, async (tx) => {
         const existing = await tx.roomType.findFirst({
           where: { id, propertyId },
           select: {
@@ -215,8 +220,10 @@ export class RoomTypesService {
           }
         }
 
-        return tx.roomType.update({
-          where: { id },
+        const result = await tx.roomType.update({
+          where: {
+            id,
+          },
           data: {
             name,
             description:
@@ -229,6 +236,12 @@ export class RoomTypesService {
           },
           select: staffFields,
         });
+
+        if (isReducingCapacity || isDeactivating) {
+          await assertInventoryCommitments(tx, [id]);
+        }
+
+        return result;
       });
     } catch (error) {
       this.handleDatabaseError(error);

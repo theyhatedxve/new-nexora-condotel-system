@@ -12,6 +12,11 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateRoomDto } from './dto/create-room.dto.js';
 import type { UpdateRoomDto } from './dto/update-room.dto.js';
 
+import {
+  withInventoryWrite,
+  assertInventoryCommitments,
+} from '../reservations/inventory-write.js';
+
 const roomFields = {
   id: true,
   roomNumber: true,
@@ -170,7 +175,8 @@ export class RoomsService {
         : this.normalizeFloor(dto.floor);
 
     try {
-      return await this.prisma.$transaction(
+      return await withInventoryWrite(
+        this.prisma,
         async (tx) => {
           const existing = await tx.room.findFirst({
             where: {
@@ -229,8 +235,10 @@ export class RoomsService {
             }
           }
 
-          return tx.room.update({
-            where: { id },
+          const result = await tx.room.update({
+            where: {
+              id,
+            },
             data: {
               roomNumber,
               floor,
@@ -239,6 +247,15 @@ export class RoomsService {
             },
             select: roomFields,
           });
+
+          if (changingType || deactivating) {
+            await assertInventoryCommitments(tx, [
+              existing.roomTypeId,
+              result.roomTypeId,
+            ]);
+          }
+
+          return result;
         },
       );
     } catch (error) {

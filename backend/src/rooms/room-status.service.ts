@@ -11,6 +11,11 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
 import type { ManualRoomStatus } from './dto/update-room-status.dto.js';
 
+import {
+  withInventoryWrite,
+  assertRoomInventoryCommitments,
+} from '../reservations/inventory-write.js';
+
 const transitions: Record<string, readonly string[]> = {
   READY: ['CLEANING', 'MAINTENANCE', 'OUT_OF_SERVICE'],
   CLEANING: ['READY', 'MAINTENANCE', 'OUT_OF_SERVICE'],
@@ -41,7 +46,7 @@ export class RoomStatusService {
 
     const propertyId = properties[0].id;
 
-    return this.prisma.$transaction(async (tx) => {
+    return withInventoryWrite(this.prisma, async (tx) => {
       const room = await tx.room.findFirst({
         where: {
           id: roomId,
@@ -116,9 +121,13 @@ export class RoomStatusService {
         );
       }
 
-      return tx.room.update({
-        where: { id: roomId },
-        data: { status: nextStatus },
+      const result = await tx.room.update({
+        where: {
+          id: roomId,
+        },
+        data: {
+          status: nextStatus,
+        },
         select: {
           id: true,
           roomNumber: true,
@@ -126,6 +135,15 @@ export class RoomStatusService {
           isActive: true,
         },
       });
+
+      if (
+        nextStatus === 'MAINTENANCE' ||
+        nextStatus === 'OUT_OF_SERVICE'
+      ) {
+        await assertRoomInventoryCommitments(tx, roomId);
+      }
+
+      return result;
     });
   }
 }

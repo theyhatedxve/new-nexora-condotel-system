@@ -328,16 +328,31 @@ describe('Phase 4 Step 2 — RoomsService', () => {
     expect(assignment?.releasedAt).toBeNull();
   });
 
-  it('allows changes after an assignment is released', async () => {
-    await prisma.roomAssignment.update({
-      where: { id: assignmentId },
-      data: { releasedAt: new Date() },
-    });
+  it(
+      'protects the booking inventory after an assignment is released',
+      async () => {
+        await prisma.roomAssignment.update({
+          where: {
+            id: assignmentId,
+          },
+          data: {
+            releasedAt: new Date(),
+          },
+        });
 
-    const updated = await service.update(roomId, {
-      roomTypeId,
-    });
+        await expect(
+          service.update(roomId, {
+            roomTypeId,
+          }),
+        ).rejects.toBeInstanceOf(ConflictException);
 
-    expect(updated.roomTypeId).toBe(roomTypeId);
-  });
+        const stored = await prisma.room.findUniqueOrThrow({
+          where: {
+            id: roomId,
+          },
+        });
+
+        expect(stored.roomTypeId).toBe(alternateTypeId);
+      },
+    );
 });

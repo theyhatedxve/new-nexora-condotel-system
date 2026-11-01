@@ -19,6 +19,11 @@ import type { UpdateRoomBlockDto } from './dto/update-room-block.dto.js';
 
 import type { Prisma } from '../generated/prisma/client.js';
 
+import {
+  withInventoryWrite,
+  assertRoomInventoryCommitments,
+} from '../reservations/inventory-write.js';
+
 const protectedStatuses = [
   'PENDING',
   'CONFIRMED',
@@ -167,7 +172,7 @@ export class RoomBlocksService {
 
     const reason = this.cleanReason(dto.reason);
 
-    return this.prisma.$transaction(async (tx) => {
+    return withInventoryWrite(this.prisma, async (tx) => {
       const room = await this.requireRoom(
         roomId,
         propertyId,
@@ -187,7 +192,7 @@ export class RoomBlocksService {
         endDate,
       );
 
-      return tx.roomBlock.create({
+      const result = await tx.roomBlock.create({
         data: {
           roomId,
           startDate,
@@ -196,6 +201,10 @@ export class RoomBlocksService {
         },
         select: blockFields,
       });
+
+      await assertRoomInventoryCommitments(tx, roomId);
+
+      return result;
     });
   }
 
@@ -212,7 +221,7 @@ export class RoomBlocksService {
 
     const propertyId = await this.getPropertyId();
 
-    return this.prisma.$transaction(async (tx) => {
+    return withInventoryWrite(this.prisma, async (tx) => {
       await this.requireRoom(roomId, propertyId, tx);
 
       const existing = await tx.roomBlock.findFirst({
@@ -252,18 +261,24 @@ export class RoomBlocksService {
         blockId,
       );
 
-      return tx.roomBlock.update({
-        where: { id: blockId },
-        data: {
-          startDate,
-          endDate,
-          reason:
-            dto.reason === undefined
-              ? undefined
-              : this.cleanReason(dto.reason),
-        },
-        select: blockFields,
-      });
+      const result = await tx.roomBlock.update({
+          where: {
+            id: blockId,
+          },
+          data: {
+            startDate,
+            endDate,
+            reason:
+              dto.reason === undefined
+                ? undefined
+                : this.cleanReason(dto.reason),
+          },
+          select: blockFields,
+        });
+
+        await assertRoomInventoryCommitments(tx, roomId);
+
+        return result;
     });
   }
 
