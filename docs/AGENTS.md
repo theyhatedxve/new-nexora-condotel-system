@@ -1,17 +1,11 @@
 # NEXORA — Development Reference and Completion Checklist
 
 **Last synchronized:** 2026-11-01. Paths are relative to D:\Web-JSX\NEXORA.
-**Current checkpoint:** Phases 1–5 are COMPLETED, including Phase 3 (8/8),
-Phase 4 (7/7), and Phase 5 (7/7), as confirmed by the project owner.
-**Current phase:** Phase 6 — Reservation System, IN PROGRESS — **2/10 steps completed**.
-Steps 6.1–6.2 are COMPLETED. Step 6.3 — Concurrency-safe inventory acquisition
-is APPROVED / IN PROGRESS, handed over to ChatGPT Work and pending completion
-verification. Steps 6.4–6.10 are NOT STARTED.
-**Next action:** Finish and verify Step 6.3. After its completion is confirmed,
-continue to Step 6.4 — Guest Checkout and Booking Forms through source review
-and approval before code generation.
-Phase 7 — Payment System follows completion of Phase 6 and remains NOT STARTED
-/ AWAITING APPROVAL.
+**Current checkpoint:** Phases 1–6 are COMPLETED per owner confirmation,
+including Phase 3 (8/8), Phase 4 (7/7), Phase 5 (7/7) and Phase 6 (10/10).
+**Next phase:** Phase 7 — Payment System, NOT STARTED / AWAITING APPROVAL.
+Review the existing reservation/payment boundaries and approve the Phase 7
+step plan before implementing payment collection, hosted checkout or webhooks.
 
 ## A. Project Identity and Architecture
 
@@ -30,8 +24,11 @@ Phase 7 — Payment System follows completion of Phase 6 and remains NOT STARTED
   JWT/Passport, Argon2id, and explicit role/ownership enforcement.
 - SQLite is used for development. PostgreSQL is recommended for production,
   subject to the production decision and separate migration verification.
-- Guest accounts are optional; accountless booking is a Phase 6 requirement.
-  Phase 5 completion does not establish booking, payment, or NFC operations.
+- Guest accounts remain optional. Accountless Pay at Property checkout and
+  private email-link booking access are implemented. A booking number alone is
+  not private authorization. Existing account holders can use the same email
+  access flow; automatic User/Guest linking and a JWT booking-list API are not
+  established by the inspected checkout. Payment processing and NFC remain future work.
 - Never publish real .env contents, credentials, raw tokens, password hashes,
   private guest records, database contents, or NFC cryptographic material.
 
@@ -174,7 +171,7 @@ and SMTP delivery were not executed. No new test pass count is claimed.
 | 3 — Authentication & RBAC | COMPLETED — 8/8 | Accounts, secure sessions, explicit roles, ownership and email verification |
 | 4 — Room Management | COMPLETED — 7/7 | Room types, physical rooms, amenities, images, rates/capacity, operational states, blocks and eligibility helpers |
 | 5 — Guest Website | COMPLETED — 7/7 | Homepage, room browsing/details, integrated availability search, server-priced stay display, feedback and responsive/keyboard work |
-| 6 — Reservation System | IN PROGRESS — 2/10 complete | Steps 6.1–6.2 completed; 6.3 approved/in progress, pending verification; 6.4–6.10 not started |
+| 6 — Reservation System | COMPLETED — 10/10 | Registered reservation API, guest checkout/private access, assignment history, lifecycle/expiration, cancellation, staff stays and accepted regression work |
 | 7–12 | NOT STARTED / AWAITING APPROVAL | Payments; admin operations; NFC; reports/settings; integrated testing/security; deployment |
 
 ### Phase 1 — Project Foundation
@@ -219,9 +216,10 @@ execution result or the case count of the HTTP test file.
 InventorySafetyService checks physical-room eligibility and reserves nothing.
 Future assignment writers must use assertEligibleInTx with their write in the
 same transaction. Existing PENDING-assignment checks are conservative and do
-not filter hold expiry. Phase 6 now adds an internal acquisition writer and
-commitment protections described below; public booking integration remains
-unimplemented.
+not filter hold expiry. Phase 6 adds transactional acquisition, commitment
+protection, public Pay at Property checkout and registered staff reservation
+operations. Its expiration helper now releases expired-hold assignments and
+records audit history; see the Phase 6 section below.
 
 ### Phase 5 — Guest Website (7/7)
 
@@ -252,128 +250,165 @@ inspected locations. This is a coverage limitation, not a reversal of the
 owner's Phase 5 completion. Historical sandbox diagnostics are not current
 build/lint results; future verification must record actual command outcomes.
 
-### Phase 6 — Reservation System (In Progress — 2/10 Completed)
+### Phase 6 — Reservation System (Completed — 10/10)
 
-**Roadmap updated November 1, 2026.** The latest owner-supplied ten-step roadmap
-supersedes the earlier handoff that called "Protect Existing Inventory
-Commitments" a completed Phase 6 Step 3. That work remains recorded as inspected
-code supporting acquisition; it does not confirm completion of Step 6.3.
-No tests or final acceptance results establishing Step 6.3 completion have been
-reported for this checkpoint. Commit messages and source presence alone do not
-establish completion.
+The owner's latest Phase 6 completion supersedes the earlier 2/10 checkpoint
+and Step 6.3 pending-verification handoff. The ten-step sequence is retained
+from [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md#8-phase-06--reservation-system).
+Its historical status text and other supporting documents are not synchronized
+by this AGENTS.md-only update.
 
-#### Development checklist
-
-| Step | Development task | Current status |
+| Step | Development task | Status / implemented scope |
 |---|---|---|
-| 6.1 | Booking policies and hold duration | COMPLETED |
-| 6.2 | Reservation date and capacity validation | COMPLETED |
-| 6.3 | Concurrency-safe inventory acquisition | APPROVED / IN PROGRESS — handed to ChatGPT Work; pending completion verification |
-| 6.4 | Guest checkout and booking forms | NOT STARTED |
-| 6.5 | Private booking access | NOT STARTED |
-| 6.6 | Physical-room assignment history | NOT STARTED |
-| 6.7 | Reservation lifecycle transitions | NOT STARTED |
-| 6.8 | Reservation cancellation | NOT STARTED |
-| 6.9 | Staff check-in and check-out | NOT STARTED |
-| 6.10 | Competing-booking and hold-expiration testing | NOT STARTED |
+| 6.1 | Booking policies and hold duration | COMPLETED — 15-minute hold, safely available Pay at Property confirmation, optional registration and trusted snapshots |
+| 6.2 | Reservation date and capacity validation | COMPLETED — DTO/service validation of Philippine dates, active type/property, guests, rates and stay bounds |
+| 6.3 | Concurrency-safe inventory acquisition | COMPLETED — serialized SQLite acquisition, bounded retry, whole-stay allocation, rollback and protection of existing commitments |
+| 6.4 | Guest checkout and booking forms | COMPLETED — routed React/JSX checkout, selected stay details, current backend quote, guest form and confirmed booking receipt |
+| 6.5 | Private booking access | COMPLETED — emailed single-use link, scoped cookie session, private booking view and logout |
+| 6.6 | Physical-room assignment history | COMPLETED — staff assignment/reassignment/release, historical records, inventory checks and audit events |
+| 6.7 | Reservation lifecycle transitions | COMPLETED — transition rules and bounded audited hold expiration with assignment release; action-specific writers enforce transitions |
+| 6.8 | Reservation cancellation | COMPLETED — staff-authorized unpaid cancellation, inventory release, audit history and safe repeated cancellation |
+| 6.9 | Staff check-in and check-out | COMPLETED — identity/assignment/date/room checks, full recorded-payment eligibility, operational room transitions and audited retries |
+| 6.10 | Competing-booking and hold-expiration testing | COMPLETED per owner acceptance — permanent acquisition, protection, HTTP feature and cross-workflow journey suites inspected; not rerun here |
 
-This preserves the ten-step sequence in
-[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md#8-phase-06--reservation-system).
-Its older status text is not updated by this AGENTS.md-only task; use the
-owner's latest checkpoint above for current progress.
+#### Booking policies and current operational limits
 
-#### Approved booking policies — Step 6.1
+- PayMongo-style holds last 15 minutes in the acquisition foundation; no public
+  PayMongo payment flow exists yet. Expired holds stop reducing searchable
+  inventory immediately, independently of persisted cleanup status.
+- Pay at Property booking creates CONFIRMED inventory commitments without
+  recording payment. Prices are recalculated by the backend at creation and
+  stored as reservation snapshots; neither redirect pages nor client totals
+  establish price/payment authority.
+- Accountless booking is supported. Private access requires control of the
+  matching guest email and a valid scoped session, not a reference number alone.
+- Current unpaid-cancellation policy is unpaid-cancellation-v1: no cancellation
+  fee or refund for eligible pre-check-in bookings with no Payment records.
+  Any existing payment record requires financial review. Detailed prepaid fees,
+  refunds, arrival/no-show cutoffs and provider settlement policies remain
+  separate Phase 7/property decisions.
+- Both staff check-in and check-out require full valid recorded Pay at Property
+  payment. This is read-only eligibility against existing records: these
+  endpoints do not collect/verify money or create Payment records. Synthetic
+  paid fixtures in tests are not a production payment-recording workflow.
 
-| Policy | Approved behavior |
+#### Checkout and private access
+
+ReservationsModule is registered in AppModule and imports PrismaModule and
+InventorySafetyModule. Public checkout selects CONFIRMED policy on the backend;
+clients cannot supply privileged price/status/policy fields. Origin checks,
+DTO validation, throttling and no-store responses remain applicable to public
+reservation controllers.
+
+Guest routes now include /checkout/:roomTypeId, /booking-access and /my-booking,
+in addition to /, /rooms and /rooms/:id. Rooms.jsx preserves selected dates and
+guest count in the checkout link. Checkout.jsx rechecks availability, collects
+guest details, displays backend prices and confirms the returned booking.
+Duplicate clicks are blocked. Network/unknown outcomes lock resubmission and
+ask the guest to contact the property; booking writes are not retried
+implicitly, and no general idempotency-key contract is claimed.
+
+Booking access requests return a generic 202 acknowledgment before lookup/SMTP.
+A matching reference and email can issue a hashed 15-minute single-use link;
+per-reservation resend spacing is one minute. The frontend keeps its URL-fragment
+token in memory, removes the fragment, and requires an explicit button action
+to exchange it, avoiding automatic link consumption on page load.
+
+Exchange creates a hashed 30-minute booking session in the HttpOnly,
+SameSite=Strict nexora_booking_access cookie, scoped to /api/reservations/access
+and Secure in production. The browser client uses withCredentials. Current
+booking returns a limited projection; logout revokes the session and clears
+the cookie. Replacing one browser session does not revoke unrelated browsers.
+Private access grants no staff operations or cancellation permission.
+BOOKING_ACCESS_URL and SMTP_* configuration are read only by backend code;
+real values remain private and real delivery still needs environment acceptance.
+
+#### Assignment, lifecycle, cancellation and stay operations
+
+ADMIN, MANAGER and RECEPTIONIST are explicitly permitted staff roles. Assignment
+writers require a confirmed booking with remaining stay dates and at most one
+active assignment. Reassignment releases the old row and creates a new one;
+release keeps history. Eligibility, active blocks, fixed assignments and global
+commitments are checked in the write transaction, followed by an audit record.
+A released assignment does not cancel the reservation's inventory commitment.
+
+reservation-lifecycle.ts defines PENDING to CONFIRMED/CANCELLED/EXPIRED,
+CONFIRMED to CHECKED_IN/CANCELLED, and CHECKED_IN to CHECKED_OUT; terminal states
+have no outgoing transitions. This structural table alone does not authorize
+arbitrary status updates or implement a payment-confirmation endpoint.
+expirePendingHoldsInTx performs bounded, property-scoped cleanup (maximum 100),
+releases active assignments and records reservation.hold_expired events. Staff
+can invoke it explicitly; acquisition reuses it for the selected room type.
+Cleanup and acquisition roll back together on failure. No scheduled worker is
+claimed. Responses include counts and hasMore for additional batches.
+
+Cancellation accepts a normalized 3–500 character reason and only eligible
+PENDING/CONFIRMED reservations with remaining stay dates and no Payment records.
+Expired holds use the expiration workflow. A successful transaction sets
+CANCELLED, releases assignments and writes one policy-bearing audit event.
+Repeating cancellation preserves the original event/reason; checked-in stays
+cannot use this operation. Guests request cancellation through the property;
+there is no guest self-service cancellation endpoint.
+
+Check-in requires identityVerified=true, one matching active assignment,
+booked Philippine dates, an eligible READY room and full recorded payment.
+It changes the reservation to CHECKED_IN and the room to OCCUPIED. Check-out
+rechecks assignment, payment, actual occupancy and card-access constraints,
+changes the reservation to CHECKED_OUT and the room to CLEANING, and releases
+the assignment. Both preserve booking dates/prices and add audit history.
+Retries require the original matching audit event and do not repeat room
+mutations. Overdue checked-in occupants and unreleased card access block unsafe
+operations; NFC revocation itself remains a future integration.
+
+#### Registered reservation endpoints
+
+All routes below use the /api prefix and no-store responses. Staff routes
+require active staff JWTs and explicit role permission; booking-access cookies
+and GUEST JWTs do not authorize them. Public means no access JWT is required,
+not an exemption from the route's input, Origin, cookie or throttle rules.
+
+| Method and path | Access / behavior |
 |---|---|
-| PayMongo reservation hold | 15 minutes |
-| Pay at Property | Automatically confirm when inventory is safely available; confirmation is not proof of payment |
-| Hold expiration | Expired pending holds stop consuming inventory immediately |
-| Expiration transition | Safely update eligible PENDING reservations to EXPIRED |
-| Arrival and no-show cutoff | TBD — requires separate approval |
-| Prices | Calculated by the backend and preserved as reservation snapshots |
-| Guest registration | Optional; accountless booking must be supported |
+| POST /api/reservations/pay-at-property | Public; allowed Origin, 5/minute; 201 limited confirmed-booking receipt |
+| POST /api/reservations/access/request | Public; allowed Origin, 3/minute; 202 generic acknowledgment |
+| POST /api/reservations/access/exchange | Public; allowed Origin, 5/minute; 200 and scoped cookie |
+| GET /api/reservations/access/current | Valid booking cookie, 30/minute; 200 limited private view; Vary: Cookie, Origin |
+| POST /api/reservations/access/logout | Public; allowed Origin, 10/minute; 204 and cookie clearing |
+| GET /api/reservations/:reservationId/assignments | Staff; 200 assignment history |
+| POST /api/reservations/:reservationId/assignments | Staff; AssignRoomDto; 201 |
+| POST /api/reservations/:reservationId/assignments/:assignmentId/reassign | Staff; AssignRoomDto; 201 |
+| POST /api/reservations/:reservationId/assignments/:assignmentId/release | Staff; 200 historical released record |
+| POST /api/reservations/lifecycle/expire-holds | Staff; optional integer limit 1–100; 200 cleanup counts/hasMore |
+| POST /api/reservations/:reservationId/cancel | Staff; CancelReservationDto.reason; 200 cancellation result |
+| POST /api/reservations/:reservationId/check-in | Staff; assignmentId and identityVerified=true; 200 |
+| POST /api/reservations/:reservationId/check-out | Staff; assignmentId; 200 |
 
-Payment processing remains Phase 7. Phase 6 can establish holds and reservation
-states; browser redirects and unverified payment events must never establish
-payment success. Cancellation fees/refunds and other unresolved policies require
-separate approval. Final private-access verification contracts remain to be agreed.
+#### Inventory protection and regression evidence
 
-#### Source-inspected foundations — separate from completion acceptance
+Acquisition and administrative inventory-reducing writes retain the shared
+SQLite write-lock/retry and commitment protection. Whole-stay allocation respects
+blocks, unreleased fixed assignments and indirect overlaps without room moves.
+Search remains informational. Allocation limits fail closed with staff-review
+503 responses; source/test inspection does not verify PostgreSQL concurrency.
 
-- **Step 6.2 validation:** CreateReservationDto and ReservationValidationService
-  define accountless guest input and validate real Philippine dates, the
-  30-night limit, active property/type, room rate and capacity. DTO validation
-  rejects undeclared client-supplied price/status fields.
-- **Step 6.3 acquisition code present; verification pending:** The internal
-  ReservationAcquisitionService revalidates inside a SQLite write transaction,
-  creates the guest/reservation together, stores backend price snapshots, and
-  checks safe-integer/signed-32-bit totals. HOLD creates a 15-minute PENDING hold;
-  CONFIRMED creates a confirmed reservation. Today's new arrivals require READY
-  rooms. Eligible expired holds for the selected type transition transactionally
-  to EXPIRED; failures roll back expiration, guest and reservation writes.
-- **Supporting commitment protection code present:** Room/type/block changes
-  check that existing commitments remain allocatable and roll back incompatible
-  changes. This includes unassigned bookings; it is supporting Step 6.3 work,
-  not an additional completed item in the ten-step roadmap.
+There are ten reservation spec files: reservation-validation.spec.ts,
+reservation-acquisition.spec.ts, inventory-write.spec.ts, reservations.http.spec.ts,
+booking-access.http.spec.ts, room-assignments.http.spec.ts,
+reservation-lifecycle.http.spec.ts, reservation-cancellation.http.spec.ts,
+reservation-stay.http.spec.ts and reservation-journeys.http.spec.ts.
+The journey suite covers private-view/cancellation consistency, same-day room
+turnover with cleaning, expiry plus competing acquisition, rollback, failed
+checkout/retry and cancellation-versus-replacement contention. Feature suites
+also cover permissions, replay/expiry, snapshots and audit failure rollback.
+HTTP/acquisition suites provision disposable SQLite databases and migration SQL
+under backend/.phase6-* directories, then clean their own synthetic fixtures.
+The validation unit suite uses mocks. Existing Phase 4 isolated fixtures remain.
 
-Previously inspected commits f9462f6 (reservation foundations) and d296af5
-(commitment protection) retain their original test-suite/commit labels.
-These labels are historical source references, not new step numbering or
-independently verified test results. The owner-supplied roadmap controls the
-current development sequence and acceptance status.
-
-#### Supporting inventory-commitment protection behavior
-
-- withInventoryWrite obtains the SQLite write lock through a no-op Property
-  update before the callback's inventory reads, then commits checks and writes
-  together. SQLite contention retries up to five attempts; exhausted retries
-  return ServiceUnavailableException (503). PostgreSQL behavior is not verified.
-- assertInventoryCommitments checks CONFIRMED/CHECKED_IN reservations and
-  PENDING holds with null or future expiry whose stay has not ended by today's
-  Philippine date. It includes unreleased assignments, clips ongoing stays to
-  their remaining interval, and checks each connected overlap group separately.
-- Room-block creation/edit, MAINTENANCE/OUT_OF_SERVICE transitions, physical-room
-  deactivation/reclassification, and room-type capacity reduction/deactivation
-  invoke commitment checks after staging the relevant change. Reclassification
-  checks both affected types. Canceled blocks are excluded from allocation.
-- Releasing an assignment does not cancel the reservation's inventory claim.
-  A change can proceed only if other eligible inventory can still honor it;
-  fixed unreleased assignments cannot silently move to another room.
-- room-allocation.ts evaluates direct and indirect overlaps and feasible rooms
-  for complete stays without room moves. Current assignments are constraints;
-  this calculation does not persist new assignments or double-count a booking.
-  Fragmented nightly capacity can therefore fail even when each night has a
-  spare room. Allocation limits (120 connected stays / 200,000 search visits)
-  fail closed with a staff-review 503 rather than declaring availability.
-- Stored reservation prices survive later rate edits. Existing assignment and
-  type-level guards remain in place and can conservatively reject expired
-  PENDING records; the new helper's hold-expiry filter does not replace them.
-
-#### Tests and integration boundary
-
-New sources: reservation-validation.spec.ts, reservation-acquisition.spec.ts,
-and inventory-write.spec.ts. Their assertions cover DTO/date/capacity rules,
-holds and trusted snapshots, independent-client acquisition, rollback,
-fragmented/indirect stays, assigned/unassigned commitments, expired holds,
-spare inventory, protected administrative changes, and booking-versus-block
-contention. rooms.spec.ts and room-blocks.spec.ts now assert that releasing an
-assignment alone does not permit invalidating its still-active booking.
-
-The validation suite uses mocked database queries. Acquisition/protection suites
-create disposable SQLite databases under backend/.phase6-step3-* and
-backend/.phase6-protection-*, apply the checked-in migration SQL there, and clean
-up their own fixtures. No tests, migrations, builds or lint ran for this update;
-no fresh pass count or production concurrency guarantee is asserted.
-
-No ReservationsModule/controller is registered in AppModule. Internal acquisition
-is exercised by tests; existing registered room-management services directly use
-the shared protection functions. No public reservation endpoint, browser checkout,
-payment, private accountless verification, or assignment/check-in/out API is
-established by these additions. A future controller must select trusted policy;
-clients must not choose HOLD/CONFIRMED directly. HOLD_DURATION_MS implements the approved 15-minute hold policy. Arrival/no-show
-cutoffs, cancellation fees and payment-processing rules are not implied by this
-constant and still require their separate approvals.
+Latest source reference: 22a4319, "Step 10 for Phase 6 Complete". Completion is
+owner-confirmed; no new pass count is inferred from commit titles or suite
+presence. No application test, build, lint, browser check, SMTP send, migration
+or seed was executed for this documentation update. Production acceptance,
+real SMTP/cookies, PostgreSQL behavior and physical hardware remain separate.
 
 ## D. Backend Structure
 
@@ -381,8 +416,8 @@ constant and still require their separate approvals.
 |---|---|
 | backend/src/main.ts | Nest bootstrap, startup rejection handler, cookie parsing, ValidationPipe, CORS, /api prefix, port 3000 |
 | backend/src/availability/ | Public search controller/DTO, service, pure nightly calculator; read-only availability and stay-price quote |
-| backend/src/reservations/ | New accountless input DTO, validation/acquisition services, room-allocation and inventory-write helpers, and three test suites; no public controller/module |
-| backend/src/app.module.ts | Prisma, auth, room types, rooms/status, amenities, room images, room blocks, availability; global throttling/JWT/roles guards |
+| backend/src/reservations/ | Registered ReservationsModule; checkout, booking access/email, assignments, lifecycle, cancellation and stay controllers/services; DTOs, policies, inventory helpers and ten spec files |
+| backend/src/app.module.ts | Registers Prisma, auth, room management, availability and ReservationsModule; global throttling/JWT/role guards |
 | backend/src/auth/ | AuthModule, controller, password/session/registration/verification/SMTP services; DTOs and security tests |
 | backend/src/prisma/ | Global PrismaModule, PrismaService, guarded development seed |
 | backend/src/room-types/ | RoomTypesModule, DTOs, rate snapshots, and transaction-scoped commitment checks on capacity reduction/deactivation |
@@ -403,15 +438,20 @@ registered business controllers. Full current directory map: docs/DIRECTORY_STRU
 
 ## E. Database Architecture and Safety
 
-- Current schema: 25 Prisma models and four migrations under backend/prisma/.
-  The inspected Phase 6 changes add services/helpers/tests, with no schema or
-  migration changes; the new logic uses existing Guest/Reservation/Room records.
+- Current schema: **27 Prisma models and five migrations** under backend/prisma/.
+  Phase 6 private access adds ReservationAccessToken and ReservationAccessSession
+  to the prior 25 models. Both reference Reservation with restrictive deletion;
+  unique tokenHash values and expiry/lookup indexes support scoped access.
+  Tokens/sessions store hashes, not raw credentials.
   Preserve the original foundation and accepted extensions, including
   RefreshToken.familyId, EmailVerificationToken and RoomBlock.canceledAt.
 - Migration history: 20261027150551_init,
   20261029133315_add_refresh_token_family,
   20261030134255_add_email_verification_tokens, and
-  20261031_phase4_step6_room_block_cancellation.
+  20261031_phase4_step6_room_block_cancellation, and
+  20261101070000_reservation_private_access (two additive access tables/indexes).
+  Migration presence is verified from files; no development/production migration
+  was applied or database inspected during this update.
 - PrismaService uses the fixed runtime URL file:./dev.db relative to the
   process directory; run the backend from backend/. Prisma CLI reads
   DATABASE_URL through backend/prisma7.config.ts. Verify their resolved targets
@@ -434,8 +474,9 @@ step6.ownership.test.db, step7.registration.test.db, step8.security.test.db,
 step10.test.db, and phase4.step1.test.db through phase4.step7.test.db.
 Inspect suite configuration and ensure the required isolated schema exists
 before running those suites; this list does not assert that each fixture is
-provisioned. The new Phase 6 acquisition/protection suites instead build their
-own disposable migrated databases, as described in section C.
+provisioned. Phase 6 acquisition and HTTP suites build their own disposable
+migrated databases under isolated backend/.phase6-* directories, as described
+in section C. Never redirect them to development data.
 
 ## F. Security and Remaining Review Items
 
@@ -446,8 +487,10 @@ own disposable migrated databases, as described in section C.
 - Auth POSTs require an allowlisted Origin. Refresh cookies are HttpOnly,
   SameSite=Strict, Path=/api/auth and Secure in production. Logout revokes the
   refresh family; an existing access JWT can remain valid until expiry.
-- OwnershipModule must be explicitly used by future guest/reservation services;
-  helper presence does not protect a future endpoint automatically.
+- Ownership helpers protect linked-account records only when explicitly used.
+  Current private booking access instead uses a reservation-scoped email/cookie
+  capability. Staff reservation operations enforce staff JWTs separately; neither
+  a booking reference nor the booking cookie grants staff powers.
 - ADMIN/MANAGER manage room/amenity/image data; reception can read physical rooms
   and blocks. Public room-type/image reads exclude inactive types. Uploads are
   decoded and re-encoded, use guarded storage paths and omit internal file paths.
@@ -455,13 +498,18 @@ own disposable migrated databases, as described in section C.
   management View permission, while RoomStatusService permits READY/CLEANING
   transitions. Preserve both the approved baseline and accurate implementation
   description until the intended housekeeping exception is decided.
-- Remaining operational review includes duplicate bootstrap CORS registration,
-  deployed cookies/origins, email-link prefetch, SMTP failure monitoring,
-  durable image storage/recovery, HTTPS, PostgreSQL compatibility and backups.
+- main.ts now has one CORS registration with the configured Origin allowlist
+  and credentials enabled; the earlier duplicate-CORS finding is superseded.
+  Deployed cookies/origins still require acceptance. Booking links use fragments
+  and explicit POST exchange; the separate auth verification GET still needs
+  prefetch review. SMTP/TLS delivery, durable image storage/recovery, HTTPS,
+  PostgreSQL compatibility and backups remain operational work.
 - The legacy backend/test/app.e2e-spec.ts expects Hello World! and imports the
   real AppModule without isolating Prisma. Review it before using test:e2e as
-  release evidence. Existing model records and admin placeholders do not
-  implement payments, check-in/out, reporting or real NFC door access.
+  release evidence. Check-in/out APIs now exist, but admin operational screens,
+  payment recording, financial reporting and real NFC access remain later work.
+  Stay-payment eligibility reads existing receipts without creating or verifying
+  them; suspicious provider/refund records require Phase 7 financial review.
 
 ## G. Coding and Verification Workflow
 
@@ -492,71 +540,68 @@ Existing commands, from the relevant application directory:
 
 ## H. Latest System Changes and Added Files
 
-Source changes inspected in f9462f6 and d296af5:
+Phase 6 source changes through 22a4319 were inspected against the previous
+reservation-foundation checkpoint. Existing inventory/validation helpers remain;
+the following additions connect them to guest and staff workflows.
 
 | Area / path | Added or updated behavior |
 |---|---|
-| backend/src/reservations/dto/create-reservation.dto.ts | Added accountless guest/stay input contract; prices, role and status are not client input fields |
-| backend/src/reservations/reservation-validation.service.ts | Added property/type/date/capacity validation; accepts a transaction client for acquisition |
-| backend/src/reservations/reservation-validation.spec.ts | Added mocked validation and DTO rejection coverage |
-| backend/src/reservations/reservation-acquisition.service.ts | Added transactional HOLD/CONFIRMED acquisition, expiration handling, guest creation, trusted snapshots and SQLite contention retries |
-| backend/src/reservations/reservation-acquisition.spec.ts | Added disposable-database acquisition, concurrency, rollback and allocation coverage |
-| backend/src/reservations/room-allocation.ts | Added overlaps, connectedStays and bounded whole-stay assertAllocatable; respects blocks and fixed assignments |
-| backend/src/reservations/inventory-write.ts | Added withInventoryWrite, assertInventoryCommitments and assertRoomInventoryCommitments for protected administrative writes |
-| backend/src/reservations/inventory-write.spec.ts | Added supporting commitment-protection test source for bookings/holds, rollback, spare capacity, fragmentation and competing writes; not a completed 6.10 acceptance run |
-| backend/src/room-blocks/room-blocks.service.ts | Block create/edit now stage changes and recheck room-type commitments in the same serialized transaction |
-| backend/src/rooms/room-status.service.ts | MAINTENANCE/OUT_OF_SERVICE transitions recheck commitments and roll back when promised inventory would be lost |
-| backend/src/rooms/rooms.service.ts | Deactivation/reclassification now check commitments, including both affected types |
-| backend/src/room-types/room-types.service.ts | Capacity reduction/deactivation use shared serialized writes and commitment checks |
-| backend/src/rooms/rooms.spec.ts and backend/src/room-blocks/room-blocks.spec.ts | Updated released-assignment expectations: an active reservation still needs inventory |
-| docs/AGENTS.md | Updated the current Phase 6 checkpoint, source additions, protection rules, test evidence boundaries and remaining work |
+| backend/src/app.module.ts and reservations/reservations.module.ts | Registers the reservation controllers, providers and InventorySafetyModule integration |
+| backend/src/main.ts | Uses one credentialed CORS allowlist; removes duplicate registration |
+| backend/src/reservations/reservations.controller.ts | Public, Origin-checked Pay at Property booking endpoint with a limited receipt |
+| backend/src/reservations/booking-access.controller.ts, booking-access.service.ts, booking-access.config.ts | Generic link request, atomic single-use exchange, scoped booking sessions, private projection, logout and throttling |
+| backend/src/reservations/booking-access-email.service.ts | Backend-configured TLS email delivery with fragment link and allowlisted URL validation; the access service logs delivery failure without sensitive details |
+| backend/src/reservations/room-assignments.controller.ts and room-assignments.service.ts | Staff history/assign/reassign/release operations with commitment checks, preserved rows and audit events |
+| backend/src/reservations/reservation-lifecycle.ts, reservation-lifecycle.controller.ts and reservation-lifecycle.service.ts | Allowed state transitions, bounded expiration, assignment release and audit persistence |
+| backend/src/reservations/reservation-acquisition.service.ts | Reuses lifecycle expiration and records the current unpaid-cancellation policy with reservation creation |
+| backend/src/reservations/reservation-cancellation.controller.ts, reservation-cancellation.service.ts and cancellation-policy.ts | Staff unpaid cancellation, preserved reason/policy audit, assignment release and safe repeated requests |
+| backend/src/reservations/reservation-stay.controller.ts, reservation-stay.service.ts and stay-payment-policy.ts | Identity/room/payment gates; transactional check-in/out, assignment release, cleaning status, retry checks and NFC safety boundary |
+| backend/src/reservations/dto/ | Adds booking-access, assign-room, expire-holds, cancel-reservation and reservation-stay DTOs alongside the creation contract |
+| backend/src/reservations/*.http.spec.ts | Seven HTTP suites cover checkout/access, assignments, lifecycle, cancellation, stays and integrated journeys; three earlier reservation suites remain |
+| backend/prisma/schema.prisma | Adds ReservationAccessToken/ReservationAccessSession and Reservation relations; total 27 models |
+| backend/prisma/migrations/20261101070000_reservation_private_access/migration.sql | Fifth checked-in migration; additive access tables, restrictive relations and unique/lookup indexes |
+| frontend/guest-web/src/pages/Checkout.jsx | Stay selection, current quote, guest details, policy acknowledgment, receipt and unknown-outcome recovery |
+| frontend/guest-web/src/pages/BookingAccess.jsx and MyBooking.jsx | Email-link request/exchange, private session view, expiry/error handling and logout |
+| frontend/guest-web/src/services/reservationsApi.js and bookingAccessApi.js | Reservation creation and credentialed private-access requests; no implicit booking retry |
+| frontend/guest-web/src/App.jsx, pages/Rooms.jsx and components/Navbar.jsx | Adds checkout/private-view routes, selected-stay booking links and booking-access navigation |
+| frontend/guest-web/src/styles/checkout.css and availability.css | Checkout/private-view presentation and room-search booking controls |
+| docs/AGENTS.md | Records owner-confirmed Phase 6 10/10 completion, current APIs/schema, source additions, verification limits and Phase 7 boundary |
 
-Installed metadata still matches all 62 documented direct dependency entries;
-no new dependency is recorded for these changes. The database remains at 25
-models/four migrations. Phases 1–5 stay complete. The latest Phase 6 roadmap
-records 2/10 completed, Step 6.3 approved/in progress and pending verification,
-and Steps 6.4–6.10 not started. Documentation stays under docs/ with only README.md
-at the repository root. Other Markdown files are unchanged by this update and
-may retain older phase/integration descriptions.
+All 62 direct dependency entries were rechecked against installed metadata and
+lockfiles; documented versions still match. Phase 6 uses the existing approved
+stack without a new dependency entry. Database documentation in this handoff is
+updated to 27 models/five migrations. This task edits only docs/AGENTS.md;
+other Markdown files may retain older counts/status/API descriptions. Keep
+project Markdown under docs/, with only README.md at the repository root.
 
-## I. Remaining Phase 6 Roadmap and Next Phase
+## I. Next Phase — Phase 7: Payment System
 
-**Current checkpoint:** 2/10 complete. Step 6.3 was approved and handed over to
-ChatGPT Work for implementation; its tests and actual completion results remain
-pending verification. The immediate next action is to finish Step 6.3.
+**Phase 6: COMPLETED — 10/10 per owner confirmation.** The next phase in
+Architecture v2.1 section 16 is **Phase 7 — Payment System**, currently
+**NOT STARTED / AWAITING APPROVAL**. No additional Phase 6 step is pending in
+the owner's accepted checklist; the operational limits above remain relevant.
 
-| Step | Remaining development scope |
-|---|---|
-| 6.3 — Concurrency-safe inventory acquisition | Transactional inventory checks and reservation creation; prevent overselling of the last room; verify competing writes, blocking, rollback and hold expiration |
-| 6.4 — Guest checkout and booking forms | React/JSX booking form, preserved stay selection, guest information, backend-calculated price review and validation feedback |
-| 6.5 — Private booking access | Secure retrieval for registered/accountless guests; a reservation number alone must never authorize private access |
-| 6.6 — Physical-room assignment history | Authorized assignment/reassignment, preserved history and prevention of overlapping allocations |
-| 6.7 — Reservation lifecycle transitions | Enforce approved PENDING, CONFIRMED, CHECKED_IN, CHECKED_OUT, CANCELLED and EXPIRED transitions; reject invalid transitions and retain audit-relevant history |
-| 6.8 — Reservation cancellation | Permission checks, appropriate future inventory release and history preservation; cancellation fees/refunds require separate policy approval |
-| 6.9 — Staff check-in and check-out | Verify assigned rooms and staff authorization; coordinate operational status, cleaning and future NFC revocation integration |
-| 6.10 — Reservation regression testing | Competing bookings, expired holds, invalid input, ownership restrictions, protected prices, rollback and preservation of existing functionality |
+Prepare and approve the detailed Phase 7 plan around:
 
-Existing test files support development; their presence does not mark Step 6.10
-started or complete. Keep acquisition verification in Step 6.3 distinct from the
-later full reservation regression milestone.
+- Backend-calculated PayMongo Hosted Checkout and trusted reservation association.
+- Verified webhook signatures/events, amount/currency checks and duplicate-safe
+  processing; browser returns are not payment evidence.
+- Authorized Pay at Property collection records that satisfy existing stay gates.
+- Payment/reservation status separation, financial audit history and approved
+  refunds/fees. Preserve stored reservation price snapshots.
+- Expired holds, late/duplicate/failed provider events, retry/reconciliation rules
+  and isolated provider test-mode verification.
 
-Retain NestJS/TypeScript/Prisma/SQLite in the backend and React/JavaScript/JSX,
-Vite, Axios, React Router and plain CSS in the guest frontend. Reuse existing
-ownership, pricing, date and inventory helpers. Protect backend/dev.db; tests
-must use isolated databases/storage. Review existing source, approve each step,
-provide copy-paste-ready code with exact paths when authorized, test, and confirm
-completion before advancing. This update changes documentation only.
+Review current stay-payment and cancellation boundaries first: unpaid booking
+confirmation does not authorize check-in; stay endpoints require full recorded
+payment, and cancellation with any financial history requires review. Public
+PayMongo flows, payment recording/refund endpoints and real provider processing
+are not implemented by Phase 6 or its synthetic payment fixtures.
 
-After Step 6.3 is confirmed complete, the next task is **Step 6.4 — Guest Checkout
-and Booking Forms**, starting with source review and approval before generating
-code. Continue the remaining Phase 6 sequence before beginning Phase 7.
-
-Architecture v2.1 section 16 places **Phase 7 — Payment System** after Reservation
-System. Phase 7 remains **NOT STARTED / AWAITING APPROVAL**: PayMongo Hosted
-Checkout/verified webhooks and Pay at Property payment records remain future
-implementation. No payment success may be inferred from a browser redirect or
-unverified event. No code, migration, installation, commit, push or deployment
-is authorized by this documentation update.
+Production hosting/domains, PostgreSQL migration verification and physical NFC
+hardware remain separate approved phases/decisions. This documentation update
+authorizes no new code, dependency installation, database change, commit, push
+or deployment.
 
 Related references: [architecture](NEXORA_ARCHITECTURE_V2.1.md), [API](API.md),
 [database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md),
