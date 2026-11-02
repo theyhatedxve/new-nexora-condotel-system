@@ -16,6 +16,8 @@ import { PaymentReconciliationController } from './payment-reconciliation.contro
 import { PaymentReconciliationService } from './payment-reconciliation.service.js';
 import { PaymongoReconciliationAdapter } from './paymongo-reconciliation.adapter.js';
 
+import { StaffPaymentsController } from './staff-payments.controller.js';
+import { StaffPaymentsService } from './staff-payments.service.js';
 @Module({
   imports: [PrismaModule, OwnershipModule],
   controllers: [
@@ -24,6 +26,7 @@ import { PaymongoReconciliationAdapter } from './paymongo-reconciliation.adapter
     PayAtPropertyController,
     RefundsController,
     PaymentReconciliationController,
+    StaffPaymentsController,
   ],
   providers: [
     PaymentSummaryService,
@@ -35,6 +38,7 @@ import { PaymongoReconciliationAdapter } from './paymongo-reconciliation.adapter
     PaymongoRefundAdapter,
     PaymentReconciliationService,
     PaymongoReconciliationAdapter,
+    StaffPaymentsService,
   ],
   exports: [PaymentSummaryService, CheckoutService],
 })

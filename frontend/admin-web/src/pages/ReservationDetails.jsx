@@ -18,6 +18,8 @@ import {
   guestName,
 } from "../utils/formatters";
 
+import ReservationActions from "../components/ReservationActions";
+
 export default function ReservationDetails() {
   const { reservationId } = useParams();
 
@@ -265,8 +267,17 @@ export default function ReservationDetails() {
               )
             )}
           </section>
-        </>
+                </>
       )}
-    </section>
-  );
-}
+
+        <ReservationActions
+            key={reservationId}
+            reservationId={reservationId}
+            record={record}
+            assignments={assignments}
+            payment={payment}
+            onReload={refresh}
+        />
+        </section>
+    );
+    }

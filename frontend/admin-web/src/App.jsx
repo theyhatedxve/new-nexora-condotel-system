@@ -17,12 +17,19 @@ import Guests from "./pages/Guests";
 import GuestDetails from "./pages/GuestDetails";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
+import Rooms from "./pages/Rooms";
+import RoomDetails from "./pages/RoomDetails";
+import Payments from "./pages/Payments";
+import PaymentDetails from "./pages/PaymentDetails";
+
 import "./styles/global.css";
 
 const pages = {
   "/": <Dashboard />,
   "/reservations": <Reservations />,
   "/guests": <Guests />,
+  "/rooms": <Rooms />,
+  "/payments": <Payments />,
 };
 
 export default function App() {
@@ -60,6 +67,16 @@ export default function App() {
               <Route
                 path="/reservations/:reservationId"
                 element={<ReservationDetails />}
+              />
+
+              <Route
+                path="/rooms/:roomId"
+                element={<RoomDetails />}
+              />
+
+              <Route
+                path="/payments/:paymentId"
+                element={<PaymentDetails />}
               />
 
               <Route
