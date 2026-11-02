@@ -1,5 +1,3 @@
-// CREATE: backend/src/payments/refunds.service.ts
-
 import { createHash } from 'node:crypto';
 import {
   BadRequestException,
@@ -14,10 +12,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { isUUID } from 'class-validator';
-import type {
-  Prisma,
-  Refund,
-} from '../generated/prisma/client.js';
+import type { Prisma, Refund } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { withInventoryWrite } from '../reservations/inventory-write.js';
@@ -60,6 +55,209 @@ const fingerprint = (
     }),
   );
 
+async function assertRefundClaim(
+  tx: Prisma.TransactionClient,
+  refund: Refund,
+  expected: string,
+) {
+  const audits = await tx.auditLog.findMany({
+    where: {
+      action: CLAIM,
+      entityType: 'Refund',
+      entityId: refund.id,
+    },
+    select: {
+      actorUserId: true,
+      detailsJson: true,
+    },
+    take: 2,
+  });
+
+  let value: unknown;
+
+  try {
+    value = JSON.parse(audits[0]?.detailsJson ?? 'null');
+  } catch {
+    value = null;
+  }
+
+  if (
+    audits.length !== 1 ||
+    audits[0].actorUserId !== refund.processedByUserId ||
+    value === null ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    !('version' in value) ||
+    value.version !== 1 ||
+    !('requestFingerprint' in value) ||
+    value.requestFingerprint !== expected
+  ) {
+    throw new ConflictException('Refund request evidence requires review.');
+  }
+}
+
+async function updateRefundedPayment(tx: Prisma.TransactionClient, id: string) {
+  const payment = await tx.payment.findUniqueOrThrow({
+    where: { id },
+    include: { refunds: true },
+  });
+
+  const completed = payment.refunds
+    .filter((refund) => refund.status === 'COMPLETED')
+    .reduce((sum, refund) => sum + refund.amountCentavos, 0);
+
+  if (
+    !Number.isSafeInteger(completed) ||
+    completed < 0 ||
+    completed > payment.amountCentavos
+  ) {
+    throw new ConflictException('Refund totals require review.');
+  }
+
+  await tx.payment.update({
+    where: { id },
+    data: {
+      status:
+        completed === 0
+          ? 'PAID'
+          : completed === payment.amountCentavos
+            ? 'REFUNDED'
+            : 'PARTIALLY_REFUNDED',
+    },
+  });
+}
+
+export async function settlePaymongoRefund(
+  tx: Prisma.TransactionClient,
+  id: string,
+  outcome: ProviderRefund,
+): Promise<'PROCESSED' | 'DUPLICATE' | 'REVIEW_REQUIRED'> {
+  const refund = await tx.refund.findUnique({ where: { id } });
+  if (!refund?.processedByUserId) return 'REVIEW_REQUIRED';
+
+  const payment = await tx.payment.findUnique({
+    where: { id: refund.paymentId },
+    include: {
+      events: { select: paymentEvidenceSelect },
+      refunds: true,
+      reservation: { select: { roomType: { select: { propertyId: true } } } },
+    },
+  });
+
+  const properties = await tx.property.findMany({
+    select: { id: true },
+    take: 2,
+  });
+
+  if (
+    !payment ||
+    properties.length !== 1 ||
+    payment.reservation.roomType.propertyId !== properties[0].id ||
+    payment.method !== 'PAYMONGO' ||
+    payment.currency !== 'PHP' ||
+    !hasVerifiedPaymongoEvidence(payment) ||
+    !['PAID', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(payment.status) ||
+    !Number.isSafeInteger(refund.amountCentavos) ||
+    refund.amountCentavos < 100 ||
+    outcome.livemode !== false ||
+    outcome.currency !== 'PHP' ||
+    outcome.localRefundId !== refund.id ||
+    outcome.paymentId !== payment.providerPaymentId ||
+    outcome.amountCentavos !== refund.amountCentavos ||
+    !/^ref_[A-Za-z0-9_]{1,96}$/.test(outcome.id) ||
+    !['PENDING', 'COMPLETED', 'FAILED'].includes(outcome.status) ||
+    (refund.providerRefundId && refund.providerRefundId !== outcome.id)
+  )
+    return 'REVIEW_REQUIRED';
+
+  try {
+    await assertRefundClaim(
+      tx,
+      refund,
+      fingerprint(
+        payment.id,
+        refund.processedByUserId,
+        refund.amountCentavos,
+        refund.reason,
+        false,
+      ),
+    );
+  } catch (error) {
+    if (error instanceof ConflictException) return 'REVIEW_REQUIRED';
+    throw error;
+  }
+
+  if (
+    await tx.refund.findFirst({
+      where: { providerRefundId: outcome.id, id: { not: id } },
+      select: { id: true },
+    })
+  )
+    return 'REVIEW_REQUIRED';
+
+  const completed = payment.refunds
+    .filter((r) => r.status === 'COMPLETED')
+    .reduce((sum, r) => sum + r.amountCentavos, 0);
+
+  const pending = payment.refunds
+    .filter((r) => r.status === 'PENDING')
+    .reduce((sum, r) => sum + r.amountCentavos, 0);
+
+  const expected =
+    completed === 0
+      ? 'PAID'
+      : completed === payment.amountCentavos
+        ? 'REFUNDED'
+        : 'PARTIALLY_REFUNDED';
+
+  if (
+    ![completed, pending, completed + pending].every(Number.isSafeInteger) ||
+    completed < 0 ||
+    pending < 0 ||
+    completed + pending > payment.amountCentavos ||
+    payment.status !== expected
+  )
+    return 'REVIEW_REQUIRED';
+
+  if (refund.status !== 'PENDING') {
+    if (
+      refund.providerRefundId === outcome.id &&
+      (refund.status === outcome.status ||
+        (['COMPLETED', 'FAILED'].includes(refund.status) &&
+          outcome.status === 'PENDING'))
+    )
+      return 'DUPLICATE';
+
+    return 'REVIEW_REQUIRED';
+  }
+
+  if (refund.providerRefundId === outcome.id && outcome.status === 'PENDING')
+    return 'DUPLICATE';
+
+  await tx.refund.update({
+    where: { id },
+    data: {
+      providerRefundId: outcome.id,
+      status: outcome.status,
+      completedAt: outcome.status === 'COMPLETED' ? new Date() : null,
+    },
+  });
+
+  await updateRefundedPayment(tx, payment.id);
+
+  await tx.auditLog.create({
+    data: {
+      actorUserId: refund.processedByUserId,
+      action: 'payment.refund.' + outcome.status.toLowerCase(),
+      entityType: 'Refund',
+      entityId: id,
+      detailsJson: JSON.stringify({ version: 1, source: 'paymongo_test' }),
+    },
+  });
+
+  return 'PROCESSED';
+}
+
 @Injectable()
 export class RefundsService {
   private readonly logger = new Logger(RefundsService.name);
@@ -101,20 +299,14 @@ export class RefundsService {
       );
     }
 
-    if (
-      !ROLES.includes(user.role.name) ||
-      user.role.name !== actor.role
-    ) {
+    if (!ROLES.includes(user.role.name) || user.role.name !== actor.role) {
       throw new ForbiddenException(
         'Manager or Administrator permission is required.',
       );
     }
   }
 
-  private async payment(
-    tx: Prisma.TransactionClient,
-    id: string,
-  ) {
+  private async payment(tx: Prisma.TransactionClient, id: string) {
     const properties = await tx.property.findMany({
       select: { id: true },
       take: 2,
@@ -154,49 +346,6 @@ export class RefundsService {
     }
 
     return payment;
-  }
-
-  private async proof(
-    tx: Prisma.TransactionClient,
-    refund: Refund,
-    expected: string,
-  ) {
-    const audits = await tx.auditLog.findMany({
-      where: {
-        action: CLAIM,
-        entityType: 'Refund',
-        entityId: refund.id,
-      },
-      select: {
-        actorUserId: true,
-        detailsJson: true,
-      },
-      take: 2,
-    });
-
-    let value: unknown;
-
-    try {
-      value = JSON.parse(audits[0]?.detailsJson ?? 'null');
-    } catch {
-      value = null;
-    }
-
-    if (
-      audits.length !== 1 ||
-      audits[0].actorUserId !== refund.processedByUserId ||
-      value === null ||
-      typeof value !== 'object' ||
-      Array.isArray(value) ||
-      !('version' in value) ||
-      value.version !== 1 ||
-      !('requestFingerprint' in value) ||
-      value.requestFingerprint !== expected
-    ) {
-      throw new ConflictException(
-        'Refund request evidence requires review.',
-      );
-    }
   }
 
   private async view(
@@ -266,40 +415,6 @@ export class RefundsService {
     }
   }
 
-  private async updatePayment(
-    tx: Prisma.TransactionClient,
-    id: string,
-  ) {
-    const payment = await tx.payment.findUniqueOrThrow({
-      where: { id },
-      include: { refunds: true },
-    });
-
-    const completed = payment.refunds
-      .filter((refund) => refund.status === 'COMPLETED')
-      .reduce((sum, refund) => sum + refund.amountCentavos, 0);
-
-    if (
-      !Number.isSafeInteger(completed) ||
-      completed < 0 ||
-      completed > payment.amountCentavos
-    ) {
-      throw new ConflictException('Refund totals require review.');
-    }
-
-    await tx.payment.update({
-      where: { id },
-      data: {
-        status:
-          completed === 0
-            ? 'PAID'
-            : completed === payment.amountCentavos
-              ? 'REFUNDED'
-              : 'PARTIALLY_REFUNDED',
-      },
-    });
-  }
-
   private async reserve(
     paymentId: string,
     input: CreateRefundDto,
@@ -346,7 +461,7 @@ export class RefundsService {
           );
         }
 
-        await this.proof(tx, existing, expected);
+        await assertRefundClaim(tx, existing, expected);
 
         return {
           kind: 'stored' as const,
@@ -366,26 +481,19 @@ export class RefundsService {
       }
 
       if (
-        !['PAID', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(
-          payment.status,
-        ) ||
+        !['PAID', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(payment.status) ||
         payment.reservation.payments.some(
           (receipt) =>
-            receipt.status === 'PENDING' ||
-            hasPaymentReview(receipt),
+            receipt.status === 'PENDING' || hasPaymentReview(receipt),
         ) ||
-        (
-          cash &&
-          (
-            payment.provider ||
+        (cash &&
+          (payment.provider ||
             payment.providerCheckoutId ||
             payment.providerPaymentId ||
             payment.checkoutRequestKeyHash ||
             payment.checkoutRequestFingerprint ||
             payment.checkoutState ||
-            payment.checkoutUrl
-          )
-        ) ||
+            payment.checkoutUrl)) ||
         (!cash && !hasVerifiedPaymongoEvidence(payment))
       ) {
         throw new ConflictException(
@@ -407,13 +515,8 @@ export class RefundsService {
         [payment],
       );
 
-      if (
-        summary.requiresReview ||
-        summary.pendingRefundCentavos > 0
-      ) {
-        throw new ConflictException(
-          'An existing refund requires review.',
-        );
+      if (summary.requiresReview || summary.pendingRefundCentavos > 0) {
+        throw new ConflictException('An existing refund requires review.');
       }
 
       const available =
@@ -461,7 +564,7 @@ export class RefundsService {
       });
 
       if (cash) {
-        await this.updatePayment(tx, payment.id);
+        await updateRefundedPayment(tx, payment.id);
 
         await tx.auditLog.create({
           data: {
@@ -497,94 +600,13 @@ export class RefundsService {
     });
   }
 
-  private async apply(
-    id: string,
-    outcome: ProviderRefund,
-  ) {
+  private async apply(id: string, outcome: ProviderRefund) {
     return withInventoryWrite(this.prisma, async (tx) => {
-      const refund = await tx.refund.findUniqueOrThrow({
-        where: { id },
-      });
-
-      const payment = await this.payment(tx, refund.paymentId);
-
-      if (!refund.processedByUserId) {
-        throw new ConflictException(
-          'Refund attribution requires review.',
-        );
-      }
-
-      await this.proof(
-        tx,
-        refund,
-        fingerprint(
-          payment.id,
-          refund.processedByUserId,
-          refund.amountCentavos,
-          refund.reason,
-          false,
-        ),
-      );
-
-      if (
-        payment.method !== 'PAYMONGO' ||
-        !hasVerifiedPaymongoEvidence(payment) ||
-        outcome.livemode !== false ||
-        outcome.currency !== 'PHP' ||
-        outcome.localRefundId !== refund.id ||
-        outcome.paymentId !== payment.providerPaymentId ||
-        outcome.amountCentavos !== refund.amountCentavos ||
-        !/^ref_[A-Za-z0-9_]{1,96}$/.test(outcome.id) ||
-        !['PENDING', 'COMPLETED', 'FAILED'].includes(outcome.status) ||
-        refund.status !== 'PENDING' ||
-        (
-          refund.providerRefundId &&
-          refund.providerRefundId !== outcome.id
-        )
-      ) {
+      if ((await settlePaymongoRefund(tx, id, outcome)) === 'REVIEW_REQUIRED') {
         throw new ConflictException(
           'Provider refund evidence requires review.',
         );
       }
-
-      const collision = await tx.refund.findFirst({
-        where: {
-          providerRefundId: outcome.id,
-          id: { not: id },
-        },
-        select: { id: true },
-      });
-
-      if (collision) {
-        throw new ConflictException(
-          'Provider refund identifier requires review.',
-        );
-      }
-
-      await tx.refund.update({
-        where: { id },
-        data: {
-          providerRefundId: outcome.id,
-          status: outcome.status,
-          completedAt:
-            outcome.status === 'COMPLETED' ? new Date() : null,
-        },
-      });
-
-      await this.updatePayment(tx, payment.id);
-
-      await tx.auditLog.create({
-        data: {
-          actorUserId: refund.processedByUserId,
-          action: `payment.refund.${outcome.status.toLowerCase()}`,
-          entityType: 'Refund',
-          entityId: id,
-          detailsJson: JSON.stringify({
-            version: 1,
-            source: 'paymongo_test',
-          }),
-        },
-      });
     });
   }
 
@@ -602,10 +624,8 @@ export class RefundsService {
       input.amountCentavos < 1 ||
       input.amountCentavos > 2_147_483_647 ||
       !REFUND_REASONS.includes(input.reason) ||
-      (
-        input.cashReturnedConfirmed !== undefined &&
-        typeof input.cashReturnedConfirmed !== 'boolean'
-      )
+      (input.cashReturnedConfirmed !== undefined &&
+        typeof input.cashReturnedConfirmed !== 'boolean')
     ) {
       throw new BadRequestException(
         'Provide a UUID v4, valid integer centavos, an allowed reason and valid confirmation.',
@@ -616,20 +636,13 @@ export class RefundsService {
       const claim = await this.reserve(paymentId, input, user);
 
       if (claim.kind === 'stored') {
-        return await this.forUser(
-          claim.id,
-          user,
-          claim.alreadyRecorded,
-        );
+        return await this.forUser(claim.id, user, claim.alreadyRecorded);
       }
 
       let outcome: ProviderRefund;
 
       try {
-        outcome = await this.provider.create(
-          claim.input,
-          claim.secret,
-        );
+        outcome = await this.provider.create(claim.input, claim.secret);
       } catch {
         // Never repeat provider creation after an uncertain result,
         // including after its idempotency window expires.

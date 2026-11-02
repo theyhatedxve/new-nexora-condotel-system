@@ -1,5 +1,3 @@
-// REPLACE ENTIRE FILE: backend/src/payments/payments.module.ts
-
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { OwnershipModule } from '../common/ownership/ownership.module.js';
@@ -14,6 +12,9 @@ import { PayAtPropertyService } from './pay-at-property.service.js';
 import { RefundsController } from './refunds.controller.js';
 import { RefundsService } from './refunds.service.js';
 import { PaymongoRefundAdapter } from './paymongo-refund.adapter.js';
+import { PaymentReconciliationController } from './payment-reconciliation.controller.js';
+import { PaymentReconciliationService } from './payment-reconciliation.service.js';
+import { PaymongoReconciliationAdapter } from './paymongo-reconciliation.adapter.js';
 
 @Module({
   imports: [PrismaModule, OwnershipModule],
@@ -22,6 +23,7 @@ import { PaymongoRefundAdapter } from './paymongo-refund.adapter.js';
     WebhooksController,
     PayAtPropertyController,
     RefundsController,
+    PaymentReconciliationController,
   ],
   providers: [
     PaymentSummaryService,
@@ -31,6 +33,8 @@ import { PaymongoRefundAdapter } from './paymongo-refund.adapter.js';
     PayAtPropertyService,
     RefundsService,
     PaymongoRefundAdapter,
+    PaymentReconciliationService,
+    PaymongoReconciliationAdapter,
   ],
   exports: [PaymentSummaryService, CheckoutService],
 })
