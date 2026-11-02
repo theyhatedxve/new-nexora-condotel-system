@@ -1,76 +1,64 @@
-
 import {
   BrowserRouter,
   Routes,
   Route,
 } from "react-router";
 
+import { AuthProvider } from "./auth/AuthProvider";
+import StaffRoute from "./auth/StaffRoute";
+import { staffNavigation } from "./auth/staffNavigation";
+
 import AdminLayout from "./layouts/AdminLayout";
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
 import "./styles/global.css";
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<AdminLayout />}>
-          <Route path="/" element={<Dashboard />} />
-
+      <AuthProvider>
+        <Routes>
           <Route
-            path="/reservations"
-            element={<PlaceholderPage title="Reservations" />}
+            path="/login"
+            element={<Login />}
           />
 
-          <Route
-            path="/rooms"
-            element={<PlaceholderPage title="Rooms" />}
-          />
+          <Route element={<StaffRoute />}>
+            <Route element={<AdminLayout />}>
+              {staffNavigation.map((item) => (
+                <Route
+                  key={item.path}
+                  element={
+                    <StaffRoute roles={item.roles} />
+                  }
+                >
+                  <Route
+                    path={item.path}
+                    element={
+                      item.path === "/" ? (
+                        <Dashboard />
+                      ) : (
+                        <PlaceholderPage
+                          title={item.label}
+                        />
+                      )
+                    }
+                  />
+                </Route>
+              ))}
 
-          <Route
-            path="/guests"
-            element={<PlaceholderPage title="Guests" />}
-          />
-
-          <Route
-            path="/nfc"
-            element={<PlaceholderPage title="NFC Management" />}
-          />
-
-          <Route
-            path="/payments"
-            element={<PlaceholderPage title="Payments" />}
-          />
-
-          <Route
-            path="/reports"
-            element={<PlaceholderPage title="Reports" />}
-          />
-
-          <Route
-            path="/users"
-            element={<PlaceholderPage title="User Management" />}
-          />
-
-          <Route
-            path="/settings"
-            element={<PlaceholderPage title="Settings" />}
-          />
-
-          <Route
-            path="/audit-logs"
-            element={<PlaceholderPage title="Audit Logs" />}
-          />
-
-          <Route
-            path="*"
-            element={<PlaceholderPage title="Page Not Found" />}
-          />
-        </Route>
-      </Routes>
+              <Route
+                path="*"
+                element={
+                  <PlaceholderPage title="Page not found" />
+                }
+              />
+            </Route>
+          </Route>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
-
-export default App;

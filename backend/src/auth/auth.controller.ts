@@ -34,6 +34,10 @@ import { RegisterDto } from './dto/register.dto.js';
 import { ResendVerificationDto } from './dto/resend-verification.dto.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
 
+import type {
+  AuthenticatedUser,
+} from '../common/ownership/ownership.service.js';
+
 
 @Controller('auth')
 export class AuthController {
@@ -202,6 +206,24 @@ export class AuthController {
       body.email,
     );
   }
+
+  //Admin 
+
+    @Get('me')
+    @Throttle({ default: { limit: 30, ttl: 60_000 } })
+    me(
+      @Req() request: Request & { user: AuthenticatedUser },
+      @Res({ passthrough: true }) response: Response,
+    ) {
+      response.setHeader('Cache-Control', 'no-store');
+      response.setHeader('Vary', 'Authorization');
+
+      const { id, email, role } = request.user;
+
+      return {
+        data: { id, email, role },
+      };
+    }
 
 }
 

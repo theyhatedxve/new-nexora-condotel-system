@@ -1,18 +1,25 @@
-function PlaceholderPage({ title }) {
+import { Link } from "react-router";
+
+export default function PlaceholderPage({ title }) {
   return (
-    <div className="placeholder-page">
+    <section>
       <h1>{title}</h1>
 
-      <div className="notice">
-        <h2>{title} Management</h2>
+      <div className="content-card">
+        <h2>
+          {title === "Page not found"
+            ? "This page could not be found"
+            : "This area is not available yet"}
+        </h2>
 
         <p>
-          This module will be developed
-          in its scheduled NEXORA phase.
+          No records or actions are available on this page.
         </p>
+
+        <Link to="/">
+          Return to dashboard
+        </Link>
       </div>
-    </div>
+    </section>
   );
 }
-
-export default PlaceholderPage;
