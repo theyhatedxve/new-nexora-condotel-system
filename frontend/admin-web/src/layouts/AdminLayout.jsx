@@ -34,9 +34,14 @@ export default function AdminLayout() {
   const menuButton = useRef(null);
   const main = useRef(null);
 
-  const title =
+    const title =
     staffNavigation.find(
-      (item) => item.path === location.pathname,
+      (item) =>
+        item.path === location.pathname ||
+        (
+          item.path !== "/" &&
+          location.pathname.startsWith(item.path + "/")
+        ),
     )?.label ?? "Page not found";
 
   useEffect(() => {

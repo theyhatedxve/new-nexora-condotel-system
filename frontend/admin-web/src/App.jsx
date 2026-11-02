@@ -11,9 +11,19 @@ import { staffNavigation } from "./auth/staffNavigation";
 import AdminLayout from "./layouts/AdminLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Reservations from "./pages/Reservations";
+import ReservationDetails from "./pages/ReservationDetails";
+import Guests from "./pages/Guests";
+import GuestDetails from "./pages/GuestDetails";
 import PlaceholderPage from "./pages/PlaceholderPage";
 
 import "./styles/global.css";
+
+const pages = {
+  "/": <Dashboard />,
+  "/reservations": <Reservations />,
+  "/guests": <Guests />,
+};
 
 export default function App() {
   return (
@@ -37,9 +47,7 @@ export default function App() {
                   <Route
                     path={item.path}
                     element={
-                      item.path === "/" ? (
-                        <Dashboard />
-                      ) : (
+                      pages[item.path] ?? (
                         <PlaceholderPage
                           title={item.label}
                         />
@@ -48,6 +56,16 @@ export default function App() {
                   />
                 </Route>
               ))}
+
+              <Route
+                path="/reservations/:reservationId"
+                element={<ReservationDetails />}
+              />
+
+              <Route
+                path="/guests/:guestId"
+                element={<GuestDetails />}
+              />
 
               <Route
                 path="*"

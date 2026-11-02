@@ -30,6 +30,10 @@ import {
   DashboardModule,
 } from './dashboard/dashboard.module.js';
 
+import {
+  GuestsModule,
+} from './guests/guests.module.js';
+
 @Module({
   imports: [PrismaModule, ThrottlerModule.forRoot([
     {
@@ -45,7 +49,8 @@ import {
   RoomBlocksModule,
   AvailabilityModule,
   ReservationsModule,
-  DashboardModule
+  DashboardModule,
+  GuestsModule
 ],
   controllers: [AppController],
   providers: [AppService, {

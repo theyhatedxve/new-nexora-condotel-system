@@ -70,11 +70,24 @@ import {
   PaymentsModule,
 } from '../payments/payments.module.js';
 
+import {
+  OwnershipModule,
+} from '../common/ownership/ownership.module.js';
+
+import {
+  StaffReservationsController,
+} from './staff-reservations.controller.js';
+
+import {
+  StaffReservationsService,
+} from './staff-reservations.service.js';
+
 @Module({
   imports: [
     PrismaModule,
     InventorySafetyModule,
     PaymentsModule,
+    OwnershipModule,
   ],
   controllers: [
     ReservationsController,
@@ -83,6 +96,7 @@ import {
     ReservationLifecycleController,
     ReservationCancellationController,
     ReservationStayController,
+    StaffReservationsController,
   ],
   providers: [
     RoomRateCapacityService,
@@ -94,6 +108,7 @@ import {
     ReservationLifecycleService,
     ReservationCancellationService,
     ReservationStayService,
+    StaffReservationsService,
   ],
 })
 export class ReservationsModule {}
