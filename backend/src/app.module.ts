@@ -26,6 +26,10 @@ import {
   ReservationsModule,
 } from './reservations/reservations.module.js';
 
+import {
+  DashboardModule,
+} from './dashboard/dashboard.module.js';
+
 @Module({
   imports: [PrismaModule, ThrottlerModule.forRoot([
     {
@@ -41,6 +45,7 @@ import {
   RoomBlocksModule,
   AvailabilityModule,
   ReservationsModule,
+  DashboardModule
 ],
   controllers: [AppController],
   providers: [AppService, {
