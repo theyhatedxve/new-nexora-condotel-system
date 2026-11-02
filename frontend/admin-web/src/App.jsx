@@ -22,6 +22,10 @@ import RoomDetails from "./pages/RoomDetails";
 import Payments from "./pages/Payments";
 import PaymentDetails from "./pages/PaymentDetails";
 
+import RoomTypes from "./pages/RoomTypes";
+
+import PaymentReconciliation from "./pages/PaymentReconciliation";
+
 import "./styles/global.css";
 
 const pages = {
@@ -72,6 +76,22 @@ export default function App() {
               <Route
                 path="/rooms/:roomId"
                 element={<RoomDetails />}
+              />
+
+              <Route
+                element={
+                  <StaffRoute roles={["ADMIN", "MANAGER"]} />
+                }
+              >
+                <Route
+                  path="/rooms/types"
+                  element={<RoomTypes />}
+                />
+              </Route>
+
+              <Route
+                path="/payments/reconciliation"
+                element={<PaymentReconciliation />}
               />
 
               <Route

@@ -1,7 +1,15 @@
-import { Link, useParams } from "react-router";
+import {
+  Link,
+  useLocation,
+  useParams,
+} from "react-router";
 
 import { useStaffData } from "../hooks/useStaffData";
-import { getGuest } from "../services/guestsApi";
+import {
+  getGuest,
+  guestListSearch,
+  parseGuestListQuery,
+} from "../services/guestsApi";
 import StaffDataState from "../components/StaffDataState";
 
 import {
@@ -12,13 +20,37 @@ import {
 
 export default function GuestDetails() {
   const { guestId } = useParams();
+  
+  const location = useLocation();
 
+let returnSearch = "";
+
+const savedSearch =
+  location.state?.guestListSearch;
+
+if (
+  typeof savedSearch === "string" &&
+  savedSearch.length <= 2000
+) {
+  try {
+    returnSearch = guestListSearch(
+      parseGuestListQuery(savedSearch),
+    );
+  } catch {
+    returnSearch = "";
+  }
+}
   const state = useStaffData(getGuest, guestId);
   const guest = state.data;
 
   return (
     <section aria-labelledby="guest-title">
-      <Link to="/guests">
+      <Link
+        to={{
+          pathname: "/guests",
+          search: returnSearch ? "?" + returnSearch : "",
+        }}
+      >
         Return to guests
       </Link>
 

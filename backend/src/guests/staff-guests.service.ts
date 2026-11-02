@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 
 import {
@@ -19,13 +20,16 @@ import type {
   Prisma,
 } from '../generated/prisma/client.js';
 
+import {
+  StaffGuestsQueryDto,
+} from './dto/staff-guests-query.dto.js';
+
 const roles = [
   'ADMIN',
   'MANAGER',
   'RECEPTIONIST',
 ] as const;
 
-const limit = 50;
 const historyLimit = 25;
 
 @Injectable()
@@ -68,8 +72,47 @@ export class StaffGuestsService {
     return properties[0].id;
   }
 
-  list(actor: AuthenticatedUser | undefined) {
+  list(
+    actor: AuthenticatedUser | undefined,
+    query: StaffGuestsQueryDto =
+      new StaffGuestsQueryDto(),
+  ) {
     this.assertStaff(actor);
+
+    const requestedPage = query.page ?? 1;
+    const limit = query.limit ?? 50;
+
+    if (
+      !Number.isSafeInteger(requestedPage) ||
+      requestedPage < 1 ||
+      requestedPage > 10000 ||
+      ![20, 50].includes(limit)
+    ) {
+      throw new BadRequestException(
+        'Invalid guest pagination.',
+      );
+    }
+
+    if (
+      query.q !== undefined &&
+      typeof query.q !== 'string'
+    ) {
+      throw new BadRequestException(
+        'Guest search must be text.',
+      );
+    }
+
+    const q = (query.q ?? '')
+      .trim()
+      .replace(/\s+/g, ' ');
+
+    if (q.length > 100) {
+      throw new BadRequestException(
+        'Guest search must contain at most 100 characters.',
+      );
+    }
+
+    const words = q ? q.split(' ') : [];
 
     return this.prisma.$transaction(async (tx) => {
       const propertyId = await this.propertyId(tx);
@@ -78,18 +121,44 @@ export class StaffGuestsService {
         roomType: { propertyId },
       };
 
-      const where = {
+      const where: Prisma.GuestWhereInput = {
         reservations: {
           some: reservationWhere,
         },
+
+        ...(words.length > 0
+          ? {
+              AND: words.map((word) => ({
+                OR: [
+                  {
+                    firstName: {
+                      contains: word,
+                    },
+                  },
+                  {
+                    lastName: {
+                      contains: word,
+                    },
+                  },
+                ],
+              })),
+            }
+          : {}),
       };
 
       const total = await tx.guest.count({
         where,
       });
 
+      const totalPages = Math.ceil(total / limit);
+
+      const page = total === 0
+        ? 1
+        : Math.min(requestedPage, totalPages);
+
       const guests = await tx.guest.findMany({
         where,
+        skip: (page - 1) * limit,
         take: limit,
         orderBy: [
           { updatedAt: 'desc' },
@@ -116,7 +185,13 @@ export class StaffGuestsService {
         }),
       );
 
-      return { items, total, limit };
+      return {
+        items,
+        total,
+        page,
+        limit,
+        totalPages,
+      };
     });
   }
 

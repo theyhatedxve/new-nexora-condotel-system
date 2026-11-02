@@ -1,4 +1,8 @@
-import { Link, useParams } from "react-router";
+import {
+  Link,
+  useLocation,
+  useParams,
+} from "react-router";
 
 import { useStaffData } from "../hooks/useStaffData";
 
@@ -6,6 +10,8 @@ import {
   getReservation,
   getAssignmentHistory,
   getReservationPaymentSummary,
+  parseReservationListQuery,
+  reservationListSearch,
 } from "../services/reservationsApi";
 
 import StaffDataState from "../components/StaffDataState";
@@ -20,8 +26,33 @@ import {
 
 import ReservationActions from "../components/ReservationActions";
 
+import PropertyCollection from "../components/PropertyCollection";
+
+
+
+
 export default function ReservationDetails() {
   const { reservationId } = useParams();
+
+  const location = useLocation();
+
+    let returnSearch = "";
+
+    const savedSearch =
+      location.state?.reservationListSearch;
+
+    if (
+      typeof savedSearch === "string" &&
+      savedSearch.length <= 2000
+    ) {
+      try {
+        returnSearch = reservationListSearch(
+          parseReservationListQuery(savedSearch),
+        );
+      } catch {
+        returnSearch = "";
+      }
+    }
 
   const record = useStaffData(
     getReservation,
@@ -49,9 +80,14 @@ export default function ReservationDetails() {
 
   return (
     <section aria-labelledby="reservation-title">
-      <Link to="/reservations">
-        Return to reservations
-      </Link>
+      <Link
+          to={{
+            pathname: "/reservations",
+            search: returnSearch ? "?" + returnSearch : "",
+          }}
+        >
+          Return to reservations
+        </Link>
 
       <div className="records-heading">
         <h1 id="reservation-title">
@@ -275,6 +311,14 @@ export default function ReservationDetails() {
             reservationId={reservationId}
             record={record}
             assignments={assignments}
+            payment={payment}
+            onReload={refresh}
+        />
+
+        <PropertyCollection
+            key={"collection-" + reservationId}
+            reservationId={reservationId}
+            record={record}
             payment={payment}
             onReload={refresh}
         />

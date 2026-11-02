@@ -5,8 +5,18 @@ import { listRooms } from "../services/roomsApi";
 import StaffDataState from "../components/StaffDataState";
 import { formatStatus } from "../utils/formatters";
 
+import { useAuth } from "../auth/useAuth";
+import CreateRoomForm from "../components/CreateRoomForm";
+
 export default function Rooms() {
   const state = useStaffData(listRooms);
+
+  const { user } = useAuth();
+
+  const canManage = [
+    "ADMIN",
+    "MANAGER",
+  ].includes(user?.role);
 
   return (
     <section aria-labelledby="rooms-title">
@@ -87,9 +97,20 @@ export default function Rooms() {
                 </tbody>
               </table>
             </div>
+            
           )}
         </>
       )}
+    {canManage && (
+    <p>
+        <Link to="/rooms/types">
+        Manage room types and nightly rates
+        </Link>
+    </p>
+    )}
+      {canManage && (
+        <CreateRoomForm rooms={state} />
+        )}
     </section>
   );
 }

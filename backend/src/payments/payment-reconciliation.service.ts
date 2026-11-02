@@ -19,6 +19,7 @@ import type {
   ReconcilePaymentDto,
   ReconcileRefundDto,
   ReconciliationListDto,
+  ReconciliationStatusQueryDto,
 } from './dto/reconciliation.dto.js';
 import { REFUND_REASONS } from './dto/create-refund.dto.js';
 import {
@@ -195,6 +196,151 @@ export class PaymentReconciliationService {
     throw new ServiceUnavailableException(
       'Reconciliation could not be saved. Retry with the same request identifier.',
     );
+  }
+
+  async requestStatus(
+    requestId: string,
+    input: ReconciliationStatusQueryDto,
+    identity: AuthenticatedUser | undefined,
+  ) {
+    const actor = this.identity(identity);
+
+    if (
+      !input ||
+      !['payment', 'refund'].includes(input.kind) ||
+      typeof input.targetId !== 'string' ||
+      input.targetId.length < 1 ||
+      input.targetId.length > 100
+    ) {
+      throw new BadRequestException(
+        'Invalid reconciliation status input.',
+      );
+    }
+
+    if (input.kind === 'payment') {
+      if (
+        typeof input.eventId !== 'string' ||
+        !/^evt_[A-Za-z0-9_]{1,96}$/.test(input.eventId) ||
+        input.providerRefundId !== undefined ||
+        (
+          input.acknowledgeLateCapture !== undefined &&
+          input.acknowledgeLateCapture !== 'true' &&
+          input.acknowledgeLateCapture !== 'false'
+        )
+      ) {
+        throw new BadRequestException(
+          'Provide the original payment reconciliation inputs.',
+        );
+      }
+    } else if (
+      input.eventId !== undefined ||
+      input.acknowledgeLateCapture !== undefined ||
+      (
+        input.providerRefundId !== undefined &&
+        !/^ref_[A-Za-z0-9_]{1,96}$/.test(
+          input.providerRefundId,
+        )
+      )
+    ) {
+      throw new BadRequestException(
+        'Provide the original refund reconciliation inputs.',
+      );
+    }
+
+    const fields = input.kind === 'payment'
+      ? {
+          eventId: input.eventId,
+          acknowledgeLateCapture:
+            input.acknowledgeLateCapture === 'true',
+        }
+      : {
+          providerRefundId:
+            input.providerRefundId ?? null,
+        };
+
+    const op = this.operation(
+      input.kind,
+      input.targetId,
+      requestId,
+      actor.id,
+      fields,
+    );
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const propertyId = await this.authorize(tx, actor);
+
+        const target = input.kind === 'payment'
+          ? await tx.payment.findFirst({
+              where: {
+                id: input.targetId,
+                method: 'PAYMONGO',
+                provider: 'PAYMONGO',
+                reservation: {
+                  roomType: { propertyId },
+                },
+              },
+              select: { id: true },
+            })
+          : await tx.refund.findFirst({
+              where: {
+                id: input.targetId,
+                payment: {
+                  method: 'PAYMONGO',
+                  provider: 'PAYMONGO',
+                  reservation: {
+                    roomType: { propertyId },
+                  },
+                },
+              },
+              select: { id: true },
+            });
+
+        if (!target) {
+          throw new NotFoundException('Record not found.');
+        }
+
+        const saved = await tx.auditLog.findUnique({
+          where: { id: op.key },
+          select: {
+            actorUserId: true,
+            entityType: true,
+          },
+        });
+
+        if (!saved || saved.actorUserId !== actor.id) {
+          throw new NotFoundException(
+            'No completed reconciliation result was found.',
+          );
+        }
+
+        if (saved.entityType !== 'PaymentReconciliation') {
+          throw new ConflictException(
+            'Reconciliation evidence requires review.',
+          );
+        }
+
+        const result = await this.replay(tx, op);
+
+        if (!result) {
+          throw new NotFoundException(
+            'No completed reconciliation result was found.',
+          );
+        }
+
+        return {
+          requestId: requestId.toLowerCase(),
+          kind: input.kind,
+          ...result,
+        };
+      });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+
+      throw new ServiceUnavailableException(
+        'Reconciliation status could not be read.',
+      );
+    }
   }
 
   async list(

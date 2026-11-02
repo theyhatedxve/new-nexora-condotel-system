@@ -4,6 +4,7 @@ import {
   Header,
   Param,
   Req,
+  Query,
 } from '@nestjs/common';
 
 import { Throttle } from '@nestjs/throttler';
@@ -25,6 +26,11 @@ import {
   StaffGuestsService,
 } from './staff-guests.service.js';
 
+import {
+  StaffGuestsQueryDto,
+} from './dto/staff-guests-query.dto.js';
+
+
 type StaffRequest = Request & {
   user?: AuthenticatedUser;
 };
@@ -42,9 +48,15 @@ export class StaffGuestsController {
   @Get()
   @Header('Cache-Control', 'no-store')
   @Header('Vary', 'Authorization, Origin')
-  async list(@Req() request: StaffRequest) {
+  async list(
+    @Query() query: StaffGuestsQueryDto,
+    @Req() request: StaffRequest,
+  ) {
     return {
-      data: await this.records.list(request.user),
+      data: await this.records.list(
+        request.user,
+        query,
+      ),
     };
   }
 

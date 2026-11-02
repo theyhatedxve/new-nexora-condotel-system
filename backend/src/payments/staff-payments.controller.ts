@@ -4,6 +4,7 @@ import {
   Header,
   Param,
   Req,
+  Query,
 } from '@nestjs/common';
 
 import { Throttle } from '@nestjs/throttler';
@@ -25,6 +26,11 @@ import {
   StaffPaymentsService,
 } from './staff-payments.service.js';
 
+import {
+  StaffPaymentsQueryDto,
+} from './dto/staff-payments-query.dto.js';
+
+
 type StaffRequest = Request & {
   user?: AuthenticatedUser;
 };
@@ -42,9 +48,15 @@ export class StaffPaymentsController {
   @Get()
   @Header('Cache-Control', 'no-store')
   @Header('Vary', 'Authorization, Origin')
-  async list(@Req() request: StaffRequest) {
+  async list(
+    @Query() query: StaffPaymentsQueryDto,
+    @Req() request: StaffRequest,
+  ) {
     return {
-      data: await this.payments.list(request.user),
+      data: await this.payments.list(
+        request.user,
+        query,
+      ),
     };
   }
 

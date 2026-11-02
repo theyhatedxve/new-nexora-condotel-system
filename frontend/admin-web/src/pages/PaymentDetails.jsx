@@ -1,7 +1,15 @@
-import { Link, useParams } from "react-router";
+import {
+  Link,
+  useLocation,
+  useParams,
+} from "react-router";
 
 import { useStaffData } from "../hooks/useStaffData";
-import { getPayment } from "../services/paymentsApi";
+import {
+  getPayment,
+  parsePaymentListQuery,
+  paymentListSearch,
+} from "../services/paymentsApi";
 import StaffDataState from "../components/StaffDataState";
 
 import {
@@ -10,9 +18,39 @@ import {
   formatTimestamp,
 } from "../utils/formatters";
 
+import { useAuth } from "../auth/useAuth";
+import PaymentRefund from "../components/PaymentRefund";
+
 export default function PaymentDetails() {
   const { paymentId } = useParams();
+
+  const location = useLocation();
+
+    let returnSearch = "";
+
+    const savedSearch =
+      location.state?.paymentListSearch;
+
+    if (
+      typeof savedSearch === "string" &&
+      savedSearch.length <= 2000
+    ) {
+      try {
+        returnSearch = paymentListSearch(
+          parsePaymentListQuery(savedSearch),
+        );
+      } catch {
+        returnSearch = "";
+      }
+    }
   const state = useStaffData(getPayment, paymentId);
+
+  const { user } = useAuth();
+
+  const canManageRefunds = [
+    "ADMIN",
+    "MANAGER",
+  ].includes(user?.role);
 
   const payment =
     state.status === "ready" ? state.data : null;
@@ -54,7 +92,14 @@ export default function PaymentDetails() {
 
   return (
     <section aria-labelledby="payment-title">
-      <Link to="/payments">Return to payments</Link>
+      <Link
+        to={{
+          pathname: "/payments",
+          search: returnSearch ? "?" + returnSearch : "",
+        }}
+      >
+        Return to payments
+      </Link>
 
       <div className="records-heading">
         <h1 id="payment-title">Payment details</h1>
@@ -239,6 +284,14 @@ export default function PaymentDetails() {
           </section>
         </>
       )}
+
+      {canManageRefunds && (
+        <PaymentRefund
+            key={"cash-refund-" + paymentId}
+            paymentId={paymentId}
+            record={state}
+        />
+    )}
     </section>
   );
 }

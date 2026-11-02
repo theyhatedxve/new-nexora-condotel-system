@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 
 import type {
@@ -28,13 +29,20 @@ import {
   paymentEvidenceSelect,
 } from './payment-evidence.js';
 
+import {
+  STAFF_PAYMENT_METHODS,
+  STAFF_PAYMENT_STATUSES,
+  StaffPaymentsQueryDto,
+} from './dto/staff-payments-query.dto.js';
+
+
+
 const roles = [
   'ADMIN',
   'MANAGER',
   'RECEPTIONIST',
 ] as const;
 
-const limit = 50;
 
 const financialFields = {
   id: true,
@@ -192,23 +200,98 @@ export class StaffPaymentsService {
     };
   }
 
-  list(actor: AuthenticatedUser | undefined) {
+  list(
+    actor: AuthenticatedUser | undefined,
+    query: StaffPaymentsQueryDto =
+      new StaffPaymentsQueryDto(),
+  ) {
     this.assertStaff(actor);
+
+    const requestedPage = query.page ?? 1;
+    const limit = query.limit ?? 50;
+
+    if (
+      !Number.isSafeInteger(requestedPage) ||
+      requestedPage < 1 ||
+      requestedPage > 10000 ||
+      ![20, 50].includes(limit)
+    ) {
+      throw new BadRequestException(
+        'Invalid payment pagination.',
+      );
+    }
+
+    if (
+      query.q !== undefined &&
+      (
+        typeof query.q !== 'string' ||
+        query.q.trim().length > 100
+      )
+    ) {
+      throw new BadRequestException(
+        'Booking reference search must contain at most 100 characters.',
+      );
+    }
+
+    if (
+      query.method !== undefined &&
+      !STAFF_PAYMENT_METHODS.includes(query.method)
+    ) {
+      throw new BadRequestException(
+        'Invalid payment method.',
+      );
+    }
+
+    if (
+      query.status !== undefined &&
+      !STAFF_PAYMENT_STATUSES.includes(query.status)
+    ) {
+      throw new BadRequestException(
+        'Invalid stored payment status.',
+      );
+    }
+
+    const q = query.q?.trim() ?? '';
 
     return this.prisma.$transaction(async (tx) => {
       const propertyId = await this.propertyId(tx);
 
-      const where = {
+      const where: Prisma.PaymentWhereInput = {
         reservation: {
           roomType: { propertyId },
+
+          ...(q
+            ? {
+                reservationNumber: {
+                  contains: q,
+                },
+              }
+            : {}),
         },
+
+        ...(query.method
+          ? { method: query.method }
+          : {}),
+
+        ...(query.status
+          ? { status: query.status }
+          : {}),
       };
 
-      const total = await tx.payment.count({ where });
+      const total = await tx.payment.count({
+        where,
+      });
+
+      const totalPages = Math.ceil(total / limit);
+
+      const page = total === 0
+        ? 1
+        : Math.min(requestedPage, totalPages);
 
       const payments = await tx.payment.findMany({
         where,
         select: fields,
+        skip: (page - 1) * limit,
         take: limit,
         orderBy: [
           { createdAt: 'desc' },
@@ -221,7 +304,9 @@ export class StaffPaymentsService {
           this.project(payment),
         ),
         total,
+        page,
         limit,
+        totalPages,
       };
     });
   }

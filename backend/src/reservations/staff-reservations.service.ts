@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 
 import {
@@ -19,13 +20,23 @@ import type {
   Prisma,
 } from '../generated/prisma/client.js';
 
+import {
+  parsePhilippineDate,
+} from '../common/validation/philippine-date-range.js';
+
+import {
+  STAFF_RESERVATION_STATUSES,
+  StaffReservationsQueryDto,
+} from './dto/staff-reservations-query.dto.js';
+
+
+
 const roles = [
   'ADMIN',
   'MANAGER',
   'RECEPTIONIST',
 ] as const;
 
-const limit = 50;
 
 const fields = {
   id: true,
@@ -90,20 +101,106 @@ export class StaffReservationsService {
     return properties[0].id;
   }
 
-  list(actor: AuthenticatedUser | undefined) {
+  list(
+    actor: AuthenticatedUser | undefined,
+    query: StaffReservationsQueryDto =
+      new StaffReservationsQueryDto(),
+  ) {
     this.assertStaff(actor);
+
+    const requestedPage = query.page ?? 1;
+    const limit = query.limit ?? 50;
+
+    if (
+      !Number.isSafeInteger(requestedPage) ||
+      requestedPage < 1 ||
+      requestedPage > 10000 ||
+      ![20, 50].includes(limit)
+    ) {
+      throw new BadRequestException(
+        'Invalid reservation pagination.',
+      );
+    }
+
+    if (
+      query.q !== undefined &&
+      (
+        typeof query.q !== 'string' ||
+        query.q.trim().length > 100
+      )
+    ) {
+      throw new BadRequestException(
+        'Booking reference search must contain at most 100 characters.',
+      );
+    }
+
+    if (
+      query.status !== undefined &&
+      !STAFF_RESERVATION_STATUSES.includes(query.status)
+    ) {
+      throw new BadRequestException(
+        'Invalid reservation status.',
+      );
+    }
+
+    const q = query.q?.trim() ?? '';
+
+    const from = query.checkInFrom === undefined
+      ? undefined
+      : parsePhilippineDate(query.checkInFrom);
+
+    const to = query.checkInTo === undefined
+      ? undefined
+      : parsePhilippineDate(query.checkInTo);
+
+    if (from && to && from > to) {
+      throw new BadRequestException(
+        'Check-in end date must be on or after its start date.',
+      );
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const propertyId = await this.propertyId(tx);
-      const where = { roomType: { propertyId } };
+
+      const where: Prisma.ReservationWhereInput = {
+        roomType: { propertyId },
+
+        ...(q
+          ? {
+              reservationNumber: {
+                contains: q,
+              },
+            }
+          : {}),
+
+        ...(query.status
+          ? { status: query.status }
+          : {}),
+
+        ...(from || to
+          ? {
+              checkInDate: {
+                ...(from ? { gte: from } : {}),
+                ...(to ? { lte: to } : {}),
+              },
+            }
+          : {}),
+      };
 
       const total = await tx.reservation.count({
         where,
       });
 
+      const totalPages = Math.ceil(total / limit);
+
+      const page = total === 0
+        ? 1
+        : Math.min(requestedPage, totalPages);
+
       const items = await tx.reservation.findMany({
         where,
         select: fields,
+        skip: (page - 1) * limit,
         take: limit,
         orderBy: [
           { createdAt: 'desc' },
@@ -111,7 +208,13 @@ export class StaffReservationsService {
         ],
       });
 
-      return { items, total, limit };
+      return {
+        items,
+        total,
+        page,
+        limit,
+        totalPages,
+      };
     });
   }
 

@@ -14,12 +14,23 @@ import {
   formatTimestamp,
 } from "../utils/formatters";
 
+import { useAuth } from "../auth/useAuth";
+import RoomManagement from "../components/RoomManagement";
+
+
 export default function RoomDetails() {
   const { roomId } = useParams();
 
   const room = useStaffData(getRoom, roomId);
   const blocks = useStaffData(getRoomBlocks, roomId);
 
+  const { user } = useAuth();
+
+  const canManage = [
+    "ADMIN",
+    "MANAGER",
+  ].includes(user?.role);
+  
   function refresh() {
     room.reload();
     blocks.reload();
@@ -167,6 +178,14 @@ export default function RoomDetails() {
           </section>
         </>
       )}
+
+      {canManage && (
+        <RoomManagement
+            key={roomId}
+            room={room}
+            blocks={blocks}
+        />
+        )}
     </section>
   );
 }

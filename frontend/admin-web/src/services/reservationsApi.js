@@ -487,3 +487,241 @@ export async function performReservationAction(input) {
     throw new Error(message);
   }
 }
+
+export const RESERVATION_LIST_STATUSES = [
+  "PENDING",
+  "CONFIRMED",
+  "CHECKED_IN",
+  "CHECKED_OUT",
+  "CANCELLED",
+  "EXPIRED",
+];
+
+function reservationListDate(value) {
+  if (!value) return "";
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(
+      "Check-in filters must use valid calendar dates.",
+    );
+  }
+
+  const date = new Date(value + "T00:00:00Z");
+
+  if (
+    !Number.isFinite(date.getTime()) ||
+    date.toISOString().slice(0, 10) !== value
+  ) {
+    throw new Error(
+      "Check-in filters must use valid calendar dates.",
+    );
+  }
+
+  return value;
+}
+
+export function parseReservationListQuery(search) {
+  if (
+    typeof search !== "string" ||
+    search.length > 2000
+  ) {
+    throw new Error("Reservation filters are invalid.");
+  }
+
+  const params = new URLSearchParams(search);
+
+  const allowed = [
+    "q",
+    "status",
+    "checkInFrom",
+    "checkInTo",
+    "page",
+    "limit",
+  ];
+
+  for (const name of params.keys()) {
+    if (
+      !allowed.includes(name) ||
+      params.getAll(name).length !== 1
+    ) {
+      throw new Error(
+        "Reservation filters contain unsupported or repeated parameters.",
+      );
+    }
+  }
+
+  const q = (params.get("q") ?? "").trim();
+  const status = params.get("status") ?? "";
+
+  const checkInFrom = reservationListDate(
+    params.get("checkInFrom") ?? "",
+  );
+
+  const checkInTo = reservationListDate(
+    params.get("checkInTo") ?? "",
+  );
+
+  const pageText = params.get("page") ?? "1";
+  const limitText = params.get("limit") ?? "20";
+
+  if (q.length > 100) {
+    throw new Error(
+      "Booking reference search must contain at most 100 characters.",
+    );
+  }
+
+  if (
+    status &&
+    !RESERVATION_LIST_STATUSES.includes(status)
+  ) {
+    throw new Error("Choose a valid reservation status.");
+  }
+
+  if (
+    checkInFrom &&
+    checkInTo &&
+    checkInFrom > checkInTo
+  ) {
+    throw new Error(
+      "Check-in end date must be on or after its start date.",
+    );
+  }
+
+  if (
+    !/^\d+$/.test(pageText) ||
+    !/^\d+$/.test(limitText)
+  ) {
+    throw new Error("Pagination values must be whole numbers.");
+  }
+
+  const page = Number(pageText);
+  const limit = Number(limitText);
+
+  if (
+    !Number.isSafeInteger(page) ||
+    page < 1 ||
+    page > 10000 ||
+    ![20, 50].includes(limit)
+  ) {
+    throw new Error(
+      "Choose a page from 1 to 10000 and a page size of 20 or 50.",
+    );
+  }
+
+  return {
+    q,
+    status,
+    checkInFrom,
+    checkInTo,
+    page,
+    limit,
+  };
+}
+
+export function reservationListSearch(query) {
+  const params = new URLSearchParams();
+
+  for (const name of [
+    "q",
+    "status",
+    "checkInFrom",
+    "checkInTo",
+  ]) {
+    if (
+      query[name] !== undefined &&
+      query[name] !== null &&
+      query[name] !== ""
+    ) {
+      params.set(name, String(query[name]));
+    }
+  }
+
+  params.set("page", String(query.page ?? 1));
+  params.set("limit", String(query.limit ?? 20));
+
+  const normalized = parseReservationListQuery(
+    params.toString(),
+  );
+
+  const result = new URLSearchParams();
+
+  for (const name of [
+    "q",
+    "status",
+    "checkInFrom",
+    "checkInTo",
+  ]) {
+    if (normalized[name]) {
+      result.set(name, normalized[name]);
+    }
+  }
+
+  result.set("page", String(normalized.page));
+  result.set("limit", String(normalized.limit));
+
+  return result.toString();
+}
+
+export async function listReservationPage(query, signal) {
+  const search = reservationListSearch(query);
+  const expected = parseReservationListQuery(search);
+
+  const response = await api.get(
+    "/staff/reservations",
+    {
+      signal,
+      params: new URLSearchParams(search),
+    },
+  );
+
+  const data = response.data?.data;
+
+  if (
+    !data ||
+    !Array.isArray(data.items) ||
+    !Number.isSafeInteger(data.total) ||
+    data.total < 0 ||
+    data.limit !== expected.limit
+  ) {
+    throw new Error(
+      "Reservation page is unavailable.",
+    );
+  }
+
+  const totalPages = Math.ceil(data.total / data.limit);
+
+  const page = data.total === 0
+    ? 1
+    : Math.min(expected.page, totalPages);
+
+  const expectedLength = Math.min(
+    data.limit,
+    Math.max(
+      data.total - (page - 1) * data.limit,
+      0,
+    ),
+  );
+
+  if (
+    data.page !== page ||
+    data.totalPages !== totalPages ||
+    data.items.length !== expectedLength ||
+    !data.items.every(
+      (item) =>
+        reservation(item) &&
+        RESERVATION_LIST_STATUSES.includes(item.status) &&
+        Number.isSafeInteger(item.guestCount) &&
+        item.guestCount > 0 &&
+        typeof item.roomType.id === "string" &&
+        typeof item.guest?.id === "string" &&
+        typeof item.guest.firstName === "string" &&
+        typeof item.guest.lastName === "string",
+    )
+  ) {
+    throw new Error(
+      "Reservation page is unavailable.",
+    );
+  }
+
+  return data;
+}

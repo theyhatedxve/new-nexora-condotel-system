@@ -5,6 +5,8 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -18,6 +20,12 @@ import {
   withInventoryWrite,
   assertInventoryCommitments,
 } from '../reservations/inventory-write.js';
+
+import type {
+  AuthenticatedUser,
+} from '../common/ownership/ownership.service.js';
+
+
 
 const publicFields = {
   id: true,
@@ -55,6 +63,44 @@ export class RoomTypesService {
 
     return properties[0].id;
   }
+
+
+    async findAllForStaff(
+      actor: AuthenticatedUser | undefined,
+    ) {
+      if (!actor?.id || !actor.role) {
+        throw new UnauthorizedException(
+          'Authentication required.',
+        );
+      }
+
+      if (
+        actor.role !== 'ADMIN' &&
+        actor.role !== 'MANAGER'
+      ) {
+        throw new ForbiddenException(
+          'Room management permission is required.',
+        );
+      }
+
+      const propertyId = await this.getPropertyId();
+
+      return this.prisma.roomType.findMany({
+        where: { propertyId },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          capacity: true,
+          baseRateCentavos: true,
+          isActive: true,
+        },
+        orderBy: [
+          { name: 'asc' },
+          { id: 'asc' },
+        ],
+      });
+    }
 
   // Public results never include inactive room types.
   async findAll() {
