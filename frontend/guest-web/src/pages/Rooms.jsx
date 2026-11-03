@@ -366,7 +366,7 @@ function AvailabilityResults({
                     <div className="availability-booking-actions">
                       <Link
                         className="outline-button"
-                        to={`/rooms/${roomId}`}
+                        to={`/rooms/${roomId}?${checkoutSearch}`}
                       >
                         View Room Details
                       </Link>
