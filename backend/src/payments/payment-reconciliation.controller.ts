@@ -20,6 +20,7 @@ import {
   ReconcilePaymentDto,
   ReconcileRefundDto,
   ReconciliationListDto,
+  ReconciliationPagesDto,
   ReconciliationRequestParamsDto,
   ReconciliationStatusQueryDto,
 } from './dto/reconciliation.dto.js';
@@ -45,6 +46,23 @@ export class PaymentReconciliationController {
   ) {
     return { data: await this.reconciliation.list(query, request.user) };
   }
+
+  @Get('reconciliation/pages')
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async pages(
+    @Query() query: ReconciliationPagesDto,
+    @Req() request: Request & { user?: AuthenticatedUser },
+  ) {
+    return {
+      data: await this.reconciliation.pages(
+        query,
+        request.user,
+      ),
+    };
+  }
+
 
   @Get('reconciliation/requests/:requestId')
   @Header('Cache-Control', 'no-store')

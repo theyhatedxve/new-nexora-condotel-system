@@ -1,9 +1,15 @@
-import { Link, useParams } from "react-router";
+import {
+  Link,
+  useLocation,
+  useParams,
+} from "react-router";
 
 import { useStaffData } from "../hooks/useStaffData";
 import {
   getRoom,
   getRoomBlocks,
+  parseRoomListQuery,
+  roomListSearch,
 } from "../services/roomsApi";
 
 import StaffDataState from "../components/StaffDataState";
@@ -18,8 +24,29 @@ import { useAuth } from "../auth/useAuth";
 import RoomManagement from "../components/RoomManagement";
 
 
+
+
 export default function RoomDetails() {
   const { roomId } = useParams();
+
+  const location = useLocation();
+
+  let returnSearch = "";
+
+  const savedSearch = location.state?.roomListSearch;
+
+  if (
+    typeof savedSearch === "string" &&
+    savedSearch.length <= 2000
+  ) {
+    try {
+      returnSearch = roomListSearch(
+        parseRoomListQuery(savedSearch),
+      );
+    } catch {
+      returnSearch = "";
+    }
+  }
 
   const room = useStaffData(getRoom, roomId);
   const blocks = useStaffData(getRoomBlocks, roomId);
@@ -38,7 +65,14 @@ export default function RoomDetails() {
 
   return (
     <section aria-labelledby="room-title">
-      <Link to="/rooms">Return to rooms</Link>
+      <Link
+        to={{
+          pathname: "/rooms",
+          search: returnSearch ? "?" + returnSearch : "",
+        }}
+      >
+        Return to rooms
+      </Link>
 
       <div className="records-heading">
         <h1 id="room-title">Room details</h1>

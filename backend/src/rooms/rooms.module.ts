@@ -8,9 +8,13 @@ import { RoomsService } from './rooms.service.js';
 import { RoomStatusController } from './room-status.controller.js';
 import { RoomStatusService } from './room-status.service.js';
 
+import {
+  StaffRoomsController,
+} from './staff-rooms.controller.js';
+
 @Module({
   imports: [PrismaModule],
-  controllers: [RoomsController, RoomStatusController],
+  controllers: [RoomsController, RoomStatusController, StaffRoomsController],
   providers: [RoomsService, RoomStatusService],
 })
 export class RoomsModule {}

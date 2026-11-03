@@ -66,30 +66,15 @@ function reviewLabel(value) {
   }
 }
 
-export async function listReconciliation(signal) {
-  const response = await api.get(
-    "/payments/reconciliation",
-    {
-      signal,
-      params: {
-        offset: 0,
-        limit,
-      },
-    },
-  );
-
-  const data = response.data?.data;
-
+function projectReconciliationQueues(data, maximumLength) {
   if (
     !data ||
-    data.offset !== 0 ||
-    data.limit !== limit ||
     !Array.isArray(data.payments) ||
     !Array.isArray(data.refunds) ||
     !Array.isArray(data.events) ||
-    data.payments.length > limit ||
-    data.refunds.length > limit ||
-    data.events.length > limit ||
+    data.payments.length > maximumLength ||
+    data.refunds.length > maximumLength ||
+    data.events.length > maximumLength ||
     !data.payments.every(
       (item) =>
         reference(item?.id) &&
@@ -136,8 +121,6 @@ export async function listReconciliation(signal) {
   }
 
   return {
-    limit: data.limit,
-
     payments: data.payments.map((item) => ({
       id: item.id,
       reservationId: item.reservationId,
@@ -165,6 +148,35 @@ export async function listReconciliation(signal) {
       reviewReason: reviewLabel(item.errorMessage),
       createdAt: item.createdAt,
     })),
+  };
+}
+
+export async function listReconciliation(signal) {
+  const response = await api.get(
+    "/payments/reconciliation",
+    {
+      signal,
+      params: {
+        offset: 0,
+        limit,
+      },
+    },
+  );
+
+  const data = response.data?.data;
+
+  if (
+    data?.offset !== 0 ||
+    data.limit !== limit
+  ) {
+    throw new Error(
+      "Reconciliation records are unavailable.",
+    );
+  }
+
+  return {
+    limit: data.limit,
+    ...projectReconciliationQueues(data, limit),
   };
 }
 
@@ -441,4 +453,204 @@ export async function getReconciliationFinancialRecords(intent) {
   }
 
   return { payment, refundStatus };
+}
+
+export function parseReconciliationPagesQuery(search) {
+  if (
+    typeof search !== "string" ||
+    search.length > 1000
+  ) {
+    throw new Error(
+      "Queue pagination parameters are invalid.",
+    );
+  }
+
+  const params = new URLSearchParams(search);
+
+  const names = [
+    "paymentPage",
+    "refundPage",
+    "eventPage",
+    "limit",
+  ];
+
+  for (const name of params.keys()) {
+    if (
+      !names.includes(name) ||
+      params.getAll(name).length !== 1
+    ) {
+      throw new Error(
+        "Queue pagination contains unsupported or repeated parameters.",
+      );
+    }
+  }
+
+  const values = {};
+
+  for (const name of names) {
+    const text = params.get(name) ??
+      (name === "limit" ? "20" : "1");
+
+    if (!/^\d+$/.test(text)) {
+      throw new Error(
+        "Queue pagination values must be whole numbers.",
+      );
+    }
+
+    values[name] = Number(text);
+  }
+
+  if (
+    ![
+      values.paymentPage,
+      values.refundPage,
+      values.eventPage,
+    ].every(
+      (page) =>
+        Number.isSafeInteger(page) &&
+        page >= 1 &&
+        page <= 10000,
+    ) ||
+    ![20, 50].includes(values.limit)
+  ) {
+    throw new Error(
+      "Choose pages from 1 to 10000 and a page size of 20 or 50.",
+    );
+  }
+
+  return values;
+}
+
+export function reconciliationPagesSearch(query) {
+  const params = new URLSearchParams();
+
+  for (const name of [
+    "paymentPage",
+    "refundPage",
+    "eventPage",
+  ]) {
+    params.set(name, String(query[name] ?? 1));
+  }
+
+  params.set("limit", String(query.limit ?? 20));
+
+  const normalized = parseReconciliationPagesQuery(
+    params.toString(),
+  );
+
+  const result = new URLSearchParams();
+
+  for (const name of [
+    "paymentPage",
+    "refundPage",
+    "eventPage",
+    "limit",
+  ]) {
+    result.set(name, String(normalized[name]));
+  }
+
+  return result.toString();
+}
+
+function validateReconciliationPage(
+  meta,
+  items,
+  requestedPage,
+  pageLimit,
+) {
+  if (
+    !meta ||
+    !Number.isSafeInteger(meta.total) ||
+    meta.total < 0 ||
+    meta.limit !== pageLimit
+  ) {
+    throw new Error(
+      "Queue pagination is unavailable.",
+    );
+  }
+
+  const totalPages = Math.ceil(meta.total / pageLimit);
+
+  const page = meta.total === 0
+    ? 1
+    : Math.min(requestedPage, totalPages);
+
+  const expectedLength = Math.min(
+    pageLimit,
+    Math.max(
+      meta.total - (page - 1) * pageLimit,
+      0,
+    ),
+  );
+
+  if (
+    meta.page !== page ||
+    meta.totalPages !== totalPages ||
+    items.length !== expectedLength
+  ) {
+    throw new Error(
+      "Queue pagination is unavailable.",
+    );
+  }
+
+  return {
+    total: meta.total,
+    page,
+    limit: pageLimit,
+    totalPages,
+  };
+}
+
+export async function listReconciliationPage(query, signal) {
+  const search = reconciliationPagesSearch(query);
+  const expected = parseReconciliationPagesQuery(search);
+
+  const response = await api.get(
+    "/payments/reconciliation/pages",
+    {
+      signal,
+      params: new URLSearchParams(search),
+    },
+  );
+
+  const data = response.data?.data;
+
+  if (data?.limit !== expected.limit) {
+    throw new Error(
+      "Reconciliation queues are unavailable.",
+    );
+  }
+
+  const queues = projectReconciliationQueues(
+    data,
+    expected.limit,
+  );
+
+  return {
+    ...queues,
+    limit: expected.limit,
+
+    pagination: {
+      payments: validateReconciliationPage(
+        data.pagination?.payments,
+        queues.payments,
+        expected.paymentPage,
+        expected.limit,
+      ),
+
+      refunds: validateReconciliationPage(
+        data.pagination?.refunds,
+        queues.refunds,
+        expected.refundPage,
+        expected.limit,
+      ),
+
+      events: validateReconciliationPage(
+        data.pagination?.events,
+        queues.events,
+        expected.eventPage,
+        expected.limit,
+      ),
+    },
+  };
 }

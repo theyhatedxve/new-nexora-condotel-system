@@ -7,7 +7,14 @@ import { listStaffRoomTypes } from "../services/roomTypesApi";
 import StaffDataState from "./StaffDataState";
 import RoomChangeReview from "./RoomChangeReview";
 
-export default function CreateRoomForm({ rooms }) {
+import { Link } from "react-router";
+import { formatStatus } from "../utils/formatters";
+
+
+export default function CreateRoomForm({
+  rooms,
+  returnSearch = "",
+}) {
   const types = useStaffData(listStaffRoomTypes);
 
   const [roomNumber, setRoomNumber] = useState("");
@@ -70,6 +77,16 @@ export default function CreateRoomForm({ rooms }) {
       setError(failure.message);
     }
   }
+
+  const showCatalogReview =
+    change.sameScope &&
+    ["result", "review"].includes(change.state.status);
+
+  const catalogMatch = rooms.status === "ready"
+    ? rooms.data.find(
+        (room) => room.roomNumber === roomNumber.trim(),
+      )
+    : null;
 
   return (
     <section
@@ -147,6 +164,79 @@ export default function CreateRoomForm({ rooms }) {
         <p role="status">
           No active room types are available for creation.
         </p>
+      )}
+
+      {showCatalogReview && (
+        <section
+          className="record-section"
+          aria-labelledby="creation-catalog-review-title"
+        >
+          <h3 id="creation-catalog-review-title">
+            Current room catalog match
+          </h3>
+
+          <p>
+            This review uses the complete catalog, including
+            rooms hidden by the current list filters.
+            Compare it with the requested change.
+          </p>
+
+          <StaffDataState
+            state={rooms}
+            label="Current room catalog"
+          />
+
+          {rooms.status === "ready" && (
+            catalogMatch ? (
+              <dl className="record-fields">
+                <div>
+                  <dt>Room</dt>
+                  <dd>
+                    <Link
+                      to={
+                        "/rooms/" +
+                        encodeURIComponent(catalogMatch.id)
+                      }
+                      state={{
+                        roomListSearch: returnSearch,
+                      }}
+                    >
+                      {catalogMatch.roomNumber}
+                    </Link>
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>Floor</dt>
+                  <dd>
+                    {catalogMatch.floor || "Not recorded"}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>Room type</dt>
+                  <dd>{catalogMatch.roomType.name}</dd>
+                </div>
+
+                <div>
+                  <dt>Status</dt>
+                  <dd>{formatStatus(catalogMatch.status)}</dd>
+                </div>
+
+                <div>
+                  <dt>Room active</dt>
+                  <dd>{catalogMatch.isActive ? "Yes" : "No"}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p role="status">
+                No matching room is present in the currently
+                loaded catalog. Reload records for review before
+                deciding whether another submission is needed.
+              </p>
+            )
+          )}
+        </section>
       )}
 
       <RoomChangeReview change={change} />

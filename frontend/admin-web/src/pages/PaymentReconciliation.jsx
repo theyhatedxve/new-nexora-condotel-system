@@ -1,12 +1,25 @@
-import { Link } from "react-router";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
+
+import {
+  Link,
+  useSearchParams,
+} from "react-router";
 
 import { useStaffData } from "../hooks/useStaffData";
 
 import {
-  listReconciliation,
+  listReconciliationPage,
+  parseReconciliationPagesQuery,
+  reconciliationPagesSearch,
 } from "../services/reconciliationApi";
 
 import StaffDataState from "../components/StaffDataState";
+import ReconciliationActions from "../components/ReconciliationActions";
 
 import {
   formatPesos,
@@ -14,23 +27,188 @@ import {
   formatTimestamp,
 } from "../utils/formatters";
 
-import ReconciliationActions from "../components/ReconciliationActions";
+function QueueTable({
+  label,
+  caption,
+  headings,
+  children,
+}) {
+  return (
+    <div
+      className="records-scroll"
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+    >
+      <table className="records-table">
+        <caption>{caption}</caption>
 
-export default function PaymentReconciliation() {
-  const state = useStaffData(listReconciliation);
+        <thead>
+          <tr>
+            {headings.map((heading) => (
+              <th key={heading} scope="col">
+                {heading}
+              </th>
+            ))}
+          </tr>
+        </thead>
+
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function QueueSection({
+  name,
+  title,
+  headingRef,
+  meta,
+  onPage,
+  children,
+}) {
+  const start = meta.total === 0
+    ? 0
+    : (meta.page - 1) * meta.limit + 1;
+
+  const end = Math.min(
+    meta.page * meta.limit,
+    meta.total,
+  );
+
+  return (
+    <section
+      className="record-section"
+      aria-labelledby={name + "-queue-title"}
+    >
+      <h2
+        id={name + "-queue-title"}
+        ref={headingRef}
+        tabIndex={-1}
+      >
+        {title}
+      </h2>
+
+      <p role="status">
+        {meta.total === 0
+          ? "No records in this queue."
+          : (
+              "Showing " +
+              start +
+              "–" +
+              end +
+              " of " +
+              meta.total +
+              " records."
+            )}
+      </p>
+
+      {meta.total > 0 && (
+        <>
+          {children}
+
+          <nav
+            className="reconciliation-pagination"
+            aria-label={title + " pages"}
+          >
+            <button
+              type="button"
+              disabled={meta.page <= 1}
+              onClick={() =>
+                onPage(name, meta.page - 1)
+              }
+            >
+              Previous
+            </button>
+
+            <span>
+              Page {meta.page} of {meta.totalPages}
+            </span>
+
+            <button
+              type="button"
+              disabled={
+                meta.page >=
+                Math.min(meta.totalPages, 10000)
+              }
+              onClick={() =>
+                onPage(name, meta.page + 1)
+              }
+            >
+              Next
+            </button>
+          </nav>
+
+          {meta.totalPages > 10000 && (
+            <p>
+              Pages beyond 10,000 are unavailable in this view.
+            </p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function ReconciliationQueues({
+  query,
+  onPage,
+  onNormalize,
+  onLimit,
+}) {
+  const state = useStaffData(
+    listReconciliationPage,
+    query,
+  );
+
+  const paymentHeading = useRef(null);
+  const refundHeading = useRef(null);
+  const eventHeading = useRef(null);
+  const focusQueue = useRef(null);
 
   const data =
     state.status === "ready" ? state.data : null;
 
+  const pagesCurrent = Boolean(
+    data &&
+    data.pagination.payments.page === query.paymentPage &&
+    data.pagination.refunds.page === query.refundPage &&
+    data.pagination.events.page === query.eventPage,
+  );
+
+  useEffect(() => {
+    if (data && !pagesCurrent) {
+      onNormalize({
+        paymentPage: data.pagination.payments.page,
+        refundPage: data.pagination.refunds.page,
+        eventPage: data.pagination.events.page,
+      });
+    }
+  }, [data, pagesCurrent, onNormalize]);
+
+  useEffect(() => {
+    if (!data || !pagesCurrent || !focusQueue.current) {
+      return;
+    }
+
+    const headings = {
+      payments: paymentHeading,
+      refunds: refundHeading,
+      events: eventHeading,
+    };
+
+    headings[focusQueue.current]?.current?.focus();
+    focusQueue.current = null;
+  }, [data, pagesCurrent]);
+
+  function navigate(name, page) {
+    focusQueue.current = name;
+    onPage(name, page);
+  }
+
   return (
-    <section aria-labelledby="reconciliation-title">
-      <Link to="/payments">Return to payments</Link>
-
+    <>
       <div className="records-heading">
-        <h1 id="reconciliation-title">
-          Payment reconciliation
-        </h1>
-
         <button
           type="button"
           onClick={state.reload}
@@ -38,17 +216,27 @@ export default function PaymentReconciliation() {
         >
           Refresh review queues
         </button>
+
+        <div className="reconciliation-page-size">
+          <label htmlFor="reconciliation-page-size">
+            Records per queue page
+          </label>
+          <select
+            id="reconciliation-page-size"
+            value={String(query.limit)}
+            onChange={(event) =>
+              onLimit(Number(event.target.value))
+            }
+          >
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
       </div>
 
       <p>
-        Review PayMongo payment attempts, pending refunds,
-        and event records. Open payment details to check
-        verified financial figures.
-      </p>
-
-      <p>
-        A queue entry does not establish that a payment
-        was received or a refund completed.
+        Older records appear first. Each queue has its
+        own page selection.
       </p>
 
       <StaffDataState
@@ -58,261 +246,278 @@ export default function PaymentReconciliation() {
 
       {data && (
         <>
-          <p>
-            Older records appear first. Each section shows
-            up to {data.limit} entries. Additional records
-            may exist beyond this view.
-          </p>
-
-          <section
-            className="record-section"
-            aria-labelledby="review-payments-title"
+          <QueueSection
+            name="payments"
+            title="Payment records for review"
+            headingRef={paymentHeading}
+            meta={data.pagination.payments}
+            onPage={navigate}
           >
-            <h2 id="review-payments-title">
-              Payment records for review
-            </h2>
+            <QueueTable
+              label="Payment review table"
+              caption="PayMongo payment records selected for review"
+              headings={[
+                "Payment record",
+                "Reservation",
+                "Stored status",
+                "Checkout state",
+                "Stored amount",
+                "Created",
+              ]}
+            >
+              {data.payments.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <Link
+                      to={
+                        "/payments/" +
+                        encodeURIComponent(item.id)
+                      }
+                    >
+                      {item.id}
+                    </Link>
+                  </td>
 
-            <p>
-              Entries shown: {data.payments.length}
-            </p>
+                  <td>
+                    <Link
+                      to={
+                        "/reservations/" +
+                        encodeURIComponent(item.reservationId)
+                      }
+                    >
+                      View reservation
+                    </Link>
+                  </td>
 
-            {data.payments.length === 0 ? (
-              <p role="status">
-                No payment records in this review queue.
-              </p>
-            ) : (
-              <div
-                className="records-scroll"
-                role="region"
-                aria-label="Payment review table"
-                tabIndex={0}
-              >
-                <table className="records-table">
-                  <caption>
-                    PayMongo payment records selected for review
-                  </caption>
+                  <td>{formatStatus(item.status)}</td>
 
-                  <thead>
-                    <tr>
-                      <th scope="col">Payment record</th>
-                      <th scope="col">Reservation</th>
-                      <th scope="col">Stored status</th>
-                      <th scope="col">Checkout state</th>
-                      <th scope="col">Stored amount</th>
-                      <th scope="col">Created</th>
-                    </tr>
-                  </thead>
+                  <td>
+                    {item.checkoutState
+                      ? formatStatus(item.checkoutState)
+                      : "Not recorded"}
+                  </td>
 
-                  <tbody>
-                    {data.payments.map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <Link
-                            to={
-                              "/payments/" +
-                              encodeURIComponent(item.id)
-                            }
-                          >
-                            {item.id}
-                          </Link>
-                        </td>
+                  <td>
+                    {item.currency === "PHP"
+                      ? formatPesos(item.amountCentavos)
+                      : item.currency + " — review required"}
+                  </td>
 
-                        <td>
-                          <Link
-                            to={
-                              "/reservations/" +
-                              encodeURIComponent(
-                                item.reservationId,
-                              )
-                            }
-                          >
-                            View reservation
-                          </Link>
-                        </td>
+                  <td>{formatTimestamp(item.createdAt)}</td>
+                </tr>
+              ))}
+            </QueueTable>
+          </QueueSection>
 
-                        <td>
-                          {formatStatus(item.status)}
-                        </td>
-
-                        <td>
-                          {item.checkoutState
-                            ? formatStatus(item.checkoutState)
-                            : "Not recorded"}
-                        </td>
-
-                        <td>
-                          {item.currency === "PHP"
-                            ? formatPesos(item.amountCentavos)
-                            : item.currency + " — review required"}
-                        </td>
-
-                        <td>
-                          {formatTimestamp(item.createdAt)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          <section
-            className="record-section"
-            aria-labelledby="review-refunds-title"
+          <QueueSection
+            name="refunds"
+            title="Pending PayMongo refunds"
+            headingRef={refundHeading}
+            meta={data.pagination.refunds}
+            onPage={navigate}
           >
-            <h2 id="review-refunds-title">
-              Pending PayMongo refunds
-            </h2>
+            <QueueTable
+              label="Pending refund review table"
+              caption="Pending refunds awaiting review"
+              headings={[
+                "Refund record",
+                "Related payment",
+                "Provider refund reference",
+                "Stored status",
+                "Stored amount, centavos",
+                "Requested",
+              ]}
+            >
+              {data.refunds.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.id}</td>
 
-            <p>
-              Entries shown: {data.refunds.length}
-            </p>
+                  <td>
+                    <Link
+                      to={
+                        "/payments/" +
+                        encodeURIComponent(item.paymentId)
+                      }
+                    >
+                      View payment
+                    </Link>
+                  </td>
 
-            {data.refunds.length === 0 ? (
-              <p role="status">
-                No pending refunds in this review queue.
-              </p>
-            ) : (
-              <div
-                className="records-scroll"
-                role="region"
-                aria-label="Pending refund review table"
-                tabIndex={0}
-              >
-                <table className="records-table">
-                  <caption>
-                    Pending refunds awaiting review
-                  </caption>
+                  <td>
+                    {item.providerRefundId || "Not recorded"}
+                  </td>
 
-                  <thead>
-                    <tr>
-                      <th scope="col">Refund record</th>
-                      <th scope="col">Related payment</th>
-                      <th scope="col">Provider refund reference</th>
-                      <th scope="col">Stored status</th>
-                      <th scope="col">Stored amount, centavos</th>
-                      <th scope="col">Requested</th>
-                    </tr>
-                  </thead>
+                  <td>{formatStatus(item.status)}</td>
 
-                  <tbody>
-                    {data.refunds.map((item) => (
-                      <tr key={item.id}>
-                        <td>{item.id}</td>
+                  <td>
+                    {item.amountCentavos.toLocaleString(
+                      "en-PH",
+                    )}
+                  </td>
 
-                        <td>
-                          <Link
-                            to={
-                              "/payments/" +
-                              encodeURIComponent(item.paymentId)
-                            }
-                          >
-                            View payment
-                          </Link>
-                        </td>
+                  <td>{formatTimestamp(item.requestedAt)}</td>
+                </tr>
+              ))}
+            </QueueTable>
+          </QueueSection>
 
-                        <td>
-                          {item.providerRefundId || "Not recorded"}
-                        </td>
-
-                        <td>{formatStatus(item.status)}</td>
-
-                        <td>
-                          {item.amountCentavos.toLocaleString(
-                            "en-PH",
-                          )}
-                        </td>
-
-                        <td>
-                          {formatTimestamp(item.requestedAt)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          <section
-            className="record-section"
-            aria-labelledby="review-events-title"
+          <QueueSection
+            name="events"
+            title="Event records for review"
+            headingRef={eventHeading}
+            meta={data.pagination.events}
+            onPage={navigate}
           >
-            <h2 id="review-events-title">
-              Event records for review
-            </h2>
+            <QueueTable
+              label="Event review table"
+              caption="Payment and refund events selected for review"
+              headings={[
+                "Event reference",
+                "Related payment",
+                "Event type",
+                "Stored status",
+                "Review note",
+                "Created",
+              ]}
+            >
+              {data.events.map((item) => (
+                <tr key={item.providerEventId}>
+                  <td>{item.providerEventId}</td>
 
-            <p>
-              Entries shown: {data.events.length}
-            </p>
+                  <td>
+                    {item.paymentId ? (
+                      <Link
+                        to={
+                          "/payments/" +
+                          encodeURIComponent(item.paymentId)
+                        }
+                      >
+                        View payment
+                      </Link>
+                    ) : (
+                      "Not linked to a payment"
+                    )}
+                  </td>
 
-            {data.events.length === 0 ? (
-              <p role="status">
-                No event records in this review queue.
-              </p>
-            ) : (
-              <div
-                className="records-scroll"
-                role="region"
-                aria-label="Event review table"
-                tabIndex={0}
-              >
-                <table className="records-table">
-                  <caption>
-                    Payment and refund events selected for review
-                  </caption>
-
-                  <thead>
-                    <tr>
-                      <th scope="col">Event reference</th>
-                      <th scope="col">Related payment</th>
-                      <th scope="col">Event type</th>
-                      <th scope="col">Stored status</th>
-                      <th scope="col">Review note</th>
-                      <th scope="col">Created</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {data.events.map((item) => (
-                      <tr key={item.providerEventId}>
-                        <td>{item.providerEventId}</td>
-
-                        <td>
-                          {item.paymentId ? (
-                            <Link
-                              to={
-                                "/payments/" +
-                                encodeURIComponent(
-                                  item.paymentId,
-                                )
-                              }
-                            >
-                              View payment
-                            </Link>
-                          ) : (
-                            "Not linked to a payment"
-                          )}
-                        </td>
-
-                        <td>{item.eventType}</td>
-                        <td>{formatStatus(item.status)}</td>
-                        <td>{item.reviewReason}</td>
-
-                        <td>
-                          {formatTimestamp(item.createdAt)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+                  <td>{item.eventType}</td>
+                  <td>{formatStatus(item.status)}</td>
+                  <td>{item.reviewReason}</td>
+                  <td>{formatTimestamp(item.createdAt)}</td>
+                </tr>
+              ))}
+            </QueueTable>
+          </QueueSection>
         </>
       )}
+
       <ReconciliationActions queue={state} />
+    </>
+  );
+}
+
+export default function PaymentReconciliation() {
+  const [searchParams, setSearchParams] =
+    useSearchParams();
+
+  const queryKey = searchParams.toString();
+
+  const parsed = useMemo(() => {
+    try {
+      return {
+        query: parseReconciliationPagesQuery(queryKey),
+        error: "",
+      };
+    } catch (failure) {
+      return {
+        query: null,
+        error: failure.message,
+      };
+    }
+  }, [queryKey]);
+
+  const changePage = useCallback(
+    (name, page) => {
+      if (!parsed.query) return;
+
+      const fields = {
+        payments: "paymentPage",
+        refunds: "refundPage",
+        events: "eventPage",
+      };
+
+      const field = fields[name];
+
+      if (!field) return;
+
+      setSearchParams(
+        reconciliationPagesSearch({
+          ...parsed.query,
+          [field]: page,
+        }),
+      );
+    },
+    [parsed.query, setSearchParams],
+  );
+
+  const normalizePages = useCallback(
+    (pages) => {
+      if (!parsed.query) return;
+
+      setSearchParams(
+        reconciliationPagesSearch({
+          ...parsed.query,
+          ...pages,
+        }),
+        { replace: true },
+      );
+    },
+    [parsed.query, setSearchParams],
+  );
+
+  function changeLimit(limit) {
+    setSearchParams(
+      reconciliationPagesSearch({
+        paymentPage: 1,
+        refundPage: 1,
+        eventPage: 1,
+        limit,
+      }),
+    );
+  }
+
+  return (
+    <section aria-labelledby="reconciliation-title">
+      <Link to="/payments">Return to payments</Link>
+
+      <h1 id="reconciliation-title">
+        Payment reconciliation
+      </h1>
+
+      <p>
+        Review existing payment attempts, pending refunds,
+        and event records. Queue membership does not
+        establish payment or refund completion.
+      </p>
+
+      {parsed.error ? (
+        <div className="feedback">
+          <p role="alert">{parsed.error}</p>
+
+          <button
+            type="button"
+            onClick={() => setSearchParams("")}
+          >
+            Clear invalid pagination
+          </button>
+        </div>
+      ) : (
+        <ReconciliationQueues
+          query={parsed.query}
+          onPage={changePage}
+          onNormalize={normalizePages}
+          onLimit={changeLimit}
+        />
+      )}
     </section>
   );
 }

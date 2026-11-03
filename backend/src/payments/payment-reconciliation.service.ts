@@ -19,6 +19,7 @@ import type {
   ReconcilePaymentDto,
   ReconcileRefundDto,
   ReconciliationListDto,
+  ReconciliationPagesDto,
   ReconciliationStatusQueryDto,
 } from './dto/reconciliation.dto.js';
 import { REFUND_REASONS } from './dto/create-refund.dto.js';
@@ -343,111 +344,292 @@ export class PaymentReconciliationService {
     }
   }
 
-  async list(
-    query: ReconciliationListDto,
-    identity: AuthenticatedUser | undefined,
-  ) {
-    const actor = this.identity(identity);
-    if (
-      !Number.isInteger(query.offset) ||
-      query.offset < 0 ||
-      query.offset > 10000 ||
-      !Number.isInteger(query.limit) ||
-      query.limit < 1 ||
-      query.limit > 50
-    )
-      throw new BadRequestException('Invalid pagination.');
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        const propertyId = await this.authorize(tx, actor);
-        const scope = { reservation: { roomType: { propertyId } } };
-        const page = {
-          skip: query.offset,
-          take: query.limit,
-          orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }],
-        };
-        const payments = await tx.payment.findMany({
-          where: {
-            ...scope,
-            method: 'PAYMONGO',
-            provider: 'PAYMONGO',
-            OR: [
-              {
-                status: 'PENDING',
-                checkoutState: { in: ['CREATING', 'UNKNOWN'] },
-              },
-              {
-                events: {
-                  some: {
-                    OR: [{ status: 'FAILED' }, { errorMessage: { not: null } }],
-                  },
-                },
-              },
-            ],
-          },
-          ...page,
-          select: {
-            id: true,
-            reservationId: true,
-            status: true,
-            checkoutState: true,
-            amountCentavos: true,
-            currency: true,
-            createdAt: true,
-          },
-        });
-        const refunds = await tx.refund.findMany({
-          where: {
+  private queueFilters(propertyId: string) {
+      const scope: Prisma.PaymentWhereInput = {
+        reservation: {
+          roomType: { propertyId },
+        },
+      };
+
+      const payments: Prisma.PaymentWhereInput = {
+        ...scope,
+        method: 'PAYMONGO',
+        provider: 'PAYMONGO',
+        OR: [
+          {
             status: 'PENDING',
-            payment: { ...scope, method: 'PAYMONGO', provider: 'PAYMONGO' },
+            checkoutState: {
+              in: ['CREATING', 'UNKNOWN'],
+            },
           },
-          skip: query.offset,
-          take: query.limit,
-          orderBy: [{ requestedAt: 'asc' }, { id: 'asc' }],
-          select: {
-            id: true,
-            paymentId: true,
-            providerRefundId: true,
-            status: true,
-            amountCentavos: true,
-            requestedAt: true,
-          },
-        });
-        const events = await tx.paymentEvent.findMany({
-          where: {
-            AND: [
-              { OR: [{ paymentId: null }, { payment: scope }] },
-              {
+          {
+            events: {
+              some: {
                 OR: [
                   { status: 'FAILED' },
                   { errorMessage: { not: null } },
-                  { status: 'IGNORED', eventType: { in: REFUND_EVENTS } },
                 ],
+              },
+            },
+          },
+        ],
+      };
+
+      const refunds: Prisma.RefundWhereInput = {
+        status: 'PENDING',
+        payment: {
+          ...scope,
+          method: 'PAYMONGO',
+          provider: 'PAYMONGO',
+        },
+      };
+
+      const events: Prisma.PaymentEventWhereInput = {
+        AND: [
+          {
+            OR: [
+              { paymentId: null },
+              { payment: scope },
+            ],
+          },
+          {
+            OR: [
+              { status: 'FAILED' },
+              { errorMessage: { not: null } },
+              {
+                status: 'IGNORED',
+                eventType: { in: REFUND_EVENTS },
               },
             ],
           },
-          ...page,
-          select: {
-            providerEventId: true,
-            paymentId: true,
-            eventType: true,
-            status: true,
-            errorMessage: true,
-            createdAt: true,
-          },
-        });
-        return {
-          payments,
-          refunds,
-          events,
-          offset: query.offset,
-          limit: query.limit,
-        };
-      });
-    } catch (error) {
-      return this.failure(error);
+        ],
+      };
+
+      return { payments, refunds, events };
     }
-  }
+
+    private pageInfo(
+      total: number,
+      requestedPage: number,
+      limit: number,
+    ) {
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        total,
+        page: total === 0
+          ? 1
+          : Math.min(requestedPage, totalPages),
+        limit,
+        totalPages,
+      };
+    }
+
+    private async readQueueRows(
+      tx: Prisma.TransactionClient,
+      filters: {
+        payments: Prisma.PaymentWhereInput;
+        refunds: Prisma.RefundWhereInput;
+        events: Prisma.PaymentEventWhereInput;
+      },
+      offsets: {
+        payments: number;
+        refunds: number;
+        events: number;
+      },
+      limit: number,
+    ) {
+      const payments = await tx.payment.findMany({
+        where: filters.payments,
+        skip: offsets.payments,
+        take: limit,
+        orderBy: [
+          { createdAt: 'asc' },
+          { id: 'asc' },
+        ],
+        select: {
+          id: true,
+          reservationId: true,
+          status: true,
+          checkoutState: true,
+          amountCentavos: true,
+          currency: true,
+          createdAt: true,
+        },
+      });
+
+      const refunds = await tx.refund.findMany({
+        where: filters.refunds,
+        skip: offsets.refunds,
+        take: limit,
+        orderBy: [
+          { requestedAt: 'asc' },
+          { id: 'asc' },
+        ],
+        select: {
+          id: true,
+          paymentId: true,
+          providerRefundId: true,
+          status: true,
+          amountCentavos: true,
+          requestedAt: true,
+        },
+      });
+
+      const events = await tx.paymentEvent.findMany({
+        where: filters.events,
+        skip: offsets.events,
+        take: limit,
+        orderBy: [
+          { createdAt: 'asc' },
+          { id: 'asc' },
+        ],
+        select: {
+          providerEventId: true,
+          paymentId: true,
+          eventType: true,
+          status: true,
+          errorMessage: true,
+          createdAt: true,
+        },
+      });
+
+      return { payments, refunds, events };
+    }
+
+    async list(
+      query: ReconciliationListDto,
+      identity: AuthenticatedUser | undefined,
+    ) {
+      const actor = this.identity(identity);
+
+      if (
+        !Number.isInteger(query.offset) ||
+        query.offset < 0 ||
+        query.offset > 10000 ||
+        !Number.isInteger(query.limit) ||
+        query.limit < 1 ||
+        query.limit > 50
+      ) {
+        throw new BadRequestException('Invalid pagination.');
+      }
+
+      try {
+        return await this.prisma.$transaction(async (tx) => {
+          const propertyId = await this.authorize(tx, actor);
+          const filters = this.queueFilters(propertyId);
+
+          const rows = await this.readQueueRows(
+            tx,
+            filters,
+            {
+              payments: query.offset,
+              refunds: query.offset,
+              events: query.offset,
+            },
+            query.limit,
+          );
+
+          return {
+            ...rows,
+            offset: query.offset,
+            limit: query.limit,
+          };
+        });
+      } catch (error) {
+        return this.failure(error);
+      }
+    }
+
+    async pages(
+      query: ReconciliationPagesDto,
+      identity: AuthenticatedUser | undefined,
+    ) {
+      const actor = this.identity(identity);
+
+      const requestedPages = [
+        query.paymentPage,
+        query.refundPage,
+        query.eventPage,
+      ];
+
+      if (
+        !requestedPages.every(
+          (page) =>
+            Number.isSafeInteger(page) &&
+            page >= 1 &&
+            page <= 10000,
+        ) ||
+        ![20, 50].includes(query.limit)
+      ) {
+        throw new BadRequestException(
+          'Invalid reconciliation queue pagination.',
+        );
+      }
+
+      try {
+        return await this.prisma.$transaction(async (tx) => {
+          const propertyId = await this.authorize(tx, actor);
+          const filters = this.queueFilters(propertyId);
+
+          const paymentTotal = await tx.payment.count({
+            where: filters.payments,
+          });
+
+          const refundTotal = await tx.refund.count({
+            where: filters.refunds,
+          });
+
+          const eventTotal = await tx.paymentEvent.count({
+            where: filters.events,
+          });
+
+          const pagination = {
+            payments: this.pageInfo(
+              paymentTotal,
+              query.paymentPage,
+              query.limit,
+            ),
+            refunds: this.pageInfo(
+              refundTotal,
+              query.refundPage,
+              query.limit,
+            ),
+            events: this.pageInfo(
+              eventTotal,
+              query.eventPage,
+              query.limit,
+            ),
+          };
+
+          const rows = await this.readQueueRows(
+            tx,
+            filters,
+            {
+              payments:
+                (pagination.payments.page - 1) * query.limit,
+              refunds:
+                (pagination.refunds.page - 1) * query.limit,
+              events:
+                (pagination.events.page - 1) * query.limit,
+            },
+            query.limit,
+          );
+
+          return {
+            ...rows,
+            limit: query.limit,
+            pagination,
+          };
+        });
+      } catch (error) {
+        if (error instanceof HttpException) throw error;
+
+        throw new ServiceUnavailableException(
+          'Reconciliation queues could not be read.',
+        );
+      }
+    }
 
   async payment(
     id: string,

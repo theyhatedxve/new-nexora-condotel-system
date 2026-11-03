@@ -138,14 +138,9 @@ export function useReconciliation(queue) {
   const ready = queue.status === "ready";
 
   const confirmationCurrent =
-    state.status === "confirm" &&
-    (
-      state.retry ||
-      (
-        ready &&
-        queue.data === state.snapshot
-      )
-    );
+  state.status === "confirm" &&
+  ready &&
+  queue.data === state.snapshot;
 
   const reviewed =
     state.status === "done" &&
@@ -192,21 +187,23 @@ export function useReconciliation(queue) {
     const current = read(key);
 
     if (
-      current.status !== "absent" ||
-      acknowledged !== true ||
-      !authorized(actorId)
+        current.status !== "absent" ||
+        acknowledged !== true ||
+        !ready ||
+        !authorized(actorId)
     ) {
-      return;
+        return;
     }
 
     trigger.current = button;
 
     publish(key, {
-      status: "confirm",
-      retry: true,
-      intent: current.intent,
+        status: "confirm",
+        retry: true,
+        snapshot: queue.data,
+        intent: current.intent,
     });
-  }
+    }
 
   function back() {
     const current = read(key);

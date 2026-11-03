@@ -1,4 +1,9 @@
-import { Type } from 'class-transformer';
+import {
+  Transform,
+  Type,
+  type TransformFnParams,
+} from 'class-transformer';
+
 import {
   IsBoolean,
   IsIn,
@@ -12,6 +17,9 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+
+
+
 
 export class ReconcilePaymentDto {
   @IsUUID('4')
@@ -73,4 +81,52 @@ export class ReconciliationStatusQueryDto {
   @IsOptional()
   @Matches(/^ref_[A-Za-z0-9_]{1,96}$/)
   providerRefundId?: string;
+}
+
+function reconciliationPageInteger(value: unknown): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  if (
+    typeof value !== 'string' ||
+    !/^\d+$/.test(value)
+  ) {
+    return Number.NaN;
+  }
+
+  return Number(value);
+}
+
+export class ReconciliationPagesDto {
+  @Transform(({ value }: TransformFnParams) =>
+    reconciliationPageInteger(value),
+  )
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  paymentPage = 1;
+
+  @Transform(({ value }: TransformFnParams) =>
+    reconciliationPageInteger(value),
+  )
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  refundPage = 1;
+
+  @Transform(({ value }: TransformFnParams) =>
+    reconciliationPageInteger(value),
+  )
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  eventPage = 1;
+
+  @Transform(({ value }: TransformFnParams) =>
+    reconciliationPageInteger(value),
+  )
+  @IsInt()
+  @IsIn([20, 50])
+  limit = 20;
 }
