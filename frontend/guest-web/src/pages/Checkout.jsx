@@ -22,6 +22,14 @@ import {
   formatPesos,
 } from "../utils/formatMoney.js";
 
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+} from "lucide-react";
+
+import "../styles/checkout-view.css";
+
 import "../styles/checkout.css";
 
 function CheckoutForm({
@@ -218,28 +226,54 @@ function CheckoutForm({
     }
   }
 
-  if (receipt) {
+    if (receipt) {
     return (
-      <main className="checkout-page">
-        <section className="checkout-panel checkout-receipt">
+      <main className="checkout-page checkout-view">
+        <section
+          className="checkout-panel checkout-receipt"
+          aria-labelledby="booking-receipt-title"
+        >
+          <div
+            className="checkout-view__confirmation-icon"
+            aria-hidden="true"
+          >
+            <Check size={30} />
+          </div>
+
           <p className="checkout-kicker">
             PAY AT PROPERTY
           </p>
 
-          <h1 ref={receiptHeading} tabIndex={-1}>
+          <h1
+            id="booking-receipt-title"
+            ref={receiptHeading}
+            tabIndex={-1}
+          >
             Your reservation is confirmed
           </h1>
 
-          <p>
+          <p className="checkout-view__receipt-intro">
             No payment has been collected.
-            Full payment is required at the property
-            before check-in.
+            Full payment is required at the
+            property before check-in.
           </p>
+
+          <div className="checkout-view__reference">
+            <span>Booking reference</span>
+            <strong>
+              {receipt.reservationNumber}
+            </strong>
+          </div>
 
           <dl className="checkout-summary">
             <div>
-              <dt>Booking reference</dt>
-              <dd>{receipt.reservationNumber}</dd>
+              <dt>Reservation</dt>
+              <dd>Confirmed</dd>
+            </div>
+
+            <div>
+              <dt>Payment</dt>
+              <dd>No payment collected</dd>
             </div>
 
             <div>
@@ -266,7 +300,7 @@ function CheckoutForm({
               </dd>
             </div>
 
-            <div>
+            <div className="checkout-total">
               <dt>Confirmed stay total</dt>
               <dd>
                 {formatPesos(
@@ -276,32 +310,38 @@ function CheckoutForm({
             </div>
           </dl>
 
-          <p>
-            Save this reference. Contact the property
-            for assistance with your booking.
+          <p className="checkout-note">
+            Save this reference. Contact the
+            property for assistance with
+            your booking.
           </p>
 
-          <p>
+          <p className="checkout-note">
             Unpaid reservations can be cancelled
-            without a cancellation fee before check-in.
-            Contact the property to request cancellation.
+            without a cancellation fee before
+            check-in. Contact the property to
+            request cancellation.
           </p>
 
-          <Link
-            className="checkout-link"
-            to="/rooms"
-          >
-            Return to rooms
-          </Link>
+          <div className="checkout-view__receipt-actions">
+            <Link
+              className="checkout-view__primary-link"
+              to="/booking-access"
+            >
+              Request private booking access
+              <ArrowRight
+                size={18}
+                aria-hidden="true"
+              />
+            </Link>
 
-          <br />
-
-          <Link
-          className="checkout-link"
-          to="/booking-access"
-          >
-          Request private booking access
-          </Link>
+            <Link
+              className="checkout-view__secondary-link"
+              to="/rooms"
+            >
+              Return to rooms
+            </Link>
+          </div>
         </section>
       </main>
     );
@@ -313,21 +353,46 @@ function CheckoutForm({
     pending ||
     phase === "uncertain";
 
-  return (
-    <main className="checkout-page">
-      <Link className="back-link" to="/rooms">
-        ← Back to rooms
+    return (
+    <main className="checkout-page checkout-view">
+      <Link
+        className="checkout-view__back"
+        to={
+          validSelection
+            ? `/rooms?${new URLSearchParams({
+                checkIn,
+                checkOut,
+                guests: String(guests),
+              }).toString()}`
+            : "/rooms"
+        }
+      >
+        <ArrowLeft
+          size={18}
+          aria-hidden="true"
+        />
+
+        {validSelection
+          ? "Back to selected rooms"
+          : "Back to rooms"}
       </Link>
 
-      <p className="checkout-kicker">
-        YOUR NEXORA STAY
-      </p>
+      <header className="checkout-view__heading">
+        <p className="checkout-kicker">
+          YOUR NEXORA STAY
+        </p>
 
-      <h1>Complete your booking</h1>
+        <h1>Complete your booking</h1>
 
-      <p>
-        Reserve your stay without creating an account.
-      </p>
+        <p>
+          Reserve your stay without creating
+          an account.
+        </p>
+
+        <span className="checkout-view__payment-label">
+          Pay at Property
+        </span>
+      </header>
 
       <div className="checkout-grid">
         <section
@@ -337,6 +402,11 @@ function CheckoutForm({
           <h2 id="guest-details-title">
             Primary guest details
           </h2>
+
+          <p className="checkout-view__form-intro">
+            Enter the details of the primary
+            guest. Fields marked * are required.
+          </p>
 
           <form
             onSubmit={handleSubmit}
@@ -350,73 +420,94 @@ function CheckoutForm({
                 Contact information
               </legend>
 
-              <label htmlFor="booking-first-name">
-                First name
-              </label>
+              <div className="checkout-view__field-grid">
+                <div className="checkout-view__field">
+                  <label htmlFor="booking-first-name">
+                    First name{" "}
+                    <span aria-hidden="true">*</span>
+                  </label>
 
-              <input
-                id="booking-first-name"
-                name="firstName"
-                autoComplete="given-name"
-                maxLength={100}
-                required
-                value={details.firstName}
-                onChange={updateDetail}
-              />
+                  <input
+                    id="booking-first-name"
+                    name="firstName"
+                    autoComplete="given-name"
+                    maxLength={100}
+                    required
+                    value={details.firstName}
+                    onChange={updateDetail}
+                  />
+                </div>
 
-              <label htmlFor="booking-last-name">
-                Last name
-              </label>
+                <div className="checkout-view__field">
+                  <label htmlFor="booking-last-name">
+                    Last name{" "}
+                    <span aria-hidden="true">*</span>
+                  </label>
 
-              <input
-                id="booking-last-name"
-                name="lastName"
-                autoComplete="family-name"
-                maxLength={100}
-                required
-                value={details.lastName}
-                onChange={updateDetail}
-              />
+                  <input
+                    id="booking-last-name"
+                    name="lastName"
+                    autoComplete="family-name"
+                    maxLength={100}
+                    required
+                    value={details.lastName}
+                    onChange={updateDetail}
+                  />
+                </div>
 
-              <label htmlFor="booking-email">
-                Email
-              </label>
+                <div className="checkout-view__field checkout-view__field--wide">
+                  <label htmlFor="booking-email">
+                    Email{" "}
+                    <span aria-hidden="true">*</span>
+                  </label>
 
-              <input
-                id="booking-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                maxLength={254}
-                required
-                value={details.email}
-                onChange={updateDetail}
-              />
+                  <input
+                    id="booking-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    maxLength={254}
+                    required
+                    value={details.email}
+                    onChange={updateDetail}
+                  />
+                </div>
 
-              <label htmlFor="booking-phone">
-                Phone <span>(optional)</span>
-              </label>
+                <div className="checkout-view__field checkout-view__field--wide">
+                  <label htmlFor="booking-phone">
+                    Phone{" "}
+                    <span className="checkout-view__optional">
+                      (optional)
+                    </span>
+                  </label>
 
-              <input
-                id="booking-phone"
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                maxLength={30}
-                value={details.phone}
-                onChange={updateDetail}
-              />
+                  <input
+                    id="booking-phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    maxLength={30}
+                    value={details.phone}
+                    onChange={updateDetail}
+                  />
+                </div>
+              </div>
 
               <label className="checkout-consent">
-                <input type="checkbox" required />
+                <input
+                  type="checkbox"
+                  required
+                />
 
                 <span>
-                    I understand that availability and the
-                    final price are checked when I confirm,
-                    and payment is due at the property.
-                    Unpaid reservations can be cancelled
-                    without a cancellation fee before check-in.
-                    Contact the property to request cancellation.
+                  I understand that availability
+                  and the final price are checked
+                  when I confirm, and payment is
+                  due at the property. Unpaid
+                  reservations can be cancelled
+                  without a cancellation fee
+                  before check-in. Contact the
+                  property to request cancellation.
                 </span>
               </label>
 
@@ -424,15 +515,24 @@ function CheckoutForm({
                 className="checkout-button"
                 type="submit"
               >
-                {pending
-                  ? "Confirming your stay…"
-                  : "Confirm — Pay at Property"}
+                <span>
+                  {pending
+                    ? "Confirming your stay..."
+                    : "Confirm - Pay at Property"}
+                </span>
+
+                {!pending && (
+                  <ArrowRight
+                    size={18}
+                    aria-hidden="true"
+                  />
+                )}
               </button>
             </fieldset>
 
             {problem && (
               <p
-                className="checkout-error"
+                className="checkout-error checkout-view__alert"
                 role="alert"
               >
                 {problem}
@@ -440,72 +540,62 @@ function CheckoutForm({
             )}
 
             {pending && (
-              <p role="status">
-                Please wait for the booking result
-                before submitting again.
+              <p
+                className="checkout-view__status"
+                role="status"
+              >
+                Please wait for the booking
+                result before submitting again.
               </p>
             )}
           </form>
         </section>
 
         <aside
-          className="checkout-panel"
+          className="checkout-panel checkout-view__stay"
           aria-labelledby="stay-summary-title"
         >
+          <p className="checkout-view__summary-kicker">
+            STAY SUMMARY
+          </p>
+
           <h2 id="stay-summary-title">
             Your stay
           </h2>
 
+          {quote && (
+            <h3 className="checkout-view__room-name">
+              {quote.name}
+            </h3>
+          )}
+
           <dl className="checkout-summary">
             <div>
               <dt>Check-in</dt>
-              <dd>{checkIn || "Not selected"}</dd>
+              <dd>
+                {checkIn || "Not selected"}
+              </dd>
             </div>
 
             <div>
               <dt>Check-out</dt>
-              <dd>{checkOut || "Not selected"}</dd>
+              <dd>
+                {checkOut || "Not selected"}
+              </dd>
             </div>
 
             <div>
               <dt>Guests</dt>
               <dd>
-                {Number.isSafeInteger(guests)
+                {Number.isSafeInteger(guests) &&
+                guests >= 1
                   ? guests
                   : "Not selected"}
               </dd>
             </div>
-          </dl>
 
-          {!quote && !selectionError && (
-            <p role="status">
-              Checking your stay…
-            </p>
-          )}
-
-          {selectionError && (
-            <div role="alert">
-              <p className="checkout-error">
-                {selectionError}
-              </p>
-
-              {!locked && validSelection && (
-                <button
-                  className="checkout-button"
-                  type="button"
-                  onClick={refreshQuote}
-                >
-                  Refresh availability
-                </button>
-              )}
-            </div>
-          )}
-
-          {quote && (
-            <>
-              <h3>{quote.name}</h3>
-
-              <dl className="checkout-summary">
+            {quote && (
+              <>
                 <div>
                   <dt>Nights</dt>
                   <dd>{quote.nights}</dd>
@@ -528,19 +618,53 @@ function CheckoutForm({
                     )}
                   </dd>
                 </div>
-              </dl>
-            </>
+              </>
+            )}
+          </dl>
+
+          {!quote && !selectionError && (
+            <p
+              className="checkout-view__status"
+              role="status"
+            >
+              Checking your stay...
+            </p>
           )}
 
-          <p>
-            Pay at Property. No online payment
-            is collected here.
-          </p>
+          {selectionError && (
+            <div
+              className="checkout-view__quote-error"
+              role="alert"
+            >
+              <p className="checkout-error">
+                {selectionError}
+              </p>
+
+              {!locked && validSelection && (
+                <button
+                  className="checkout-view__refresh"
+                  type="button"
+                  onClick={refreshQuote}
+                >
+                  Refresh availability
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="checkout-view__payment-note">
+            <strong>Payment due at the property</strong>
+
+            <p>
+              No online payment is collected
+              on this page.
+            </p>
+          </div>
 
           <p className="checkout-note">
             This quote does not reserve a room.
-            The backend confirms availability and
-            the final price when you submit.
+            The backend confirms availability
+            and the final price when you submit.
           </p>
         </aside>
       </div>
