@@ -34,6 +34,18 @@ import {
   GuestsModule,
 } from './guests/guests.module.js';
 
+import {
+  ReportsModule,
+} from './reports/reports.module.js';
+
+import {
+  AuditModule,
+} from './audit/audit.module.js';
+
+import {
+  SettingsModule,
+} from './settings/settings.module.js';
+
 @Module({
   imports: [PrismaModule, ThrottlerModule.forRoot([
     {
@@ -50,7 +62,10 @@ import {
   AvailabilityModule,
   ReservationsModule,
   DashboardModule,
-  GuestsModule
+  GuestsModule,
+  ReportsModule,
+  AuditModule,
+  SettingsModule
 ],
   controllers: [AppController],
   providers: [AppService, {

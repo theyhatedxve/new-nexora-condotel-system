@@ -1,0 +1,127 @@
+.audit-page {
+  min-width: 0;
+}
+
+.audit-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.audit-field {
+  display: grid;
+  flex: 1 1 12rem;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.audit-field label,
+.audit-page-size label {
+  font-weight: 600;
+}
+
+.audit-field input,
+.audit-page-size select {
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #9cabc2;
+  border-radius: 0.4rem;
+  background: #ffffff;
+  color: #15283f;
+  font: inherit;
+}
+
+.audit-field input {
+  width: 100%;
+  min-width: 0;
+}
+
+.audit-filter-actions,
+.audit-toolbar,
+.audit-page-size,
+.audit-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.audit-filter-help {
+  flex: 1 0 100%;
+  margin: 0;
+}
+
+.audit-toolbar {
+  justify-content: space-between;
+  margin: 1.5rem 0;
+}
+
+.audit-page button {
+  min-height: 44px;
+}
+
+.audit-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.audit-table {
+  min-width: 900px;
+}
+
+.audit-table caption {
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.audit-table th,
+.audit-table td {
+  vertical-align: top;
+}
+
+.audit-table td {
+  overflow-wrap: anywhere;
+}
+
+.audit-reference {
+  max-width: 20rem;
+}
+
+.audit-pagination {
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.audit-page input:focus-visible,
+.audit-page select:focus-visible,
+.audit-page button:focus-visible,
+.audit-table-scroll:focus-visible,
+.audit-results-summary:focus {
+  outline: 3px solid #946b21;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .audit-filters,
+  .audit-toolbar,
+  .audit-page-size {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .audit-field,
+  .audit-filter-help {
+    flex: initial;
+  }
+
+  .audit-filter-actions > button {
+    flex: 1 1 auto;
+  }
+
+  .audit-pagination {
+    justify-content: center;
+  }
+}

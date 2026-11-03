@@ -26,6 +26,12 @@ import RoomTypes from "./pages/RoomTypes";
 
 import PaymentReconciliation from "./pages/PaymentReconciliation";
 
+import Reports from "./pages/Reports";
+
+import AuditLogs from "./pages/AuditLogs";
+
+import Settings from "./pages/Settings";
+
 import "./styles/global.css";
 
 const pages = {
@@ -34,6 +40,9 @@ const pages = {
   "/guests": <Guests />,
   "/rooms": <Rooms />,
   "/payments": <Payments />,
+  "/reports": <Reports />,
+  "/audit-logs": <AuditLogs />,
+  "/settings": <Settings />,
 };
 
 export default function App() {

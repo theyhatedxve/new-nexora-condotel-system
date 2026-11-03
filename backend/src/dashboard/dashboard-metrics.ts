@@ -69,8 +69,13 @@ function safeSum(total: number, amount: number) {
 export function financialMetrics(
   bookings: readonly FinancialBooking[],
   now: Date,
+  window?: {
+    start: Date;
+    end: Date;
+  },
 ) {
-  const { start, end } = dashboardPeriod(now);
+  const { start, end } =
+    window ?? dashboardPeriod(now);
 
   const withinDay = (date: Date) =>
     date >= start && date < end;

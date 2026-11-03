@@ -82,8 +82,7 @@ export const staffNavigation = [
     path: "/audit-logs",
     label: "Audit Logs",
     icon: ScrollText,
-    roles: [],
-    unavailable: true,
+    roles: ["ADMIN"],
   },
 ];
 
