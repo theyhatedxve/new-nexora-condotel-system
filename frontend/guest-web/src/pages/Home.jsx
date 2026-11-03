@@ -1,61 +1,166 @@
 import { Link } from "react-router";
-import { BedDouble, CalendarDays, ShieldCheck } from "lucide-react";
 
-const features = [
-  {
-    icon: BedDouble,
-    title: "Comfortable Rooms",
-    text: "Find a space that feels like home.",
-  },
+import {
+  ArrowRight,
+  BedDouble,
+  CalendarDays,
+  KeyRound,
+} from "lucide-react";
+
+import heroImage from "../assets/rooms/deluxe-suite.jpg";
+
+import HomeStaySearch from "../components/HomeStaySearch";
+import FeaturedRooms from "../components/FeaturedRooms";
+
+import "../styles/home.css";
+
+const staySteps = [
   {
     icon: CalendarDays,
-    title: "Easy Reservations",
-    text: "Plan your stay with convenience.",
+    title: "Choose your dates",
+    text: "Select your check-in, check-out, and guest count to check availability.",
   },
   {
-    icon: ShieldCheck,
-    title: "Secure Experience",
-    text: "Your comfort and safety matter.",
+    icon: BedDouble,
+    title: "Explore room types",
+    text: "Compare room capacity, recorded amenities, and nightly rates.",
+  },
+  {
+    icon: KeyRound,
+    title: "Access your booking",
+    text: "Request a private access link using your booking reference and reservation email.",
   },
 ];
 
 function Home() {
   return (
-    <main>
-      <section className="hero" aria-labelledby="hero-title">
-        <p className="eyebrow">WELCOME TO NEXORA</p>
+    <main className="home-page">
+      <section
+        className="home-hero"
+        aria-labelledby="home-hero-title"
+      >
+        <img
+          src={heroImage}
+          alt=""
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          decoding="async"
+          className="home-hero__image"
+        />
 
-        <h1 id="hero-title">Your Next Stay Starts Here</h1>
+        <div
+          className="home-hero__shade"
+          aria-hidden="true"
+        />
 
-        <p className="hero-description">
-          Enjoy a comfortable and relaxing stay. Explore our rooms and plan
-          your next visit.
-        </p>
+        <div className="home-hero__inner">
+          <div className="home-hero__content">
+            <p className="home-hero__eyebrow">
+              Welcome to NEXORA
+            </p>
 
-        <Link to="/rooms" className="primary-button">
-          Explore Rooms
-        </Link>
-      </section>
+            <h1
+              id="home-hero-title"
+              className="home-hero__title"
+            >
+              A Comfortable Stay
+              <span>at NEXORA</span>
+            </h1>
 
-      <section className="features" aria-labelledby="features-title">
-        <h2 id="features-title">Experience NEXORA</h2>
+            <p className="home-hero__description">
+              Explore our rooms and find a space
+              for your next stay.
+            </p>
 
-        <div className="feature-grid">
-          {features.map(({ icon: Icon, title, text }) => (
-            <div className="feature-card" key={title}>
-              <Icon size={32} aria-hidden="true" />
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </div>
-          ))}
+            <Link
+              to="/rooms"
+              className="home-hero__button"
+            >
+              Explore Rooms
+              <ArrowRight
+                size={19}
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="cta-band" aria-labelledby="cta-title">
-        <h2 id="cta-title">Ready to find your room?</h2>
-        <p>Browse our room types and see what suits your stay.</p>
-        <Link to="/rooms" className="primary-button">
-          View Rooms
+      <HomeStaySearch />
+
+      <FeaturedRooms />
+
+      <section
+        className="home-stay-guide"
+        aria-labelledby="home-stay-guide-title"
+      >
+        <div className="home-stay-guide__heading">
+          <p className="home-stay-guide__eyebrow">
+            Plan with NEXORA
+          </p>
+
+          <h2 id="home-stay-guide-title">
+            Your stay, made simple
+          </h2>
+
+          <p>
+            Find a room that suits your plans
+            and keep your booking within reach.
+          </p>
+        </div>
+
+        <div className="home-stay-guide__grid">
+          {staySteps.map(
+            ({ icon: Icon, title, text }) => (
+              <article
+                className="home-stay-guide__item"
+                key={title}
+              >
+                <div className="home-stay-guide__icon">
+                  <Icon
+                    size={26}
+                    aria-hidden="true"
+                  />
+                </div>
+
+                <h3>{title}</h3>
+
+                <p>{text}</p>
+              </article>
+            ),
+          )}
+        </div>
+      </section>
+
+      <section
+        className="home-booking-prompt"
+        aria-labelledby="home-booking-prompt-title"
+      >
+        <div>
+          <p className="home-booking-prompt__eyebrow">
+            Your next visit
+          </p>
+
+          <h2 id="home-booking-prompt-title">
+            Ready to plan your stay?
+          </h2>
+
+          <p className="home-booking-prompt__description">
+            Explore our rooms, choose your dates,
+            and check the full stay price.
+          </p>
+        </div>
+
+        <Link
+          to="/rooms"
+          className="home-booking-prompt__button"
+        >
+          Browse Rooms
+          <ArrowRight
+            size={19}
+            aria-hidden="true"
+          />
         </Link>
       </section>
     </main>

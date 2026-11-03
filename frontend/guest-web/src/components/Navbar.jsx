@@ -1,7 +1,10 @@
-
 import { useRef, useState } from "react";
 import { Link, NavLink } from "react-router";
 import { Menu, X } from "lucide-react";
+
+import nexoraLogo from "../assets/branding/logo-horizontal-dark.svg";
+
+import "../styles/guest-header.css";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -11,69 +14,92 @@ function Navbar() {
     setMenuOpen(false);
   }
 
-  function handleMenuKeyDown(event) {
+  function handleKeyDown(event) {
     if (event.key === "Escape" && menuOpen) {
+      event.preventDefault();
       setMenuOpen(false);
       menuButtonRef.current?.focus();
     }
   }
 
   return (
-    <header className="navbar">
-      <Link
-        to="/"
-        className="logo"
-        onClick={closeMenu}
-      >
-        NEXORA
-      </Link>
-
-      <button
-        ref={menuButtonRef}
-        type="button"
-        className="nav-toggle"
-        aria-label={menuOpen ? "Close menu" : "Open menu"}
-        aria-expanded={menuOpen}
-        aria-controls="main-navigation"
-        onClick={() => setMenuOpen((open) => !open)}
-      >
-        {menuOpen ? (
-          <X size={28} aria-hidden="true" />
-        ) : (
-          <Menu size={28} aria-hidden="true" />
-        )}
-      </button>
-
-      <nav
-        id="main-navigation"
-        aria-label="Main navigation"
-        className={
-          menuOpen ? "nav-links is-open" : "nav-links"
-        }
-        onKeyDown={handleMenuKeyDown}
-      >
-        <NavLink
+    <header
+      className="guest-header"
+      onKeyDown={handleKeyDown}
+    >
+      <div className="guest-header__inner">
+        <Link
           to="/"
-          end
+          className="guest-header__brand"
+          aria-label="NEXORA home"
           onClick={closeMenu}
         >
-          Home
-        </NavLink>
+          <img
+            src={nexoraLogo}
+            alt=""
+            width={900}
+            height={260}
+            className="guest-header__logo"
+          />
+        </Link>
 
-        <NavLink
-          to="/rooms"
-          onClick={closeMenu}
+        <button
+          ref={menuButtonRef}
+          type="button"
+          className="guest-header__toggle"
+          aria-label={
+            menuOpen
+              ? "Close navigation menu"
+              : "Open navigation menu"
+          }
+          aria-expanded={menuOpen}
+          aria-controls="guest-main-navigation"
+          onClick={() =>
+            setMenuOpen((open) => !open)
+          }
         >
-          Rooms
-        </NavLink>
+          {menuOpen ? (
+            <X size={24} aria-hidden="true" />
+          ) : (
+            <Menu size={24} aria-hidden="true" />
+          )}
+        </button>
 
-        <NavLink
-          to="/my-booking"
-          onClick={closeMenu}
+        <nav
+          id="guest-main-navigation"
+          aria-label="Main navigation"
+          className={
+            menuOpen
+              ? "guest-header__navigation is-open"
+              : "guest-header__navigation"
+          }
         >
-          My Booking
-        </NavLink>
-      </nav>
+          <NavLink
+            to="/"
+            end
+            className="guest-header__link"
+            onClick={closeMenu}
+          >
+            Home
+          </NavLink>
+
+          <NavLink
+            to="/rooms"
+            className="guest-header__link"
+            onClick={closeMenu}
+          >
+            Rooms
+          </NavLink>
+
+          <NavLink
+            to="/my-booking"
+            className="guest-header__link guest-header__booking-link"
+            onClick={closeMenu}
+          >
+            My Booking
+          </NavLink>
+        </nav>
+      </div>
     </header>
   );
 }

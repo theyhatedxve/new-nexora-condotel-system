@@ -1,0 +1,364 @@
+.home-page {
+  min-width: 0;
+}
+
+.home-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: 540px;
+  min-height: clamp(540px, 72svh, 740px);
+  overflow: hidden;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.home-hero__image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.home-hero__shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      90deg,
+      rgb(12 27 46 / 94%) 0%,
+      rgb(12 27 46 / 84%) 31%,
+      rgb(12 27 46 / 40%) 64%,
+      rgb(12 27 46 / 8%) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgb(12 27 46 / 42%),
+      transparent 38%
+    );
+}
+
+.home-hero__inner {
+  width: min(1200px, calc(100% - 3rem));
+  margin-inline: auto;
+  padding-block: 5rem 6rem;
+}
+
+.home-hero__content {
+  max-width: 650px;
+}
+
+.home-hero__eyebrow {
+  margin: 0 0 1.25rem;
+  color: var(--color-gold-light);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.home-hero__title {
+  margin: 0;
+  color: var(--color-on-primary);
+  font-size: clamp(2.75rem, 5.1vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.home-hero__title span {
+  display: block;
+}
+
+.home-hero__description {
+  max-width: 420px;
+  margin: 1.5rem 0 2rem;
+  color: #edf1f6;
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.75;
+}
+
+.home-hero__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 50px;
+  padding: 0.85rem 1.5rem;
+  border: 1px solid var(--color-gold-light);
+  border-radius: 0.4rem;
+  background: var(--color-gold-light);
+  color: var(--color-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.home-hero__button:hover {
+  border-color: #eed49d;
+  background: #eed49d;
+}
+
+.home-hero__button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 5px;
+}
+
+.home-hero__caption {
+  position: absolute;
+  right: max(1.5rem, calc((100% - 1200px) / 2));
+  bottom: 1.25rem;
+  margin: 0;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 0.25rem;
+  background: rgb(12 27 46 / 78%);
+  color: #ffffff;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .home-hero {
+    min-height: 560px;
+  }
+
+  .home-hero__inner {
+    width: calc(100% - 2rem);
+    padding-block: 4rem 6rem;
+  }
+
+  .home-hero__content {
+    max-width: 520px;
+  }
+
+  .home-hero__image {
+    object-position: 42% center;
+  }
+
+  .home-hero__shade {
+    background:
+      linear-gradient(
+        90deg,
+        rgb(12 27 46 / 91%),
+        rgb(12 27 46 / 62%) 70%,
+        rgb(12 27 46 / 38%)
+      ),
+      linear-gradient(
+        0deg,
+        rgb(12 27 46 / 45%),
+        transparent 50%
+      );
+  }
+
+  .home-hero__title {
+    font-size: clamp(2.5rem, 7.5vw, 3.5rem);
+  }
+
+  
+}
+
+.home-stay-guide {
+  padding: 3.5rem max(
+    1.5rem,
+    calc((100% - 1200px) / 2)
+  );
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.home-stay-guide__heading {
+  max-width: 620px;
+  margin: 0 auto 2.5rem;
+  text-align: center;
+}
+
+.home-stay-guide__eyebrow {
+  margin: 0 0 0.65rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.home-stay-guide__heading h2 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.home-stay-guide__heading > p:last-child {
+  margin: 1rem 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.75;
+}
+
+.home-stay-guide__grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.home-stay-guide__item {
+  min-width: 0;
+  padding: 0.5rem 1rem;
+  text-align: center;
+}
+
+.home-stay-guide__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.25rem;
+  border: 1px solid #e7d5ae;
+  border-radius: 50%;
+  background: #faf5e9;
+  color: var(--color-primary);
+}
+
+.home-stay-guide__item h3 {
+  margin: 0 0 0.75rem;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.home-stay-guide__item p {
+  max-width: 320px;
+  margin: 0 auto;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.home-booking-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  width: min(1200px, calc(100% - 3rem));
+  margin: 3.5rem auto;
+  padding: 2.5rem;
+  border: 1px solid rgb(217 187 124 / 25%);
+  border-radius: 0.75rem;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.home-booking-prompt > div {
+  min-width: 0;
+  max-width: 680px;
+}
+
+.home-booking-prompt__eyebrow {
+  margin: 0 0 0.65rem;
+  color: var(--color-gold-light);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.home-booking-prompt h2 {
+  margin: 0;
+  color: var(--color-on-primary);
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.home-booking-prompt__description {
+  margin: 0.85rem 0 0;
+  color: #e6edf5;
+  line-height: 1.75;
+}
+
+.home-booking-prompt__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 0.65rem;
+  min-height: 50px;
+  padding: 0.85rem 1.3rem;
+  border: 1px solid var(--color-gold-light);
+  border-radius: 0.4rem;
+  background: var(--color-gold-light);
+  color: var(--color-primary);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.home-booking-prompt__button:hover {
+  border-color: #eed49d;
+  background: #eed49d;
+}
+
+.home-booking-prompt__button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 5px;
+}
+
+@media (max-width: 760px) {
+  .home-stay-guide {
+    padding: 2.75rem 1rem;
+  }
+
+  .home-stay-guide__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .home-stay-guide__item {
+    padding-inline: 0;
+  }
+
+  .home-booking-prompt {
+    align-items: flex-start;
+    flex-direction: column;
+    width: calc(100% - 2rem);
+    margin-block: 2.75rem;
+    padding: 1.75rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .home-booking-prompt__button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .home-hero__title {
+    font-size: 2.25rem;
+  }
+
+  .home-hero__button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__button {
+    transition: none;
+  }
+}
