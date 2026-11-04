@@ -1,0 +1,218 @@
+[
+  {
+    "path": "hero/property-evening.jpg",
+    "dimensions": [
+      2560,
+      960
+    ],
+    "source_crop": [
+      1104,
+      390
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "hero/resort-pool.jpg",
+    "dimensions": [
+      2560,
+      1120
+    ],
+    "source_crop": [
+      547,
+      237
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "hero/property-sunset.jpg",
+    "dimensions": [
+      2560,
+      1000
+    ],
+    "source_crop": [
+      1160,
+      450
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "hero/seaside-condotel.jpg",
+    "dimensions": [
+      2560,
+      900
+    ],
+    "source_crop": [
+      1000,
+      308
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "rooms/deluxe-suite.jpg",
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_crop": [
+      550,
+      237
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "rooms/family-suite.jpg",
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_crop": [
+      464,
+      241
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "rooms/executive-suite.jpg",
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_crop": [
+      435,
+      241
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "rooms/deluxe-suite-alternate.jpg",
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "source_crop": [
+      393,
+      207
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "rooms/studio-kitchen.jpg",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "source_crop": [
+      332,
+      204
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "rooms/bathroom.jpg",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "source_crop": [
+      343,
+      204
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "rooms/living-room.jpg",
+    "dimensions": [
+      1600,
+      900
+    ],
+    "source_crop": [
+      419,
+      205
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "rooms/balcony.jpg",
+    "dimensions": [
+      1600,
+      900
+    ],
+    "source_crop": [
+      315,
+      170
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "amenities/pool.jpg",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "source_crop": [
+      218,
+      167
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "amenities/gym.jpg",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "source_crop": [
+      238,
+      167
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "amenities/lobby.jpg",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "source_crop": [
+      234,
+      167
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "amenities/restaurant.jpg",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "source_crop": [
+      238,
+      167
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "amenities/room-service.jpg",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "source_crop": [
+      368,
+      207
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  },
+  {
+    "path": "amenities/towels.jpg",
+    "dimensions": [
+      1600,
+      1000
+    ],
+    "source_crop": [
+      353,
+      207
+    ],
+    "note": "Upscaled from generated visual composition, not native-resolution photograph"
+  }
+]

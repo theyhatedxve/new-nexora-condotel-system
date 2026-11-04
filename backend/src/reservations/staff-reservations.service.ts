@@ -243,6 +243,12 @@ export class StaffReservationsService {
           ...fields,
           nightlyRateCentavos: true,
           totalAmountCentavos: true,
+          bookingPolicyVersion: true,
+          paymentPreference: true,
+          expectedArrivalAt: true,
+          firstContactedAt: true,
+          responseDeadlineAt: true,
+          confirmedAt: true,
           holdExpiresAt: true,
           guest: {
             select: {

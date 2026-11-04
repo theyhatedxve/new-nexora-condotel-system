@@ -28,6 +28,8 @@ import ReservationActions from "../components/ReservationActions";
 
 import PropertyCollection from "../components/PropertyCollection";
 
+import GuestBookingStaffPanel from "../components/GuestBookingStaffPanel";
+
 
 
 
@@ -305,6 +307,13 @@ export default function ReservationDetails() {
           </section>
                 </>
       )}
+
+        <GuestBookingStaffPanel
+          key={"guest-request-" + reservationId}
+          record={record}
+          payment={payment}
+          onReload={refresh}
+        />
 
         <ReservationActions
             key={reservationId}

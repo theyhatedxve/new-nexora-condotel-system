@@ -82,19 +82,59 @@ export class BookingAccessService implements OnModuleDestroy {
     });
   }
 
-  async current(cookie: unknown) {
-    const session = await requireBookingSession(this.prisma, cookie);
-    const reservation = await this.prisma.reservation.findUnique({
-      where: { id: session.reservationId },
-      select: {
-          reservationNumber: true, status: true, checkInDate: true, checkOutDate: true,
-          guestCount: true, nightlyRateCentavos: true, totalAmountCentavos: true, holdExpiresAt: true,
-          roomType: { select: { name: true } },
-          guest: { select: { firstName: true, lastName: true } },
-      },
-    });
-    if (!reservation) denied();
-    return { ...reservation, accessExpiresAt: session.expiresAt };
+    async current(cookie: unknown) {
+    const session = await requireBookingSession(
+      this.prisma,
+      cookie,
+    );
+
+    const reservation =
+      await this.prisma.reservation.findUnique({
+        where: {
+          id: session.reservationId,
+        },
+        select: {
+          reservationNumber: true,
+          status: true,
+          checkInDate: true,
+          checkOutDate: true,
+          guestCount: true,
+          nightlyRateCentavos: true,
+          totalAmountCentavos: true,
+          holdExpiresAt: true,
+          bookingPolicyVersion: true,
+          paymentPreference: true,
+          expectedArrivalAt: true,
+          firstContactedAt: true,
+          responseDeadlineAt: true,
+          confirmedAt: true,
+          roomType: {
+            select: {
+              name: true,
+            },
+          },
+          guest: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      });
+
+    if (!reservation) {
+      denied();
+    }
+
+    return {
+      ...reservation,
+      holdExpired:
+        reservation.status === 'PENDING' &&
+        reservation.holdExpiresAt !== null &&
+        reservation.holdExpiresAt.getTime() <=
+          Date.now(),
+      accessExpiresAt: session.expiresAt,
+    };
   }
 
   async logout(cookie: unknown): Promise<void> {

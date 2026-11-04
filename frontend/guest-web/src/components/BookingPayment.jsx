@@ -1,82 +1,365 @@
-import { useEffect, useRef, useState } from 'react';
-import { createBookingCheckout, getBookingPaymentState } from '../services/bookingPaymentsApi.js';
-import { formatPesos } from '../utils/formatMoney.js';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-function safeLink(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' && url.hostname === 'checkout.paymongo.com' &&
-      !url.port && !url.username && !url.password && !url.hash;
-  } catch { return false; }
-}
+import {
+  getGuestBookingCheckout,
+  getGuestBookingPaymentSummary,
+  startGuestBookingCheckout,
+} from "../services/guestBookingApi.js";
 
-export default function BookingPayment() {
-  const [record, setRecord] = useState(null);
-  const [busy, setBusy] = useState(true);
-  const [error, setError] = useState('');
-  const [refresh, setRefresh] = useState(0);
+import {
+  checkoutRequestIdFor,
+} from "../utils/bookingContext.js";
+
+import {
+  formatPesos,
+} from "../utils/formatMoney.js";
+
+export default function BookingPayment({
+  booking,
+}) {
+  const reference =
+    booking.reservationNumber;
+
+  const pendingOnline =
+    booking.bookingPolicyVersion ===
+      "guest-booking-v2" &&
+    booking.paymentPreference ===
+      "PAYMONGO";
+
+  const holdExpiresAt =
+    booking.holdExpiresAt;
+
+  const [state, setState] = useState({
+    busy: true,
+    record: null,
+    error: "",
+  });
+
+  const [revision, setRevision] =
+    useState(0);
+
+  const [now, setNow] = useState(
+    () => Date.now(),
+  );
+
   const alive = useRef(false);
   const pending = useRef(false);
-  const requestId = useRef(null);
+
+  const inspect = useCallback(
+    async (signal) => {
+      const summary =
+        await getGuestBookingPaymentSummary(
+          reference,
+          signal,
+        );
+
+      const closed = [
+        "CANCELLED",
+        "EXPIRED",
+        "CHECKED_IN",
+        "CHECKED_OUT",
+      ].includes(
+        summary.reservationStatus,
+      );
+
+      const activePending =
+        summary.reservationStatus === "PENDING" &&
+        pendingOnline &&
+        holdExpiresAt &&
+        Date.parse(holdExpiresAt) > Date.now();
+
+      const eligible =
+        !closed &&
+        !summary.requiresReview &&
+        summary.status !== "PAID" &&
+        summary.balanceDueCentavos > 0 &&
+        (
+          summary.reservationStatus ===
+            "CONFIRMED" ||
+          activePending
+        );
+
+      const checkout = eligible
+        ? await getGuestBookingCheckout(
+            reference,
+            signal,
+          )
+        : null;
+
+      return {
+        summary,
+        checkout,
+      };
+    },
+    [
+      reference,
+      pendingOnline,
+      holdExpiresAt,
+    ],
+  );
+
   useEffect(() => {
     alive.current = true;
+
     const controller = new AbortController();
-    getBookingPaymentState(controller.signal)
-      .then((result) => { if (!controller.signal.aborted) setRecord(result); })
-      .catch((failure) => {
+
+    inspect(controller.signal)
+      .then((record) => {
         if (!controller.signal.aborted) {
-          setRecord(null);
-          setError(failure.response?.status === 404
-            ? 'Private access has expired. Request a new booking access link.'
-            : 'We could not check payment availability. Contact the property if this continues.');
+          setState({
+            busy: false,
+            record,
+            error: "",
+          });
         }
       })
-      .finally(() => { if (!controller.signal.aborted) setBusy(false); });
-    return () => { alive.current = false; controller.abort(); };
-  }, [refresh]);
-  async function create() {
-    if (pending.current || busy || record?.state !== 'NONE') return;
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setState({
+            busy: false,
+            record: null,
+            error:
+              "Payment records could not be checked for this booking. Refresh its details or request private access before paying again.",
+          });
+        }
+      });
+
+    return () => {
+      alive.current = false;
+      controller.abort();
+    };
+  }, [
+    inspect,
+    revision,
+  ]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  async function createCheckout() {
+    if (
+      pending.current ||
+      state.busy ||
+      state.record?.checkout?.state !== "NONE"
+    ) {
+      return;
+    }
+
     pending.current = true;
-    setBusy(true);
-    setError('');
-    requestId.current ??= crypto.randomUUID();
+
+    setState({
+      busy: true,
+      record: null,
+      error: "",
+    });
+
     try {
-      const result = await createBookingCheckout(requestId.current);
-      const current = result.state === 'PAID' ? await getBookingPaymentState() : result;
-      if (alive.current) setRecord(current);
+      const requestId =
+        checkoutRequestIdFor(reference);
+
+      await startGuestBookingCheckout({
+        requestId,
+        expectedReservationNumber:
+          reference,
+      });
+
+      const record = await inspect();
+
+      if (alive.current) {
+        setState({
+          busy: false,
+          record,
+          error: "",
+        });
+      }
     } catch {
       if (alive.current) {
-        setRecord({ state: 'UNKNOWN', checkoutUrl: null });
-        setError('We could not confirm the payment link. Check the existing attempt before trying again.');
+        setState({
+          busy: false,
+          record: null,
+          error:
+            "The payment-link result is uncertain. Check the existing attempt before trying again. The original request ID is retained.",
+        });
       }
     } finally {
       pending.current = false;
-      if (alive.current) setBusy(false);
     }
   }
+
+  function refresh() {
+    if (pending.current) return;
+
+    setState({
+      busy: true,
+      record: null,
+      error: "",
+    });
+
+    setRevision((value) => value + 1);
+  }
+
+  const summary =
+    state.record?.summary;
+
+  const checkout =
+    state.record?.checkout;
+
+  const deadlineReached =
+    summary?.reservationStatus === "PENDING" &&
+    holdExpiresAt &&
+    Date.parse(holdExpiresAt) <= now;
+
+  const paid =
+    summary?.status === "PAID" &&
+    !summary.requiresReview;
+
   return (
     <section aria-labelledby="booking-payment-heading">
-      <h2 id="booking-payment-heading">Test payment</h2>
-      <p>This checkout uses test mode. Returning from PayMongo does not confirm payment.</p>
-      {busy && <p role="status">Checking payment options…</p>}
-      {error && <p className="checkout-error" role="alert">{error}</p>}
-      {!busy && record?.state === 'NONE' && record.amountCentavos > 0 && (
+      <h2 id="booking-payment-heading">
+        Payment
+      </h2>
+
+      {state.busy && (
+        <p role="status">
+          Checking verified backend records...
+        </p>
+      )}
+
+      {state.error && (
+        <p className="checkout-error" role="alert">
+          {state.error}
+        </p>
+      )}
+
+      {summary && (
         <>
-          <p>Remaining balance: {formatPesos(record.amountCentavos)}</p>
-          <button className="checkout-button" type="button" onClick={create}>Create PayMongo test payment link</button>
+          <dl className="checkout-summary">
+            <div>
+              <dt>Payment status</dt>
+              <dd>
+                {summary.status.replaceAll("_", " ")}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Net recorded payment</dt>
+              <dd>
+                {formatPesos(
+                  summary.netPaidCentavos,
+                )}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Balance due</dt>
+              <dd>
+                {summary.balanceDueCentavos === null
+                  ? "Not applicable to this closed stay"
+                  : formatPesos(
+                      summary.balanceDueCentavos,
+                    )}
+              </dd>
+            </div>
+          </dl>
+
+          {summary.reservationStatus !==
+            booking.status && (
+            <p className="checkout-note">
+              The reservation status has changed.
+              Refresh booking details to see its
+              latest state.
+            </p>
+          )}
+
+          {paid && (
+            <p role="status">
+              Full payment is recorded in the
+              verified backend records.
+            </p>
+          )}
+
+          {summary.requiresReview && (
+            <p role="status" className="checkout-note">
+              This payment needs property review.
+              Contact the property before paying again.
+            </p>
+          )}
         </>
       )}
-      {!busy && record?.state === 'NONE' && record.amountCentavos === 0 && <p>No remaining balance is available for checkout.</p>}
-      {!busy && record?.state === 'PAID' && <p role="status">Full payment is recorded for this booking. Please contact reception for check-in.</p>}
-      {!busy && record?.state === 'REVIEW_REQUIRED' && <p role="status">The payment needs property review. Contact the property before paying again.</p>}
-      {!busy && record?.state === 'READY' && safeLink(record.checkoutUrl) && (
-        <a className="checkout-link" href={record.checkoutUrl} rel="noreferrer noopener">Continue to PayMongo test checkout</a>
+
+      {deadlineReached && (
+        <p role="status" className="checkout-note">
+          The pending hold deadline has been reached.
+          Refresh booking details before continuing.
+        </p>
       )}
-      {!busy && (record?.state === 'UNKNOWN' || record?.state === 'CREATING') && (
-        <p role="status">The existing payment attempt is unresolved. Contact the property before starting another payment.</p>
+
+      {!state.busy && !deadlineReached &&
+        checkout?.state === "NONE" &&
+        checkout.amountCentavos > 0 && (
+          <p>
+            <button
+              className="checkout-button"
+              type="button"
+              onClick={createCheckout}
+            >
+              Prepare PayMongo test checkout
+            </button>
+          </p>
+        )}
+
+      {!state.busy && !deadlineReached &&
+        checkout?.state === "READY" && (
+          <p>
+            <a
+              className="checkout-link"
+              href={checkout.checkoutUrl}
+              rel="noreferrer noopener"
+            >
+              Continue to PayMongo test checkout
+            </a>
+          </p>
+        )}
+
+      {["CREATING", "UNKNOWN"].includes(
+        checkout?.state,
+      ) && (
+        <p role="status" className="checkout-note">
+          The existing payment attempt is unresolved.
+          Check it again or contact the property.
+          Do not create a replacement payment.
+        </p>
       )}
-      <p><button className="checkout-button" type="button" disabled={busy}
-        onClick={() => { setBusy(true); setError(''); setRefresh((value) => value + 1); }}>Check existing payment attempt</button></p>
+
+      <p>
+        <button
+          className="checkout-button"
+          type="button"
+          disabled={state.busy}
+          onClick={refresh}
+        >
+          Check payment records
+        </button>
+      </p>
+
+      <p className="checkout-note">
+        Online checkout is test mode.
+        Reservation status and payment status
+        are separate. Returning from PayMongo
+        does not itself establish payment.
+      </p>
     </section>
   );
 }

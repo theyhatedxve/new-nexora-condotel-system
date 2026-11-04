@@ -1,0 +1,303 @@
+# NEXORA — Technical Plan
+
+## 1. Implementation Approach
+
+| Phase | Status |
+|---|---|
+| Phase 1 | COMPLETED |
+| Phase 2 | COMPLETED |
+| Phase 3 | COMPLETED — 8/8 steps |
+| Phase 4 | COMPLETED — 7/7 steps |
+| Phase 5 | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
+| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
+
+Accepted scope, eight completed Phase 3 steps, and seven completed Phase 4 steps are tracked in the
+[implementation guide](IMPLEMENTATION_GUIDE.md). The owner previously reported 23/23 Phase 3
+acceptance checks passed; this Markdown-only task did not rerun tests/builds.
+Phase 4 is owner-confirmed complete. Phase 5 Steps 1–3 are complete; Steps 4–5
+have completed backend work with frontend integration in progress. Steps 6–7
+remain pending; no full-phase acceptance or Phase 6 authorization is implied.
+
+Build one approved feature at a time.
+
+Prefer direct, readable implementations with minimal dependencies.
+
+Preserve existing working project structure and package configuration.
+
+## 2. Project Structure
+
+For the inspected current directory tree and links between folders and project
+documentation, see [System Directory Structure](DIRECTORY_STRUCTURE.md).
+The tree below describes the intended expanded layout, including future folders.
+
+The existing frontend/ parent directory is retained.
+
+This reconciles the blueprint's illustrative root-level frontend folders
+with the established project layout.
+
+```text
+NEXORA/
+├── frontend/
+│   ├── guest-web/
+│   │   ├── src/
+│   │   │   ├── assets/
+│   │   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   ├── layouts/
+│   │   │   ├── routes/
+│   │   │   ├── services/
+│   │   │   ├── hooks/
+│   │   │   ├── styles/
+│   │   │   ├── App.jsx
+│   │   │   └── main.jsx
+│   │   └── package.json
+│   └── admin-web/
+│       ├── src/
+│       │   ├── assets/
+│       │   ├── components/
+│       │   ├── pages/
+│       │   ├── layouts/
+│       │   ├── routes/
+│       │   ├── services/
+│       │   ├── hooks/
+│       │   ├── styles/
+│       │   ├── App.jsx
+│       │   └── main.jsx
+│       └── package.json
+├── backend/
+│   ├── src/
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── guests/
+│   │   ├── rooms/
+│   │   ├── reservations/
+│   │   ├── payments/
+│   │   ├── nfc/
+│   │   ├── dashboard/
+│   │   ├── reports/
+│   │   ├── uploads/
+│   │   ├── settings/
+│   │   ├── audit/
+│   │   └── common/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── migrations/
+│   └── package.json
+├── docs/
+├── .gitignore
+└── README.md
+```
+
+Add folders when needed. This tree is not a requirement to create empty folders.
+
+Current modules include availability, auth, room-types, rooms, amenities, room-images,
+room-blocks, common/decorators, common/guards, common/ownership,
+common/validation, common/inventory, and src/prisma integration.
+The current schema has 25 models and four migrations; see
+[the inspected directory map](DIRECTORY_STRUCTURE.md) and
+[database history](DATABASE_SCHEMA.md).
+
+## 3. File Naming
+
+| File | Convention |
+|---|---|
+| React component | RoomCard.jsx |
+| React page | RoomDetailsPage.jsx |
+| React hook | useAvailability.js |
+| API service | reservationsApi.js |
+| Utility | formatMoney.js |
+| Stylesheet | room-card.css |
+| NestJS controller | reservations.controller.ts |
+| NestJS service | reservations.service.ts |
+| NestJS module | reservations.module.ts |
+| DTO | create-reservation.dto.ts |
+| Guard | roles.guard.ts |
+
+Use consistent naming within the existing project.
+
+## 4. Request Lifecycle
+
+```text
+User action
+    ↓
+React page/component
+    ↓
+Frontend API service
+    ↓
+NestJS authentication and authorization
+    ↓
+DTO validation
+    ↓
+Business service
+    ↓
+Prisma transaction/query
+    ↓
+Response DTO
+    ↓
+Frontend state and feedback
+```
+
+Validation improves usability in the frontend and enforces correctness
+in the backend.
+
+## 5. Database Strategy
+
+- SQLite for development.
+- PostgreSQL recommended for production.
+- Prisma for schema and database access.
+- Versioned migrations.
+- Integer centavos for approved monetary fields.
+- Date-only stay semantics and UTC event timestamps.
+- Restrictive deletion for historical relationships.
+
+SQLite success does not prove PostgreSQL compatibility.
+
+Verify migrations, constraints, date behavior, and concurrent inventory
+operations against the production database before launch.
+
+## 6. Configuration
+
+Keep environment-specific values outside source code.
+
+Backend configuration categories:
+
+- Server port.
+- Database connection.
+- Allowed frontend origins.
+- JWT signing and validation.
+- Refresh-session settings.
+- PayMongo credentials.
+- Webhook verification secret.
+- Upload storage.
+- Encryption keys when required.
+- Approved business policies.
+
+The current bootstrap listens on port 3000; a configurable PORT is not
+implemented by main.ts. Prisma CLI reads DATABASE_URL, while PrismaService
+uses a fixed SQLite runtime path; confirm targets before authorized migrations.
+PayMongo/webhook/encryption/business-policy entries above are future categories,
+not proof of implemented configuration consumers.
+
+Frontend configuration contains public values such as the API base URL.
+
+Vite frontend environment values are visible to users.
+Never place backend secrets in frontend configuration.
+
+Room image storage supports ROOM_IMAGE_STORAGE_DIR; the default is
+../storage/room-images relative to backend/. Installed exact versions for all
+62 direct application dependencies are in [AGENTS.md](AGENTS.md#b-installed-dependencies-and-exact-versions).
+
+Auth configuration reads JWT_ACCESS_SECRET and AUTH_ALLOWED_ORIGINS. Email
+delivery reads SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, and
+AUTH_VERIFY_URL. These are variable names only; actual values remain outside
+documentation. See [security](SECURITY.md) for transport and monitoring limits.
+
+## 7. Development Roadmap
+
+| Phase | Deliverable | Status |
+|---|---|---|
+| 01 — Project Foundation | Two React JSX applications, NestJS backend, API connection | COMPLETED |
+| 02 — Database Foundation | Models, relationships, migrations, seeds | COMPLETED |
+| 03 — Authentication & RBAC | Sessions, roles, optional guest accounts | COMPLETED — 8/8 steps |
+| 04 — Room Management | Types, rooms, rates, images, amenities, states/blocks, inventory safety | COMPLETED — 7/7 steps |
+| 05 — Guest Website | Shared layout, homepage, room listing/detail, search/pricing foundations | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete, frontend in progress; Steps 6–7 pending |
+| 06 — Reservation System | Holds, bookings, assignments, check-in/out | NOT STARTED / AWAITING APPROVAL |
+| 07 — Payment System | PayMongo and Pay at Property | NOT STARTED / AWAITING APPROVAL |
+| 08 — Admin Dashboard | Operational screens and statistics | NOT STARTED / AWAITING APPROVAL |
+| 09 — NFC Management | Cards, assignments, simulations, later device integration | NOT STARTED / AWAITING APPROVAL |
+| 10 — Reports & Settings | Reports, policies, audit views | NOT STARTED / AWAITING APPROVAL |
+| 11 — Testing & Security | Integrated journeys and failure scenarios | NOT STARTED / AWAITING APPROVAL |
+| 12 — Production Deployment | Hosting, recommended PostgreSQL, storage, recovery, monitoring | NOT STARTED / AWAITING APPROVAL |
+
+Security and testing apply throughout development.
+Phase 11 provides broader integrated verification.
+
+## 8. Testing Strategy
+
+| Level | What to verify |
+|---|---|
+| Unit | Pricing, date rules, transitions, permission decisions |
+| Database integration | Constraints, rollback, inventory contention |
+| API integration | Validation, ownership, RBAC, response contracts |
+| Frontend | Forms, loading, errors, booking and staff workflows |
+| End-to-end | Complete guest and reception journeys |
+| External integration | PayMongo test mode and selected NFC hardware |
+
+Phase 3 acceptance includes isolated auth, ownership, registration, and HTTP
+security suites. Phase 4 adds isolated room-type/room/amenity/image, validation,
+status/block, snapshot and inventory tests; this documentation task inspected
+them without executing a new regression run. See [test prerequisites and commands](IMPLEMENTATION_GUIDE.md#15-command-guidance)
+and [reported versus inspected evidence](SECURITY.md#14-security-acceptance-checks).
+
+Use the project's configured test tools and scripts.
+
+Do not replace existing tooling without a reason and approval.
+
+## 9. Operational Requirements
+
+Production requires:
+
+- HTTPS.
+- A publicly reachable PayMongo webhook endpoint.
+- Durable database and image storage.
+- Restricted database access.
+- Managed secrets.
+- Database backups and tested restoration.
+- Application and integration monitoring.
+- Migration procedures.
+- NFC failure procedures after hardware selection.
+
+Hosting providers and deployment domains remain TBD.
+
+## 10. Guest Website Checkpoint
+
+Phase 5 Steps 1–3 are owner-confirmed complete. Steps 4–5 backend work is
+complete; frontend date/guest search and searched-stay quote integration remain
+in progress. The repository now includes
+GuestLayout, Footer, RoomCard, useRoomTypes/useRoomDetails, RoomDetails,
+roomTypesApi, tokens.css, and formatMoney. The backend adds AvailabilityModule
+and a public read-only availability/stay-price quote. No schema migration is
+introduced by this work.
+
+The current guest pages display backend nightly rates but do not call the new
+availability API or provide a date/guest search form/stay-total display. Record
+that source boundary alongside the owner's partial-completion clarification. Steps 6–7
+remain pending; existing UI states/CSS are not a completed acceptance pass.
+See [current checklist](AGENTS.md#c-completed-project-phases) and [API](API.md).
+
+For Steps 4–5, backend implementation is owner-confirmed complete, with frontend
+integration still in progress. Seven quick rule checks were reported from a
+separate copy; permanent availability tests and full local build/lint results
+remain unverified. See [reported checks and limitations](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45).
+
+## 11. Architecture and Implementation Review Items
+
+Audit authority: [docs/NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md).
+Architecture requirements, inspected implementation, and owner-confirmed
+milestones serve different purposes. Do not change requirements to justify a
+source deviation or treat accepted phase completion as production readiness.
+
+| Item | Approved baseline / observed source | Disposition |
+|---|---|---|
+| Reception room-status writes | Architecture section 4 lists reception room/rate management as View. RoomStatusController and RoomStatusService allow RECEPTIONIST to switch READY and CLEANING. | **OWNER REVIEW REQUIRED:** confirm whether housekeeping transitions are an intended exception. Keep the baseline table and document actual route behavior; this audit authorizes neither a permission expansion nor a source correction. |
+| Physical project layout | The blueprint's illustrative tree places guest-web/admin-web at root; the repository uses frontend/guest-web and frontend/admin-web. | Document the actual paths without moving files or changing the two-frontend/one-API architecture. |
+| Informational inventory | Architecture requires transaction-safe double-booking prevention; current search calculates nightly type-level capacity, and physical-room helpers reserve nothing. | Preserve the requirement for future booking writers. Current search is informational, not proof that a complete booking/allocation flow exists. |
+| Property policies | Code limits search to 30 nights and uses broad signed-integer capacity/rate bounds. Hold duration, cancellation, no-show, arrival cutoffs, and production deployment choices remain unresolved. | Document code constants without inventing property policy. Policy changes require owner approval. |
+| Current schema extensions | Initial blueprint has 23 core models; the accepted foundation adds RoomTypeAmenity and subsequent work adds EmailVerificationToken and canceledAt. | Preserve 25 current models and four migrations. Do not replace them with historical examples. |
+
+No new step completion is accepted by this audit. The owner checkpoint remains
+Phases 1–4 complete; Phase 5 Steps 1–3 complete, Steps 4–5 backend complete and
+frontend in progress, Steps 6–7 pending; Phase 6 onward awaits approval.
+
+Outstanding verification remains local build/lint for availability, permanent
+availability regression coverage, frontend search/quote integration and browser
+acceptance, the legacy end-to-end fixture, deployed CORS/cookies, real SMTP,
+backups/recovery, and PostgreSQL compatibility. Existing Phase 3 23/23 and seven
+quick availability checks remain reported evidence, not test executions in this
+audit. See [verification context](IMPLEMENTATION_GUIDE.md#reported-backend-checks-for-steps-45)
+and [security concerns](SECURITY.md#15-production-hardening-and-open-concerns).
+
+
+## Phase 7.3 — Implemented runtime configuration
+
+PAYMONGO_TEST_WEBHOOK_SECRET is consumed only by backend signature verification. PAYMONGO_TEST_SECRET_KEY remains the separate test API credential. Normal Prisma runtime still defaults to backend/dev.db; isolated manual runs must explicitly set NEXORA_RUNTIME_DATABASE_URL to an absolute file: test path before startup. Webhook registration requires a publicly reachable HTTPS endpoint; local automated tests use signed synthetic events and no provider network calls.

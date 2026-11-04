@@ -31,10 +31,33 @@ export class PaymongoAdapter {
 
   async create(input: { paymentId: string; reference: string; amountCentavos: number },
     settings: ReturnType<PaymongoAdapter['settings']>) {
-    const success = new URL(settings.returnUrl);
-    success.searchParams.set('outcome', 'returned');
-    const cancel = new URL(settings.returnUrl);
-    cancel.searchParams.set('outcome', 'cancelled');
+        const success = new URL(
+      settings.returnUrl,
+    );
+
+    success.searchParams.set(
+      'outcome',
+      'returned',
+    );
+
+    success.searchParams.set(
+      'booking',
+      input.reference,
+    );
+
+    const cancel = new URL(
+      settings.returnUrl,
+    );
+
+    cancel.searchParams.set(
+      'outcome',
+      'cancelled',
+    );
+
+    cancel.searchParams.set(
+      'booking',
+      input.reference,
+    );
     const response = await fetch('https://api.paymongo.com/v2/checkout_sessions', {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10_000),
       headers: { Authorization: `Basic ${Buffer.from(`${settings.secret}:`).toString('base64')}`,

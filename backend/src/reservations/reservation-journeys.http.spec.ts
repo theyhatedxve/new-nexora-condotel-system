@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import {
   mkdtempSync,
   readFileSync,
@@ -145,21 +145,50 @@ function publicBooking(
   email = 'guest@example.test',
 ) {
   return request(app.getHttpServer())
-    .post('/api/reservations/pay-at-property')
+    .post('/api/reservations/access/guest-bookings')
     .set('Origin', origin)
-    .send(input(email));
+    .send({
+      ...input(email),
+      requestId: randomUUID(),
+      recoveryToken: randomBytes(32).toString('hex'),
+      paymentPreference: 'PAY_AT_PROPERTY',
+      arrivalTime: '23:59',
+      acknowledgmentAccepted: true,
+    });
+}
+
+async function confirmCreatedBooking(
+  reservationNumber: string,
+) {
+  const booking = await prisma.reservation.findUniqueOrThrow({
+    where: { reservationNumber },
+  });
+
+  expect(booking.status).toBe('PENDING');
+
+  await request(app.getHttpServer())
+    .post(`/api/reservations/${booking.id}/guest-request/contact`)
+    .set('Authorization', bearer())
+    .send({ channel: 'PHONE' })
+    .expect(200);
+
+  await request(app.getHttpServer())
+    .post(`/api/reservations/${booking.id}/guest-request/confirm`)
+    .set('Authorization', bearer())
+    .send({ guestAgreed: true })
+    .expect(200);
+
+  return prisma.reservation.findUniqueOrThrow({
+    where: { id: booking.id },
+  });
 }
 
 async function book() {
-  const response =
-    await publicBooking().expect(201);
+  const response = await publicBooking().expect(200);
 
-  return prisma.reservation.findUniqueOrThrow({
-    where: {
-      reservationNumber:
-        response.body.data.reservationNumber,
-    },
-  });
+  return confirmCreatedBooking(
+    response.body.data.reservationNumber,
+  );
 }
 
 async function privateCookie(
@@ -649,7 +678,11 @@ describe(
         const replacement =
           await publicBooking(
             'other@example.test',
-          ).expect(201);
+          ).expect(200);
+
+        await confirmCreatedBooking(
+          replacement.body.data.reservationNumber,
+        );
 
         expect(
           replacement.body.data
@@ -818,7 +851,11 @@ describe(
         const next =
           await publicBooking(
             'next@example.test',
-          ).expect(201);
+          ).expect(200);
+
+        await confirmCreatedBooking(
+          next.body.data.reservationNumber,
+        );
 
         const nextBooking =
           await prisma.reservation.findUniqueOrThrow({

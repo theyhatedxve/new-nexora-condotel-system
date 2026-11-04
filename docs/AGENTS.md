@@ -1,12 +1,34 @@
 # NEXORA — Development Reference and Completion Checklist
 
-**Last synchronized:** 2026-11-01. Paths are relative to D:\Web-JSX\NEXORA.
-**Current checkpoint:** Phases 1–6 are COMPLETED per owner confirmation,
+**Last synchronized:** 2026-11-04. Paths are relative to D:\Web-JSX\NEXORA unless an isolated path is explicitly named.
+
+**Current owner-confirmed roadmap (2026-11-03):** Phases 1–8 and 10 are
+COMPLETED. Phase 9 (NFC Management) is POSTPONED. Phase 11 (Testing and Security)
+is IN PROGRESS; the owner recalls completing Steps 11.1–11.2, but the exact step
+checkpoint still needs confirmation. Do not mark Phase 11 fully complete.
+Phase 12 has not been reported complete and is not authorized by this update.
+
+**Current work:** Main-project testing after the owner completed transfer/migration
+of the isolated backend and frontend changes. Testing is focused on the redesigned
+guest payment and booking flows, including the current PayMongo property-review
+case. This does not restart completed development phases.
+
+**Current continuation checkpoint:** Phase 11 remains in progress. The owner reports completing migration/transfer of the isolated backend and frontend into the main project and is now testing the transferred system there, focusing on the guest payment and booking flows. The latest reported browser state is a PayMongo booking whose hold deadline has passed and which requests property review. That booking is unresolved; do not infer payment, cancellation, or confirmation from the page alone. See [section J](#j-current-checkpoint-phase-11-main-project-testing-2026-11-04) and [AI_HANDOFF.md](AI_HANDOFF.md) for context.
+
+**Historical milestone snapshot:** The phase descriptions below retain the
+earlier 2026-11-01 record. Later owner-approved work exists, including admin and
+payment modules. Older "not started" statements are not a current inventory or
+instructions to restart those phases. The roadmap above and section C govern
+current phase status; section J governs the current redesign. Where
+AI_HANDOFF.md or another guide retains an older phase status, use this latest
+owner update. Completion below is owner-reported, not a new source/test audit.
+
+**Earlier completion record:** Phases 1–6 are COMPLETED per owner confirmation,
 including Phase 3 (8/8), Phase 4 (7/7), Phase 5 (7/7) and Phase 6 (10/10).
-**Current phase:** Phase 7 — Payment System: IN PROGRESS.
-**Steps 7.1–7.2:** Accepted for advancement by owner instruction; provider smoke result not independently observed.
-**Step 7.3:** Installed; 398 tests across 25 files passed; actual verified PayMongo test receipt confirmed. Provider HTTP acknowledgment, manual redelivery and final owner acceptance remain unconfirmed.
-**Steps 7.4–7.8:** NOT STARTED.
+**Earlier phase tracker:** Phase 7 — Payment System: IN PROGRESS.
+**Earlier Steps 7.1–7.2:** Accepted for advancement by owner instruction; provider smoke result not independently observed.
+**Earlier Step 7.3:** Installed; 398 tests across 25 files passed; actual verified PayMongo test receipt confirmed. Provider HTTP acknowledgment, manual redelivery and final owner acceptance remained unconfirmed in that snapshot.
+**Earlier Steps 7.4–7.8:** Recorded as NOT STARTED in that snapshot; not a current source assessment.
 
 ## A. Project Identity and Architecture
 
@@ -31,7 +53,9 @@ including Phase 3 (8/8), Phase 4 (7/7), Phase 5 (7/7) and Phase 6 (10/10).
   access flow; automatic User/Guest linking and a JWT booking-list API are not
   established by the inspected checkout. Read-only payment summaries are now
   implemented. Test-mode Hosted Checkout and verified webhook receipt processing
-  are installed; live payments, staff collection, refunds and NFC remain later work.
+  are installed. Staff collection and payment operations were developed in later
+  owner-completed phases; the older handoff sections below do not describe their
+  full current scope. NFC remains postponed. Live payments are not authorized.
 - Never publish real .env contents, credentials, raw tokens, password hashes,
   private guest records, database contents, or NFC cryptographic material.
 
@@ -163,11 +187,12 @@ install merely to inspect versions. package.json ranges alone are insufficient.
 
 ## C. Completed Project Phases
 
-Phases 1–6 are owner-confirmed complete. Historical inspection and review-copy
-notes below are attributed to those earlier handoffs. The current Step 7.3
-local test/build/lint and manual provider results are recorded in the final
-checkpoint section. Email/private-booking UI observations are owner-reported;
-full browser and production acceptance remain separate.
+Phases 1–8 and 10 are owner-confirmed complete. Phase 9 is postponed and Phase 11
+remains in progress. The owner tentatively reports Steps 11.1–11.2 complete;
+confirm that checkpoint before selecting the next numbered testing/security
+step. Historical inspection and review-copy notes below remain attributed to
+their original handoffs, not newly executed checks. Current work is the
+guest-web UI/UX redesign, specifically the payment experience in section J.
 
 | Phase | Status | Delivered scope |
 |---|---|---|
@@ -177,8 +202,24 @@ full browser and production acceptance remain separate.
 | 4 — Room Management | COMPLETED — 7/7 | Room types, physical rooms, amenities, images, rates/capacity, operational states, blocks and eligibility helpers |
 | 5 — Guest Website | COMPLETED — 7/7 | Homepage, room browsing/details, integrated availability search, server-priced stay display, feedback and responsive/keyboard work |
 | 6 — Reservation System | COMPLETED — 10/10 | Registered reservation API, guest checkout/private access, assignment history, lifecycle/expiration, cancellation, staff stays and accepted regression work |
-| 7 — Payment System | IN PROGRESS | Steps 7.1–7.2 accepted for advancement; Step 7.3 locally verified with an actual verified test receipt; final manual acceptance pending; Steps 7.4–7.8 NOT STARTED |
-| 8–12 | NOT STARTED / AWAITING APPROVAL | Admin operations; NFC; reports/settings; integrated testing/security; deployment |
+| 7 — Payment System | COMPLETED — owner-confirmed | Payment development milestone complete; current payment UI/UX and booking-policy redesign remains separate ongoing work |
+| 8 — Admin Dashboard | COMPLETED — owner-confirmed | Admin operations and staff workspace milestone complete |
+| 9 — NFC Management | POSTPONED | Resume only when explicitly requested; do not treat as implemented or complete |
+| 10 — Reports and Settings | COMPLETED — owner-confirmed | Reports and settings milestone complete |
+| 11 — Testing and Security | IN PROGRESS | Steps 11.1–11.2 tentatively completed per owner recollection; exact checkpoint requires confirmation |
+| 12 — Production Deployment | NOT REPORTED COMPLETE / NOT AUTHORIZED | No deployment is authorized by this documentation update |
+
+### Current completion checklist
+
+- [x] Phases 1–8 completed, per owner confirmation.
+- [x] Phase 10 completed, per owner confirmation.
+- [ ] Phase 9 NFC implementation — postponed, not completed.
+- [ ] Confirm the exact Phase 11 checkpoint; Steps 11.1–11.2 are tentatively reported complete.
+- [ ] Finish remaining Phase 11 testing/security work after that checkpoint is confirmed.
+- [ ] Complete the current guest payment UI/UX redesign and its remaining acceptance checks in section J.
+
+Do not interpret completed original phases as acceptance of the unfinished
+payment redesign, its main-project transfer, or production deployment.
 
 ### Phase 1 — Project Foundation
 
@@ -419,12 +460,12 @@ presence. No application test, build, lint, browser check, SMTP send, migration
 or seed was executed for this documentation update. Production acceptance,
 real SMTP/cookies, PostgreSQL behavior and physical hardware remain separate.
 
-### Phase 7 — Payment System (In Progress)
+### Phase 7 — Payment System (Completed; historical handoff below)
 
-Steps 7.1–7.2 are accepted for advancement. Step 7.3 source is installed,
-current local checks passed and an actual verified test receipt is confirmed. Steps
-7.4–7.8 are NOT STARTED. See section I and the final checkpoint for the
-financial contracts, attributed historical reports and current execution results.
+Phase 7 is completed per the latest owner confirmation. Section I retains the
+earlier Steps 7.1–7.3 handoff and its verification evidence; its old pending
+items are historical, not the current development roadmap. The payment UI/UX
+redesign is ongoing and tracked separately in section J.
 
 ## D. Backend Structure
 
@@ -455,7 +496,10 @@ registered business controllers. Full current directory map: docs/DIRECTORY_STRU
 
 ## E. Database Architecture and Safety
 
-- Current schema: **27 Prisma models and six migration source directories** under backend/prisma/.
+- Current source schema: **28 Prisma models and seven migration source directories**
+  in both main and the isolated backend, inspected on 2026-11-03. The main
+  implementation is only partially copied; see section J before any generation,
+  deployment or database operation.
   Step 7.2 adds nullable checkout-attempt fields and a unique request-key index;
   Steps 7.1 and 7.3 need no new schema or migration.
   Phase 6 private access adds ReservationAccessToken and ReservationAccessSession
@@ -464,14 +508,21 @@ registered business controllers. Full current directory map: docs/DIRECTORY_STRU
   Tokens/sessions store hashes, not raw credentials.
   Preserve the original foundation and accepted extensions, including
   RefreshToken.familyId, EmailVerificationToken and RoomBlock.canceledAt.
+  The guest-booking redesign adds GuestBookingAttempt and six nullable
+  Reservation policy/timing fields. Existing records must not receive invented
+  arrival times or retrospective application of the revised booking policy.
 - Migration history: 20261027150551_init,
   20261029133315_add_refresh_token_family,
   20261030134255_add_email_verification_tokens, and
   20261031_phase4_step6_room_block_cancellation, and
   20261101070000_reservation_private_access (two additive access tables/indexes), and
-  20261101090000_payment_checkout_attempts.
-  No migration was applied to any dev.db. Current tests apply the existing SQL
-  only to disposable synthetic databases; no new migration was introduced.
+  20261101090000_payment_checkout_attempts, and
+  20261103090000_guest_booking_flow (guest request ledger, nullable policy/timing
+  fields and indexes). This is a source-directory inventory, not proof of main
+  database deployment history. Redesign checks used disposable databases per
+  owner-supplied evidence. Main dev.db history and a transfer/migration plan
+  remain separate review items; no database operation is authorized by this
+  documentation update.
 - PrismaService defaults to file:./dev.db relative to the process directory.
   Manual testing must explicitly set NEXORA_RUNTIME_DATABASE_URL to an absolute
   file: URL for a fresh isolated database. Run the backend from backend/. Prisma CLI reads
@@ -618,9 +669,14 @@ DATABASE_SCHEMA.md, SECURITY.md, BUSINESS_FLOWS.md and DIRECTORY_STRUCTURE.md.
 Other Markdown files may retain older status/API descriptions. Keep
 project Markdown under docs/, with only README.md at the repository root.
 
-## I. Phase 7 — Payment System (In Progress)
+## I. Phase 7 — Payment System (Historical implementation handoff)
 
-Phase 7 — Payment System: **IN PROGRESS**.
+Phase 7 — Payment System: **COMPLETED per latest owner confirmation**.
+
+The step-level notes in this section retain the earlier handoff snapshot.
+Historical pending/not-started labels below are superseded by section C and
+must not be used to restart completed phases. They remain evidence of what was
+observed at that time, not a fresh verification of all later work.
 
 **Steps 7.1–7.2:** accepted for advancement by owner instruction.
 **Step 7.3:** installed, locally verified and actual verified test receipt
@@ -708,7 +764,7 @@ Prisma CLI migrate deploy failed in this environment with a schema-engine error.
 Checkout targets existing CONFIRMED bookings with remaining stay dates. CREATING/READY/UNKNOWN are checkout-link states, never payment success. The adapter only permits test credentials. Normal database access still defaults to backend/dev.db; isolated manual testing must set NEXORA_RUNTIME_DATABASE_URL to an absolute file: path.
 
 
-## Phase 7.3 — Verified test webhook handoff (current checkpoint)
+## Phase 7.3 — Verified test webhook handoff (historical checkpoint)
 
 This checkpoint supersedes earlier planned-status descriptions. On 2026-11-01,
 all 25 prepared-manifest destinations matched the repository byte-for-byte:
@@ -800,3 +856,138 @@ Remaining checklist:
 - [ ] Obtain final owner acceptance; Step 7.4 remains outside this task.
 
 Basic event uniqueness and atomic receipt/event/audit writes are required safety within Step 7.3. Expanded retry/recovery and reconciliation are still Steps 7.4 and 7.7. Do not mark them complete from these tests.
+
+## J. Current checkpoint - Phase 11 main-project testing (2026-11-04)
+
+This is the current owner-reported checkpoint. Phases 1-8 and 10 are complete;
+Phase 9 (NFC) is postponed. Phase 11 (Testing and Security) remains in progress.
+The owner tentatively recalls completing Steps 11.1-11.2; confirm the precise
+checkpoint before selecting the next numbered Phase 11 step. The isolated backend and frontend migration/transfer to the main project is
+reported complete by the owner. The active work is now testing the transferred
+implementation in the main project, especially guest payment and booking flows.
+Do not treat the redesign as a new numbered phase or mark Phase 11 complete.
+
+### What changed since the previous checkpoint
+
+- The pending guest-booking flow now supports both Pay at Property and PayMongo.
+  Pay at Property requests begin pending and require staff contact plus recorded
+  guest agreement before confirmation. PayMongo requests begin pending with an
+  online hold; only timely, verified payment may confirm a booking.
+- Guest booking creation, recovery, required expected arrival, booking receipts,
+  reference-bound checkout, private access, verified payment summaries and
+  deadline handling were added or updated. Return URL parameters do not establish
+  payment success.
+- Staff booking actions and the admin reservation details panel support recording
+  contact, confirming guest agreement and rejecting a Pay at Property request.
+  These actions do not record a payment.
+- The owner now confirms migration/transfer of the isolated backend and frontend
+  to the main project is complete. Supplied console output showed 50 reviewed
+  source files matched the isolated snapshot; a database backup and migration
+  rehearsal were completed before applying the rehearsed database to backend/dev.db.
+  The supplied checks reported preserved records, matching schema, SQLite integrity
+  success and zero foreign-key violations. Treat these as owner-supplied evidence;
+  testing of the transferred system is the current stage.
+- No new dependency was introduced for the booking/payment redesign. The prior
+  dependency inventory remains dated 2026-11-01 and has not been refreshed here.
+
+### Current workspace and database state
+
+| Location | Meaning |
+|---|---|
+| D:\Web-JSX\NEXORA | Main project. The owner reports that the isolated redesign source was transferred here and the rehearsed database was applied to backend/dev.db. |
+| C:\Users\chrst\AppData\Local\Temp\nexora-guest-payment-2ec027c638874bea8376bd851d04ee17 | Isolated review workspace; preserve for comparison until the owner says it may be removed. |
+| D:\Web-JSX\NEXORA\backups | Contains the owner-created pre-transfer database and source backups. Preserve them. |
+
+Do not clean or replace either database. The latest screenshot shows an online
+booking after its displayed hold deadline and says the booking/payment needs
+property review. Its persisted reservation/payment state has not been supplied.
+Do not advise another payment or another booking until staff/backend state is
+checked. A passed deadline or UI warning alone does not prove whether a webhook
+was received, payment was recorded, or the reservation was cancelled.
+
+### Approved booking rules and implemented flow
+
+- **Pay at Property:** starts as PENDING. Authorized staff records phone/email
+  contact and explicit guest agreement before confirmation. First contact starts
+  the 24-hour response window; repeated contact does not extend it. The earlier
+  deadline applies: response deadline or expected arrival plus 30 minutes.
+  Confirming agreement does not record payment.
+- **PayMongo:** starts as PENDING with a 15-minute hold. A verified, matching,
+  timely full PHP payment and safe inventory are required for confirmation.
+  Late, mismatched, cancelled, expired or conflicting captures need review; do
+  not revive a closed reservation or automatically check a guest in.
+- Guest-selected arrival is interpreted in Asia/Manila. Backend snapshots are
+  authoritative. Guest accounts remain optional; booking references alone do
+  not authorize private data access.
+- The webhook uses the original request bytes, backend-only test signing secret,
+  HMAC-SHA256 and timing-safe signature comparison. Only verified test-mode
+  paid checkout events can create payment evidence. Payment, event and audit
+  writes are atomic and duplicate-safe. Never infer success from a return URL.
+
+### Main implementation areas
+
+All paths below are relative to the main NEXORA project unless noted.
+
+| Area | Scope |
+|---|---|
+| backend/prisma/schema.prisma and backend/prisma/migrations/20261103090000_guest_booking_flow/ | Guest booking attempt ledger and policy/arrival/contact/deadline fields; owner reports the rehearsal migration was applied to main dev.db. |
+| backend/src/reservations/guest-booking files, related DTOs/controllers and reservations.module.ts | Booking creation/recovery, policy deadlines, privacy-scoped guest routes and staff actions. |
+| backend/src/payments/pending-online-booking.ts, checkout/webhook/deadline services and adapters | Pending PayMongo checkout, provider expiration, verified receipt processing and late/conflict review behavior. |
+| frontend/guest-web/src/pages/Checkout.jsx, GuestBookingReceipt, booking hooks/utilities and guest-checkout.css | Payment selection, expected arrival, recoverable request, booking receipt and checkout context. |
+| frontend/guest-web/src/pages/MyBooking.jsx, BookingPayment and PaymentReturn.jsx | Backend-derived payment status, stay/payment summaries and return-context handling. |
+| frontend/admin-web/src/components/GuestBookingStaffPanel.jsx, pages/ReservationDetails.jsx and staff API helper | Staff contact/agreement/rejection controls and refreshed reservation details. |
+
+### Main-project testing checkpoint and next diagnostic
+
+The owner reports that the latest main-project booking/payment page displays the message
+that the displayed deadline has been reached and the booking/payment needs
+property review before paying again.
+This is an unresolved review state, not evidence of payment success or failure.
+The earlier isolated end-to-end PayMongo test was reported paid and verified; it
+does not establish the state of this later booking in the main database.
+
+Next, inspect the exact booking through the page's Check original booking and payment action and, if needed, the protected staff reservation details/payment
+summary. Confirm its persisted reservation status, payment status, review flag,
+and whether a verified provider event/receipt exists. Do not paste secrets,
+cookies, access tokens, full provider payloads, or private guest data into chat.
+Do not pay again, delete booking records, clear the database, or create a
+replacement booking until that review is resolved.
+
+### Verification record and remaining work
+
+The owner previously supplied passing isolated automated/build/lint results
+and reported a successful isolated PayMongo test payment. Those results are
+historical and do not replace testing in the main project. The owner reports the
+backend/frontend transfer and database migration are complete and is now testing
+in main. The current main-project booking still needs property-review investigation.
+This documentation update did not run tests, inspect credentials, start services,
+or independently verify the current booking.
+
+- [x] Phases 1-8 and 10 owner-confirmed complete.
+- [x] Phase 9 recorded as postponed; do not implement NFC without renewed request.
+- [x] Phase 11 remains in progress; 11.1-11.2 are tentative owner recollection.
+- [x] Owner confirms isolated backend and frontend transfer/migration to main
+  is complete.
+- [x] Main database backup and migration rehearsal were completed; supplied checks
+  showed record preservation, schema match and SQLite integrity.
+- [ ] Test the transferred backend and both frontends in the main project.
+- [x] Isolated PayMongo test payment was previously reported verified.
+- [ ] Confirm exact Phase 11 step checkpoint.
+- [ ] Resolve the current main-project booking's property-review state using
+  persisted staff/payment evidence; do not infer from the deadline banner.
+- [ ] Complete remaining guest payment UX/browser acceptance, including Pay at
+  Property and online payment outcomes, after the current booking is resolved.
+- [ ] Review remaining Phase 11 testing/security work, then record completion
+  only after owner confirmation and evidence.
+- [ ] Keep Phase 9 postponed. Phase 12 deployment remains unauthorized unless
+  explicitly requested.
+
+### Continuation instructions
+
+Inspect current source, configuration and persisted booking state before
+recommending fixes. Never print or request live secrets or private guest data.
+Respect the owner's workflow: explain a proposed step and provide exact paths
+when code is needed; the owner runs tests unless they explicitly change that
+instruction. Do not run tests, migrate, seed, clean databases, delete backups,
+deploy, commit or push without explicit authorization. The current request
+authorizes only this docs/AGENTS.md update. Do not change other Markdown files.

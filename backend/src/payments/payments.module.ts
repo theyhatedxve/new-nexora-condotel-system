@@ -15,6 +15,17 @@ import { PaymongoRefundAdapter } from './paymongo-refund.adapter.js';
 import { PaymentReconciliationController } from './payment-reconciliation.controller.js';
 import { PaymentReconciliationService } from './payment-reconciliation.service.js';
 import { PaymongoReconciliationAdapter } from './paymongo-reconciliation.adapter.js';
+import {
+  PaymongoCheckoutExpirationAdapter,
+} from './paymongo-checkout-expiration.adapter.js';
+
+import {
+  GuestBookingDeadlineService,
+} from './guest-booking-deadline.service.js';
+
+import {
+  GuestBookingDeadlineWorker,
+} from './guest-booking-deadline.worker.js';
 
 import { StaffPaymentsController } from './staff-payments.controller.js';
 import { StaffPaymentsService } from './staff-payments.service.js';
@@ -39,6 +50,9 @@ import { StaffPaymentsService } from './staff-payments.service.js';
     PaymentReconciliationService,
     PaymongoReconciliationAdapter,
     StaffPaymentsService,
+    GuestBookingDeadlineService,
+    GuestBookingDeadlineWorker,
+    PaymongoCheckoutExpirationAdapter,
   ],
   exports: [PaymentSummaryService, CheckoutService],
 })

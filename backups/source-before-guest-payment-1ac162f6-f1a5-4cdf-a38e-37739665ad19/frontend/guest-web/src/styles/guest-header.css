@@ -1,0 +1,146 @@
+.guest-header {
+  position: relative;
+  z-index: 20;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-bottom: 1px solid rgb(217 187 124 / 22%);
+}
+
+.guest-header__inner {
+  width: min(1200px, calc(100% - 3rem));
+  min-height: 88px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.guest-header__brand {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 0.25rem;
+}
+
+.guest-header__logo {
+  display: block;
+  width: 224px;
+  height: auto;
+}
+
+.guest-header__navigation {
+  display: flex;
+  align-items: center;
+  gap: 2.25rem;
+}
+
+.guest-header__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.5rem 0;
+  border-bottom: 2px solid transparent;
+  color: var(--color-on-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.guest-header__link:hover,
+.guest-header__link[aria-current="page"] {
+  color: var(--color-gold-light);
+  border-bottom-color: var(--color-gold-light);
+}
+
+.guest-header__booking-link {
+  padding: 0.65rem 1.15rem;
+  border: 1px solid rgb(217 187 124 / 65%);
+  border-radius: 0.4rem;
+}
+
+.guest-header__booking-link:hover,
+.guest-header__booking-link[aria-current="page"] {
+  background: rgb(217 187 124 / 10%);
+  border-color: var(--color-gold-light);
+}
+
+.guest-header__toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgb(217 187 124 / 45%);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--color-on-primary);
+  cursor: pointer;
+}
+
+.guest-header a:focus-visible,
+.guest-header button:focus-visible {
+  outline: 3px solid var(--color-gold-light);
+  outline-offset: 5px;
+}
+
+@media (max-width: 760px) {
+  .guest-header__inner {
+    width: calc(100% - 2rem);
+    min-height: 76px;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0;
+  }
+
+  .guest-header__logo {
+    width: 190px;
+  }
+
+  .guest-header__toggle {
+    display: inline-flex;
+  }
+
+  .guest-header__navigation {
+    display: none;
+    flex: 1 0 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.75rem 0 1.25rem;
+    border-top: 1px solid rgb(217 187 124 / 18%);
+  }
+
+  .guest-header__navigation.is-open {
+    display: flex;
+  }
+
+  .guest-header__link {
+    justify-content: flex-start;
+    padding: 0.8rem 0.75rem;
+    border-bottom: 0;
+    border-radius: 0.4rem;
+  }
+
+  .guest-header__link:hover,
+  .guest-header__link[aria-current="page"] {
+    background: rgb(217 187 124 / 10%);
+  }
+
+  .guest-header__booking-link {
+    margin-top: 0.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guest-header__link {
+    transition: none;
+  }
+}

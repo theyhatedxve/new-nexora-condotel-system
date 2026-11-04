@@ -82,6 +82,31 @@ import {
   StaffReservationsService,
 } from './staff-reservations.service.js';
 
+import {
+  GuestBookingService,
+} from './guest-booking.service.js';
+
+import {
+  GuestBookingStaffService,
+} from './guest-booking-staff.service.js';
+
+import {
+  GuestBookingStaffController,
+} from './guest-booking-staff.controller.js';
+
+import type {
+  MiddlewareConsumer,
+  NestModule,
+} from '@nestjs/common';
+
+import {
+  GuestBookingsController,
+} from './guest-bookings.controller.js';
+
+import {
+  GuestBookingPrivacyMiddleware,
+} from './guest-booking-privacy.middleware.js';
+
 @Module({
   imports: [
     PrismaModule,
@@ -97,6 +122,8 @@ import {
     ReservationCancellationController,
     ReservationStayController,
     StaffReservationsController,
+    GuestBookingsController,
+    GuestBookingStaffController,
   ],
   providers: [
     RoomRateCapacityService,
@@ -109,6 +136,22 @@ import {
     ReservationCancellationService,
     ReservationStayService,
     StaffReservationsService,
+    GuestBookingService,
+    GuestBookingStaffService,
   ],
 })
-export class ReservationsModule {}
+export class ReservationsModule
+  implements NestModule
+{
+  configure(
+    consumer: MiddlewareConsumer,
+  ): void {
+    consumer
+      .apply(
+        GuestBookingPrivacyMiddleware,
+      )
+      .forRoutes(
+        GuestBookingsController,
+      );
+  }
+}

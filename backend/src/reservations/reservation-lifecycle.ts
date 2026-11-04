@@ -8,6 +8,11 @@ import type {
   ReservationStatus,
 } from '../generated/prisma/client.js';
 
+import {
+  ARRIVAL_GRACE_MS,
+  GUEST_BOOKING_POLICY_VERSION,
+} from './guest-booking-policy.js';
+
 const transitions: Record<
   ReservationStatus,
   readonly ReservationStatus[]
@@ -20,9 +25,6 @@ const transitions: Record<
   EXPIRED: [],
 };
 
-// Structural rules only.
-// This does not authorize an operation, verify payment,
-// acquire inventory, or implement the other transitions.
 export function assertReservationTransition(
   from: ReservationStatus,
   to: ReservationStatus,
@@ -40,21 +42,55 @@ interface ExpirationOptions {
   propertyId: string;
   now: Date;
   roomTypeId?: string;
+  reservationId?: string;
   limit?: number;
   actorUserId?: string;
 }
 
-// The caller must hold the SQLite write lock
-// and use this same transaction.
-//
-// Property, time and actor come from trusted backend
-// code, never from public request fields.
+function propertyCancellationReason(hold: {
+  holdExpiresAt: Date;
+  expectedArrivalAt: Date | null;
+  responseDeadlineAt: Date | null;
+}) {
+  const arrivalDeadline =
+    hold.expectedArrivalAt === null
+      ? null
+      : new Date(
+          hold.expectedArrivalAt.getTime() +
+            ARRIVAL_GRACE_MS,
+        );
+
+  const responseWins =
+    hold.responseDeadlineAt !== null &&
+    (
+      arrivalDeadline === null ||
+      hold.responseDeadlineAt < arrivalDeadline
+    );
+
+  const expectedDeadline = responseWins
+    ? hold.responseDeadlineAt
+    : arrivalDeadline;
+
+  if (
+    expectedDeadline === null ||
+    expectedDeadline.getTime() !==
+      hold.holdExpiresAt.getTime()
+  ) {
+    return 'PENDING_CONFIRMATION_DEADLINE_EXPIRED';
+  }
+
+  return responseWins
+    ? 'GUEST_RESPONSE_EXPIRED'
+    : 'ARRIVAL_GRACE_EXPIRED';
+}
+
 export async function expirePendingHoldsInTx(
   tx: Prisma.TransactionClient,
   {
     propertyId,
     now,
     roomTypeId,
+    reservationId,
     limit = MAX_EXPIRATION_BATCH,
     actorUserId,
   }: ExpirationOptions,
@@ -75,7 +111,7 @@ export async function expirePendingHoldsInTx(
     );
   }
 
-  const where: Prisma.ReservationWhereInput = {
+    const where: Prisma.ReservationWhereInput = {
     status: 'PENDING',
     holdExpiresAt: {
       lte: now,
@@ -84,6 +120,7 @@ export async function expirePendingHoldsInTx(
       propertyId,
     },
     ...(roomTypeId ? { roomTypeId } : {}),
+    ...(reservationId ? { id: reservationId } : {}),
   };
 
   const holds = await tx.reservation.findMany({
@@ -91,6 +128,10 @@ export async function expirePendingHoldsInTx(
     select: {
       id: true,
       holdExpiresAt: true,
+      bookingPolicyVersion: true,
+      paymentPreference: true,
+      expectedArrivalAt: true,
+      responseDeadlineAt: true,
     },
     orderBy: [
       { holdExpiresAt: 'asc' },
@@ -100,12 +141,28 @@ export async function expirePendingHoldsInTx(
   });
 
   let expiredCount = 0;
+  let cancelledCount = 0;
   let releasedAssignmentCount = 0;
 
   for (const hold of holds) {
+    if (hold.holdExpiresAt === null) {
+      continue;
+    }
+
+    const propertyConfirmation =
+      hold.bookingPolicyVersion ===
+        GUEST_BOOKING_POLICY_VERSION &&
+      hold.paymentPreference ===
+        'PAY_AT_PROPERTY';
+
+    const target: ReservationStatus =
+      propertyConfirmation
+        ? 'CANCELLED'
+        : 'EXPIRED';
+
     assertReservationTransition(
       'PENDING',
-      'EXPIRED',
+      target,
     );
 
     const claimed =
@@ -113,12 +170,17 @@ export async function expirePendingHoldsInTx(
         where: {
           id: hold.id,
           status: 'PENDING',
+          bookingPolicyVersion:
+            hold.bookingPolicyVersion,
+          paymentPreference:
+            hold.paymentPreference,
           holdExpiresAt: {
+            equals: hold.holdExpiresAt,
             lte: now,
           },
         },
         data: {
-          status: 'EXPIRED',
+          status: target,
         },
       });
 
@@ -137,22 +199,50 @@ export async function expirePendingHoldsInTx(
         },
       });
 
+    const details = propertyConfirmation
+      ? {
+          policyVersion:
+            hold.bookingPolicyVersion,
+          paymentPreference:
+            hold.paymentPreference,
+          reason: propertyCancellationReason({
+            holdExpiresAt:
+              hold.holdExpiresAt,
+            expectedArrivalAt:
+              hold.expectedArrivalAt,
+            responseDeadlineAt:
+              hold.responseDeadlineAt,
+          }),
+          holdExpiresAt:
+            hold.holdExpiresAt.toISOString(),
+          releasedAssignmentCount:
+            released.count,
+        }
+      : {
+          holdExpiresAt:
+            hold.holdExpiresAt.toISOString(),
+          releasedAssignmentCount:
+            released.count,
+        };
+
     await tx.auditLog.create({
       data: {
         actorUserId: actorUserId ?? null,
-        action: 'reservation.hold_expired',
+        action: propertyConfirmation
+          ? 'reservation.pending_confirmation_cancelled'
+          : 'reservation.hold_expired',
         entityType: 'Reservation',
         entityId: hold.id,
-        detailsJson: JSON.stringify({
-          holdExpiresAt:
-            hold.holdExpiresAt?.toISOString(),
-          releasedAssignmentCount:
-            released.count,
-        }),
+        detailsJson: JSON.stringify(details),
       },
     });
 
-    expiredCount += 1;
+    if (propertyConfirmation) {
+      cancelledCount += 1;
+    } else {
+      expiredCount += 1;
+    }
+
     releasedAssignmentCount += released.count;
   }
 
@@ -168,5 +258,8 @@ export async function expirePendingHoldsInTx(
     expiredCount,
     releasedAssignmentCount,
     hasMore: remaining !== null,
+    ...(cancelledCount > 0
+      ? { cancelledCount }
+      : {}),
   };
 }

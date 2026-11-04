@@ -1,0 +1,310 @@
+# NEXORA — Business Flows
+
+Phases 1–6 are owner-confirmed complete. Phase 7 is IN PROGRESS with the
+read-only payment-summary foundation prepared/verified in the review copy;
+owner-local verification is pending. Payment collection/provider/refund writes
+and NFC integration remain future work. Current routes, permissions and
+operational limits are recorded in [AGENTS.md](AGENTS.md). No application tests
+ran for this documentation update.
+
+### Implemented optional account and session flow
+
+1. Guest may register with first/last name, email, and password; account creation
+   remains optional for booking.
+2. Backend assigns GUEST and transactionally creates the PENDING user, linked
+   guest profile, and hashed email-verification credential.
+3. After commit, SMTP sends a verification link valid for 30 minutes. Delivery
+   failure leaves the account PENDING; eligible guests may request resend.
+4. A valid single-use verification link atomically activates the account.
+5. ACTIVE users log in for a 15-minute access JWT and seven-day HttpOnly refresh
+   credential; refresh rotates the credential and rejects replay/concurrent reuse.
+6. Logout revokes the current session family and clears the refresh cookie.
+   Other login families are independent; already-issued access JWTs may remain
+   valid until expiry while the user remains ACTIVE.
+
+Private record access must explicitly call OwnershipService using the trusted
+identity and allowed staff roles. Cross-guest and missing records return 404;
+roles do not imply record ownership. Private accountless booking access now
+uses a scoped email-link/session flow; reservation numbers alone are insufficient. See [API](API.md) for
+contracts and [security](SECURITY.md) for acceptance and delivery limits.
+
+## 1. Room Search
+
+The public backend endpoint GET /api/availability implements date/capacity
+validation and informational nightly availability/stay pricing. Connected guest
+search and checkout display backend-calculated prices. Listing/detail pages also
+fetch metadata and nightly base rates. No booking is created by search.
+
+```text
+Guest selects dates and guest count
+                 ↓
+Backend validates input
+                 ↓
+Backend evaluates dated inventory and capacity
+                 ↓
+Guest sees eligible room types and current rates
+```
+
+Search does not guarantee inventory until the backend safely acquires it.
+
+## 2. Guest Booking
+
+Accountless Pay at Property checkout is implemented. Selecting an online
+payment method remains future Phase 7 work.
+
+```text
+Select room type
+      ↓
+Enter guest details
+      ↓
+Review backend-calculated amount and policies
+      ↓
+Select payment method
+      ↓
+Backend rechecks inventory
+      ↓
+Create reservation under the applicable hold/confirmation policy
+```
+
+Guest accounts are optional.
+
+For accountless bookings, issue access only through the approved private
+verification mechanism.
+
+## 3. PayMongo Checkout
+
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+
+1. Validate the reservation and the caller's access.
+2. Safely acquire or validate the inventory hold.
+3. Calculate the expected amount in NestJS.
+4. Record the payment attempt.
+5. Create the hosted checkout session.
+6. Send the guest to PayMongo.
+7. Receive the signed payment event.
+8. Verify authenticity and expected payment details.
+9. Process the event once.
+10. Update payment and reservation records under the approved policy.
+11. Display the result obtained from the backend.
+
+A browser redirect may arrive before the verified event.
+Show Processing when payment verification is incomplete.
+
+If checkout creation fails, retain a recoverable attempt state.
+Do not create duplicate sessions blindly after a network timeout.
+
+## 4. Pay at Property
+
+Booking confirmation is implemented; collection writes in steps 6–7 below
+remain future work. Step 7.1 already derives read-only summaries.
+
+1. Guest selects Pay at Property.
+2. Backend validates booking details and inventory.
+3. Eligible booking becomes Confirmed.
+4. Payment remains Unpaid.
+5. Show arrival and payment instructions.
+6. Staff collects payment.
+7. Authorized staff records the collection.
+8. Recalculate the payment summary.
+
+Arrival cutoffs and no-show rules remain TBD.
+
+### Phase 7.1 payment-summary foundation
+
+Payment summaries distinguish completed individual receipts from the booking's
+overall payment state. Pending and failed attempts do not count as collected.
+
+Active booking balances use the stored booking total and net completed
+collections. Pending refunds and excess collections require review.
+
+Existing check-in/out operations reuse the shared calculation while retaining
+their conservative restrictions on provider and refund histories. Payment
+recording and verified online processing remain later Phase 7 steps.
+
+## 5. Hold Expiration
+
+The availability reader excludes expired PENDING holds. Phase 6 acquisition
+and staff lifecycle actions now expire eligible holds, release assignments and
+record audit history transactionally. Late-payment reconciliation remains
+planned Phase 7 work.
+
+1. Compare holdExpiresAt with backend time.
+2. Exclude expired holds from current inventory calculations.
+3. Record expiration through a safe state transition.
+4. Stop treating the expired reservation as confirmed inventory.
+5. Require fresh availability before resuming the booking.
+
+An expired hold stops consuming inventory even when a cleanup task
+has not yet updated its status.
+
+A late successful payment requires reconciliation.
+Do not silently revive an expired booking.
+
+## 6. Room Assignment
+
+Staff assignment, reassignment, release and historical reads are implemented.
+
+1. Verify staff permission.
+2. Verify the reservation is eligible.
+3. Select a physical room of the reserved type.
+4. Check blocks and conflicting assignments.
+5. Preserve any previous assignment history.
+6. Save the new assignment safely.
+
+Do not assign a room based only on its current Ready status.
+
+## 7. Check-in
+
+Staff check-in is implemented with identity, room, assignment and full
+recorded-payment gates. NFC issuance in step 9 remains future work.
+
+1. Verify staff permission.
+2. Find the reservation.
+3. Verify guest identity under property procedure.
+4. Confirm the reservation is eligible for check-in.
+5. Check the applicable payment policy.
+6. Assign or validate the physical room.
+7. Confirm operational readiness.
+8. Record check-in and update operational state.
+9. Issue approved NFC access or an explicitly simulated assignment.
+
+Current check-in/out requires full valid recorded Pay at Property payment.
+Payment recording itself remains future Phase 7 work.
+
+## 8. Check-out
+
+Staff check-out is implemented with payment/occupancy checks, assignment
+release, CLEANING status and audit history. Device revocation actions in the
+diagram remain future work; active card access blocks unsafe checkout.
+
+```text
+Authorized checkout
+        ↓
+Validate stay and applicable settlement policy
+        ↓
+Record checkout
+        ↓
+Room enters Cleaning
+        ↓
+Initiate credential revocation
+        ↓
+Track pending/failed device actions
+        ↓
+Housekeeping verifies room
+        ↓
+Room becomes Ready
+```
+
+Planned NFC integration must persist device-revocation intent with the checkout outcome.
+
+Do not show a credential as physically revoked until the selected hardware
+provides the required confirmation.
+
+## 9. Cancellation and Refund
+
+Staff unpaid cancellation is implemented. Any Payment record requires
+financial review; guest self-service cancellation and refund processing are
+not granted by the private-access session. Refund steps below remain planned.
+
+1. Verify ownership or staff permission.
+2. Evaluate the approved cancellation policy.
+3. Apply an allowed reservation transition.
+4. Release relevant future inventory.
+5. Preserve assignment and payment history.
+6. Determine whether a refund is permitted.
+7. Require Manager or Administrator authorization for refund processing.
+8. Submit the refund through the applicable method.
+9. Record pending, successful, or failed outcomes.
+
+Cancellation does not automatically mean refund success.
+
+The current unpaid pre-check-in cancellation policy has no fee/refund and
+requires no Payment records. Prepaid fees and refund rules need separate approval.
+
+## 10. Maintenance Block
+
+Implemented room-block APIs accept real Philippine calendar dates, reject active
+block overlap and protected unreleased assignment conflicts, and retain canceled
+history through canceledAt. ADMIN/MANAGER can create/update/cancel; reception can
+read. Canceled blocks cannot be edited or canceled twice. Checks and writes share
+a transaction. The reusable inventory service rejects active dated blocks but
+ignores canceled ones. It reserves no inventory.
+
+Phase 6 adds whole-stay commitment checks for assigned and unassigned
+reservations during block create/edit, within the same serialized transaction.
+Do not infer financial or device actions from those inventory checks.
+
+1. Authorized staff selects a room and date interval.
+2. Backend validates the interval.
+3. Check physical assignments.
+4. Check affected unassigned reservations and room-type capacity.
+5. Reject the block or require an approved operational resolution.
+6. Save the block and audit the action.
+
+Do not remove promised inventory without addressing existing bookings.
+
+## 11. Lost NFC Card
+
+**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+
+1. Verify the guest and active stay.
+2. Mark the old card/credential according to the approved lifecycle.
+3. Initiate revocation.
+4. Track device acknowledgment or failure.
+5. Authorize a replacement.
+6. Apply the same room and validity restrictions.
+7. Record staff action.
+
+Offline revocation behavior depends on hardware.
+
+## 12. Failure Handling
+
+| Failure | Required response |
+|---|---|
+| Two guests request the last inventory | One succeeds; the other receives a conflict |
+| Duplicate payment webhook | No duplicate payment effect |
+| Payment after hold expiration | Record and reconcile; safely recheck inventory |
+| Checkout return before webhook | Show verification pending |
+| Invalid status transition | Reject without partial business changes |
+| Door offline during revocation | Keep pending/failure visible and follow procedure |
+| Refund timeout | Reconcile provider state before retrying |
+| Database failure | Roll back the database operation where applicable |
+
+## 13. Business Acceptance Checks
+
+The following are acceptance criteria for implemented or planned workflows.
+Owner-confirmed Phase 6 completion and supplied review-copy results are recorded
+in AGENTS.md; this list is not a new execution report.
+
+- Accountless guest can complete an authorized booking.
+- A guest cannot read another guest's booking.
+- Pay at Property can be Confirmed and Unpaid.
+- Client prices cannot override backend prices.
+- Expired holds do not reduce availability.
+- Conflicting requests cannot oversell inventory.
+- Checkout preserves history and starts required follow-up work.
+- Simulated NFC behavior is clearly identified.
+
+
+## Phase 7.2 — Confirmed booking to test Hosted Checkout
+
+1. Verify staff/owner JWT access or the private booking session.
+2. Require a confirmed booking with remaining stay dates and a valid positive backend-calculated balance.
+3. Reserve a PENDING Payment and durable checkout request in a short serialized transaction.
+4. Create the PayMongo test session outside the transaction.
+5. Persist a READY link, or UNKNOWN outcome requiring review. A repeated request must not create another session.
+6. Guest follows the validated hosted link. Both return outcomes display payment verification pending.
+
+This step uses existing confirmed bookings. Pending-hold checkout and provider-session expiry coordination are not implemented here. PayMongo sessions must not be assumed to inherit NEXORA hold expiry. Collections, refunds, verified payment success and automated reconciliation remain later Phase 7 steps.
+
+
+## Phase 7.3 — Verified capture to recorded payment
+
+1. Verify the test webhook signature over exact bytes, then validate the event envelope.
+2. In the existing serialized write transaction, deduplicate the event and match the stored checkout claim.
+3. Verify provider IDs, gross PHP amount and reference; durably retain mismatches for review.
+4. Record a genuine capture, verified event and audit atomically. Never change reservation status here.
+5. Retain late/closed/ended booking captures for review; never revive inventory or promise automatic refunds.
+6. Guest pages read the protected summary. Reception still performs authorized check-in after the existing inventory, assignment and full-payment checks.
+
+A callback arriving before checkout creation returns cannot be overwritten by READY persistence. Repeated events do not repeat money or payment audit writes. Failed review events are not automatically replayed in this step.

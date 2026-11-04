@@ -1,0 +1,99 @@
+# NEXORA
+
+**Condotel Management System**
+
+NEXORA is a web-based system for managing one condotel property. It is designed
+to bring room information, reservations, guest services, payments, and daily
+property operations into one platform.
+
+The system aims to make booking easier for guests and help staff organize their
+work from a shared administrative workspace.
+
+## Who the System Is For
+
+- **Guests** who want to explore rooms, make reservations, and manage their stays.
+- **Reception staff** who handle bookings, guest assistance, check-in, and check-out.
+- **Property managers** who oversee room availability and daily operations.
+- **Administrators** who manage staff access and system settings.
+
+## Planned Capabilities
+
+These capabilities describe the intended system. Development is ongoing;
+completion of the project and database foundations does not mean all features
+are available.
+
+| Area | Intended capabilities |
+|---|---|
+| Room discovery | Browse room types, amenities, photos, and availability |
+| Reservations | Book stays, review booking details, and manage reservations |
+| Guest services | Support optional guest accounts and booking without an account |
+| Reception operations | Coordinate room assignments, check-in, and check-out |
+| Payments | Support online checkout and payment at the property |
+| Room management | Organize room information, rates, and operational status |
+| NFC access management | Manage guest access cards, subject to compatible hardware and testing |
+| Reports | Review occupancy, reservations, and financial summaries |
+| Administration | Manage staff access, property settings, and activity records |
+
+## System Applications
+
+NEXORA consists of three connected applications:
+
+1. **Guest Website** — the public interface for discovering rooms and arranging stays.
+2. **Admin Dashboard** — the staff workspace for property operations.
+3. **Backend API** — the shared application service supporting both interfaces.
+
+The frontend applications use React with JavaScript and JSX. The backend uses
+NestJS with TypeScript.
+
+## Project Organization
+
+```text
+NEXORA/
+├── frontend/
+│   ├── guest-web/    # Guest Website
+│   └── admin-web/    # Admin Dashboard
+├── backend/          # Shared Backend API
+├── docs/             # Project documentation
+└── README.md         # System overview
+```
+
+## Development Status
+
+As of **October 31, 2026**:
+
+| Phase | Status |
+|---|---|
+| Phase 1 — Project Foundation | COMPLETED |
+| Phase 2 — Database Foundation | COMPLETED |
+| Phase 3 — Authentication and Access Control | COMPLETED — 8/8 steps |
+| Phase 4 | COMPLETED — 7/7 steps |
+| Phase 5 — Guest Website | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete/frontend in progress; Steps 6–7 pending |
+| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
+
+The current foundation includes the starter guest and admin applications,
+backend connectivity, database structure, and accepted backend authentication
+and access controls, including optional guest registration and email verification,
+plus room-management APIs for rooms, categories, amenities, images, states, and blocks.
+Guest room listings/details use backend data. Availability search and stay-price
+quotes are implemented in the backend; their guest-interface integration is in progress.
+The project owner reports successful Phase 3 acceptance checks; no fresh
+application tests ran during this documentation update. Frontend sign-in
+integration and operational features remain later work. The system is under
+development and has not been declared ready for production use.
+
+## Project Scope
+
+The initial system serves a single condotel property. Its focus is guest
+booking, reception workflows, room management, payment handling, and property
+administration. Physical NFC access depends on hardware selection and
+integration testing.
+
+
+## Test-mode online checkout
+
+Verified booking guests can prepare and resume a PayMongo test checkout link from My Booking. Returning from the hosted page does not confirm payment. Verified online payment processing is a subsequent integration step.
+
+
+## Verified test-mode payment recording
+
+Step 7.3 adds signed PayMongo test webhook processing. Guest pages read protected backend payment summaries; browser returns alone never establish payment success. Reception still completes check-in. See docs/AGENTS.md for verification results and pending owner/provider acceptance.

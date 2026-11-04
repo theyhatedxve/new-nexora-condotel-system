@@ -265,6 +265,13 @@ model Reservation {
   // Optional temporary inventory hold.
   holdExpiresAt DateTime?
 
+  bookingPolicyVersion String?
+  paymentPreference    PaymentMethod?
+  expectedArrivalAt    DateTime?
+  firstContactedAt     DateTime?
+  responseDeadlineAt   DateTime?
+  confirmedAt          DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -279,6 +286,9 @@ model Reservation {
   accessTokens   ReservationAccessToken[]
   accessSessions ReservationAccessSession[]
 
+  bookingAttempt GuestBookingAttempt?
+
+  @@index([bookingPolicyVersion, status, holdExpiresAt])
   @@index([guestId])
   @@index([roomTypeId, checkInDate, checkOutDate])
   @@index([status, holdExpiresAt])
@@ -696,4 +706,37 @@ model EmailVerificationToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+
+enum GuestBookingAttemptState {
+  PROCESSING
+  RESERVATION_CREATED
+  REJECTED
+}
+
+model GuestBookingAttempt {
+  id String @id @default(cuid())
+
+  requestId          String @unique
+  recoveryTokenHash  String @unique
+  requestFingerprint String
+
+  paymentPreference PaymentMethod
+  policyVersion     String
+
+  state GuestBookingAttemptState @default(PROCESSING)
+
+  reservationId String? @unique
+
+  recoveryExpiresAt DateTime
+  rejectionCode     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+
+  @@index([recoveryExpiresAt])
+  @@index([state, updatedAt])
 }

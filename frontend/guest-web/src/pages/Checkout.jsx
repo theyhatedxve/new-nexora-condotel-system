@@ -1,6 +1,6 @@
 import {
   useEffect,
-  useRef,
+  useMemo,
   useState,
 } from "react";
 
@@ -11,36 +11,47 @@ import {
 } from "react-router";
 
 import {
+  ArrowLeft,
+} from "lucide-react";
+
+import {
   searchAvailability,
 } from "../services/availabilityApi.js";
 
 import {
-  createPayAtPropertyReservation,
-} from "../services/reservationsApi.js";
+  getPhilippineToday,
+  parseStaySearch,
+} from "../utils/staySearch.js";
 
 import {
   formatPesos,
 } from "../utils/formatMoney.js";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-} from "lucide-react";
+import useGuestCheckout from
+  "../hooks/useGuestCheckout.js";
 
-import "../styles/checkout-view.css";
+import GuestBookingReceipt from
+  "../components/GuestBookingReceipt.jsx";
 
 import "../styles/checkout.css";
+import "../styles/checkout-view.css";
+import "../styles/guest-checkout.css";
+
+const API_SCOPE = new URL(
+  import.meta.env.VITE_API_URL || "/",
+  window.location.origin,
+).href;
 
 function CheckoutForm({
-  roomTypeId,
-  checkIn,
-  checkOut,
-  guests,
+  selection,
+  selectionError,
 }) {
+  const flow = useGuestCheckout(API_SCOPE);
+
   const [quote, setQuote] = useState(null);
   const [quoteError, setQuoteError] = useState("");
-  const [refresh, setRefresh] = useState(0);
+  const [revision, setRevision] = useState(0);
+  const [formError, setFormError] = useState("");
 
   const [details, setDetails] = useState({
     firstName: "",
@@ -49,55 +60,64 @@ function CheckoutForm({
     phone: "",
   });
 
-  const [phase, setPhase] = useState("idle");
-  const [problem, setProblem] = useState("");
-  const [receipt, setReceipt] = useState(null);
+  const [arrivalTime, setArrivalTime] =
+    useState("");
 
-  const submitting = useRef(false);
-  const receiptHeading = useRef(null);
+  const [
+    paymentPreference,
+    setPaymentPreference,
+  ] = useState("");
 
-  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const [
+    acknowledgmentAccepted,
+    setAcknowledgmentAccepted,
+  ] = useState(false);
 
-  const validSelection =
-    datePattern.test(checkIn) &&
-    datePattern.test(checkOut) &&
-    Number.isSafeInteger(guests) &&
-    guests >= 1 &&
-    guests <= 2_147_483_647;
-
-  const selectionError = validSelection
-    ? quoteError
-    : "Choose valid dates and guests from the Rooms page.";
+  const hasAttempt = Boolean(flow.attempt);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    if (!validSelection) {
-      return () => controller.abort();
+    if (!selection || hasAttempt) {
+      return;
     }
 
+    const controller = new AbortController();
+
     searchAvailability(
-      {
-        checkIn,
-        checkOut,
-        guests,
-      },
+      selection,
       controller.signal,
     )
       .then((results) => {
-        if (controller.signal.aborted) {
-          return;
-        }
+        if (controller.signal.aborted) return;
 
         const selected = results.find(
-          (room) => room.id === roomTypeId,
+          (room) =>
+            room.id === selection.roomTypeId,
         );
 
         if (!selected?.available) {
-          setQuoteError(
-            "This room type is unavailable for your selected stay.",
+          throw new Error(
+            "Selected stay is unavailable.",
           );
-          return;
+        }
+
+        if (
+          typeof selected.name !== "string" ||
+          !Number.isSafeInteger(
+            selected.nights,
+          ) ||
+          selected.nights < 1 ||
+          !Number.isSafeInteger(
+            selected.nightlyRateCentavos,
+          ) ||
+          selected.nightlyRateCentavos < 1 ||
+          !Number.isSafeInteger(
+            selected.totalAmountCentavos,
+          ) ||
+          selected.totalAmountCentavos < 1
+        ) {
+          throw new Error(
+            "The quote is invalid.",
+          );
         }
 
         setQuote(selected);
@@ -105,26 +125,17 @@ function CheckoutForm({
       .catch(() => {
         if (!controller.signal.aborted) {
           setQuoteError(
-            "We could not check this stay. Check your dates or try again.",
+            "This stay could not be verified. Refresh availability or choose another room.",
           );
         }
       });
 
     return () => controller.abort();
   }, [
-    roomTypeId,
-    checkIn,
-    checkOut,
-    guests,
-    refresh,
-    validSelection,
+    selection,
+    hasAttempt,
+    revision,
   ]);
-
-  useEffect(() => {
-    if (receipt) {
-      receiptHeading.current?.focus();
-    }
-  }, [receipt]);
 
   function updateDetail(event) {
     const { name, value } = event.target;
@@ -138,17 +149,18 @@ function CheckoutForm({
   function refreshQuote() {
     setQuote(null);
     setQuoteError("");
-    setRefresh((value) => value + 1);
+    setRevision((value) => value + 1);
   }
 
-  async function handleSubmit(event) {
+  function handleSubmit(event) {
     event.preventDefault();
 
     if (
-      submitting.current ||
+      !selection ||
       !quote ||
-      phase === "uncertain" ||
-      receipt
+      flow.busy ||
+      flow.attempt ||
+      flow.storageBlocked
     ) {
       return;
     }
@@ -157,189 +169,137 @@ function CheckoutForm({
       !details.firstName.trim() ||
       !details.lastName.trim()
     ) {
-      setProblem(
-        "Please enter your first and last names.",
+      setFormError(
+        "Enter your first and last names.",
       );
       return;
     }
 
-    // The ref blocks a second click immediately,
-    // before React finishes updating the button.
-    submitting.current = true;
-    setPhase("submitting");
-    setProblem("");
+    const arrival = Date.parse(
+      `${selection.checkIn}T${arrivalTime}:00+08:00`,
+    );
 
-    try {
-      const result =
-        await createPayAtPropertyReservation({
-          roomTypeId,
-          checkIn,
-          checkOut,
-          guests,
-          firstName: details.firstName.trim(),
-          lastName: details.lastName.trim(),
-          email: details.email.trim(),
-
-          ...(details.phone.trim()
-            ? {
-                phone: details.phone.trim(),
-              }
-            : {}),
-        });
-
-      setReceipt(result);
-      setPhase("success");
-    } catch (error) {
-      const status = error.response?.status;
-
-      // These responses explicitly reject the booking.
-      if (
-        [400, 403, 404, 409, 429].includes(status)
-      ) {
-        submitting.current = false;
-        setPhase("idle");
-
-        if (status === 404 || status === 409) {
-          setQuote(null);
-          setQuoteError(
-            "Availability changed. Refresh this stay or choose another room.",
-          );
-        }
-
-        const messages = {
-          400: "Check your guest details and stay dates.",
-          403: "Booking is unavailable from this website address. Please contact the property.",
-          404: "This room type is no longer available.",
-          409: "The stay could not be reserved. Please refresh availability.",
-          429: "Too many attempts. Please wait one minute before trying again.",
-        };
-
-        setProblem(messages[status]);
-      } else {
-        // A timeout or lost response does not prove
-        // that the reservation failed to save.
-        setPhase("uncertain");
-        setProblem(
-          "We could not confirm the booking result. Please contact the property before making another booking.",
-        );
-      }
+    if (
+      !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(
+        arrivalTime,
+      ) ||
+      !Number.isFinite(arrival) ||
+      arrival <= Date.now()
+    ) {
+      setFormError(
+        "Choose a future expected arrival time on your check-in date, using Philippine time.",
+      );
+      return;
     }
+
+    if (
+      !["PAY_AT_PROPERTY", "PAYMONGO"].includes(
+        paymentPreference,
+      ) ||
+      !acknowledgmentAccepted
+    ) {
+      setFormError(
+        "Choose a payment method and acknowledge its booking rules.",
+      );
+      return;
+    }
+
+    setFormError("");
+
+    void flow.submit({
+      selection,
+      details,
+      arrivalTime,
+      paymentPreference,
+    });
   }
 
-    if (receipt) {
+  if (flow.receipt) {
     return (
-      <main className="checkout-page checkout-view">
+      <GuestBookingReceipt flow={flow} />
+    );
+  }
+
+  if (flow.attempt) {
+    return (
+      <main className="checkout-page checkout-view guest-checkout">
         <section
           className="checkout-panel checkout-receipt"
-          aria-labelledby="booking-receipt-title"
+          aria-busy={flow.busy}
         >
-          <div
-            className="checkout-view__confirmation-icon"
-            aria-hidden="true"
-          >
-            <Check size={30} />
-          </div>
-
           <p className="checkout-kicker">
-            PAY AT PROPERTY
+            ORIGINAL BOOKING REQUEST
           </p>
 
-          <h1
-            id="booking-receipt-title"
-            ref={receiptHeading}
-            tabIndex={-1}
-          >
-            Your reservation is confirmed
+          <h1>
+            {flow.busy
+              ? "Checking your booking"
+              : "Recover your booking"}
           </h1>
 
           <p className="checkout-view__receipt-intro">
-            No payment has been collected.
-            Full payment is required at the
-            property before check-in.
+            This tab holds an earlier request.
+            Recover it before creating another
+            booking. Reloading this page does
+            not submit it again.
           </p>
 
-          <div className="checkout-view__reference">
-            <span>Booking reference</span>
-            <strong>
-              {receipt.reservationNumber}
-            </strong>
-          </div>
+          {flow.attempt.reservationNumber && (
+            <div className="checkout-view__reference">
+              <span>Saved booking reference</span>
+              <strong>
+                {flow.attempt.reservationNumber}
+              </strong>
+            </div>
+          )}
 
           <dl className="checkout-summary">
             <div>
-              <dt>Reservation</dt>
-              <dd>Confirmed</dd>
-            </div>
-
-            <div>
-              <dt>Payment</dt>
-              <dd>No payment collected</dd>
-            </div>
-
-            <div>
               <dt>Check-in</dt>
-              <dd>{checkIn}</dd>
-            </div>
-
-            <div>
-              <dt>Check-out</dt>
-              <dd>{checkOut}</dd>
-            </div>
-
-            <div>
-              <dt>Guests</dt>
-              <dd>{guests}</dd>
-            </div>
-
-            <div>
-              <dt>Confirmed nightly rate</dt>
               <dd>
-                {formatPesos(
-                  receipt.nightlyRateCentavos,
-                )}
+                {flow.attempt.selection.checkIn}
               </dd>
             </div>
-
-            <div className="checkout-total">
-              <dt>Confirmed stay total</dt>
+            <div>
+              <dt>Check-out</dt>
               <dd>
-                {formatPesos(
-                  receipt.totalAmountCentavos,
-                )}
+                {flow.attempt.selection.checkOut}
+              </dd>
+            </div>
+            <div>
+              <dt>Guests</dt>
+              <dd>
+                {flow.attempt.selection.guests}
               </dd>
             </div>
           </dl>
 
-          <p className="checkout-note">
-            Save this reference. Contact the
-            property for assistance with
-            your booking.
-          </p>
-
-          <p className="checkout-note">
-            Unpaid reservations can be cancelled
-            without a cancellation fee before
-            check-in. Contact the property to
-            request cancellation.
-          </p>
+          {flow.error && (
+            <p
+              role="alert"
+              className="checkout-error"
+            >
+              {flow.error}
+            </p>
+          )}
 
           <div className="checkout-view__receipt-actions">
-            <Link
-              className="checkout-view__primary-link"
-              to="/booking-access"
+            <button
+              className="checkout-button"
+              type="button"
+              disabled={flow.busy}
+              onClick={flow.resume}
             >
-              Request private booking access
-              <ArrowRight
-                size={18}
-                aria-hidden="true"
-              />
-            </Link>
+              {flow.busy
+                ? "Please wait..."
+                : "Recover original request"}
+            </button>
 
             <Link
               className="checkout-view__secondary-link"
-              to="/rooms"
+              to="/booking-access"
             >
-              Return to rooms
+              Request private email access
             </Link>
           </div>
         </section>
@@ -347,34 +307,30 @@ function CheckoutForm({
     );
   }
 
-  const pending = phase === "submitting";
+  const online =
+    paymentPreference === "PAYMONGO";
 
   const locked =
-    pending ||
-    phase === "uncertain";
+    flow.busy ||
+    flow.storageBlocked ||
+    !quote;
 
-    return (
-    <main className="checkout-page checkout-view">
+  const backToRooms = selection
+    ? `/rooms?${new URLSearchParams({
+        checkIn: selection.checkIn,
+        checkOut: selection.checkOut,
+        guests: String(selection.guests),
+      })}`
+    : "/rooms";
+
+  return (
+    <main className="checkout-page checkout-view guest-checkout">
       <Link
         className="checkout-view__back"
-        to={
-          validSelection
-            ? `/rooms?${new URLSearchParams({
-                checkIn,
-                checkOut,
-                guests: String(guests),
-              }).toString()}`
-            : "/rooms"
-        }
+        to={backToRooms}
       >
-        <ArrowLeft
-          size={18}
-          aria-hidden="true"
-        />
-
-        {validSelection
-          ? "Back to selected rooms"
-          : "Back to rooms"}
+        <ArrowLeft size={18} aria-hidden="true" />
+        Back to rooms
       </Link>
 
       <header className="checkout-view__heading">
@@ -385,13 +341,10 @@ function CheckoutForm({
         <h1>Complete your booking</h1>
 
         <p>
-          Reserve your stay without creating
-          an account.
+          Choose how to pay and tell us when
+          you expect to arrive. An account
+          is optional.
         </p>
-
-        <span className="checkout-view__payment-label">
-          Pay at Property
-        </span>
       </header>
 
       <div className="checkout-grid">
@@ -400,33 +353,30 @@ function CheckoutForm({
           aria-labelledby="guest-details-title"
         >
           <h2 id="guest-details-title">
-            Primary guest details
+            Guest and payment details
           </h2>
 
           <p className="checkout-view__form-intro">
-            Enter the details of the primary
-            guest. Fields marked * are required.
+            Fields marked * are required.
           </p>
 
           <form
             onSubmit={handleSubmit}
-            aria-busy={pending}
+            aria-busy={flow.busy}
           >
             <fieldset
               className="checkout-fields"
-              disabled={locked || !quote}
+              disabled={locked}
             >
               <legend className="checkout-legend">
-                Contact information
+                Primary guest
               </legend>
 
               <div className="checkout-view__field-grid">
                 <div className="checkout-view__field">
                   <label htmlFor="booking-first-name">
-                    First name{" "}
-                    <span aria-hidden="true">*</span>
+                    First name *
                   </label>
-
                   <input
                     id="booking-first-name"
                     name="firstName"
@@ -440,10 +390,8 @@ function CheckoutForm({
 
                 <div className="checkout-view__field">
                   <label htmlFor="booking-last-name">
-                    Last name{" "}
-                    <span aria-hidden="true">*</span>
+                    Last name *
                   </label>
-
                   <input
                     id="booking-last-name"
                     name="lastName"
@@ -457,10 +405,8 @@ function CheckoutForm({
 
                 <div className="checkout-view__field checkout-view__field--wide">
                   <label htmlFor="booking-email">
-                    Email{" "}
-                    <span aria-hidden="true">*</span>
+                    Email *
                   </label>
-
                   <input
                     id="booking-email"
                     name="email"
@@ -473,14 +419,10 @@ function CheckoutForm({
                   />
                 </div>
 
-                <div className="checkout-view__field checkout-view__field--wide">
+                <div className="checkout-view__field">
                   <label htmlFor="booking-phone">
-                    Phone{" "}
-                    <span className="checkout-view__optional">
-                      (optional)
-                    </span>
+                    Phone (optional)
                   </label>
-
                   <input
                     id="booking-phone"
                     name="phone"
@@ -491,23 +433,112 @@ function CheckoutForm({
                     onChange={updateDetail}
                   />
                 </div>
+
+                <div className="checkout-view__field">
+                  <label htmlFor="booking-arrival">
+                    Expected arrival time *
+                  </label>
+                  <input
+                    id="booking-arrival"
+                    type="time"
+                    step={60}
+                    required
+                    aria-describedby="arrival-help"
+                    value={arrivalTime}
+                    onChange={(event) =>
+                      setArrivalTime(
+                        event.target.value,
+                      )
+                    }
+                  />
+                  <small id="arrival-help">
+                    On {selection?.checkIn || "your check-in date"},
+                    Philippine time.
+                  </small>
+                </div>
+              </div>
+
+              <fieldset className="guest-checkout__methods">
+                <legend>
+                  Payment method *
+                </legend>
+
+                {[
+                  {
+                    value: "PAY_AT_PROPERTY",
+                    title: "Pay at Property",
+                    description:
+                      "Request your stay now. Staff must contact you and confirm your agreement before the reservation is confirmed.",
+                  },
+                  {
+                    value: "PAYMONGO",
+                    title: "Pay online · test mode",
+                    description:
+                      "Continue to PayMongo after reserving. A verified full payment within the 15-minute hold confirms an eligible reservation.",
+                  },
+                ].map((method) => (
+                  <label
+                    key={method.value}
+                    className={
+                      "guest-checkout__choice" +
+                      (
+                        paymentPreference === method.value
+                          ? " is-selected"
+                          : ""
+                      )
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="paymentPreference"
+                      value={method.value}
+                      required
+                      checked={
+                        paymentPreference === method.value
+                      }
+                      onChange={(event) => {
+                        setPaymentPreference(
+                          event.target.value,
+                        );
+                        setAcknowledgmentAccepted(false);
+                      }}
+                    />
+
+                    <span>
+                      <strong>{method.title}</strong>
+                      <span>{method.description}</span>
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+
+              <div className="guest-checkout__notice">
+                {paymentPreference === "PAY_AT_PROPERTY"
+                  ? "Your request stays pending until staff confirms it. Reply within 24 hours of the first call or email. The earlier deadline applies: that response deadline or 30 minutes after your expected arrival."
+                  : online
+                    ? "Test payments only. The hold starts when the booking is saved. A redirect or payment screenshot does not confirm payment. Late or conflicting payments require property review."
+                    : "Choose a payment method to review its confirmation rules."}
               </div>
 
               <label className="checkout-consent">
                 <input
                   type="checkbox"
                   required
+                  checked={
+                    acknowledgmentAccepted
+                  }
+                  onChange={(event) =>
+                    setAcknowledgmentAccepted(
+                      event.target.checked,
+                    )
+                  }
                 />
-
                 <span>
-                  I understand that availability
-                  and the final price are checked
-                  when I confirm, and payment is
-                  due at the property. Unpaid
-                  reservations can be cancelled
-                  without a cancellation fee
-                  before check-in. Contact the
-                  property to request cancellation.
+                  I have checked my stay and arrival
+                  details, and understand the selected
+                  payment and confirmation rules.
+                  Availability and prices are checked
+                  again by the backend.
                 </span>
               </label>
 
@@ -515,37 +546,18 @@ function CheckoutForm({
                 className="checkout-button"
                 type="submit"
               >
-                <span>
-                  {pending
-                    ? "Confirming your stay..."
-                    : "Confirm - Pay at Property"}
-                </span>
-
-                {!pending && (
-                  <ArrowRight
-                    size={18}
-                    aria-hidden="true"
-                  />
-                )}
+                {online
+                  ? "Reserve and prepare test payment"
+                  : "Send booking request"}
               </button>
             </fieldset>
 
-            {problem && (
+            {(formError || flow.error) && (
               <p
-                className="checkout-error checkout-view__alert"
+                className="checkout-error"
                 role="alert"
               >
-                {problem}
-              </p>
-            )}
-
-            {pending && (
-              <p
-                className="checkout-view__status"
-                role="status"
-              >
-                Please wait for the booking
-                result before submitting again.
+                {formError || flow.error}
               </p>
             )}
           </form>
@@ -560,38 +572,23 @@ function CheckoutForm({
           </p>
 
           <h2 id="stay-summary-title">
-            Your stay
+            {quote?.name || "Your selected stay"}
           </h2>
-
-          {quote && (
-            <h3 className="checkout-view__room-name">
-              {quote.name}
-            </h3>
-          )}
 
           <dl className="checkout-summary">
             <div>
               <dt>Check-in</dt>
-              <dd>
-                {checkIn || "Not selected"}
-              </dd>
+              <dd>{selection?.checkIn || "Not selected"}</dd>
             </div>
 
             <div>
               <dt>Check-out</dt>
-              <dd>
-                {checkOut || "Not selected"}
-              </dd>
+              <dd>{selection?.checkOut || "Not selected"}</dd>
             </div>
 
             <div>
               <dt>Guests</dt>
-              <dd>
-                {Number.isSafeInteger(guests) &&
-                guests >= 1
-                  ? guests
-                  : "Not selected"}
-              </dd>
+              <dd>{selection?.guests || "Not selected"}</dd>
             </div>
 
             {quote && (
@@ -622,25 +619,13 @@ function CheckoutForm({
             )}
           </dl>
 
-          {!quote && !selectionError && (
-            <p
-              className="checkout-view__status"
-              role="status"
-            >
-              Checking your stay...
-            </p>
-          )}
-
-          {selectionError && (
-            <div
-              className="checkout-view__quote-error"
-              role="alert"
-            >
+          {(selectionError || quoteError) && (
+            <div role="alert">
               <p className="checkout-error">
-                {selectionError}
+                {selectionError || quoteError}
               </p>
 
-              {!locked && validSelection && (
+              {selection && !flow.busy && (
                 <button
                   className="checkout-view__refresh"
                   type="button"
@@ -652,19 +637,23 @@ function CheckoutForm({
             </div>
           )}
 
-          <div className="checkout-view__payment-note">
-            <strong>Payment due at the property</strong>
-
-            <p>
-              No online payment is collected
-              on this page.
+          {selection && !quote && !quoteError && (
+            <p role="status">
+              Checking your stay...
             </p>
-          </div>
+          )}
 
           <p className="checkout-note">
             This quote does not reserve a room.
-            The backend confirms availability
-            and the final price when you submit.
+            Arrival time does not change the booked
+            number of nights or calculate a new price.
+          </p>
+
+          <p className="checkout-note">
+            Recovery is kept in this tab’s session
+            storage. Guest contact details are not
+            stored there. Keep this tab open if a
+            booking result is uncertain.
           </p>
         </aside>
       </div>
@@ -676,13 +665,53 @@ export default function Checkout() {
   const { roomTypeId } = useParams();
   const [params] = useSearchParams();
 
+  const search = params.toString();
+
+  const [today] = useState(
+    () => getPhilippineToday(),
+  );
+
+  const parsed = useMemo(() => {
+    try {
+      const stay = parseStaySearch(
+        search,
+        today,
+      );
+
+      if (
+        !stay ||
+        !roomTypeId ||
+        roomTypeId.length > 100
+      ) {
+        throw new Error(
+          "Choose a room, dates, and guest count from the Rooms page.",
+        );
+      }
+
+      return {
+        selection: {
+          ...stay,
+          roomTypeId,
+        },
+        error: "",
+      };
+    } catch (error) {
+      return {
+        selection: null,
+        error: error.message,
+      };
+    }
+  }, [
+    roomTypeId,
+    search,
+    today,
+  ]);
+
   return (
     <CheckoutForm
-      key={`${roomTypeId}:${params.toString()}`}
-      roomTypeId={roomTypeId}
-      checkIn={params.get("checkIn") || ""}
-      checkOut={params.get("checkOut") || ""}
-      guests={Number(params.get("guests"))}
+      key={`${roomTypeId}:${search}`}
+      selection={parsed.selection}
+      selectionError={parsed.error}
     />
   );
 }

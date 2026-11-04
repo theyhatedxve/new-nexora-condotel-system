@@ -5,16 +5,33 @@ import { isUUID } from 'class-validator';
 import type { Payment, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { OwnershipService, type AuthenticatedUser } from '../common/ownership/ownership.service.js';
-import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
 import { requireBookingSession } from '../reservations/booking-access-security.js';
 import { withInventoryWrite } from '../reservations/inventory-write.js';
 import { calculatePaymentSummary } from './payment-summary.js';
 import { PaymongoAdapter, validCheckoutUrl } from './paymongo.adapter.js';
 import { hasVerifiedPaymongoEvidence, paymentEvidenceSelect, type PaymentEvidence } from './payment-evidence.js';
+import {
+  assertCheckoutBookingEligible,
+  isPendingOnlineBooking,
+} from './pending-online-booking.js';
 
-type Access = { kind: 'user'; reservationId: string; actor: AuthenticatedUser | undefined } |
-  { kind: 'session'; cookie: unknown };
-const digest = (value: string) => createHash('sha256').update(value).digest('hex');
+
+type Access =
+  | {
+      kind: 'user';
+      reservationId: string;
+      actor: AuthenticatedUser | undefined;
+    }
+  | {
+      kind: 'session';
+      cookie: unknown;
+      expectedReservationNumber?: string;
+    };
+
+    const digest = (value: string): string =>
+  createHash('sha256')
+    .update(value)
+    .digest('hex');
 
 @Injectable()
 export class CheckoutService {
@@ -25,16 +42,34 @@ export class CheckoutService {
     return this.start({ kind: 'user', reservationId: id, actor }, requestId);
   }
 
-  startForSession(cookie: unknown, requestId: string) {
-    return this.start({ kind: 'session', cookie }, requestId);
+    startForSession(
+    cookie: unknown,
+    requestId: string,
+    expectedReservationNumber?: string,
+  ) {
+    return this.start(
+      {
+        kind: 'session',
+        cookie,
+        expectedReservationNumber,
+      },
+      requestId,
+    );
   }
 
   currentForUser(id: string, actor: AuthenticatedUser | undefined) {
     return this.current({ kind: 'user', reservationId: id, actor });
   }
 
-  currentForSession(cookie: unknown) {
-    return this.current({ kind: 'session', cookie });
+    currentForSession(
+    cookie: unknown,
+    expectedReservationNumber?: string,
+  ) {
+    return this.current({
+      kind: 'session',
+      cookie,
+      expectedReservationNumber,
+    });
   }
 
   private async booking(tx: Prisma.TransactionClient, access: Access) {
@@ -58,18 +93,61 @@ export class CheckoutService {
 
     if (!booking) throw new NotFoundException('Record not found.');
 
-    if (booking.status !== 'CONFIRMED' || booking.checkOutDate <= todayInPhilippines()) {
-      throw new ConflictException('Only confirmed bookings with remaining stay dates can use checkout.');
+        if (
+      access.kind === 'session' &&
+      access.expectedReservationNumber !== undefined &&
+      booking.reservationNumber !==
+        access.expectedReservationNumber
+    ) {
+      throw new NotFoundException(
+        'Record not found.',
+      );
     }
+
+    assertCheckoutBookingEligible(booking);
 
     return booking;
   }
 
-  private quote(booking: Awaited<ReturnType<CheckoutService['booking']>>) {
-    const summary = calculatePaymentSummary(booking.totalAmountCentavos, booking.status, booking.payments);
+    private quote(
+    booking: Awaited<
+      ReturnType<CheckoutService['booking']>
+    >,
+  ) {
+    if (isPendingOnlineBooking(booking)) {
+      const invalidInitialLedger =
+        booking.payments.length > 1 ||
+        booking.payments.some(
+          (payment) =>
+            payment.method !== 'PAYMONGO' ||
+            payment.provider !== 'PAYMONGO' ||
+            payment.status !== 'PENDING' ||
+            payment.currency !== 'PHP' ||
+            payment.amountCentavos !==
+              booking.totalAmountCentavos ||
+            payment.refunds.length > 0,
+        );
 
-    if (summary.requiresReview || summary.balanceDueCentavos === null) {
-      throw new ConflictException('This booking requires financial review.');
+      if (invalidInitialLedger) {
+        throw new ConflictException(
+          'The initial online payment requires financial review.',
+        );
+      }
+    }
+
+    const summary = calculatePaymentSummary(
+      booking.totalAmountCentavos,
+      booking.status,
+      booking.payments,
+    );
+
+    if (
+      summary.requiresReview ||
+      summary.balanceDueCentavos === null
+    ) {
+      throw new ConflictException(
+        'This booking requires financial review.',
+      );
     }
 
     return summary.balanceDueCentavos;

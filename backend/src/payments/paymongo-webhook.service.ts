@@ -22,6 +22,11 @@ import {
 } from './payment-evidence.js';
 import { verifyPaymongoWebhook } from './paymongo-webhook.signature.js';
 
+import {
+  confirmPendingOnlineBookingInTx,
+  isPendingOnlineBooking,
+} from './pending-online-booking.js';
+
 type Event = ReturnType<typeof parseWebhook>;
 type Outcome = 'PROCESSED' | 'DUPLICATE' | 'IGNORED' | 'REVIEW_REQUIRED';
 
@@ -232,10 +237,30 @@ export class PaymongoWebhookService {
       if (changed.count !== 1) throw new Error('Concurrent payment change');
     }
 
-    const bookingReview =
+        let bookingReview =
       newlyPaid &&
-      (matched.reservation.status !== 'CONFIRMED' ||
-        matched.reservation.checkOutDate <= todayInPhilippines());
+      (
+        matched.reservation.status !== 'CONFIRMED' ||
+        matched.reservation.checkOutDate <=
+          todayInPhilippines()
+      );
+
+    if (
+      newlyPaid &&
+      isPendingOnlineBooking(
+        matched.reservation,
+      )
+    ) {
+      const confirmed =
+        await confirmPendingOnlineBookingInTx(
+          tx,
+          matched.id,
+          event.id,
+          event.createdAt,
+        );
+
+      bookingReview = !confirmed;
+    }
 
     await this.record(
       tx,
