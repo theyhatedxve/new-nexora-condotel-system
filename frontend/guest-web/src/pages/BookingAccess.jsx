@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useRef,
   useState,
@@ -10,11 +10,18 @@ import {
 } from "react-router";
 
 import {
+  ArrowLeft,
+  ArrowRight,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
+
+import {
   exchangeBookingAccess,
   requestBookingAccess,
 } from "../services/bookingAccessApi.js";
 
-import "../styles/checkout.css";
+import "../styles/booking-access.css";
 
 export default function BookingAccess() {
   const navigate = useNavigate();
@@ -28,11 +35,10 @@ export default function BookingAccess() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
   const submitting = useRef(false);
 
   useEffect(() => {
-    // Opening the page does not consume the link.
-    // Keep the token in memory only.
     if (window.location.hash) {
       window.history.replaceState(
         window.history.state,
@@ -98,7 +104,7 @@ export default function BookingAccess() {
     } catch (failure) {
       setError(
         failure.response?.status === 429
-          ? "Please wait one minute before requesting another link."
+          ? "Too many requests. Please wait before requesting another link."
           : "We could not process the request. Check your details and try again later.",
       );
     } finally {
@@ -108,52 +114,77 @@ export default function BookingAccess() {
   }
 
   return (
-    <main className="checkout-page">
-      <section className="checkout-panel checkout-receipt">
-        <p className="checkout-kicker">
-          PRIVATE BOOKING ACCESS
-        </p>
+    <main className="booking-access">
+      <section
+        className="booking-access__card"
+        aria-labelledby="booking-access-title"
+      >
+        <header className="booking-access__heading">
+          <span className="booking-access__icon">
+            <ShieldCheck
+              size={28}
+              aria-hidden="true"
+            />
+          </span>
 
-        <h1>Access your booking</h1>
+          <p className="booking-access__eyebrow">
+            Your stay at NEXORA
+          </p>
+
+          <h1 id="booking-access-title">
+            {token
+              ? "Your private booking access"
+              : "Find your booking"}
+          </h1>
+
+          <p className="booking-access__intro">
+            {token
+              ? "Your private link is ready. Select the button below to open your booking."
+              : "Enter your booking reference and the email used for your reservation. We will email a private access link if they match."}
+          </p>
+        </header>
 
         {token ? (
-          <>
-            <p>
-              Select the button below to use your
-              private access link.
-            </p>
-
+          <div
+            className="booking-access__open"
+            aria-busy={busy}
+          >
             <button
-              className="checkout-button"
+              className="booking-access__button"
               type="button"
               disabled={busy}
               onClick={openBooking}
             >
               {busy
-                ? "Opening your booking…"
+                ? "Opening your booking..."
                 : "View my booking"}
+
+              <ArrowRight
+                size={18}
+                aria-hidden="true"
+              />
             </button>
-          </>
-        ) : (
-          <>
-            <p>
-              Enter your booking reference and the email
-              address used for the reservation. We will
-              send a private access link if they match.
+
+            <p className="booking-access__help">
+              Your link is used only when you select
+              this button.
             </p>
-
-            <form
-              onSubmit={requestLink}
-              aria-busy={busy}
+          </div>
+        ) : (
+          <form
+            className="booking-access__form"
+            onSubmit={requestLink}
+            aria-busy={busy}
+          >
+            <fieldset
+              className="booking-access__fields"
+              disabled={busy}
             >
-              <fieldset
-                className="checkout-fields"
-                disabled={busy}
-              >
-                <legend className="checkout-legend">
-                  Request a private link
-                </legend>
+              <legend className="booking-access__legend">
+                Booking details
+              </legend>
 
+              <div className="booking-access__field">
                 <label htmlFor="access-reference">
                   Booking reference
                 </label>
@@ -161,55 +192,108 @@ export default function BookingAccess() {
                 <input
                   id="access-reference"
                   name="reservationNumber"
+                  type="text"
+                  placeholder="Enter your booking reference"
+                  aria-describedby="access-reference-help"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   maxLength={100}
                   required
                 />
 
+                <p
+                  id="access-reference-help"
+                  className="booking-access__help"
+                >
+                  Use the reference shown on your
+                  booking receipt.
+                </p>
+              </div>
+
+              <div className="booking-access__field">
                 <label htmlFor="access-email">
-                  Booking email
+                  Email address
                 </label>
 
                 <input
                   id="access-email"
                   name="email"
                   type="email"
+                  placeholder="you@example.com"
                   autoComplete="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   maxLength={254}
                   required
                 />
+              </div>
 
-                <button
-                  className="checkout-button"
-                  type="submit"
-                >
-                  {busy
-                    ? "Requesting link…"
-                    : "Email me an access link"}
-                </button>
-              </fieldset>
-            </form>
+              <button
+                className="booking-access__button"
+                type="submit"
+              >
+                <Mail
+                  size={18}
+                  aria-hidden="true"
+                />
 
-            <p className="checkout-note">
-              Links expire after 15 minutes and can be
-              used once. Access lasts 30 minutes.
-              Do not share your link.
-            </p>
-          </>
+                {busy
+                  ? "Requesting your link..."
+                  : "Email me an access link"}
+              </button>
+            </fieldset>
+          </form>
         )}
 
         {notice && (
-          <p role="status">{notice}</p>
+          <div
+            className="booking-access__notice"
+            role="status"
+          >
+            <strong>Check your email</strong>
+            <p>{notice}</p>
+            <p>
+              If an email arrives, check your inbox
+              and spam folder.
+            </p>
+          </div>
         )}
 
         {error && (
-          <p className="checkout-error" role="alert">
+          <div
+            className="booking-access__error"
+            role="alert"
+          >
             {error}
-          </p>
+          </div>
         )}
 
-        <Link className="checkout-link" to="/rooms">
-          Return to rooms
-        </Link>
+        <div className="booking-access__privacy">
+          <ShieldCheck
+            size={20}
+            aria-hidden="true"
+          />
+
+          <p>
+            Links expire after 15 minutes and can be
+            used once. Private access lasts 30
+            minutes. Keep your link to yourself.
+          </p>
+        </div>
+
+        <footer className="booking-access__footer">
+          <Link
+            className="booking-access__back"
+            to="/rooms"
+          >
+            <ArrowLeft
+              size={16}
+              aria-hidden="true"
+            />
+            Return to rooms
+          </Link>
+        </footer>
       </section>
     </main>
   );

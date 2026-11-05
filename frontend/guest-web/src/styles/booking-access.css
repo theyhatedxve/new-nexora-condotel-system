@@ -1,0 +1,235 @@
+.booking-access {
+  padding: clamp(2rem, 6vw, 4.5rem) 1rem;
+  color: var(--color-text);
+}
+
+.booking-access__card {
+  width: 100%;
+  max-width: 32rem;
+  margin-inline: auto;
+  padding: clamp(1.25rem, 5vw, 2.5rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-gold);
+  border-radius: var(--radius-medium);
+  box-shadow: 0 12px 36px rgb(20 38 63 / 6%);
+}
+
+.booking-access__heading {
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.booking-access__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+}
+
+.booking-access__eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.booking-access__heading h1 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: clamp(1.65rem, 4vw, 2rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.booking-access__intro {
+  margin: 0.875rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.booking-access__fields {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.booking-access__legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.booking-access__field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.booking-access__field label {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.booking-access__field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0.75rem 0.875rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.booking-access__field input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.booking-access__field input:disabled {
+  background: var(--color-background);
+  cursor: wait;
+}
+
+.booking-access__help {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.booking-access__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.875rem 1rem;
+  color: var(--color-on-gold);
+  background: var(--color-gold-light);
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-small);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  cursor: pointer;
+}
+
+.booking-access__button svg {
+  flex-shrink: 0;
+}
+
+.booking-access__button:hover:not(:disabled) {
+  background: #e4ca95;
+}
+
+.booking-access__button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.booking-access__open {
+  display: grid;
+  gap: 0.875rem;
+  text-align: center;
+}
+
+.booking-access__notice,
+.booking-access__error {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid;
+  border-radius: var(--radius-small);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.booking-access__notice {
+  color: var(--color-primary);
+  background: var(--color-background);
+  border-color: var(--color-border);
+}
+
+.booking-access__notice p {
+  margin: 0.5rem 0 0;
+}
+
+.booking-access__error {
+  color: var(--color-danger);
+  background: #fff7f7;
+  border-color: #e8b6b6;
+}
+
+.booking-access__privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+}
+
+.booking-access__privacy svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.booking-access__privacy p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.booking-access__footer {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.booking-access__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+}
+
+.booking-access__back:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
+@media (max-width: 360px) {
+  .booking-access {
+    padding-inline: 0.75rem;
+  }
+
+  .booking-access__card {
+    padding-inline: 1rem;
+  }
+}
