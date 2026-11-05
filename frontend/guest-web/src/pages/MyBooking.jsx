@@ -1,4 +1,4 @@
-import {
+﻿import {
   useMemo,
   useRef,
   useState,
@@ -9,6 +9,13 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router";
+
+import {
+  ArrowLeft,
+  CalendarDays,
+  LogOut,
+  RefreshCw,
+} from "lucide-react";
 
 import {
   logoutBookingAccess,
@@ -29,6 +36,7 @@ import {
 } from "../utils/formatMoney.js";
 
 import "../styles/checkout.css";
+import "../styles/my-booking.css";
 
 const dateTime = new Intl.DateTimeFormat(
   "en-PH",
@@ -45,21 +53,24 @@ function displayTime(value) {
     : "Not recorded";
 }
 
-function MyBookingView({
-  expectedReference,
-}) {
-  const navigate = useNavigate();
-
-  const view = usePrivateBooking(
-    expectedReference,
+function SummaryRow({ label, children }) {
+  return (
+    <div className="my-booking__row">
+      <dt>{label}</dt>
+      <dd>{children}</dd>
+    </div>
   );
+}
+
+function MyBookingView({ expectedReference }) {
+  const navigate = useNavigate();
+  const view = usePrivateBooking(expectedReference);
 
   const [error, setError] = useState("");
   const [signingOut, setSigningOut] =
     useState(false);
 
   const logoutPending = useRef(false);
-
   const booking = view.booking;
 
   async function signOut() {
@@ -72,10 +83,9 @@ function MyBookingView({
     try {
       await logoutBookingAccess();
 
-      navigate(
-        "/booking-access",
-        { replace: true },
-      );
+      navigate("/booking-access", {
+        replace: true,
+      });
     } catch {
       setError(
         "Sign out could not be confirmed. Please try again.",
@@ -94,241 +104,310 @@ function MyBookingView({
         ? "Pay at Property"
         : "Not recorded";
 
+  const propertyPending =
+    booking?.status === "PENDING" &&
+    booking?.paymentPreference ===
+      "PAY_AT_PROPERTY";
+
+  const closed = booking &&
+    ["EXPIRED", "CANCELLED"].includes(
+      booking.status,
+    );
+
   return (
-    <main className="checkout-page">
-      <section className="checkout-panel checkout-receipt">
-        <p className="checkout-kicker">
-          YOUR NEXORA RESERVATION
-        </p>
-
-        <h1>My booking</h1>
-
-        {view.status === "loading" && (
-          <p role="status">
-            Loading your private booking...
+    <main className="my-booking">
+      <header className="my-booking__heading">
+        <div>
+          <p className="my-booking__eyebrow">
+            Your stay at NEXORA
           </p>
-        )}
 
-        {view.status === "unavailable" && (
-          <p role="status">
-            Private access is unavailable, expired,
-            or belongs to a different booking.
-            Request access to the intended booking.
+          <h1>My booking</h1>
+
+          <p className="my-booking__intro">
+            Review your stay, booking status,
+            and recorded payments.
           </p>
-        )}
+        </div>
 
-        {view.status === "error" && (
-          <p role="alert">
-            This booking could not be loaded.
-            Try refreshing its details.
-          </p>
+        {view.status !== "loading" && (
+          <button
+            className="my-booking__button"
+            type="button"
+            disabled={signingOut}
+            onClick={view.refresh}
+          >
+            <RefreshCw
+              size={17}
+              aria-hidden="true"
+            />
+            Refresh details
+          </button>
         )}
+      </header>
 
-        {booking && (
-          <>
-            <dl className="checkout-summary">
-              <div>
-                <dt>Booking reference</dt>
-                <dd>
+      {view.status === "loading" && (
+        <div
+          className="my-booking__feedback"
+          role="status"
+        >
+          Loading your private booking...
+        </div>
+      )}
+
+      {view.status === "unavailable" && (
+        <div
+          className="my-booking__feedback"
+          role="status"
+        >
+          Private access is unavailable, expired,
+          or belongs to a different booking.
+          Request access to the intended booking.
+        </div>
+      )}
+
+      {view.status === "error" && (
+        <div
+          className="my-booking__feedback"
+          role="alert"
+        >
+          This booking could not be loaded.
+          Try refreshing its details.
+        </div>
+      )}
+
+      {booking && (
+        <>
+          <section
+            className="my-booking__identity"
+            aria-labelledby="my-booking-room"
+          >
+            <div className="my-booking__identity-main">
+              <span className="my-booking__icon">
+                <CalendarDays
+                  size={26}
+                  aria-hidden="true"
+                />
+              </span>
+
+              <div className="my-booking__identity-text">
+                <p className="my-booking__label">
+                  Booking reference
+                </p>
+
+                <p className="my-booking__reference">
                   {booking.reservationNumber}
-                </dd>
-              </div>
+                </p>
 
-              <div>
-                <dt>Reservation status</dt>
-                <dd>
-                  {booking.status.replaceAll("_", " ")}
-                </dd>
+                <h2 id="my-booking-room">
+                  {booking.roomType.name}
+                </h2>
               </div>
+            </div>
 
-              <div>
-                <dt>Payment preference</dt>
-                <dd>{method}</dd>
-              </div>
+            <div className="my-booking__status-group">
+              <span className="my-booking__label">
+                Reservation status
+              </span>
 
-              <div>
-                <dt>Room type</dt>
-                <dd>{booking.roomType.name}</dd>
-              </div>
+              <span
+                className="my-booking__status"
+                data-status={booking.status}
+              >
+                {booking.status.replaceAll("_", " ")}
+              </span>
+            </div>
+          </section>
 
-              <div>
-                <dt>Primary guest</dt>
-                <dd>
+          <div className="my-booking__grid">
+            <section
+              className="my-booking__card"
+              aria-labelledby="my-booking-stay"
+            >
+              <h2 id="my-booking-stay">
+                Your stay
+              </h2>
+
+              <p className="my-booking__section-intro">
+                Booking dates and guest details.
+                Times use Philippine time.
+              </p>
+
+              <dl className="my-booking__summary">
+                <SummaryRow label="Check-in">
+                  {booking.checkInDate.slice(0, 10)}
+                </SummaryRow>
+
+                <SummaryRow label="Check-out">
+                  {booking.checkOutDate.slice(0, 10)}
+                </SummaryRow>
+
+                <SummaryRow label="Guests">
+                  {booking.guestCount}
+                </SummaryRow>
+
+                <SummaryRow label="Primary guest">
                   {booking.guest.firstName}{" "}
                   {booking.guest.lastName}
-                </dd>
-              </div>
+                </SummaryRow>
 
-              <div>
-                <dt>Check-in</dt>
-                <dd>
-                  {booking.checkInDate.slice(0, 10)}
-                </dd>
-              </div>
-
-              <div>
-                <dt>Check-out</dt>
-                <dd>
-                  {booking.checkOutDate.slice(0, 10)}
-                </dd>
-              </div>
-
-              <div>
-                <dt>Guests</dt>
-                <dd>{booking.guestCount}</dd>
-              </div>
-
-              <div>
-                <dt>Expected arrival · Philippine time</dt>
-                <dd>
+                <SummaryRow label="Expected arrival">
                   {displayTime(
                     booking.expectedArrivalAt,
                   )}
-                </dd>
-              </div>
+                </SummaryRow>
 
+                <SummaryRow label="Payment preference">
+                  {method}
+                </SummaryRow>
+
+                <SummaryRow label="Booked nightly rate">
+                  {formatPesos(
+                    booking.nightlyRateCentavos,
+                  )}
+                </SummaryRow>
+              </dl>
+
+              <div className="my-booking__total">
+                <span>Booked stay total</span>
+
+                <strong>
+                  {formatPesos(
+                    booking.totalAmountCentavos,
+                  )}
+                </strong>
+              </div>
+            </section>
+
+            <BookingPayment
+              key={`${booking.reservationNumber}:${view.revision}`}
+              booking={booking}
+            />
+          </div>
+
+          <section
+            className="my-booking__card my-booking__timing"
+            aria-labelledby="my-booking-timing"
+          >
+            <h2 id="my-booking-timing">
+              Booking updates and deadlines
+            </h2>
+
+            <p className="my-booking__section-intro">
+              All times below use Philippine time.
+            </p>
+
+            <dl className="my-booking__summary">
               {booking.holdExpiresAt && (
-                <div>
-                  <dt>Hold / confirmation deadline</dt>
-                  <dd>
-                    {displayTime(
-                      booking.holdExpiresAt,
-                    )}
-                  </dd>
-                </div>
+                <SummaryRow
+                  label="Hold / confirmation deadline"
+                >
+                  {displayTime(
+                    booking.holdExpiresAt,
+                  )}
+                </SummaryRow>
               )}
 
               {booking.paymentPreference ===
                 "PAY_AT_PROPERTY" && (
                 <>
-                  <div>
-                    <dt>First staff contact</dt>
-                    <dd>
-                      {displayTime(
-                        booking.firstContactedAt,
-                      )}
-                    </dd>
-                  </div>
+                  <SummaryRow label="First staff contact">
+                    {displayTime(
+                      booking.firstContactedAt,
+                    )}
+                  </SummaryRow>
 
-                  <div>
-                    <dt>Response deadline</dt>
-                    <dd>
-                      {displayTime(
-                        booking.responseDeadlineAt,
-                      )}
-                    </dd>
-                  </div>
+                  <SummaryRow label="Response deadline">
+                    {displayTime(
+                      booking.responseDeadlineAt,
+                    )}
+                  </SummaryRow>
                 </>
               )}
 
-              {booking.confirmedAt && (
-                <div>
-                  <dt>Confirmed at</dt>
-                  <dd>
-                    {displayTime(
-                      booking.confirmedAt,
-                    )}
-                  </dd>
-                </div>
-              )}
-
-              <div>
-                <dt>Booked nightly rate</dt>
-                <dd>
-                  {formatPesos(
-                    booking.nightlyRateCentavos,
-                  )}
-                </dd>
-              </div>
-
-              <div className="checkout-total">
-                <dt>Booked stay total</dt>
-                <dd>
-                  {formatPesos(
-                    booking.totalAmountCentavos,
-                  )}
-                </dd>
-              </div>
+              <SummaryRow label="Confirmed at">
+                {displayTime(booking.confirmedAt)}
+              </SummaryRow>
             </dl>
 
-            {booking.status === "PENDING" &&
-              booking.paymentPreference ===
-                "PAY_AT_PROPERTY" && (
-                <p className="checkout-note">
-                  Staff must contact you and record
-                  your agreement before confirmation.
-                  The earlier deadline applies:
-                  24 hours after first contact or
-                  30 minutes after expected arrival.
-                </p>
-              )}
+            {propertyPending && (
+              <p className="my-booking__notice">
+                Staff must contact you and record
+                your agreement before confirmation.
+                The earlier deadline applies:
+                24 hours after first contact or
+                30 minutes after expected arrival.
+              </p>
+            )}
 
             {booking.holdExpired && (
-              <p role="status" className="checkout-note">
+              <p
+                className="my-booking__notice"
+                role="status"
+              >
                 The pending deadline has passed.
                 The displayed reservation state will
                 update after deadline processing.
               </p>
             )}
 
-            {["EXPIRED", "CANCELLED"].includes(
-              booking.status,
-            ) && (
-              <p className="checkout-note">
+            {closed && (
+              <p className="my-booking__notice">
                 This booking is closed. It cannot
                 be revived by a payment or browser
                 redirect.
               </p>
             )}
+          </section>
 
-            <BookingPayment
-              key={`${booking.reservationNumber}:${view.revision}`}
-              booking={booking}
-            />
+          <footer className="my-booking__actions">
+            <Link
+              className="my-booking__back"
+              to="/rooms"
+            >
+              <ArrowLeft
+                size={17}
+                aria-hidden="true"
+              />
+              Return to rooms
+            </Link>
 
-            <p>
-              <button
-                className="checkout-button"
-                type="button"
-                disabled={signingOut}
-                onClick={signOut}
-              >
-                {signingOut
-                  ? "Signing out..."
-                  : "End private access"}
-              </button>
-            </p>
-          </>
-        )}
-
-        {view.status !== "loading" && (
-          <p>
             <button
-              className="checkout-button"
+              className="my-booking__button"
               type="button"
               disabled={signingOut}
-              onClick={view.refresh}
+              onClick={signOut}
             >
-              Refresh booking details
+              <LogOut
+                size={17}
+                aria-hidden="true"
+              />
+
+              {signingOut
+                ? "Signing out..."
+                : "End private access"}
             </button>
-          </p>
-        )}
+          </footer>
+        </>
+      )}
 
-        {error && (
-          <p className="checkout-error" role="alert">
-            {error}
-          </p>
-        )}
+      {error && (
+        <p
+          className="my-booking__error"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
 
-        {!booking && view.status !== "loading" && (
-          <Link
-            className="checkout-link"
-            to="/booking-access"
-          >
-            Request private email access
-          </Link>
-        )}
-      </section>
+      {!booking && view.status !== "loading" && (
+        <Link
+          className="my-booking__button"
+          to="/booking-access"
+        >
+          Request private email access
+        </Link>
+      )}
     </main>
   );
 }
@@ -347,19 +426,28 @@ export default function MyBooking() {
     } catch {
       return {
         reference: null,
-        error:
-          "The booking context is invalid.",
+        error: "The booking context is invalid.",
       };
     }
   }, [search]);
 
   if (context.error) {
     return (
-      <main className="checkout-page">
-        <section className="checkout-panel">
+      <main className="my-booking">
+        <section className="my-booking__card">
           <h1>Booking access unavailable</h1>
-          <p role="alert">{context.error}</p>
-          <Link to="/booking-access">
+
+          <p
+            className="my-booking__error"
+            role="alert"
+          >
+            {context.error}
+          </p>
+
+          <Link
+            className="my-booking__button"
+            to="/booking-access"
+          >
             Request private email access
           </Link>
         </section>

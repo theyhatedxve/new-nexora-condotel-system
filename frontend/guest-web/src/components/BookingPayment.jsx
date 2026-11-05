@@ -226,7 +226,10 @@ export default function BookingPayment({
     !summary.requiresReview;
 
   return (
-    <section aria-labelledby="booking-payment-heading">
+    <section
+      className="my-booking__card my-booking__payment"
+      aria-labelledby="booking-payment-heading"
+    >
       <h2 id="booking-payment-heading">
         Payment
       </h2>
