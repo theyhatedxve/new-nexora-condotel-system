@@ -1,0 +1,225 @@
+.about-page {
+  width: min(1120px, calc(100% - 3rem));
+  margin-inline: auto;
+  padding-block: clamp(2rem, 5vw, 4rem);
+  color: var(--color-text);
+}
+
+.about-page__intro {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.about-page__copy {
+  min-width: 0;
+}
+
+.about-page__eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.about-page h1,
+.about-page h2,
+.about-page h3 {
+  color: var(--color-primary);
+}
+
+.about-page h1 {
+  max-width: 12ch;
+  margin: 0;
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  line-height: 1.15;
+}
+
+.about-page__lead {
+  margin: 1.25rem 0 0;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.about-page__description {
+  margin: 1rem 0 1.5rem;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+}
+
+.about-page__primary,
+.about-page__secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  min-height: 2.875rem;
+  padding: 0.875rem 1.25rem;
+  border: 1px solid;
+  border-radius: var(--radius-small);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+}
+
+.about-page__primary svg,
+.about-page__secondary svg {
+  flex-shrink: 0;
+}
+
+.about-page__primary {
+  color: var(--color-on-gold);
+  background: var(--color-gold-light);
+  border-color: var(--color-gold);
+}
+
+.about-page__primary:hover {
+  background: #e4ca95;
+}
+
+.about-page__image {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.about-page__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.about-page__features {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+.about-page__section-heading {
+  max-width: 40rem;
+  margin: 0 auto 1.5rem;
+  text-align: center;
+}
+
+.about-page__section-heading h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  line-height: 1.4;
+}
+
+.about-page__feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.about-page__feature {
+  min-width: 0;
+  padding: 1.75rem 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  text-align: center;
+}
+
+.about-page__feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+  background: #faf5e9;
+  border: 1px solid #ead8ad;
+  border-radius: var(--radius-small);
+}
+
+.about-page__feature h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.about-page__feature p {
+  margin: 0.75rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.about-page__booking {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-radius: var(--radius-medium);
+}
+
+.about-page__booking h2 {
+  margin: 0;
+  color: var(--color-on-primary);
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.about-page__booking p {
+  max-width: 38rem;
+  margin: 0.625rem 0 0;
+  line-height: 1.7;
+}
+
+.about-page__secondary {
+  flex-shrink: 0;
+  color: var(--color-gold-light);
+  border-color: var(--color-gold-light);
+}
+
+.about-page__secondary:hover {
+  color: var(--color-on-gold);
+  background: var(--color-gold-light);
+}
+
+.about-page__booking a:focus-visible {
+  outline-color: var(--color-gold-light);
+}
+
+@media (max-width: 760px) {
+  .about-page {
+    width: calc(100% - 2rem);
+  }
+
+  .about-page__intro,
+  .about-page__feature-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .about-page h1 {
+    max-width: 16ch;
+  }
+
+  .about-page__booking {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 420px) {
+  .about-page__primary {
+    width: 100%;
+  }
+}

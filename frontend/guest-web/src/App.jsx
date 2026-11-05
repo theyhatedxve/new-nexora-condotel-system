@@ -4,6 +4,8 @@ import GuestLayout from "./layouts/GuestLayout";
 import Home from "./pages/Home";
 import Rooms from "./pages/Rooms";
 import RoomDetails from "./pages/RoomDetails";
+import About from "./pages/About.jsx";
+import Contact from "./pages/Contact.jsx";
 
 import "./styles/tokens.css";
 import "./styles/global.css";
@@ -20,6 +22,8 @@ function App() {
         <Route element={<GuestLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/rooms" element={<Rooms />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route
             path="/checkout/:roomTypeId"

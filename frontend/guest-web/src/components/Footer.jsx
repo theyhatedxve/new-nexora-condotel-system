@@ -49,6 +49,14 @@ function Footer() {
               <li>
                 <Link to="/rooms">Rooms</Link>
               </li>
+
+              <li>
+                <Link to="/about">About NEXORA</Link>
+              </li>
+
+              <li>
+                <Link to="/contact">Contact</Link>
+              </li>
             </ul>
           </nav>
 

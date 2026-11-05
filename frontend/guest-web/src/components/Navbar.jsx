@@ -92,6 +92,22 @@ function Navbar() {
           </NavLink>
 
           <NavLink
+            to="/about"
+            className="guest-header__link"
+            onClick={closeMenu}
+          >
+            About
+          </NavLink>
+
+          <NavLink
+            to="/contact"
+            className="guest-header__link"
+            onClick={closeMenu}
+          >
+            Contact
+          </NavLink>
+
+          <NavLink
             to="/my-booking"
             className="guest-header__link guest-header__booking-link"
             onClick={closeMenu}
