@@ -6,6 +6,7 @@ import Rooms from "./pages/Rooms";
 import RoomDetails from "./pages/RoomDetails";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
+import Policies from "./pages/Policies.jsx";
 
 import "./styles/tokens.css";
 import "./styles/global.css";
@@ -24,6 +25,7 @@ function App() {
           <Route path="/rooms" element={<Rooms />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/policies" element={<Policies />} />
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route
             path="/checkout/:roomTypeId"

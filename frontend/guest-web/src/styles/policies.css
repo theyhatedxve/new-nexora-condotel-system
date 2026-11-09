@@ -1,0 +1,207 @@
+.policies-page {
+  width: min(1040px, calc(100% - 3rem));
+  margin-inline: auto;
+  padding-block: clamp(2rem, 5vw, 4rem);
+  color: var(--color-text);
+}
+
+.policies-page__heading {
+  max-width: 42rem;
+  margin-bottom: 1.75rem;
+}
+
+.policies-page__eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.policies-page h1,
+.policies-page h2 {
+  color: var(--color-primary);
+}
+
+.policies-page h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  line-height: 1.2;
+}
+
+.policies-page__heading > p:last-child {
+  margin: 0.875rem 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+}
+
+.policies-page__preview,
+.policies-page__notice {
+  padding: 1rem;
+  border: 1px solid #ead19a;
+  border-radius: var(--radius-small);
+  background: #fff7e5;
+  color: #754d08;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.policies-page__preview {
+  margin: 0 0 1.5rem;
+}
+
+.policies-page__tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+}
+
+.policies-page__tab {
+  min-width: 0;
+  min-height: 48px;
+  padding: 0.875rem 0.75rem;
+  border: 1px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.policies-page__tab:hover {
+  background: var(--color-background);
+}
+
+.policies-page__tab[aria-selected="true"] {
+  border-color: var(--color-gold);
+  border-bottom-color: var(--color-primary);
+  background: var(--color-gold-light);
+  color: var(--color-on-gold);
+}
+
+.policies-page__tab:focus-visible,
+.policies-page__panel:focus-visible,
+.policies-page__booking-link:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.policies-page__panel {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-gold);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  overflow-wrap: anywhere;
+}
+
+.policies-page__panel[hidden] {
+  display: none;
+}
+
+.policies-page__panel h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.4;
+}
+
+.policies-page__introduction {
+  max-width: 48rem;
+  margin: 0.875rem 0 1.25rem;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+}
+
+.policies-page__list {
+  margin: 0;
+  padding-left: 1.4rem;
+  line-height: 1.8;
+}
+
+.policies-page__list li + li {
+  margin-top: 0.75rem;
+}
+
+.policies-page__list li::marker {
+  color: var(--color-primary);
+}
+
+.policies-page__notice {
+  margin: 1.5rem 0 0;
+}
+
+.policies-page__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.policies-page__footer h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.policies-page__footer p {
+  max-width: 36rem;
+  margin: 0.5rem 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.policies-page__booking-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-small);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.policies-page__booking-link:hover {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.policies-page__booking-link svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .policies-page__tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .policies-page {
+    width: calc(100% - 2rem);
+  }
+
+  .policies-page__tab {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .policies-page__booking-link {
+    width: 100%;
+  }
+}
