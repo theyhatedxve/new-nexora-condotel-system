@@ -1,3 +1,4 @@
+import { roles, historyLimit } from './staff-guest-policy.js';
 import {
   ForbiddenException,
   Injectable,
@@ -7,30 +8,16 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 
-import {
-  PrismaService,
-} from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 import {
   OwnershipService,
   type AuthenticatedUser,
 } from '../common/ownership/ownership.service.js';
 
-import type {
-  Prisma,
-} from '../generated/prisma/client.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
-import {
-  StaffGuestsQueryDto,
-} from './dto/staff-guests-query.dto.js';
-
-const roles = [
-  'ADMIN',
-  'MANAGER',
-  'RECEPTIONIST',
-] as const;
-
-const historyLimit = 25;
+import { StaffGuestsQueryDto } from './dto/staff-guests-query.dto.js';
 
 @Injectable()
 export class StaffGuestsService {

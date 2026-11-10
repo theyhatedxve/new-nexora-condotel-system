@@ -1,20 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { parseAvailabilityStay } from './availability-stay.js';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
-import {
-  parsePhilippineDate,
-  todayInPhilippines,
-} from '../common/validation/philippine-date-range.js';
 
-import { countNights, hasRoomEveryNight } from './availability-calculator.js';
+import { hasRoomEveryNight } from './availability-calculator.js';
 import type { SearchAvailabilityDto } from './dto/search-availability.dto.js';
-
-// Approved default. Change here if the property sets a different limit.
-export const MAX_STAY_NIGHTS = 30;
 
 @Injectable()
 export class AvailabilityService {
@@ -36,31 +26,8 @@ export class AvailabilityService {
     return properties[0].id;
   }
 
-  private parseStay(checkIn: string, checkOut: string) {
-    const startDate = parsePhilippineDate(checkIn);
-    const endDate = parsePhilippineDate(checkOut);
-
-    if (startDate >= endDate) {
-      throw new BadRequestException('Check-out must be after check-in.');
-    }
-
-    if (startDate < todayInPhilippines()) {
-      throw new BadRequestException('Check-in cannot be in the past.');
-    }
-
-    const nights = countNights(startDate, endDate);
-
-    if (nights > MAX_STAY_NIGHTS) {
-      throw new BadRequestException(
-        `A stay can be at most ${MAX_STAY_NIGHTS} nights.`,
-      );
-    }
-
-    return { startDate, endDate, nights };
-  }
-
   async search(query: SearchAvailabilityDto) {
-    const { startDate, endDate, nights } = this.parseStay(
+    const { startDate, endDate, nights } = parseAvailabilityStay(
       query.checkIn,
       query.checkOut,
     );
@@ -143,3 +110,4 @@ export class AvailabilityService {
     }));
   }
 }
+export { MAX_STAY_NIGHTS } from './availability-stay.js';

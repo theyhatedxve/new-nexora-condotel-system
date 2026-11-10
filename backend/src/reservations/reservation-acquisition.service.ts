@@ -1,64 +1,29 @@
-import {
-  randomUUID,
-} from 'node:crypto';
+import { HOLD_DURATION_MS, type AcquisitionPolicy } from './reservation-acquisition-policy.js';
+import { randomUUID } from 'node:crypto';
 
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
-import {
-  plainToInstance,
-} from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 
-import {
-  validateSync,
-} from 'class-validator';
+import { validateSync } from 'class-validator';
 
-import type {
-  Prisma,
-} from '../generated/prisma/client.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
-import {
-  PrismaService,
-} from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
-import {
-  todayInPhilippines,
-} from '../common/validation/philippine-date-range.js';
+import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
 
-import {
-  CreateReservationDto,
-} from './dto/create-reservation.dto.js';
+import { CreateReservationDto } from './dto/create-reservation.dto.js';
 
-import {
-  ReservationValidationService,
-} from './reservation-validation.service.js';
+import { ReservationValidationService } from './reservation-validation.service.js';
 
-import {
-  assertAllocatable,
-  connectedStays,
-  type Stay,
-} from './room-allocation.js';
+import { assertAllocatable, connectedStays, type Stay } from './room-allocation.js';
 
-import {
-  expirePendingHoldsInTx,
-} from './reservation-lifecycle.js';
+import { expirePendingHoldsInTx } from './reservation-lifecycle.js';
 
-import {
-  withInventoryWrite,
-} from './inventory-write.js';
+import { withInventoryWrite } from './inventory-write.js';
 
-import {
-  UNPAID_CANCELLATION_POLICY,
-} from './cancellation-policy.js';
-
-export const HOLD_DURATION_MS =
-  15 * 60 * 1000;
-
-type AcquisitionPolicy =
-  | 'HOLD'
-  | 'CONFIRMED';
+import { UNPAID_CANCELLATION_POLICY } from './cancellation-policy.js';
 
 @Injectable()
 export class ReservationAcquisitionService {
@@ -365,3 +330,4 @@ export class ReservationAcquisitionService {
     return result;
   }
 }
+export { HOLD_DURATION_MS } from './reservation-acquisition-policy.js';

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  ServiceUnavailableException,
-} from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import type { Payment, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
@@ -15,11 +11,8 @@ import {
   parseWebhook,
   type PaidCheckout,
 } from './paymongo-webhook.payload.js';
-import { settlePaymongoRefund } from './refunds.service.js';
-import {
-  hasVerifiedPaymongoEvidence,
-  paymentEvidenceSelect,
-} from './payment-evidence.js';
+import { settlePaymongoRefund } from './refund-settlement.js';
+import { hasVerifiedPaymongoEvidence, paymentEvidenceSelect } from './payment-evidence.js';
 import { verifyPaymongoWebhook } from './paymongo-webhook.signature.js';
 
 import {

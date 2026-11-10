@@ -1,3 +1,4 @@
+import { roles, fields } from './staff-reservation-query.js';
 import {
   ForbiddenException,
   Injectable,
@@ -7,59 +8,21 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 
-import {
-  PrismaService,
-} from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 import {
   OwnershipService,
   type AuthenticatedUser,
 } from '../common/ownership/ownership.service.js';
 
-import type {
-  Prisma,
-} from '../generated/prisma/client.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
-import {
-  parsePhilippineDate,
-} from '../common/validation/philippine-date-range.js';
+import { parsePhilippineDate } from '../common/validation/philippine-date-range.js';
 
 import {
   STAFF_RESERVATION_STATUSES,
   StaffReservationsQueryDto,
 } from './dto/staff-reservations-query.dto.js';
-
-
-
-const roles = [
-  'ADMIN',
-  'MANAGER',
-  'RECEPTIONIST',
-] as const;
-
-
-const fields = {
-  id: true,
-  reservationNumber: true,
-  status: true,
-  checkInDate: true,
-  checkOutDate: true,
-  guestCount: true,
-  createdAt: true,
-  roomType: {
-    select: {
-      id: true,
-      name: true,
-    },
-  },
-  guest: {
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-    },
-  },
-} as const;
 
 @Injectable()
 export class StaffReservationsService {

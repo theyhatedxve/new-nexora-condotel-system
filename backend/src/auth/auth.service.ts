@@ -1,33 +1,13 @@
+import { type AuthResult } from './auth.types.js';
+import { hashRefreshToken, getRefreshExpiry } from './refresh-token.js';
 
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PasswordService } from './password.service.js';
-import {
-  ACCESS_TOKEN_SECONDS,
-  REFRESH_TOKEN_DAYS,
-  generateRefreshToken,
-} from './auth.config.js';
+import { ACCESS_TOKEN_SECONDS, generateRefreshToken } from './auth.config.js';
 import type { LoginDto } from './dto/login.dto.js';
-
-export interface PublicUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
-export interface AuthResult {
-  accessToken: string;
-  tokenType: 'Bearer';
-  expiresIn: number;
-  user?: PublicUser;
-  refreshToken: string;
-}
 
 @Injectable()
 export class AuthService {
@@ -36,22 +16,6 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
   ) {}
-
-  private hashRefreshToken(token: string): string {
-    return createHash('sha256')
-      .update(token, 'utf8')
-      .digest('hex');
-  }
-
-  private getRefreshExpiry(): Date {
-    const expiry = new Date();
-
-    expiry.setUTCDate(
-      expiry.getUTCDate() + REFRESH_TOKEN_DAYS,
-    );
-
-    return expiry;
-  }
 
   private async createAccessToken(userId: string): Promise<string> {
     return this.jwtService.signAsync({
@@ -93,8 +57,8 @@ export class AuthService {
       data: {
         userId: user.id,
         familyId: randomUUID(),
-        tokenHash: this.hashRefreshToken(refreshToken),
-        expiresAt: this.getRefreshExpiry(),
+        tokenHash: hashRefreshToken(refreshToken),
+        expiresAt: getRefreshExpiry(),
       },
     });
 
@@ -121,7 +85,7 @@ export class AuthService {
       );
     }
 
-    const tokenHash = this.hashRefreshToken(rawToken);
+    const tokenHash = hashRefreshToken(rawToken);
 
     const existing = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
@@ -165,7 +129,7 @@ export class AuthService {
     }
 
     const nextRefreshToken = generateRefreshToken();
-    const nextTokenHash = this.hashRefreshToken(nextRefreshToken);
+    const nextTokenHash = hashRefreshToken(nextRefreshToken);
 
     // An atomic conditional update ensures only one request
     // can consume the same refresh credential.
@@ -190,7 +154,7 @@ export class AuthService {
           userId: existing.userId,
           familyId: existing.familyId,
           tokenHash: nextTokenHash,
-          expiresAt: this.getRefreshExpiry(),
+          expiresAt: getRefreshExpiry(),
         },
       });
 
@@ -215,7 +179,6 @@ export class AuthService {
     };
   }
 
-
     async logout(rawToken: string | undefined): Promise<void> {
     // Missing or malformed cookies should not expose
     // information about whether a session exists.
@@ -224,7 +187,7 @@ export class AuthService {
     }
 
     // Reuse the same hashing method as login and refresh.
-    const tokenHash = this.hashRefreshToken(rawToken);
+    const tokenHash = hashRefreshToken(rawToken);
 
     const existing = await this.prisma.refreshToken.findUnique({
         where: { tokenHash },
@@ -244,7 +207,6 @@ export class AuthService {
     await this.revokeFamily(existing.familyId);
     }
 
-
   private async revokeFamily(familyId: string): Promise<void> {
     await this.prisma.refreshToken.updateMany({
       where: {
@@ -257,3 +219,5 @@ export class AuthService {
     });
   }
 }
+
+export { type PublicUser, type AuthResult } from './auth.types.js';

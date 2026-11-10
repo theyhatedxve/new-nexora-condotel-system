@@ -1,8 +1,4 @@
-
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { EmailService } from './email.service.js';
@@ -12,7 +8,7 @@ import {
   getVerificationExpiry,
   hashVerificationToken,
   normalizeEmail,
-} from './registration.service.js';
+} from './registration-policy.js';
 
 const GENERIC_MESSAGE =
   'If the account is eligible, a verification email will be sent.';

@@ -1,6 +1,4 @@
-import {
-  randomBytes,
-} from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 
 import {
   ConflictException,
@@ -10,22 +8,13 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 
-import type {
-  GuestBookingAttempt,
-  Prisma,
-} from '../generated/prisma/client.js';
+import type { GuestBookingAttempt, Prisma } from '../generated/prisma/client.js';
 
-import {
-  PrismaService,
-} from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
-import {
-  BOOKING_SESSION_MS,
-} from './booking-access.config.js';
+import { BOOKING_SESSION_MS } from './booking-access.config.js';
 
-import {
-  hash,
-} from './booking-access-security.js';
+import { hash } from './booking-access-security.js';
 
 import {
   GUEST_BOOKING_POLICY_VERSION,
@@ -39,14 +28,10 @@ import {
   normalizedGuestBooking,
 } from './guest-booking-security.js';
 
-import {
-  HOLD_DURATION_MS,
-  ReservationAcquisitionService,
-} from './reservation-acquisition.service.js';
+import { HOLD_DURATION_MS } from './reservation-acquisition-policy.js';
+import { ReservationAcquisitionService } from './reservation-acquisition.service.js';
 
-import {
-  withInventoryWrite,
-} from './inventory-write.js';
+import { withInventoryWrite } from './inventory-write.js';
 
 @Injectable()
 export class GuestBookingService {

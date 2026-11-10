@@ -1,3 +1,4 @@
+import { publicFields, staffFields } from './room-type-projection.js';
 
 import {
   BadRequestException,
@@ -21,25 +22,7 @@ import {
   assertInventoryCommitments,
 } from '../reservations/inventory-write.js';
 
-import type {
-  AuthenticatedUser,
-} from '../common/ownership/ownership.service.js';
-
-
-
-const publicFields = {
-  id: true,
-  name: true,
-  description: true,
-  capacity: true,
-  baseRateCentavos: true,
-} as const;
-
-const staffFields = {
-  ...publicFields,
-  isActive: true,
-  propertyId: true,
-} as const;
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 
 @Injectable()
 export class RoomTypesService {
@@ -63,7 +46,6 @@ export class RoomTypesService {
 
     return properties[0].id;
   }
-
 
     async findAllForStaff(
       actor: AuthenticatedUser | undefined,

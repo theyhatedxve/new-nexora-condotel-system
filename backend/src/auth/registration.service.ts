@@ -1,41 +1,18 @@
-
 import {
-    BadRequestException,
-    Injectable,
-    InternalServerErrorException,
-} from '@nestjs/common';
-import { createHash, randomBytes } from 'node:crypto';
+  REGISTRATION_ACKNOWLEDGMENT,
+  normalizeEmail,
+  createVerificationToken,
+  hashVerificationToken,
+  getVerificationExpiry,
+} from './registration-policy.js';
+
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PasswordService } from './password.service.js';
 import { EmailService } from './email.service.js';
 
 import type { RegisterDto } from './dto/register.dto.js';
-
-const VERIFICATION_LIFETIME_MS = 30 * 60 * 1000;
-
-export const REGISTRATION_ACKNOWLEDGMENT = {
-  message: 'Registration received.',
-  accountStatus: 'PENDING' as const,
-};
-
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
-export function createVerificationToken(): string {
-  return randomBytes(32).toString('hex');
-}
-
-export function hashVerificationToken(token: string): string {
-  return createHash('sha256')
-    .update(token, 'utf8')
-    .digest('hex');
-}
-
-export function getVerificationExpiry(): Date {
-  return new Date(Date.now() + VERIFICATION_LIFETIME_MS);
-}
 
 @Injectable()
 export class RegistrationService {
@@ -143,3 +120,5 @@ export class RegistrationService {
     return REGISTRATION_ACKNOWLEDGMENT;
   }
 }
+
+export { REGISTRATION_ACKNOWLEDGMENT, normalizeEmail, createVerificationToken, hashVerificationToken, getVerificationExpiry } from './registration-policy.js';

@@ -1,3 +1,9 @@
+import { roomFields, protectedStatuses } from './room-query.js';
+import {
+  normalizeRoomNumber,
+  normalizeRoomFloor,
+  handleRoomDatabaseError,
+} from './room-validation.js';
 
 import {
   BadRequestException,
@@ -19,42 +25,11 @@ import {
   assertInventoryCommitments,
 } from '../reservations/inventory-write.js';
 
-import type {
-  Prisma,
-} from '../generated/prisma/client.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
-import type {
-  AuthenticatedUser,
-} from '../common/ownership/ownership.service.js';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 
-import {
-  STAFF_ROOM_STATUSES,
-  StaffRoomsQueryDto,
-} from './dto/staff-rooms-query.dto.js';
-
-
-const roomFields = {
-  id: true,
-  roomNumber: true,
-  floor: true,
-  status: true,
-  isActive: true,
-  roomTypeId: true,
-  roomType: {
-    select: {
-      id: true,
-      name: true,
-      capacity: true,
-      isActive: true,
-    },
-  },
-} as const;
-
-const protectedStatuses = [
-  'PENDING',
-  'CONFIRMED',
-  'CHECKED_IN',
-] as const;
+import { STAFF_ROOM_STATUSES, StaffRoomsQueryDto } from './dto/staff-rooms-query.dto.js';
 
 @Injectable()
 export class RoomsService {
@@ -78,24 +53,6 @@ export class RoomsService {
     return properties[0].id;
   }
 
-  private normalizeRoomNumber(value: string): string {
-    const roomNumber = value.trim();
-
-    if (!roomNumber) {
-      throw new BadRequestException(
-        'Room number is required.',
-      );
-    }
-
-    return roomNumber;
-  }
-
-  private normalizeFloor(
-    value: string | null | undefined,
-  ): string | null {
-    return value?.trim() || null;
-  }
-
   private async requireActiveRoomType(
     roomTypeId: string,
     propertyId: string,
@@ -116,7 +73,6 @@ export class RoomsService {
       );
     }
   }
-
 
   findStaffPage(
     query: StaffRoomsQueryDto,
@@ -292,10 +248,10 @@ export class RoomsService {
     try {
       return await this.prisma.room.create({
         data: {
-          roomNumber: this.normalizeRoomNumber(
+          roomNumber: normalizeRoomNumber(
             dto.roomNumber,
           ),
-          floor: this.normalizeFloor(dto.floor),
+          floor: normalizeRoomFloor(dto.floor),
           roomTypeId: dto.roomTypeId,
           status: 'READY',
           isActive: true,
@@ -303,7 +259,7 @@ export class RoomsService {
         select: roomFields,
       });
     } catch (error) {
-      this.handleDatabaseError(error);
+      handleRoomDatabaseError(error);
     }
   }
 
@@ -319,12 +275,12 @@ export class RoomsService {
     const roomNumber =
       dto.roomNumber === undefined
         ? undefined
-        : this.normalizeRoomNumber(dto.roomNumber);
+        : normalizeRoomNumber(dto.roomNumber);
 
     const floor =
       dto.floor === undefined
         ? undefined
-        : this.normalizeFloor(dto.floor);
+        : normalizeRoomFloor(dto.floor);
 
     try {
       return await withInventoryWrite(
@@ -411,22 +367,7 @@ export class RoomsService {
         },
       );
     } catch (error) {
-      this.handleDatabaseError(error);
+      handleRoomDatabaseError(error);
     }
-  }
-
-  private handleDatabaseError(error: unknown): never {
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      error.code === 'P2002'
-    ) {
-      throw new ConflictException(
-        'Room number already exists.',
-      );
-    }
-
-    throw error;
   }
 }

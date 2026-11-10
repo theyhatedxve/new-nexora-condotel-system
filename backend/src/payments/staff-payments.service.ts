@@ -1,4 +1,10 @@
 import {
+  roles,
+  financialFields,
+  fields,
+  projectStaffPayment,
+} from './staff-payment-projection.js';
+import {
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -8,80 +14,22 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 
-import type {
-  Prisma,
-} from '../generated/prisma/client.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
-import {
-  PrismaService,
-} from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 import {
   OwnershipService,
   type AuthenticatedUser,
 } from '../common/ownership/ownership.service.js';
 
-import {
-  calculatePaymentSummary,
-} from './payment-summary.js';
-
-import {
-  paymentEvidenceSelect,
-} from './payment-evidence.js';
+import { calculatePaymentSummary } from './payment-summary.js';
 
 import {
   STAFF_PAYMENT_METHODS,
   STAFF_PAYMENT_STATUSES,
   StaffPaymentsQueryDto,
 } from './dto/staff-payments-query.dto.js';
-
-
-
-const roles = [
-  'ADMIN',
-  'MANAGER',
-  'RECEPTIONIST',
-] as const;
-
-
-const financialFields = {
-  id: true,
-  method: true,
-  status: true,
-  amountCentavos: true,
-  currency: true,
-  paidAt: true,
-  provider: true,
-  providerCheckoutId: true,
-  providerPaymentId: true,
-  events: {
-    select: paymentEvidenceSelect,
-  },
-  refunds: {
-    select: {
-      amountCentavos: true,
-      status: true,
-    },
-  },
-} as const;
-
-const fields = {
-  ...financialFields,
-  createdAt: true,
-  updatedAt: true,
-  reservation: {
-    select: {
-      id: true,
-      reservationNumber: true,
-      status: true,
-      totalAmountCentavos: true,
-    },
-  },
-} as const;
-
-type StaffPayment = Prisma.PaymentGetPayload<{
-  select: typeof fields;
-}>;
 
 @Injectable()
 export class StaffPaymentsService {
@@ -121,83 +69,6 @@ export class StaffPaymentsService {
     }
 
     return properties[0].id;
-  }
-
-  private project(payment: StaffPayment) {
-    let collection: {
-      collectedCentavos: number;
-      refundedCentavos: number;
-      pendingRefundCentavos: number;
-      netPaidCentavos: number;
-    } | null = null;
-
-    let verification:
-      | 'VERIFIED_COLLECTION'
-      | 'NOT_COLLECTED'
-      | 'REVIEW_REQUIRED' = 'REVIEW_REQUIRED';
-
-    try {
-      if (
-        payment.currency !== 'PHP' ||
-        !Number.isSafeInteger(payment.amountCentavos) ||
-        payment.amountCentavos <= 0
-      ) {
-        throw new ConflictException(
-          'Payment records require financial review.',
-        );
-      }
-
-      // Calculate this receipt independently of booking eligibility.
-      // Booking-level obligations are calculated separately in detail().
-      const receipt = calculatePaymentSummary(
-        payment.amountCentavos,
-        'CONFIRMED',
-        [payment],
-      );
-
-      const closedWithoutStay = [
-        'CANCELLED',
-        'EXPIRED',
-      ].includes(payment.reservation.status);
-
-      if (!receipt.requiresReview && !closedWithoutStay) {
-        verification = receipt.collectedCentavos > 0
-          ? 'VERIFIED_COLLECTION'
-          : 'NOT_COLLECTED';
-
-        collection = {
-          collectedCentavos: receipt.collectedCentavos,
-          refundedCentavos: receipt.refundedCentavos,
-          pendingRefundCentavos:
-            receipt.pendingRefundCentavos,
-          netPaidCentavos: receipt.netPaidCentavos,
-        };
-      }
-    } catch (error) {
-      if (!(error instanceof ConflictException)) {
-        throw error;
-      }
-    }
-
-    return {
-      id: payment.id,
-      method: payment.method,
-      status: payment.status,
-      amountCentavos: payment.amountCentavos,
-      currency: payment.currency,
-      paidAt: payment.paidAt,
-      createdAt: payment.createdAt,
-      updatedAt: payment.updatedAt,
-      verification,
-      requiresReview: verification === 'REVIEW_REQUIRED',
-      collection,
-      reservation: {
-        id: payment.reservation.id,
-        reservationNumber:
-          payment.reservation.reservationNumber,
-        status: payment.reservation.status,
-      },
-    };
   }
 
   list(
@@ -301,7 +172,7 @@ export class StaffPaymentsService {
 
       return {
         items: payments.map((payment) =>
-          this.project(payment),
+          projectStaffPayment(payment),
         ),
         total,
         page,
@@ -367,7 +238,7 @@ export class StaffPaymentsService {
       }
 
       return {
-        ...this.project(payment),
+        ...projectStaffPayment(payment),
         bookingSummary,
         bookingRequiresReview:
           bookingSummary === null ||

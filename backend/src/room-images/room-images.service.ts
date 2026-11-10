@@ -1,3 +1,4 @@
+import { imageFields, type ImageRecord, publicRoomImage } from './room-image-projection.js';
 
 import {
   BadRequestException,
@@ -11,26 +12,6 @@ import { ImageStorageService } from './image-storage.service.js';
 import { ImageValidationService } from './image-validation.service.js';
 import type { UpdateRoomImageDto } from './dto/update-room-image.dto.js';
 
-const imageFields = {
-  id: true,
-  roomTypeId: true,
-  filePath: true,
-  altText: true,
-  displayOrder: true,
-  isPrimary: true,
-  createdAt: true,
-} as const;
-
-type ImageRecord = {
-  id: string;
-  roomTypeId: string;
-  filePath: string;
-  altText: string | null;
-  displayOrder: number;
-  isPrimary: boolean;
-  createdAt: Date;
-};
-
 @Injectable()
 export class RoomImagesService {
   constructor(
@@ -38,17 +19,6 @@ export class RoomImagesService {
     private readonly storage: ImageStorageService,
     private readonly validation: ImageValidationService,
   ) {}
-
-  private publicImage(image: ImageRecord) {
-    return {
-      id: image.id,
-      roomTypeId: image.roomTypeId,
-      altText: image.altText,
-      displayOrder: image.displayOrder,
-      isPrimary: image.isPrimary,
-      url: `/api/room-images/${image.id}/file`,
-    };
-  }
 
   private async propertyId(): Promise<string> {
     const properties = await this.prisma.property.findMany({
@@ -114,7 +84,7 @@ export class RoomImagesService {
       ],
     });
 
-    return images.map((image) => this.publicImage(image));
+    return images.map((image) => publicRoomImage(image));
   }
 
   async upload(
@@ -155,7 +125,7 @@ export class RoomImagesService {
         });
       });
 
-      return this.publicImage(created);
+      return publicRoomImage(created);
     } catch (error) {
       try {
         await this.storage.remove(filePath);
@@ -210,7 +180,7 @@ export class RoomImagesService {
       });
     });
 
-    return this.publicImage(updated);
+    return publicRoomImage(updated);
   }
 
   async remove(

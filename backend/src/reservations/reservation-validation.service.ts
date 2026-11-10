@@ -1,4 +1,3 @@
-
 import {
   BadRequestException,
   Injectable,
@@ -13,14 +12,11 @@ import {
   todayInPhilippines,
 } from '../common/validation/philippine-date-range.js';
 
-import { RoomRateCapacityService } from
-  '../common/validation/room-rate-capacity.service.js';
+import { RoomRateCapacityService } from '../common/validation/room-rate-capacity.service.js';
 
-import { MAX_STAY_NIGHTS } from
-  '../availability/availability.service.js';
+import { MAX_STAY_NIGHTS } from '../availability/availability-stay.js';
 
-import type { CreateReservationDto } from
-  './dto/create-reservation.dto.js';
+import type { CreateReservationDto } from './dto/create-reservation.dto.js';
 
   import type { Prisma } from '../generated/prisma/client.js';
 

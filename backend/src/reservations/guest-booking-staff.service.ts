@@ -1,4 +1,12 @@
 import {
+  STAFF_ROLES,
+  CONTACT_ACTION,
+  CONFIRM_ACTION,
+  REJECT_ACTION,
+  type StaffAction,
+} from './guest-booking-staff-policy.js';
+import { receipt } from './guest-booking-staff-receipt.js';
+import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -8,74 +16,20 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import type {
-  Prisma,
-  Reservation,
-} from '../generated/prisma/client.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
-import type {
-  AuthenticatedUser,
-} from '../common/ownership/ownership.service.js';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 
-import {
-  PrismaService,
-} from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 import {
   GUEST_BOOKING_POLICY_VERSION,
   payAtPropertyDeadlines,
 } from './guest-booking-policy.js';
 
-import {
-  assertInventoryCommitments,
-  withInventoryWrite,
-} from './inventory-write.js';
+import { assertInventoryCommitments, withInventoryWrite } from './inventory-write.js';
 
-import {
-  expirePendingHoldsInTx,
-} from './reservation-lifecycle.js';
-
-const STAFF_ROLES = [
-  'ADMIN',
-  'MANAGER',
-  'RECEPTIONIST',
-];
-
-const CONTACT_ACTION =
-  'reservation.guest_contact_recorded';
-
-const CONFIRM_ACTION =
-  'reservation.guest_request_confirmed';
-
-const REJECT_ACTION =
-  'reservation.guest_request_rejected';
-
-type StaffAction =
-  | {
-      kind: 'CONTACT';
-      channel: 'PHONE' | 'EMAIL';
-    }
-  | {
-      kind: 'CONFIRM';
-    }
-  | {
-      kind: 'REJECT';
-      reason: string;
-    };
-
-function receipt(booking: Reservation) {
-  return {
-    id: booking.id,
-    reservationNumber: booking.reservationNumber,
-    status: booking.status,
-    paymentPreference: booking.paymentPreference,
-    expectedArrivalAt: booking.expectedArrivalAt,
-    firstContactedAt: booking.firstContactedAt,
-    responseDeadlineAt: booking.responseDeadlineAt,
-    holdExpiresAt: booking.holdExpiresAt,
-    confirmedAt: booking.confirmedAt,
-  };
-}
+import { expirePendingHoldsInTx } from './reservation-lifecycle.js';
 
 @Injectable()
 export class GuestBookingStaffService {

@@ -1,3 +1,9 @@
+import { amenityFields } from './amenity-projection.js';
+import {
+  normalizeAmenityName,
+  normalizeAmenityDescription,
+  handleAmenityDatabaseError,
+} from './amenity-validation.js';
 
 import {
   BadRequestException,
@@ -12,31 +18,9 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateAmenityDto } from './dto/create-amenity.dto.js';
 import type { UpdateAmenityDto } from './dto/update-amenity.dto.js';
 
-const amenityFields = {
-  id: true,
-  name: true,
-  description: true,
-} as const;
-
 @Injectable()
 export class AmenitiesService {
   constructor(private readonly prisma: PrismaService) {}
-
-  private normalizeName(name: string): string {
-    const result = name.trim().replace(/\s+/g, ' ');
-
-    if (!result) {
-      throw new BadRequestException('Amenity name is required.');
-    }
-
-    return result;
-  }
-
-  private normalizeDescription(
-    description: string | null | undefined,
-  ): string | null {
-    return description?.trim() || null;
-  }
 
   private async ensureUniqueName(
     name: string,
@@ -104,7 +88,7 @@ export class AmenitiesService {
   }
 
   async create(dto: CreateAmenityDto) {
-    const name = this.normalizeName(dto.name);
+    const name = normalizeAmenityName(dto.name);
 
     await this.ensureUniqueName(name);
 
@@ -112,12 +96,12 @@ export class AmenitiesService {
       return await this.prisma.amenity.create({
         data: {
           name,
-          description: this.normalizeDescription(dto.description),
+          description: normalizeAmenityDescription(dto.description),
         },
         select: amenityFields,
       });
     } catch (error) {
-      this.handleDatabaseError(error);
+      handleAmenityDatabaseError(error);
     }
   }
 
@@ -140,7 +124,7 @@ export class AmenitiesService {
     const name =
       dto.name === undefined
         ? undefined
-        : this.normalizeName(dto.name);
+        : normalizeAmenityName(dto.name);
 
     if (name !== undefined) {
       await this.ensureUniqueName(name, id);
@@ -154,12 +138,12 @@ export class AmenitiesService {
           description:
             dto.description === undefined
               ? undefined
-              : this.normalizeDescription(dto.description),
+              : normalizeAmenityDescription(dto.description),
         },
         select: amenityFields,
       });
     } catch (error) {
-      this.handleDatabaseError(error);
+      handleAmenityDatabaseError(error);
     }
   }
 
@@ -200,7 +184,7 @@ export class AmenitiesService {
         },
       });
     } catch (error) {
-      this.handleDatabaseError(error);
+      handleAmenityDatabaseError(error);
     }
 
     return amenity;
@@ -224,20 +208,5 @@ export class AmenitiesService {
         'Amenity association not found.',
       );
     }
-  }
-
-  private handleDatabaseError(error: unknown): never {
-    if (
-      error !== null &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'P2002'
-    ) {
-      throw new ConflictException(
-        'Amenity or association already exists.',
-      );
-    }
-
-    throw error;
   }
 }

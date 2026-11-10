@@ -1,4 +1,9 @@
 import {
+  PROPERTY_FIELDS,
+  propertySelect,
+  propertySettingsReference,
+} from './property-settings-definition.js';
+import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -9,53 +14,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import type {
-  Prisma,
-} from '../generated/prisma/client.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
-import type {
-  AuthenticatedUser,
-} from '../common/ownership/ownership.service.js';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 
-import {
-  PrismaService,
-} from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
-import {
-  BOOKING_LINK_MS,
-} from '../reservations/booking-access.config.js';
-
-import {
-  HOLD_DURATION_MS,
-} from '../reservations/reservation-acquisition.service.js';
-
-import type {
-  UpdatePropertySettingsDto,
-} from './dto/update-property-settings.dto.js';
-
-const PROPERTY_FIELDS = [
-  'name',
-  'address',
-  'city',
-  'province',
-  'country',
-  'phone',
-  'email',
-  'description',
-] as const;
-
-const propertySelect = {
-  id: true,
-  name: true,
-  address: true,
-  city: true,
-  province: true,
-  country: true,
-  phone: true,
-  email: true,
-  description: true,
-  updatedAt: true,
-} as const;
+import type { UpdatePropertySettingsDto } from './dto/update-property-settings.dto.js';
 
 @Injectable()
 export class SettingsService {
@@ -119,15 +84,6 @@ export class SettingsService {
     return properties[0];
   }
 
-  private reference() {
-    return {
-      reservationHoldMinutes:
-        HOLD_DURATION_MS / 60_000,
-      bookingLinkMinutes:
-        BOOKING_LINK_MS / 60_000,
-    };
-  }
-
   async read(
     identity: AuthenticatedUser | undefined,
   ) {
@@ -138,7 +94,7 @@ export class SettingsService {
 
           return {
             property: await this.property(tx),
-            reference: this.reference(),
+            reference: propertySettingsReference(),
           };
         },
       );
@@ -207,7 +163,7 @@ export class SettingsService {
           if (changedFields.length === 0) {
             return {
               property: current,
-              reference: this.reference(),
+              reference: propertySettingsReference(),
               changed: false,
             };
           }
@@ -264,7 +220,7 @@ export class SettingsService {
 
           return {
             property,
-            reference: this.reference(),
+            reference: propertySettingsReference(),
             changed: true,
           };
         },

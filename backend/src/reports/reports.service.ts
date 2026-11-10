@@ -1,31 +1,13 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { collectionsReportRange } from './collections-report-range.js';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
-import {
-  parsePhilippineDate,
-} from '../common/validation/philippine-date-range.js';
+import { financialMetrics } from '../dashboard/dashboard-metrics.js';
 
-import {
-  dashboardPeriod,
-  financialMetrics,
-} from '../dashboard/dashboard-metrics.js';
+import { paymentEvidenceSelect } from '../payments/payment-evidence.js';
 
-import {
-  paymentEvidenceSelect,
-} from '../payments/payment-evidence.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
-import {
-  PrismaService,
-} from '../prisma/prisma.service.js';
-
-import type {
-  CollectionsReportQueryDto,
-} from './dto/collections-report-query.dto.js';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+import type { CollectionsReportQueryDto } from './dto/collections-report-query.dto.js';
 
 @Injectable()
 export class ReportsService {
@@ -33,71 +15,10 @@ export class ReportsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  private range(
-    query: CollectionsReportQueryDto,
-    now: Date,
-  ) {
-    const today = dashboardPeriod(now).date;
-
-    if (
-      (query.from === undefined) !==
-      (query.to === undefined)
-    ) {
-      throw new BadRequestException(
-        'Provide both from and to dates.',
-      );
-    }
-
-    const from = query.from ?? today;
-    const to = query.to ?? today;
-
-    const firstDate = parsePhilippineDate(from);
-    const lastDate = parsePhilippineDate(to);
-    const todayDate = parsePhilippineDate(today);
-
-    if (firstDate > lastDate) {
-      throw new BadRequestException(
-        'From date must not be after To date.',
-      );
-    }
-
-    if (lastDate > todayDate) {
-      throw new BadRequestException(
-        'Report dates must not be in the future.',
-      );
-    }
-
-    const days =
-      (lastDate.getTime() -
-        firstDate.getTime()) / DAY_MS + 1;
-
-    if (days > 31) {
-      throw new BadRequestException(
-        'Select no more than 31 calendar days.',
-      );
-    }
-
-    const start =
-      new Date(`${from}T00:00:00+08:00`);
-
-    const end = new Date(
-      new Date(`${to}T00:00:00+08:00`).getTime() +
-        DAY_MS,
-    );
-
-    return {
-      from,
-      to,
-      days,
-      start,
-      end,
-    };
-  }
-
   collections(query: CollectionsReportQueryDto) {
     return this.prisma.$transaction(async (tx) => {
       const now = new Date();
-      const range = this.range(query, now);
+      const range = collectionsReportRange(query, now);
 
       const properties = await tx.property.findMany({
         select: { id: true },

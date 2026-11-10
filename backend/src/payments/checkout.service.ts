@@ -1,20 +1,29 @@
+import { checkoutResponse } from './checkout-response.js';
 import { createHash } from 'node:crypto';
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException,
-  NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { isUUID } from 'class-validator';
 import type { Payment, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { OwnershipService, type AuthenticatedUser } from '../common/ownership/ownership.service.js';
+import {
+  OwnershipService,
+  type AuthenticatedUser,
+} from '../common/ownership/ownership.service.js';
 import { requireBookingSession } from '../reservations/booking-access-security.js';
 import { withInventoryWrite } from '../reservations/inventory-write.js';
 import { calculatePaymentSummary } from './payment-summary.js';
-import { PaymongoAdapter, validCheckoutUrl } from './paymongo.adapter.js';
-import { hasVerifiedPaymongoEvidence, paymentEvidenceSelect, type PaymentEvidence } from './payment-evidence.js';
+import { PaymongoAdapter } from './paymongo.adapter.js';
+import { hasVerifiedPaymongoEvidence, paymentEvidenceSelect } from './payment-evidence.js';
 import {
   assertCheckoutBookingEligible,
   isPendingOnlineBooking,
 } from './pending-online-booking.js';
-
 
 type Access =
   | {
@@ -153,26 +162,6 @@ export class CheckoutService {
     return summary.balanceDueCentavos;
   }
 
-  private response(payment: Payment & { events?: PaymentEvidence[] }) {
-    if (payment.status === 'PAID' && hasVerifiedPaymongoEvidence(payment)) {
-      return { state: 'PAID' as const, amountCentavos: payment.amountCentavos, checkoutUrl: null };
-    }
-
-    if (payment.status !== 'PENDING') {
-      throw new ConflictException('Reload the booking payment summary.');
-    }
-
-    if (payment.checkoutState === 'READY' && validCheckoutUrl(payment.checkoutUrl)) {
-      return { state: 'READY' as const, amountCentavos: payment.amountCentavos, checkoutUrl: payment.checkoutUrl };
-    }
-
-    return {
-      state: payment.checkoutState === 'CREATING' ? 'CREATING' as const : 'UNKNOWN' as const,
-      amountCentavos: payment.amountCentavos,
-      checkoutUrl: null,
-    };
-  }
-
   private current(access: Access) {
     return this.prisma.$transaction(async (tx) => {
       const booking = await this.booking(tx, access);
@@ -184,7 +173,7 @@ export class CheckoutService {
           (payment) => payment.status === 'PAID' && hasVerifiedPaymongoEvidence(payment),
         );
 
-        if (amount === 0 && verified) return this.response(verified);
+        if (amount === 0 && verified) return checkoutResponse(verified);
 
         return { state: 'NONE' as const, amountCentavos: amount, checkoutUrl: null };
       }
@@ -193,7 +182,7 @@ export class CheckoutService {
         throw new ConflictException('Existing payment attempts require financial review.');
       }
 
-      return this.response(pending[0]);
+      return checkoutResponse(pending[0]);
     });
   }
 
@@ -252,7 +241,7 @@ export class CheckoutService {
           throw new ConflictException('The payment balance changed. Check the booking payment summary.');
         }
 
-        return { reused: true as const, response: this.response(existing) };
+        return { reused: true as const, response: checkoutResponse(existing) };
       }
 
       if (booking.payments.some((payment) => payment.status === 'PENDING')) {
@@ -322,7 +311,7 @@ export class CheckoutService {
 
       if (current?.status === 'PAID' && current.providerCheckoutId === session.id && hasVerifiedPaymongoEvidence(current)) {
         this.quote(booking);
-        return this.response(current);
+        return checkoutResponse(current);
       }
 
       if (this.quote(booking) !== payment.amountCentavos) {
@@ -345,7 +334,7 @@ export class CheckoutService {
         },
       });
 
-      return this.response(await tx.payment.findUniqueOrThrow({ where: { id: payment.id } }));
+      return checkoutResponse(await tx.payment.findUniqueOrThrow({ where: { id: payment.id } }));
     });
   }
 

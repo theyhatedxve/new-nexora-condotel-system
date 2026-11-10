@@ -1,3 +1,4 @@
+import { protectedStatuses, blockFields } from './room-block-query.js';
 
 import {
   BadRequestException,
@@ -23,23 +24,6 @@ import {
   withInventoryWrite,
   assertRoomInventoryCommitments,
 } from '../reservations/inventory-write.js';
-
-const protectedStatuses = [
-  'PENDING',
-  'CONFIRMED',
-  'CHECKED_IN',
-] as const;
-
-const blockFields = {
-  id: true,
-  roomId: true,
-  startDate: true,
-  endDate: true,
-  reason: true,
-  canceledAt: true,
-  createdAt: true,
-  updatedAt: true,
-} as const;
 
 @Injectable()
 export class RoomBlocksService {
