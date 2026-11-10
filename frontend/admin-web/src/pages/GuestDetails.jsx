@@ -1,47 +1,10 @@
-import {
-  Link,
-  useLocation,
-  useParams,
-} from "react-router";
-
-import { useStaffData } from "../hooks/useStaffData";
-import {
-  getGuest,
-  guestListSearch,
-  parseGuestListQuery,
-} from "../services/guestsApi";
+import { Link } from "react-router";
 import StaffDataState from "../components/StaffDataState";
-
-import {
-  formatStayDate,
-  formatStatus,
-  guestName,
-} from "../utils/formatters";
+import { formatStayDate, formatStatus, guestName } from "../utils/formatters";
+import useGuestDetailsPage from "../hooks/useGuestDetailsPage.js";
 
 export default function GuestDetails() {
-  const { guestId } = useParams();
-  
-  const location = useLocation();
-
-let returnSearch = "";
-
-const savedSearch =
-  location.state?.guestListSearch;
-
-if (
-  typeof savedSearch === "string" &&
-  savedSearch.length <= 2000
-) {
-  try {
-    returnSearch = guestListSearch(
-      parseGuestListQuery(savedSearch),
-    );
-  } catch {
-    returnSearch = "";
-  }
-}
-  const state = useStaffData(getGuest, guestId);
-  const guest = state.data;
+  const { returnSearch, state, guest } = useGuestDetailsPage();
 
   return (
     <section aria-labelledby="guest-title">
@@ -55,23 +18,14 @@ if (
       </Link>
 
       <div className="records-heading">
-        <h1 id="guest-title">
-          Guest details
-        </h1>
+        <h1 id="guest-title">Guest details</h1>
 
-        <button
-          type="button"
-          onClick={state.reload}
-          disabled={state.loading}
-        >
+        <button type="button" onClick={state.reload} disabled={state.loading}>
           Refresh details
         </button>
       </div>
 
-      <StaffDataState
-        state={state}
-        label="Guest details"
-      />
+      <StaffDataState state={state} label="Guest details" />
 
       {state.status === "ready" && (
         <>
@@ -100,10 +54,9 @@ if (
             <h2>Reservation history</h2>
 
             <p>
-              Showing {guest.reservations.length} of{" "}
-              {guest.reservationCount} reservations.
-              Most recently created first;
-              up to {guest.historyLimit} records.
+              Showing {guest.reservations.length} of {guest.reservationCount}{" "}
+              reservations. Most recently created first; up to {guest.historyLimit}{" "}
+              records.
             </p>
 
             {guest.reservations.length === 0 ? (
@@ -116,9 +69,7 @@ if (
                 tabIndex={0}
               >
                 <table className="records-table">
-                  <caption>
-                    Reservations for this guest
-                  </caption>
+                  <caption>Reservations for this guest</caption>
 
                   <thead>
                     <tr>
@@ -134,12 +85,7 @@ if (
                     {guest.reservations.map((item) => (
                       <tr key={item.id}>
                         <td>
-                          <Link
-                            to={
-                              "/reservations/" +
-                              encodeURIComponent(item.id)
-                            }
-                          >
+                          <Link to={"/reservations/" + encodeURIComponent(item.id)}>
                             {item.reservationNumber}
                           </Link>
                         </td>

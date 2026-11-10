@@ -1,67 +1,36 @@
 import { Link } from "react-router";
-
-import {
-  ArrowRight,
-  Clock,
-  Mail,
-  MapPin,
-  Phone,
-} from "lucide-react";
-
+import { ArrowRight, Clock, Mail, MapPin, Phone } from "lucide-react";
+import { contact } from "../constants/contactContent.js";
 import "../styles/contact.css";
-
-const contact = {
-  isSample: true,
-  email: "hello@nexora.example",
-  phone: "+63 000 000 0000",
-  phoneHref: "+630000000000",
-  address: "123 NEXORA Avenue, Sample City, Philippines",
-  hours: "Monday to Sunday, 8:00 AM to 8:00 PM",
-};
 
 export default function Contact() {
   return (
     <main className="contact-page">
       <header className="contact-page__heading">
-        <p className="contact-page__eyebrow">
-          We are here to help
-        </p>
+        <p className="contact-page__eyebrow">We are here to help</p>
 
         <h1>Contact NEXORA</h1>
 
-        <p>
-          Have a question about your stay?
-          Find our contact information below.
-        </p>
+        <p>Have a question about your stay? Find our contact information below.</p>
       </header>
 
       {contact.isSample && (
-        <p
-          className="contact-page__sample"
-          id="contact-sample-notice"
-        >
-          Sample contact information for this design
-          preview. These details are fictional.
+        <p className="contact-page__sample" id="contact-sample-notice">
+          Sample contact information for this design preview. These details are fictional.
           Email and calling are currently unavailable.
         </p>
       )}
 
       <div className="contact-page__grid">
-        <section
-          className="contact-page__card"
-          aria-labelledby="contact-help-title"
-        >
+        <section className="contact-page__card" aria-labelledby="contact-help-title">
           <span className="contact-page__icon">
             <Mail size={28} aria-hidden="true" />
           </span>
 
-          <h2 id="contact-help-title">
-            How can we help?
-          </h2>
+          <h2 id="contact-help-title">How can we help?</h2>
 
           <p className="contact-page__description">
-            Get in touch for questions about room
-            options, booking requirements, or your
+            Get in touch for questions about room options, booking requirements, or your
             upcoming stay.
           </p>
 
@@ -74,10 +43,7 @@ export default function Contact() {
                   aria-describedby="contact-sample-notice"
                   disabled
                 >
-                  <Mail
-                    size={18}
-                    aria-hidden="true"
-                  />
+                  <Mail size={18} aria-hidden="true" />
                   Email us
                 </button>
 
@@ -87,34 +53,19 @@ export default function Contact() {
                   aria-describedby="contact-sample-notice"
                   disabled
                 >
-                  <Phone
-                    size={18}
-                    aria-hidden="true"
-                  />
+                  <Phone size={18} aria-hidden="true" />
                   Call us
                 </button>
               </>
             ) : (
               <>
-                <a
-                  className="contact-page__primary"
-                  href={`mailto:${contact.email}`}
-                >
-                  <Mail
-                    size={18}
-                    aria-hidden="true"
-                  />
+                <a className="contact-page__primary" href={`mailto:${contact.email}`}>
+                  <Mail size={18} aria-hidden="true" />
                   Email us
                 </a>
 
-                <a
-                  className="contact-page__secondary"
-                  href={`tel:${contact.phoneHref}`}
-                >
-                  <Phone
-                    size={18}
-                    aria-hidden="true"
-                  />
+                <a className="contact-page__secondary" href={`tel:${contact.phoneHref}`}>
+                  <Phone size={18} aria-hidden="true" />
                   Call us
                 </a>
               </>
@@ -125,28 +76,19 @@ export default function Contact() {
             <h3>Already have a booking?</h3>
 
             <p>
-              Use your booking reference and
-              reservation email to request private
-              access to your stay details.
+              Use your booking reference and reservation email to request private access
+              to your stay details.
             </p>
 
             <Link to="/booking-access">
               Find my booking
-              <ArrowRight
-                size={17}
-                aria-hidden="true"
-              />
+              <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
         </section>
 
-        <section
-          className="contact-page__card"
-          aria-labelledby="contact-details-title"
-        >
-          <h2 id="contact-details-title">
-            Contact information
-          </h2>
+        <section className="contact-page__card" aria-labelledby="contact-details-title">
+          <h2 id="contact-details-title">Contact information</h2>
 
           <dl className="contact-page__details">
             <div>
@@ -180,9 +122,7 @@ export default function Contact() {
               </dt>
               <dd>
                 {contact.hours}
-                <span className="contact-page__timezone">
-                  Philippine time
-                </span>
+                <span className="contact-page__timezone">Philippine time</span>
               </dd>
             </div>
           </dl>

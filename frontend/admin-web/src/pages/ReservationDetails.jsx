@@ -1,21 +1,5 @@
-import {
-  Link,
-  useLocation,
-  useParams,
-} from "react-router";
-
-import { useStaffData } from "../hooks/useStaffData";
-
-import {
-  getReservation,
-  getAssignmentHistory,
-  getReservationPaymentSummary,
-  parseReservationListQuery,
-  reservationListSearch,
-} from "../services/reservationsApi";
-
+import { Link } from "react-router";
 import StaffDataState from "../components/StaffDataState";
-
 import {
   formatPesos,
   formatStayDate,
@@ -23,96 +7,47 @@ import {
   formatTimestamp,
   guestName,
 } from "../utils/formatters";
-
 import ReservationActions from "../components/ReservationActions";
-
 import PropertyCollection from "../components/PropertyCollection";
-
 import GuestBookingStaffPanel from "../components/GuestBookingStaffPanel";
-
-
-
+import useReservationDetailsPage from "../hooks/useReservationDetailsPage.js";
 
 export default function ReservationDetails() {
-  const { reservationId } = useParams();
-
-  const location = useLocation();
-
-    let returnSearch = "";
-
-    const savedSearch =
-      location.state?.reservationListSearch;
-
-    if (
-      typeof savedSearch === "string" &&
-      savedSearch.length <= 2000
-    ) {
-      try {
-        returnSearch = reservationListSearch(
-          parseReservationListQuery(savedSearch),
-        );
-      } catch {
-        returnSearch = "";
-      }
-    }
-
-  const record = useStaffData(
-    getReservation,
+  const {
     reservationId,
-  );
-
-  const assignments = useStaffData(
-    getAssignmentHistory,
-    reservationId,
-  );
-
-  const payment = useStaffData(
-    getReservationPaymentSummary,
-    reservationId,
-  );
-
-  const booking = record.data;
-  const summary = payment.data;
-
-  function refresh() {
-    record.reload();
-    assignments.reload();
-    payment.reload();
-  }
+    returnSearch,
+    record,
+    assignments,
+    payment,
+    booking,
+    summary,
+    refresh,
+  } = useReservationDetailsPage();
 
   return (
     <section aria-labelledby="reservation-title">
       <Link
-          to={{
-            pathname: "/reservations",
-            search: returnSearch ? "?" + returnSearch : "",
-          }}
-        >
-          Return to reservations
-        </Link>
+        to={{
+          pathname: "/reservations",
+          search: returnSearch ? "?" + returnSearch : "",
+        }}
+      >
+        Return to reservations
+      </Link>
 
       <div className="records-heading">
-        <h1 id="reservation-title">
-          Reservation details
-        </h1>
+        <h1 id="reservation-title">Reservation details</h1>
 
         <button
           type="button"
           onClick={refresh}
-          disabled={
-            record.loading ||
-            assignments.loading ||
-            payment.loading
-          }
+          disabled={record.loading || assignments.loading || payment.loading}
         >
           Refresh details
         </button>
       </div>
 
-      <StaffDataState
-        state={record}
-        label="Reservation details"
-      />
+      <StaffDataState state={record} label="Reservation details" />
 
       {record.status === "ready" && (
         <>
@@ -173,12 +108,7 @@ export default function ReservationDetails() {
             <h2>Primary guest</h2>
 
             <p>
-              <Link
-                to={
-                  "/guests/" +
-                  encodeURIComponent(booking.guest.id)
-                }
-              >
+              <Link to={"/guests/" + encodeURIComponent(booking.guest.id)}>
                 {guestName(booking.guest)}
               </Link>
             </p>
@@ -199,24 +129,18 @@ export default function ReservationDetails() {
           <section className="content-card record-section">
             <h2>Payment summary</h2>
 
-            <StaffDataState
-              state={payment}
-              label="Payment summary"
-            />
+            <StaffDataState state={payment} label="Payment summary" />
 
             {payment.status === "ready" && (
               <>
                 <p>
-                  Payment status:{" "}
-                  <strong>
-                    {formatStatus(summary.status)}
-                  </strong>
+                  Payment status: <strong>{formatStatus(summary.status)}</strong>
                 </p>
 
                 {summary.requiresReview ? (
                   <p role="alert">
-                    Payment records require financial review.
-                    Settlement amounts are unavailable.
+                    Payment records require financial review. Settlement amounts are
+                    unavailable.
                   </p>
                 ) : (
                   <dl className="record-fields">
@@ -247,11 +171,7 @@ export default function ReservationDetails() {
                   </dl>
                 )}
 
-                {summary.hasPendingPayment && (
-                  <p>
-                    A payment attempt remains pending.
-                  </p>
-                )}
+                {summary.hasPendingPayment && <p>A payment attempt remains pending.</p>}
               </>
             )}
           </section>
@@ -259,13 +179,10 @@ export default function ReservationDetails() {
           <section className="record-section">
             <h2>Room assignment history</h2>
 
-            <StaffDataState
-              state={assignments}
-              label="Assignment history"
-            />
+            <StaffDataState state={assignments} label="Assignment history" />
 
-            {assignments.status === "ready" && (
-              assignments.data.length === 0 ? (
+            {assignments.status === "ready" &&
+              (assignments.data.length === 0 ? (
                 <p>No physical room has been assigned.</p>
               ) : (
                 <div
@@ -275,9 +192,7 @@ export default function ReservationDetails() {
                   tabIndex={0}
                 >
                   <table className="records-table">
-                    <caption>
-                      Current and historical room assignments
-                    </caption>
+                    <caption>Current and historical room assignments</caption>
 
                     <thead>
                       <tr>
@@ -302,35 +217,34 @@ export default function ReservationDetails() {
                     </tbody>
                   </table>
                 </div>
-              )
-            )}
+              ))}
           </section>
-                </>
+        </>
       )}
 
-        <GuestBookingStaffPanel
-          key={"guest-request-" + reservationId}
-          record={record}
-          payment={payment}
-          onReload={refresh}
-        />
+      <GuestBookingStaffPanel
+        key={"guest-request-" + reservationId}
+        record={record}
+        payment={payment}
+        onReload={refresh}
+      />
 
-        <ReservationActions
-            key={reservationId}
-            reservationId={reservationId}
-            record={record}
-            assignments={assignments}
-            payment={payment}
-            onReload={refresh}
-        />
+      <ReservationActions
+        key={reservationId}
+        reservationId={reservationId}
+        record={record}
+        assignments={assignments}
+        payment={payment}
+        onReload={refresh}
+      />
 
-        <PropertyCollection
-            key={"collection-" + reservationId}
-            reservationId={reservationId}
-            record={record}
-            payment={payment}
-            onReload={refresh}
-        />
-        </section>
-    );
-    }
+      <PropertyCollection
+        key={"collection-" + reservationId}
+        reservationId={reservationId}
+        record={record}
+        payment={payment}
+        onReload={refresh}
+      />
+    </section>
+  );
+}

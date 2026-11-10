@@ -7,14 +7,14 @@
 
 .contact-page__heading {
   max-width: 40rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: var(--space-1-75rem);
 }
 
 .contact-page__eyebrow {
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
   color: var(--color-text-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--font-size-0-75rem);
+  font-weight: var(--font-weight-700);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -28,32 +28,31 @@
 .contact-page h1 {
   margin: 0;
   font-size: clamp(2rem, 5vw, 2.75rem);
-  line-height: 1.2;
+  line-height: var(--line-height-1-2);
 }
 
 .contact-page__heading > p:last-child {
-  margin: 0.875rem 0 0;
+  margin: var(--space-0-875rem) 0 0;
   color: var(--color-text-muted);
-  line-height: 1.8;
+  line-height: var(--line-height-1-8);
 }
 
 .contact-page__sample {
-  margin: 0 0 1.5rem;
-  padding: 1rem;
-  color: #754d08;
-  background: #fff7e5;
-  border: 1px solid #ead19a;
+  margin: 0 0 var(--space-6);
+  padding: var(--space-4);
+  color: var(--color-754d08);
+  background: var(--color-fff7e5);
+  border: 1px solid var(--color-ead19a);
   border-radius: var(--radius-small);
-  font-size: 0.9rem;
-  line-height: 1.7;
+  font-size: var(--font-size-0-9rem);
+  line-height: var(--line-height-1-7);
 }
 
 .contact-page__grid {
   display: grid;
-  grid-template-columns:
-    minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   align-items: start;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .contact-page__card {
@@ -70,8 +69,8 @@
 
 .contact-page__card h2 {
   margin: 0;
-  font-size: 1.35rem;
-  line-height: 1.4;
+  font-size: var(--font-size-1-35rem);
+  line-height: var(--line-height-1-4);
 }
 
 .contact-page__icon {
@@ -80,23 +79,23 @@
   justify-content: center;
   width: 3.5rem;
   height: 3.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   color: var(--color-primary);
-  background: #faf5e9;
-  border: 1px solid #ead8ad;
+  background: var(--color-surface-warm);
+  border: 1px solid var(--color-ead8ad);
   border-radius: var(--radius-small);
 }
 
 .contact-page__description {
-  margin: 0.875rem 0 1.5rem;
+  margin: var(--space-0-875rem) 0 var(--space-6);
   color: var(--color-text-muted);
-  line-height: 1.8;
+  line-height: var(--line-height-1-8);
 }
 
 .contact-page__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .contact-page__primary,
@@ -104,15 +103,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.625rem;
+  gap: var(--space-0-625rem);
   min-height: 2.875rem;
-  padding: 0.75rem 1.25rem;
+  padding: var(--space-3) var(--space-1-25rem);
   border: 1px solid;
   border-radius: var(--radius-small);
   font: inherit;
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.5;
+  font-size: var(--font-size-0-95rem);
+  font-weight: var(--font-weight-700);
+  line-height: var(--line-height-1-5);
   text-align: center;
   text-decoration: none;
   cursor: pointer;
@@ -131,7 +130,7 @@
 }
 
 .contact-page__primary:hover:not(:disabled) {
-  background: #e4ca95;
+  background: var(--color-e4ca95);
 }
 
 .contact-page__secondary:hover:not(:disabled) {
@@ -146,33 +145,33 @@
 }
 
 .contact-page__booking {
-  margin-top: 1.75rem;
-  padding-top: 1.5rem;
+  margin-top: var(--space-1-75rem);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--color-border);
 }
 
 .contact-page__booking h3 {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: var(--font-size-1rem);
+  line-height: var(--line-height-1-5);
 }
 
 .contact-page__booking p {
-  margin: 0.625rem 0;
+  margin: var(--space-0-625rem) 0;
   color: var(--color-text-muted);
-  font-size: 0.9rem;
-  line-height: 1.8;
+  font-size: var(--font-size-0-9rem);
+  line-height: var(--line-height-1-8);
 }
 
 .contact-page__booking a,
 .contact-page__footer a {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2.75rem;
   color: var(--color-primary);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--font-size-0-9rem);
+  font-weight: var(--font-weight-700);
 }
 
 .contact-page__booking a:hover,
@@ -182,11 +181,11 @@
 }
 
 .contact-page__details {
-  margin: 1rem 0 0;
+  margin: var(--space-4) 0 0;
 }
 
 .contact-page__details > div {
-  padding-block: 1rem;
+  padding-block: var(--space-4);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -198,35 +197,35 @@
 .contact-page__details dt {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: var(--space-0-625rem);
   color: var(--color-primary);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--font-size-0-9rem);
+  font-weight: var(--font-weight-700);
 }
 
 .contact-page__details dd {
-  margin: 0.625rem 0 0;
+  margin: var(--space-0-625rem) 0 0;
   color: var(--color-text-muted);
-  font-size: 0.95rem;
-  line-height: 1.7;
+  font-size: var(--font-size-0-95rem);
+  line-height: var(--line-height-1-7);
   overflow-wrap: anywhere;
 }
 
 .contact-page__timezone {
   display: block;
-  margin-top: 0.25rem;
-  font-size: 0.8rem;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-0-8rem);
 }
 
 .contact-page__footer {
-  margin-top: 1.75rem;
+  margin-top: var(--space-1-75rem);
   text-align: center;
 }
 
 .contact-page__footer p {
   margin: 0;
   color: var(--color-text-muted);
-  line-height: 1.7;
+  line-height: var(--line-height-1-7);
 }
 
 .contact-page svg {

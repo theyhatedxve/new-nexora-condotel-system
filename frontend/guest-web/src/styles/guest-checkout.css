@@ -1,6 +1,6 @@
 .guest-checkout__methods {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -8,30 +8,30 @@
 }
 
 .guest-checkout__methods legend {
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
   color: var(--color-primary);
-  font-weight: 700;
+  font-weight: var(--font-weight-700);
 }
 
 .guest-checkout__choice {
   display: flex;
   align-items: flex-start;
-  gap: 0.85rem;
-  padding: 1rem;
+  gap: var(--space-0-85rem);
+  padding: var(--space-4);
   border: 1px solid var(--color-border);
-  border-radius: 0.6rem;
+  border-radius: var(--radius-0-6rem);
   background: var(--color-surface);
   cursor: pointer;
 }
 
 .guest-checkout__choice.is-selected {
-  border-color: var(--color-gold, #b58b3b);
-  background: #faf5e9;
+  border-color: var(--color-gold, var(--color-gold));
+  background: var(--color-surface-warm);
 }
 
 .guest-checkout__choice > span {
   display: grid;
-  gap: 0.4rem;
+  gap: var(--space-0-4rem);
   min-width: 0;
 }
 
@@ -41,8 +41,8 @@
 
 .guest-checkout__choice span span {
   color: var(--color-text-muted);
-  font-size: 0.9rem;
-  line-height: 1.65;
+  font-size: var(--font-size-0-9rem);
+  line-height: var(--line-height-1-65);
 }
 
 .checkout-view .checkout-fields input[type="radio"] {
@@ -50,24 +50,24 @@
   width: 18px;
   height: 18px;
   min-height: 18px;
-  margin: 0.2rem 0 0;
+  margin: var(--space-0-2rem) 0 0;
   padding: 0;
   accent-color: var(--color-primary);
 }
 
 .guest-checkout__notice {
-  margin-block: 0.75rem;
-  padding: 1rem;
-  border-left: 3px solid var(--color-gold, #b58b3b);
+  margin-block: var(--space-3);
+  padding: var(--space-4);
+  border-left: 3px solid var(--color-gold, var(--color-gold));
   background: var(--color-background);
   color: var(--color-text);
-  font-size: 0.9rem;
-  line-height: 1.75;
+  font-size: var(--font-size-0-9rem);
+  line-height: var(--line-height-1-75);
 }
 
 .guest-checkout .checkout-view__field small {
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: var(--line-height-1-5);
 }
 
 .guest-checkout button:disabled {

@@ -1,46 +1,45 @@
-
 /* Phase 5 Steps 4–5: Guest availability search */
 
 .availability-search {
-  margin-bottom: 2.5rem;
-  padding: 1.5rem;
+  margin-bottom: var(--space-2-5rem);
+  padding: var(--space-6);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
 }
 
 .availability-search h2 {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--space-2);
   color: var(--color-primary);
 }
 
 .availability-description {
   color: var(--color-text-muted);
-  line-height: 1.6;
+  line-height: var(--line-height-1-6);
 }
 
 .availability-fields {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
 }
 
 .availability-field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .availability-field label {
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
   color: var(--color-text);
 }
 
 .availability-field input {
   width: 100%;
   min-width: 0;
-  padding: 0.75rem;
+  padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-small);
   background: var(--color-surface);
@@ -49,13 +48,13 @@
 }
 
 .availability-button {
-  padding: 0.85rem 1.5rem;
+  padding: var(--space-0-85rem) var(--space-6);
   background: var(--color-primary);
   color: var(--color-on-primary);
   border: none;
   border-radius: var(--radius-small);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
   cursor: pointer;
 }
 
@@ -69,18 +68,18 @@
 }
 
 .availability-error {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
   color: var(--color-danger);
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
 }
 
 .availability-section-title {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .availability-results {
-  margin-top: 2rem;
+  margin-top: var(--space-8);
 }
 
 .availability-results h2 {
@@ -90,16 +89,13 @@
 .availability-summary {
   text-align: center;
   color: var(--color-text-muted);
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 }
 
 .availability-results-grid {
   display: grid;
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(min(100%, 280px), 1fr)
-  );
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: var(--space-6);
 }
 
 .availability-result-card {
@@ -111,14 +107,14 @@
 }
 
 .availability-result-body {
-  padding: 1.25rem;
+  padding: var(--space-1-25rem);
 }
 
 .availability-result-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
@@ -132,28 +128,28 @@
 
 .availability-badge {
   display: inline-block;
-  padding: 0.3rem 0.65rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: var(--space-0-3rem) var(--space-0-65rem);
+  border-radius: var(--radius-999px);
+  font-size: var(--font-size-0-8rem);
+  font-weight: var(--font-weight-600);
 }
 
 .is-available {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--color-dcfce7);
+  color: var(--color-success);
 }
 
 .is-unavailable {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-fee2e2);
+  color: var(--color-991b1b);
 }
 
 .availability-total {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding-top: 1rem;
-  margin-top: 1rem;
+  gap: var(--space-0-3rem);
+  padding-top: var(--space-4);
+  margin-top: var(--space-4);
   border-top: 1px solid var(--color-border);
 }
 
@@ -163,22 +159,21 @@
 
 .availability-total strong {
   color: var(--color-primary);
-  font-size: 1.5rem;
+  font-size: var(--font-size-1-5rem);
 }
 
 .availability-unavailable {
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
   color: var(--color-danger) !important;
 }
 
 .availability-disclaimer {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-9rem);
   color: var(--color-text-muted);
-  line-height: 1.6;
+  line-height: var(--line-height-1-6);
 }
-
 
 /* Phase 5 Step 7 — Search layout safeguards */
 
@@ -226,14 +221,13 @@
   }
 }
 
-
 @media (max-width: 768px) {
   .availability-fields {
     grid-template-columns: 1fr;
   }
 
   .availability-search {
-    padding: 1rem;
+    padding: var(--space-4);
   }
 
   .availability-button {

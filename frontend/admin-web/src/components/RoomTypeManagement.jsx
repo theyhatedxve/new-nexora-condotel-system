@@ -1,197 +1,45 @@
-import { useState } from "react";
-
-import { useRoomTypeChange } from "../hooks/useRoomTypeChange";
-
-import {
-  centavosToPesosInput,
-  pesosToCentavos,
-} from "../services/roomTypesApi";
-
-import { formatPesos } from "../utils/formatters";
-
 import RoomChangeReview from "./RoomChangeReview";
-
-function emptyDraft() {
-  return {
-    name: "",
-    description: "",
-    capacity: "",
-    nightlyRate: "",
-    isActive: true,
-  };
-}
+import useRoomTypeManagement from "../hooks/useRoomTypeManagement.js";
 
 export default function RoomTypeManagement({ records }) {
-  const change = useRoomTypeChange(records);
-
-  const [roomTypeId, setRoomTypeId] = useState("");
-  const [draft, setDraft] = useState(emptyDraft);
-  const [savedVersion, setSavedVersion] = useState("");
-  const [error, setError] = useState("");
-
-  const items =
-    records.status === "ready" ? records.data : [];
-
-  const current = items.find(
-    (item) => item.id === roomTypeId,
-  );
-
-  function selectType(id) {
-    setError("");
-    setRoomTypeId(id);
-
-    if (!id) {
-      setDraft(emptyDraft());
-      setSavedVersion("");
-      return;
-    }
-
-    const item = items.find((type) => type.id === id);
-
-    if (!item) {
-      setError("The selected room type is unavailable.");
-      return;
-    }
-
-    setDraft({
-      name: item.name,
-      description: item.description ?? "",
-      capacity: String(item.capacity),
-      nightlyRate: centavosToPesosInput(
-        item.baseRateCentavos,
-      ),
-      isActive: item.isActive,
-    });
-
-    setSavedVersion(JSON.stringify(item));
-  }
-
-  function edit(field, value) {
-    setDraft((previous) => ({
-      ...previous,
-      [field]: value,
-    }));
-  }
-
-  function prepare(event) {
-    event.preventDefault();
-    setError("");
-
-    try {
-      if (records.status !== "ready") {
-        throw new Error("Load the room types first.");
-      }
-
-      const editing = Boolean(roomTypeId);
-
-      if (
-        editing &&
-        (
-          !current ||
-          JSON.stringify(current) !== savedVersion
-        )
-      ) {
-        throw new Error(
-          "This room type changed. Load its current values before reviewing another edit.",
-        );
-      }
-
-      if (
-        items.some(
-          (item) =>
-            item.id !== roomTypeId &&
-            item.name === draft.name.trim(),
-        )
-      ) {
-        throw new Error(
-          "That name is already listed. Review the existing room type.",
-        );
-      }
-
-      const rate = pesosToCentavos(draft.nightlyRate);
-
-      const lines = editing
-        ? [
-            "Existing type: " + current.name,
-            "Name: " + draft.name.trim(),
-            "Description: " +
-              (draft.description.trim() || "Not recorded"),
-            "Capacity: " +
-              current.capacity +
-              " → " +
-              draft.capacity.trim(),
-            "Nightly rate: " +
-              formatPesos(current.baseRateCentavos) +
-              " → " +
-              formatPesos(rate),
-            "Active: " +
-              (current.isActive ? "Yes" : "No") +
-              " → " +
-              (draft.isActive ? "Yes" : "No"),
-            "Existing reservations keep their saved prices.",
-          ]
-        : [
-            "Name: " + draft.name.trim(),
-            "Description: " +
-              (draft.description.trim() || "Not recorded"),
-            "Capacity: " + draft.capacity.trim(),
-            "Nightly rate: " + formatPesos(rate),
-            "Initial active state: Yes",
-          ];
-
-      change.prepare(
-        {
-          kind: editing
-            ? "edit-room-type"
-            : "create-room-type",
-          roomTypeId: editing ? roomTypeId : undefined,
-          ...draft,
-        },
-        editing ? "Edit room type" : "Create room type",
-        lines,
-        event.nativeEvent.submitter,
-      );
-    } catch (failure) {
-      setError(failure.message);
-    }
-  }
+  const {
+    change,
+    roomTypeId,
+    draft,
+    error,
+    items,
+    current,
+    prepare,
+    changeSelectedType,
+    reloadSelectedType,
+    startNewType,
+    changeName,
+    changeDescription,
+    changeCapacity,
+    changeNightlyRate,
+    changeIsActive,
+  } = useRoomTypeManagement({ records });
 
   return (
     <section
       className="record-section room-management"
       aria-labelledby="type-management-title"
     >
-      <h2 id="type-management-title">
-        Create or edit a room type
-      </h2>
+      <h2 id="type-management-title">Create or edit a room type</h2>
 
       <p>
-        Changes to current rates do not recalculate existing
-        reservation prices. Capacity and deactivation
-        requests are checked against existing commitments.
+        Changes to current rates do not recalculate existing reservation prices. Capacity
+        and deactivation requests are checked against existing commitments.
       </p>
 
       {error && <p role="alert">{error}</p>}
 
       <form onSubmit={prepare}>
-        <fieldset
-          className="action-fields"
-          disabled={change.disabled}
-        >
-          <legend>
-            {roomTypeId ? "Edit room type" : "New room type"}
-          </legend>
+        <fieldset className="action-fields" disabled={change.disabled}>
+          <legend>{roomTypeId ? "Edit room type" : "New room type"}</legend>
 
-          <label htmlFor="managed-room-type">
-            Room type to manage
-          </label>
-          <select
-            id="managed-room-type"
-            value={roomTypeId}
-            onChange={(event) =>
-              selectType(event.target.value)
-            }
-          >
+          <label htmlFor="managed-room-type">Room type to manage</label>
+          <select id="managed-room-type" value={roomTypeId} onChange={changeSelectedType}>
             <option value="">Create a new room type</option>
 
             {items.map((item) => (
@@ -203,18 +51,11 @@ export default function RoomTypeManagement({ records }) {
           </select>
 
           {roomTypeId ? (
-            <button
-              type="button"
-              disabled={!current}
-              onClick={() => selectType(roomTypeId)}
-            >
+            <button type="button" disabled={!current} onClick={reloadSelectedType}>
               Load current room-type values
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={() => selectType("")}
-            >
+            <button type="button" onClick={startNewType}>
               Clear new-type inputs
             </button>
           )}
@@ -225,27 +66,19 @@ export default function RoomTypeManagement({ records }) {
             required
             maxLength={100}
             value={draft.name}
-            onChange={(event) =>
-              edit("name", event.target.value)
-            }
+            onChange={changeName}
           />
 
-          <label htmlFor="type-description">
-            Description
-          </label>
+          <label htmlFor="type-description">Description</label>
           <textarea
             id="type-description"
             maxLength={2000}
             rows={4}
             value={draft.description}
-            onChange={(event) =>
-              edit("description", event.target.value)
-            }
+            onChange={changeDescription}
           />
 
-          <label htmlFor="type-capacity">
-            Guest capacity
-          </label>
+          <label htmlFor="type-capacity">Guest capacity</label>
           <input
             id="type-capacity"
             type="text"
@@ -254,14 +87,10 @@ export default function RoomTypeManagement({ records }) {
             required
             maxLength={10}
             value={draft.capacity}
-            onChange={(event) =>
-              edit("capacity", event.target.value)
-            }
+            onChange={changeCapacity}
           />
 
-          <label htmlFor="type-rate">
-            Base nightly rate in PHP
-          </label>
+          <label htmlFor="type-rate">Base nightly rate in PHP</label>
           <input
             id="type-rate"
             type="text"
@@ -271,30 +100,20 @@ export default function RoomTypeManagement({ records }) {
             maxLength={11}
             aria-describedby="type-rate-help"
             value={draft.nightlyRate}
-            onChange={(event) =>
-              edit("nightlyRate", event.target.value)
-            }
+            onChange={changeNightlyRate}
           />
 
           <p id="type-rate-help">
-            Use up to two decimal places, without commas.
-            Example: 2500.50.
+            Use up to two decimal places, without commas. Example: 2500.50.
           </p>
 
           {roomTypeId && (
             <>
-              <label htmlFor="type-active">
-                Room type active
-              </label>
+              <label htmlFor="type-active">Room type active</label>
               <select
                 id="type-active"
                 value={draft.isActive ? "yes" : "no"}
-                onChange={(event) =>
-                  edit(
-                    "isActive",
-                    event.target.value === "yes",
-                  )
-                }
+                onChange={changeIsActive}
               >
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
@@ -303,9 +122,7 @@ export default function RoomTypeManagement({ records }) {
           )}
 
           <button type="submit">
-            {roomTypeId
-              ? "Review room-type edit"
-              : "Review new room type"}
+            {roomTypeId ? "Review room-type edit" : "Review new room type"}
           </button>
         </fieldset>
       </form>

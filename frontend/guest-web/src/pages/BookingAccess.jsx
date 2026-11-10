@@ -1,140 +1,23 @@
-﻿import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  Link,
-  useNavigate,
-} from "react-router";
-
-import {
-  ArrowLeft,
-  ArrowRight,
-  Mail,
-  ShieldCheck,
-} from "lucide-react";
-
-import {
-  exchangeBookingAccess,
-  requestBookingAccess,
-} from "../services/bookingAccessApi.js";
-
+import { Link } from "react-router";
+import { ArrowLeft, ArrowRight, Mail, ShieldCheck } from "lucide-react";
+import useBookingAccess from "../hooks/useBookingAccess.js";
 import "../styles/booking-access.css";
 
 export default function BookingAccess() {
-  const navigate = useNavigate();
-
-  const [token, setToken] = useState(() => {
-    return new URLSearchParams(
-      window.location.hash.slice(1),
-    ).get("token") || "";
-  });
-
-  const [notice, setNotice] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const submitting = useRef(false);
-
-  useEffect(() => {
-    if (window.location.hash) {
-      window.history.replaceState(
-        window.history.state,
-        "",
-        window.location.pathname +
-          window.location.search,
-      );
-    }
-  }, []);
-
-  async function openBooking() {
-    if (submitting.current) return;
-
-    submitting.current = true;
-    setBusy(true);
-    setError("");
-
-    try {
-      if (!/^[a-f0-9]{64}$/.test(token)) {
-        throw new Error("Invalid link");
-      }
-
-      await exchangeBookingAccess(token);
-      setToken("");
-
-      navigate("/my-booking", {
-        replace: true,
-      });
-    } catch {
-      setToken("");
-      setError(
-        "This link could not be used. Request a new link and try again.",
-      );
-    } finally {
-      submitting.current = false;
-      setBusy(false);
-    }
-  }
-
-  async function requestLink(event) {
-    event.preventDefault();
-
-    if (submitting.current) return;
-
-    const form = new FormData(event.currentTarget);
-
-    submitting.current = true;
-    setBusy(true);
-    setError("");
-    setNotice("");
-
-    try {
-      const result = await requestBookingAccess({
-        reservationNumber: String(
-          form.get("reservationNumber"),
-        ).trim(),
-        email: String(
-          form.get("email"),
-        ).trim(),
-      });
-
-      setNotice(result.message);
-    } catch (failure) {
-      setError(
-        failure.response?.status === 429
-          ? "Too many requests. Please wait before requesting another link."
-          : "We could not process the request. Check your details and try again later.",
-      );
-    } finally {
-      submitting.current = false;
-      setBusy(false);
-    }
-  }
+  const { token, notice, error, busy, openBooking, requestLink } = useBookingAccess();
 
   return (
     <main className="booking-access">
-      <section
-        className="booking-access__card"
-        aria-labelledby="booking-access-title"
-      >
+      <section className="booking-access__card" aria-labelledby="booking-access-title">
         <header className="booking-access__heading">
           <span className="booking-access__icon">
-            <ShieldCheck
-              size={28}
-              aria-hidden="true"
-            />
+            <ShieldCheck size={28} aria-hidden="true" />
           </span>
 
-          <p className="booking-access__eyebrow">
-            Your stay at NEXORA
-          </p>
+          <p className="booking-access__eyebrow">Your stay at NEXORA</p>
 
           <h1 id="booking-access-title">
-            {token
-              ? "Your private booking access"
-              : "Find your booking"}
+            {token ? "Your private booking access" : "Find your booking"}
           </h1>
 
           <p className="booking-access__intro">
@@ -145,49 +28,29 @@ export default function BookingAccess() {
         </header>
 
         {token ? (
-          <div
-            className="booking-access__open"
-            aria-busy={busy}
-          >
+          <div className="booking-access__open" aria-busy={busy}>
             <button
               className="booking-access__button"
               type="button"
               disabled={busy}
               onClick={openBooking}
             >
-              {busy
-                ? "Opening your booking..."
-                : "View my booking"}
+              {busy ? "Opening your booking..." : "View my booking"}
 
-              <ArrowRight
-                size={18}
-                aria-hidden="true"
-              />
+              <ArrowRight size={18} aria-hidden="true" />
             </button>
 
             <p className="booking-access__help">
-              Your link is used only when you select
-              this button.
+              Your link is used only when you select this button.
             </p>
           </div>
         ) : (
-          <form
-            className="booking-access__form"
-            onSubmit={requestLink}
-            aria-busy={busy}
-          >
-            <fieldset
-              className="booking-access__fields"
-              disabled={busy}
-            >
-              <legend className="booking-access__legend">
-                Booking details
-              </legend>
+          <form className="booking-access__form" onSubmit={requestLink} aria-busy={busy}>
+            <fieldset className="booking-access__fields" disabled={busy}>
+              <legend className="booking-access__legend">Booking details</legend>
 
               <div className="booking-access__field">
-                <label htmlFor="access-reference">
-                  Booking reference
-                </label>
+                <label htmlFor="access-reference">Booking reference</label>
 
                 <input
                   id="access-reference"
@@ -202,19 +65,13 @@ export default function BookingAccess() {
                   required
                 />
 
-                <p
-                  id="access-reference-help"
-                  className="booking-access__help"
-                >
-                  Use the reference shown on your
-                  booking receipt.
+                <p id="access-reference-help" className="booking-access__help">
+                  Use the reference shown on your booking receipt.
                 </p>
               </div>
 
               <div className="booking-access__field">
-                <label htmlFor="access-email">
-                  Email address
-                </label>
+                <label htmlFor="access-email">Email address</label>
 
                 <input
                   id="access-email"
@@ -229,68 +86,41 @@ export default function BookingAccess() {
                 />
               </div>
 
-              <button
-                className="booking-access__button"
-                type="submit"
-              >
-                <Mail
-                  size={18}
-                  aria-hidden="true"
-                />
+              <button className="booking-access__button" type="submit">
+                <Mail size={18} aria-hidden="true" />
 
-                {busy
-                  ? "Requesting your link..."
-                  : "Email me an access link"}
+                {busy ? "Requesting your link..." : "Email me an access link"}
               </button>
             </fieldset>
           </form>
         )}
 
         {notice && (
-          <div
-            className="booking-access__notice"
-            role="status"
-          >
+          <div className="booking-access__notice" role="status">
             <strong>Check your email</strong>
             <p>{notice}</p>
-            <p>
-              If an email arrives, check your inbox
-              and spam folder.
-            </p>
+            <p>If an email arrives, check your inbox and spam folder.</p>
           </div>
         )}
 
         {error && (
-          <div
-            className="booking-access__error"
-            role="alert"
-          >
+          <div className="booking-access__error" role="alert">
             {error}
           </div>
         )}
 
         <div className="booking-access__privacy">
-          <ShieldCheck
-            size={20}
-            aria-hidden="true"
-          />
+          <ShieldCheck size={20} aria-hidden="true" />
 
           <p>
-            Links expire after 15 minutes and can be
-            used once. Private access lasts 30
+            Links expire after 15 minutes and can be used once. Private access lasts 30
             minutes. Keep your link to yourself.
           </p>
         </div>
 
         <footer className="booking-access__footer">
-          <Link
-            className="booking-access__back"
-            to="/rooms"
-          >
-            <ArrowLeft
-              size={16}
-              aria-hidden="true"
-            />
+          <Link className="booking-access__back" to="/rooms">
+            <ArrowLeft size={16} aria-hidden="true" />
             Return to rooms
           </Link>
         </footer>

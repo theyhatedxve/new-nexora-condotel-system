@@ -4,20 +4,19 @@
 
 .settings-form {
   display: grid;
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1-25rem);
+  margin-top: var(--space-1-5rem);
 }
 
 .settings-field {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-0-5rem);
   min-width: 0;
 }
 
 .settings-field label {
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
 }
 
 .settings-field input,
@@ -26,11 +25,11 @@
   min-width: 0;
   min-height: 44px;
   box-sizing: border-box;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid #9cabc2;
-  border-radius: 0.4rem;
-  background: #ffffff;
-  color: #15283f;
+  padding: var(--space-0-7rem) var(--space-0-8rem);
+  border: 1px solid var(--color-9cabc2);
+  border-radius: var(--radius-0-4rem);
+  background: var(--surface);
+  color: var(--color-15283f);
   font: inherit;
 }
 
@@ -46,8 +45,8 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: var(--space-0-75rem);
+  margin-top: var(--space-1rem);
 }
 
 .settings-page button {
@@ -55,39 +54,38 @@
 }
 
 .settings-panel {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #d4ddec;
+  margin-top: var(--space-2rem);
+  padding-top: var(--space-1-5rem);
+  border-top: 1px solid var(--color-d4ddec);
 }
 
 .settings-values {
   display: grid;
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1-25rem);
 }
 
 .settings-values dt,
 .settings-review-list dt {
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
 }
 
 .settings-values dd,
 .settings-review-list dd {
-  margin: 0.5rem 0 0;
+  margin: var(--space-0-5rem) 0 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .settings-review-list {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-1rem);
 }
 
 .settings-review-list article {
-  padding: 1rem;
-  border: 1px solid #d4ddec;
-  border-radius: 0.5rem;
+  padding: var(--space-1rem);
+  border: 1px solid var(--color-d4ddec);
+  border-radius: var(--radius-0-5rem);
 }
 
 .settings-review-list h3 {
@@ -95,13 +93,13 @@
 }
 
 .settings-review-list dt:not(:first-child) {
-  margin-top: 1rem;
+  margin-top: var(--space-1rem);
 }
 
 .settings-page input:focus-visible,
 .settings-page textarea:focus-visible,
 .settings-page button:focus-visible {
-  outline: 3px solid #946b21;
+  outline: 3px solid var(--color-946b21);
   outline-offset: 3px;
 }
 

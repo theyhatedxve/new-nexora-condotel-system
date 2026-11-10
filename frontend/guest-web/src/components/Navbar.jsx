@@ -1,32 +1,15 @@
-import { useRef, useState } from "react";
 import { Link, NavLink } from "react-router";
 import { Menu, X } from "lucide-react";
-
 import nexoraLogo from "../assets/branding/logo-horizontal-dark.svg";
-
+import useGuestNavigation from "../hooks/useGuestNavigation.js";
 import "../styles/guest-header.css";
 
 function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuButtonRef = useRef(null);
-
-  function closeMenu() {
-    setMenuOpen(false);
-  }
-
-  function handleKeyDown(event) {
-    if (event.key === "Escape" && menuOpen) {
-      event.preventDefault();
-      setMenuOpen(false);
-      menuButtonRef.current?.focus();
-    }
-  }
+  const { menuOpen, toggleMenu, menuButtonRef, closeMenu, handleKeyDown } =
+    useGuestNavigation();
 
   return (
-    <header
-      className="guest-header"
-      onKeyDown={handleKeyDown}
-    >
+    <header className="guest-header" onKeyDown={handleKeyDown}>
       <div className="guest-header__inner">
         <Link
           to="/"
@@ -47,16 +30,10 @@ function Navbar() {
           ref={menuButtonRef}
           type="button"
           className="guest-header__toggle"
-          aria-label={
-            menuOpen
-              ? "Close navigation menu"
-              : "Open navigation menu"
-          }
+          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={menuOpen}
           aria-controls="guest-main-navigation"
-          onClick={() =>
-            setMenuOpen((open) => !open)
-          }
+          onClick={toggleMenu}
         >
           {menuOpen ? (
             <X size={24} aria-hidden="true" />
@@ -69,41 +46,22 @@ function Navbar() {
           id="guest-main-navigation"
           aria-label="Main navigation"
           className={
-            menuOpen
-              ? "guest-header__navigation is-open"
-              : "guest-header__navigation"
+            menuOpen ? "guest-header__navigation is-open" : "guest-header__navigation"
           }
         >
-          <NavLink
-            to="/"
-            end
-            className="guest-header__link"
-            onClick={closeMenu}
-          >
+          <NavLink to="/" end className="guest-header__link" onClick={closeMenu}>
             Home
           </NavLink>
 
-          <NavLink
-            to="/rooms"
-            className="guest-header__link"
-            onClick={closeMenu}
-          >
+          <NavLink to="/rooms" className="guest-header__link" onClick={closeMenu}>
             Rooms
           </NavLink>
 
-          <NavLink
-            to="/about"
-            className="guest-header__link"
-            onClick={closeMenu}
-          >
+          <NavLink to="/about" className="guest-header__link" onClick={closeMenu}>
             About
           </NavLink>
 
-          <NavLink
-            to="/contact"
-            className="guest-header__link"
-            onClick={closeMenu}
-          >
+          <NavLink to="/contact" className="guest-header__link" onClick={closeMenu}>
             Contact
           </NavLink>
 
@@ -119,5 +77,4 @@ function Navbar() {
     </header>
   );
 }
-
 export default Navbar;

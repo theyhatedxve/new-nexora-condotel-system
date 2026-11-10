@@ -1,27 +1,23 @@
-import { useState } from "react";
 import { Navigate } from "react-router";
-
-import { useAuth } from "../auth/useAuth";
 import { isStaff } from "../auth/staffNavigation";
 import AccessDenied from "./AccessDenied";
+import useStaffLogin from "../hooks/useStaffLogin.js";
 
 export default function Login() {
   const {
     status,
     user,
     message,
-    signIn,
-    signOut,
-    retry,
-  } = useAuth();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+    email,
+    password,
+    submit,
+    retrySession,
+    changeEmail,
+    changePassword,
+  } = useStaffLogin();
 
   if (status === "authenticated") {
-    return isStaff(user?.role)
-      ? <Navigate to="/" replace />
-      : <AccessDenied />;
+    return isStaff(user?.role) ? <Navigate to="/" replace /> : <AccessDenied />;
   }
 
   if (status !== "anonymous") {
@@ -36,16 +32,7 @@ export default function Login() {
             <>
               <p role="alert">{message}</p>
 
-              <button
-                type="button"
-                onClick={() =>
-                  void (
-                    status === "logout-error"
-                      ? signOut()
-                      : retry()
-                  )
-                }
-              >
+              <button type="button" onClick={retrySession}>
                 Try again
               </button>
             </>
@@ -55,31 +42,14 @@ export default function Login() {
     );
   }
 
-  async function submit(event) {
-    event.preventDefault();
-
-    const submittedPassword = password;
-
-    setPassword("");
-
-    await signIn(email.trim(), submittedPassword);
-  }
-
   return (
     <main className="auth-page">
-      <section
-        className="auth-card"
-        aria-labelledby="login-title"
-      >
-        <p className="eyebrow">
-          NEXORA · Staff workspace
-        </p>
+      <section className="auth-card" aria-labelledby="login-title">
+        <p className="eyebrow">NEXORA · Staff workspace</p>
 
         <h1 id="login-title">Sign in</h1>
 
-        <p>
-          Use your authorized staff account to continue.
-        </p>
+        <p>Use your authorized staff account to continue.</p>
 
         {message && (
           <p role="status" className="feedback">
@@ -88,9 +58,7 @@ export default function Login() {
         )}
 
         <form onSubmit={submit}>
-          <label htmlFor="staff-email">
-            Email address
-          </label>
+          <label htmlFor="staff-email">Email address</label>
 
           <input
             id="staff-email"
@@ -99,14 +67,10 @@ export default function Login() {
             maxLength={254}
             required
             value={email}
-            onChange={(event) =>
-              setEmail(event.target.value)
-            }
+            onChange={changeEmail}
           />
 
-          <label htmlFor="staff-password">
-            Password
-          </label>
+          <label htmlFor="staff-password">Password</label>
 
           <input
             id="staff-password"
@@ -114,14 +78,10 @@ export default function Login() {
             autoComplete="current-password"
             required
             value={password}
-            onChange={(event) =>
-              setPassword(event.target.value)
-            }
+            onChange={changePassword}
           />
 
-          <button type="submit">
-            Sign in
-          </button>
+          <button type="submit">Sign in</button>
         </form>
       </section>
     </main>

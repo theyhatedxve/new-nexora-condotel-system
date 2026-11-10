@@ -1,67 +1,11 @@
-import {
-  Link,
-  useLocation,
-  useParams,
-} from "react-router";
-
-import { useStaffData } from "../hooks/useStaffData";
-import {
-  getRoom,
-  getRoomBlocks,
-  parseRoomListQuery,
-  roomListSearch,
-} from "../services/roomsApi";
-
+import { Link } from "react-router";
 import StaffDataState from "../components/StaffDataState";
-
-import {
-  formatStatus,
-  formatStayDate,
-  formatTimestamp,
-} from "../utils/formatters";
-
-import { useAuth } from "../auth/useAuth";
+import { formatStatus, formatStayDate, formatTimestamp } from "../utils/formatters";
 import RoomManagement from "../components/RoomManagement";
-
-
-
+import useRoomDetailsPage from "../hooks/useRoomDetailsPage.js";
 
 export default function RoomDetails() {
-  const { roomId } = useParams();
-
-  const location = useLocation();
-
-  let returnSearch = "";
-
-  const savedSearch = location.state?.roomListSearch;
-
-  if (
-    typeof savedSearch === "string" &&
-    savedSearch.length <= 2000
-  ) {
-    try {
-      returnSearch = roomListSearch(
-        parseRoomListQuery(savedSearch),
-      );
-    } catch {
-      returnSearch = "";
-    }
-  }
-
-  const room = useStaffData(getRoom, roomId);
-  const blocks = useStaffData(getRoomBlocks, roomId);
-
-  const { user } = useAuth();
-
-  const canManage = [
-    "ADMIN",
-    "MANAGER",
-  ].includes(user?.role);
-  
-  function refresh() {
-    room.reload();
-    blocks.reload();
-  }
+  const { roomId, returnSearch, room, blocks, canManage, refresh } = useRoomDetailsPage();
 
   return (
     <section aria-labelledby="room-title">
@@ -77,19 +21,12 @@ export default function RoomDetails() {
       <div className="records-heading">
         <h1 id="room-title">Room details</h1>
 
-        <button
-          type="button"
-          onClick={refresh}
-          disabled={room.loading || blocks.loading}
-        >
+        <button type="button" onClick={refresh} disabled={room.loading || blocks.loading}>
           Refresh room
         </button>
       </div>
 
-      <StaffDataState
-        state={room}
-        label="Room details"
-      />
+      <StaffDataState state={room} label="Room details" />
 
       {room.status === "ready" && (
         <>
@@ -126,33 +63,23 @@ export default function RoomDetails() {
 
             <div>
               <dt>Room type active</dt>
-              <dd>
-                {room.data.roomType.isActive ? "Yes" : "No"}
-              </dd>
+              <dd>{room.data.roomType.isActive ? "Yes" : "No"}</dd>
             </div>
           </dl>
 
-          <section
-            className="record-section"
-            aria-labelledby="blocks-title"
-          >
+          <section className="record-section" aria-labelledby="blocks-title">
             <h2 id="blocks-title">Dated block history</h2>
 
             <p>
-              A block includes its start date and excludes
-              its end date. Cancelled blocks remain in history.
+              A block includes its start date and excludes its end date. Cancelled blocks
+              remain in history.
             </p>
 
-            <StaffDataState
-              state={blocks}
-              label="Room block history"
-            />
+            <StaffDataState state={blocks} label="Room block history" />
 
-            {blocks.status === "ready" && (
-              blocks.data.length === 0 ? (
-                <p role="status">
-                  No dated blocks recorded for this room.
-                </p>
+            {blocks.status === "ready" &&
+              (blocks.data.length === 0 ? (
+                <p role="status">No dated blocks recorded for this room.</p>
               ) : (
                 <div
                   className="records-scroll"
@@ -161,9 +88,7 @@ export default function RoomDetails() {
                   tabIndex={0}
                 >
                   <table className="records-table">
-                    <caption>
-                      Room blocks, earliest start date first
-                    </caption>
+                    <caption>Room blocks, earliest start date first</caption>
 
                     <thead>
                       <tr>
@@ -178,48 +103,30 @@ export default function RoomDetails() {
                     <tbody>
                       {blocks.data.map((block) => (
                         <tr key={block.id}>
-                          <td>
-                            {formatStayDate(block.startDate)}
-                          </td>
+                          <td>{formatStayDate(block.startDate)}</td>
 
-                          <td>
-                            {formatStayDate(block.endDate)}
-                          </td>
+                          <td>{formatStayDate(block.endDate)}</td>
 
                           <td>{block.reason}</td>
 
                           <td>
                             {block.canceledAt
-                              ? (
-                                  "Cancelled " +
-                                  formatTimestamp(
-                                    block.canceledAt,
-                                  )
-                                )
+                              ? "Cancelled " + formatTimestamp(block.canceledAt)
                               : "Not cancelled"}
                           </td>
 
-                          <td>
-                            {formatTimestamp(block.createdAt)}
-                          </td>
+                          <td>{formatTimestamp(block.createdAt)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              )
-            )}
+              ))}
           </section>
         </>
       )}
 
-      {canManage && (
-        <RoomManagement
-            key={roomId}
-            room={room}
-            blocks={blocks}
-        />
-        )}
+      {canManage && <RoomManagement key={roomId} room={room} blocks={blocks} />}
     </section>
   );
 }

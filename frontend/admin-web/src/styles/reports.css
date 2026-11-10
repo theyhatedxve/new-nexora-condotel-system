@@ -3,9 +3,9 @@
 }
 
 .reports-section {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #d4ddec;
+  margin-top: var(--space-2rem);
+  padding-top: var(--space-1-5rem);
+  border-top: 1px solid var(--color-d4ddec);
 }
 
 .reports-heading {
@@ -13,8 +13,8 @@
   align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--space-1rem);
+  margin-bottom: var(--space-1rem);
 }
 
 .reports-heading > div {
@@ -30,19 +30,19 @@
   display: flex;
   align-items: flex-end;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin: 1.5rem 0;
+  gap: var(--space-1rem);
+  margin: var(--space-1-5rem) 0;
 }
 
 .reports-date-field {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-0-5rem);
   flex: 1 1 12rem;
   min-width: 0;
 }
 
 .reports-date-field label {
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
 }
 
 .reports-date-field input {
@@ -50,11 +50,11 @@
   min-width: 0;
   min-height: 44px;
   box-sizing: border-box;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid #9cabc2;
-  border-radius: 0.4rem;
-  background: #ffffff;
-  color: #15283f;
+  padding: var(--space-0-65rem) var(--space-0-75rem);
+  border: 1px solid var(--color-9cabc2);
+  border-radius: var(--radius-0-4rem);
+  background: var(--surface);
+  color: var(--color-15283f);
   font: inherit;
 }
 
@@ -69,7 +69,7 @@
 
 .reports-page input:focus-visible,
 .reports-page button:focus-visible {
-  outline: 3px solid #946b21;
+  outline: 3px solid var(--color-946b21);
   outline-offset: 3px;
 }
 

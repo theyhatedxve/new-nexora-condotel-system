@@ -1,109 +1,26 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Link } from "react-router";
+import { formatPesos } from "../utils/formatMoney.js";
+import useGuestBookingReceipt from "../hooks/useGuestBookingReceipt.js";
+import { displayTime } from "../utils/receiptDisplayTime.js";
 
-import {
-  Link,
-  useNavigate,
-} from "react-router";
-
-import {
-  formatPesos,
-} from "../utils/formatMoney.js";
-
-const dateTime = new Intl.DateTimeFormat(
-  "en-PH",
-  {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Manila",
-  },
-);
-
-function displayTime(value) {
-  return value
-    ? dateTime.format(new Date(value))
-    : "Not started";
-}
-
-export default function GuestBookingReceipt({
-  flow,
-}) {
-  const navigate = useNavigate();
-  const heading = useRef(null);
-
-  const [now, setNow] = useState(
-    () => Date.now(),
-  );
-
+export default function GuestBookingReceipt({ flow }) {
   const {
+    heading,
     receipt,
     attempt,
     payment,
     summary,
     busy,
     error,
-  } = flow;
-
-  useEffect(() => {
-    heading.current?.focus();
-  }, [receipt.requestId]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, []);
-
-  const online =
-    receipt.paymentPreference === "PAYMONGO";
-
-  const closed = [
-    "CANCELLED",
-    "EXPIRED",
-    "CHECKED_OUT",
-  ].includes(receipt.status);
-
-  const paid =
-    summary?.status === "PAID" &&
-    !summary.requiresReview &&
-    summary.balanceDueCentavos === 0 &&
-    receipt.status === "CONFIRMED";
-
-  const deadlineReached =
-    receipt.status === "PENDING" &&
-    receipt.holdExpiresAt &&
-    now >= Date.parse(
-      receipt.holdExpiresAt,
-    );
-
-  const accessExpired =
-    now >= Date.parse(
-      receipt.sessionExpiresAt,
-    );
-
-  const title = closed
-    ? "Booking request closed"
-    : receipt.status === "CONFIRMED"
-      ? "Your reservation is confirmed"
-      : online
-        ? "Complete your test payment"
-        : "Your booking request was received";
-
-  const canStartAnother =
-    !online || paid || closed;
-
-  function startAnother() {
-    if (flow.finishKnownBooking()) {
-      navigate("/rooms");
-    }
-  }
+    online,
+    closed,
+    paid,
+    deadlineReached,
+    accessExpired,
+    title,
+    canStartAnother,
+    startAnother,
+  } = useGuestBookingReceipt({ flow });
 
   return (
     <main className="checkout-page checkout-view guest-checkout">
@@ -113,16 +30,10 @@ export default function GuestBookingReceipt({
         aria-busy={busy}
       >
         <p className="checkout-kicker">
-          {online
-            ? "PAYMONGO TEST CHECKOUT"
-            : "PAY AT PROPERTY"}
+          {online ? "PAYMONGO TEST CHECKOUT" : "PAY AT PROPERTY"}
         </p>
 
-        <h1
-          id="guest-booking-result"
-          ref={heading}
-          tabIndex={-1}
-        >
+        <h1 id="guest-booking-result" ref={heading} tabIndex={-1}>
           {title}
         </h1>
 
@@ -138,26 +49,18 @@ export default function GuestBookingReceipt({
 
         <div className="checkout-view__reference">
           <span>Booking reference</span>
-          <strong>
-            {receipt.reservationNumber}
-          </strong>
+          <strong>{receipt.reservationNumber}</strong>
         </div>
 
         <dl className="checkout-summary">
           <div>
             <dt>Reservation status</dt>
-            <dd>
-              {receipt.status.replaceAll("_", " ")}
-            </dd>
+            <dd>{receipt.status.replaceAll("_", " ")}</dd>
           </div>
 
           <div>
             <dt>Payment status</dt>
-            <dd>
-              {summary
-                ? summary.status.replaceAll("_", " ")
-                : "Not checked"}
-            </dd>
+            <dd>{summary ? summary.status.replaceAll("_", " ") : "Not checked"}</dd>
           </div>
 
           <div>
@@ -177,87 +80,57 @@ export default function GuestBookingReceipt({
 
           <div>
             <dt>Expected arrival · Philippine time</dt>
-            <dd>
-              {displayTime(
-                receipt.expectedArrivalAt,
-              )}
-            </dd>
+            <dd>{displayTime(receipt.expectedArrivalAt)}</dd>
           </div>
 
           {receipt.status === "PENDING" && (
             <div>
-              <dt>
-                {online
-                  ? "Online hold deadline"
-                  : "Current confirmation deadline"}
-              </dt>
-              <dd>
-                {displayTime(
-                  receipt.holdExpiresAt,
-                )}
-              </dd>
+              <dt>{online ? "Online hold deadline" : "Current confirmation deadline"}</dt>
+              <dd>{displayTime(receipt.holdExpiresAt)}</dd>
             </div>
           )}
 
           {!online && receipt.status === "PENDING" && (
             <div>
               <dt>First staff contact</dt>
-              <dd>
-                {displayTime(
-                  receipt.firstContactedAt,
-                )}
-              </dd>
+              <dd>{displayTime(receipt.firstContactedAt)}</dd>
             </div>
           )}
 
           <div>
             <dt>Booked nightly rate</dt>
-            <dd>
-              {formatPesos(
-                receipt.nightlyRateCentavos,
-              )}
-            </dd>
+            <dd>{formatPesos(receipt.nightlyRateCentavos)}</dd>
           </div>
 
           <div className="checkout-total">
             <dt>Booked stay total</dt>
-            <dd>
-              {formatPesos(
-                receipt.totalAmountCentavos,
-              )}
-            </dd>
+            <dd>{formatPesos(receipt.totalAmountCentavos)}</dd>
           </div>
         </dl>
 
         {!online && receipt.status === "PENDING" && (
           <p className="checkout-note">
-            Reply within 24 hours of the first
-            staff contact. The earlier deadline
-            applies: that response deadline or
-            30 minutes after your expected arrival.
-            This request remains pending until
-            staff confirms it.
+            Reply within 24 hours of the first staff contact. The earlier deadline
+            applies: that response deadline or 30 minutes after your expected arrival.
+            This request remains pending until staff confirms it.
           </p>
         )}
 
         {deadlineReached && (
           <p role="status" className="guest-checkout__notice">
-            The displayed deadline has been reached.
-            Check the latest booking status.
+            The displayed deadline has been reached. Check the latest booking status.
           </p>
         )}
 
         {paid && (
           <p role="status" className="guest-checkout__notice">
-            Full payment is recorded in the verified
-            backend records.
+            Full payment is recorded in the verified backend records.
           </p>
         )}
 
         {busy && (
           <p role="status">
-            Checking the original booking and payment
-            attempt. Please wait.
+            Checking the original booking and payment attempt. Please wait.
           </p>
         )}
 
@@ -267,9 +140,12 @@ export default function GuestBookingReceipt({
           </p>
         )}
 
-        {online && payment?.state === "READY" &&
-          !busy && !deadlineReached &&
-          !accessExpired && !closed && (
+        {online &&
+          payment?.state === "READY" &&
+          !busy &&
+          !deadlineReached &&
+          !accessExpired &&
+          !closed && (
             <a
               className="checkout-view__primary-link"
               href={payment.checkoutUrl}
@@ -279,30 +155,24 @@ export default function GuestBookingReceipt({
             </a>
           )}
 
-        {online &&
-          ["CREATING", "UNKNOWN"].includes(
-            payment?.state,
-          ) && (
-            <p className="checkout-note">
-              The existing payment attempt is unresolved.
-              Check it again or contact the property.
-              Do not start another payment.
-            </p>
-          )}
+        {online && ["CREATING", "UNKNOWN"].includes(payment?.state) && (
+          <p className="checkout-note">
+            The existing payment attempt is unresolved. Check it again or contact the
+            property. Do not start another payment.
+          </p>
+        )}
 
         {payment?.state === "REVIEW_REQUIRED" && (
           <p role="status" className="checkout-note">
-            This booking or payment needs property
-            review. Contact the property before
+            This booking or payment needs property review. Contact the property before
             paying again.
           </p>
         )}
 
         {accessExpired && (
           <p className="checkout-note">
-            This private session has expired.
-            Recovery may also have expired.
-            Use the email access flow if needed.
+            This private session has expired. Recovery may also have expired. Use the
+            email access flow if needed.
           </p>
         )}
 
@@ -318,20 +188,12 @@ export default function GuestBookingReceipt({
 
           <Link
             className="checkout-view__secondary-link"
-            to={
-                "/my-booking?booking=" +
-                encodeURIComponent(
-                    receipt.reservationNumber,
-                )
-                }
+            to={"/my-booking?booking=" + encodeURIComponent(receipt.reservationNumber)}
           >
             View my booking
           </Link>
 
-          <Link
-            className="checkout-view__secondary-link"
-            to="/booking-access"
-          >
+          <Link className="checkout-view__secondary-link" to="/booking-access">
             Request private email access
           </Link>
 
@@ -348,10 +210,8 @@ export default function GuestBookingReceipt({
         </div>
 
         <p className="checkout-note">
-          Save your booking reference. Starting another
-          stay does not cancel this reservation.
-          Returning from PayMongo does not itself
-          confirm payment.
+          Save your booking reference. Starting another stay does not cancel this
+          reservation. Returning from PayMongo does not itself confirm payment.
         </p>
       </section>
     </main>

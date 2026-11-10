@@ -1,22 +1,6 @@
 import { Link } from "react-router";
-import {
-  ArrowRight,
-  BedDouble,
-  CalendarDays,
-  LogIn,
-  LogOut,
-  RefreshCw,
-} from "lucide-react";
-
-import { useAuth } from "../auth/useAuth";
-import {
-  canVisit,
-  staffNavigation,
-} from "../auth/staffNavigation";
-import { useDashboardSummary } from "../hooks/useDashboardSummary";
-import { useStaffData } from "../hooks/useStaffData";
+import { ArrowRight, CalendarDays, RefreshCw } from "lucide-react";
 import SummaryCard from "../components/SummaryCard";
-import { listReservationPage } from "../services/reservationsApi";
 import {
   formatPesos,
   formatStatus,
@@ -24,91 +8,23 @@ import {
   formatTimestamp,
   guestName,
 } from "../utils/formatters";
-
+import { cards, quickLinkDescriptions } from "../constants/dashboard.js";
+import useDashboardPage from "../hooks/useDashboardPage.js";
 import "../styles/dashboard.css";
 
-const cards = [
-  {
-    key: "totalRooms",
-    title: "Total rooms",
-    description: "All configured physical rooms, including inactive rooms.",
-    Icon: BedDouble,
-    tone: "green",
-  },
-  {
-    key: "occupiedRooms",
-    title: "Occupied rooms",
-    description: "Distinct rooms assigned to checked-in stays, including overdue stays.",
-    Icon: BedDouble,
-    tone: "gold",
-  },
-  {
-    key: "expectedArrivals",
-    title: "Arrivals today",
-    description: "Confirmed reservations scheduled to arrive today.",
-    Icon: LogIn,
-    tone: "green",
-  },
-  {
-    key: "expectedDepartures",
-    title: "Departures today",
-    description: "Checked-in reservations scheduled to leave today.",
-    Icon: LogOut,
-    tone: "rose",
-  },
-];
-
-const quickLinkDescriptions = {
-  "/reservations": "Review bookings, arrivals, and departures.",
-  "/rooms": "Review physical rooms and operational status.",
-  "/guests": "Find guest details and reservation history.",
-  "/payments": "Review recorded payments and payment details.",
-  "/reports": "Open operational and collections reports.",
-};
-
-function loadRecentReservations(_staffScope, signal) {
-  // The existing API supports 20 or 50 rows; display only its newest five.
-  return listReservationPage({ page: 1, limit: 20 }, signal);
-}
-
 export default function Dashboard() {
-  const { user } = useAuth();
-  const { operations, financial, loading, refresh } =
-    useDashboardSummary(user.role);
-
-  // A change of staff identity or role must hide the previous list immediately.
-  const recent = useStaffData(
-    loadRecentReservations,
-    `${user.id}:${user.role}`,
-  );
-
-  const finance = financial.data;
-  const recentItems = recent.status === "ready"
-    ? recent.data.items.slice(0, 5)
-    : [];
-  const refreshing = loading || recent.loading;
-  const quickLinks = staffNavigation.filter(
-    (item) =>
-      Object.hasOwn(quickLinkDescriptions, item.path) &&
-      canVisit(item, user.role),
-  );
-
-  const empty = operations.status === "ready" &&
-    operations.data.activeReservations === 0 &&
-    cards.every((card) => operations.data[card.key] === 0);
-
-  function countValue(key) {
-    if (operations.status === "ready") {
-      return operations.data[key].toLocaleString("en-PH");
-    }
-
-    return operations.status === "error" ? "Unavailable" : "Loading…";
-  }
-
-  function refreshDashboard() {
-    refresh();
-    recent.reload();
-  }
+  const {
+    operations,
+    financial,
+    recent,
+    finance,
+    recentItems,
+    refreshing,
+    quickLinks,
+    empty,
+    countValue,
+    refreshDashboard,
+  } = useDashboardPage();
 
   return (
     <section className="dashboard-screen" aria-labelledby="dashboard-title">
@@ -141,7 +57,10 @@ export default function Dashboard() {
         </p>
       )}
       {operations.status === "error" && (
-        <p role="alert" className="dashboard-screen__message dashboard-screen__message--error">
+        <p
+          role="alert"
+          className="dashboard-screen__message dashboard-screen__message--error"
+        >
           Operational summaries could not be loaded. Try Refresh dashboard.
         </p>
       )}
@@ -151,13 +70,20 @@ export default function Dashboard() {
         </p>
       )}
 
-      <div className="dashboard-screen__metrics" aria-busy={operations.status === "loading"}>
+      <div
+        className="dashboard-screen__metrics"
+        aria-busy={operations.status === "loading"}
+      >
         {cards.map(({ key, title, description, Icon, tone }) => (
           <div key={key} className="dashboard-screen__metric">
             <span className={`dashboard-screen__icon dashboard-screen__icon--${tone}`}>
               <Icon size={21} aria-hidden="true" />
             </span>
-            <SummaryCard title={title} value={countValue(key)} description={description} />
+            <SummaryCard
+              title={title}
+              value={countValue(key)}
+              description={description}
+            />
           </div>
         ))}
       </div>
@@ -205,7 +131,8 @@ export default function Dashboard() {
                 )}
                 {finance?.status === "REVIEW_REQUIRED" && (
                   <p role="alert" className="dashboard-screen__review">
-                    Relevant payment records require financial review. Totals are unavailable.
+                    Relevant payment records require financial review. Totals are
+                    unavailable.
                   </p>
                 )}
                 {finance?.status === "READY" && (
@@ -230,7 +157,10 @@ export default function Dashboard() {
           )}
         </div>
 
-        <section className="dashboard-screen__panel" aria-labelledby="dashboard-links-title">
+        <section
+          className="dashboard-screen__panel"
+          aria-labelledby="dashboard-links-title"
+        >
           <h2 id="dashboard-links-title">Quick links</h2>
           <p className="dashboard-screen__muted">Open your daily staff tools.</p>
           <ul className="dashboard-screen__quick-links">
@@ -254,7 +184,10 @@ export default function Dashboard() {
         </section>
       </div>
 
-      <section className="dashboard-screen__panel" aria-labelledby="dashboard-recent-title">
+      <section
+        className="dashboard-screen__panel"
+        aria-labelledby="dashboard-recent-title"
+      >
         <header className="dashboard-screen__section-heading">
           <div>
             <h2 id="dashboard-recent-title">Recent reservations</h2>
@@ -266,7 +199,9 @@ export default function Dashboard() {
         </header>
 
         {recent.loading && (
-          <p role="status" className="dashboard-screen__message">Loading recent reservations…</p>
+          <p role="status" className="dashboard-screen__message">
+            Loading recent reservations…
+          </p>
         )}
         {!recent.loading && recent.status !== "ready" && (
           <div className="dashboard-screen__message dashboard-screen__message--error">
@@ -275,11 +210,15 @@ export default function Dashboard() {
                 ? "You do not have permission to view these reservations."
                 : "Recent reservations could not be loaded. Other dashboard sections remain available."}
             </p>
-            <button type="button" onClick={recent.reload}>Retry reservations</button>
+            <button type="button" onClick={recent.reload}>
+              Retry reservations
+            </button>
           </div>
         )}
         {recent.status === "ready" && recentItems.length === 0 && (
-          <p role="status" className="dashboard-screen__message">No reservations have been recorded yet.</p>
+          <p role="status" className="dashboard-screen__message">
+            No reservations have been recorded yet.
+          </p>
         )}
         {recent.status === "ready" && recentItems.length > 0 && (
           <>
@@ -319,7 +258,10 @@ export default function Dashboard() {
                         </span>
                       </td>
                       <td>
-                        <span className="dashboard-screen__badge" data-status={item.status}>
+                        <span
+                          className="dashboard-screen__badge"
+                          data-status={item.status}
+                        >
                           {formatStatus(item.status)}
                         </span>
                       </td>
@@ -329,8 +271,8 @@ export default function Dashboard() {
               </table>
             </div>
             <p className="dashboard-screen__updated">
-              Showing {recentItems.length} of {recent.data.total.toLocaleString("en-PH")} reservations.
-              Select a reference to view its details.
+              Showing {recentItems.length} of {recent.data.total.toLocaleString("en-PH")}{" "}
+              reservations. Select a reference to view its details.
             </p>
           </>
         )}

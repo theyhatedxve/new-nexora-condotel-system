@@ -1,41 +1,17 @@
-
-import { useEffect, useState } from "react";
-import { checkBackend } from "../services/api";
+import useBackendStatus from "../hooks/useBackendStatus.js";
 
 function BackendStatus() {
-  const [status, setStatus] = useState("checking");
-
-  useEffect(() => {
-    checkBackend()
-      .then((data) => {
-        if (data.status === "ok") {
-          setStatus("connected");
-        } else {
-          setStatus("offline");
-        }
-      })
-      .catch(() => {
-        setStatus("offline");
-      });
-  }, []);
+  const { status } = useBackendStatus();
 
   return (
     <div className="backend-status">
-      {status === "checking" && (
-        <span>Checking Backend...</span>
-      )}
+      {status === "checking" && <span>Checking Backend...</span>}
 
       {status === "connected" && (
-        <span className="status-connected">
-          ● Backend Connected
-        </span>
+        <span className="status-connected">● Backend Connected</span>
       )}
 
-      {status === "offline" && (
-        <span className="status-offline">
-          ● Backend Offline
-        </span>
-      )}
+      {status === "offline" && <span className="status-offline">● Backend Offline</span>}
     </div>
   );
 }

@@ -1,0 +1,126 @@
+.availability-search {
+  width: 100%;
+  margin: var(--space-8) auto;
+  padding: var(--space-6);
+  background: var(--color-on-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-12px);
+}
+
+.availability-search h2,
+.availability-search h3,
+.availability-search h4 {
+  color: var(--color-primary);
+}
+
+.availability-search > p {
+  color: var(--color-text-muted);
+}
+
+.availability-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+
+.availability-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-600);
+  color: var(--color-on-gold);
+}
+
+.availability-fields input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-6px);
+  font: inherit;
+  background: var(--color-on-primary);
+  color: var(--color-on-gold);
+}
+
+.availability-search button {
+  padding: var(--space-0-85rem) var(--space-6);
+  border: 0;
+  border-radius: var(--radius-6px);
+  background: var(--color-primary);
+  color: white;
+  font: inherit;
+  font-weight: var(--font-weight-600);
+  cursor: pointer;
+}
+
+.availability-search button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.availability-search :focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.availability-error {
+  margin-top: var(--space-4);
+  color: var(--color-danger);
+}
+
+.availability-results {
+  margin-top: var(--space-8);
+}
+
+.availability-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  padding: var(--space-1-25rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-8px);
+}
+
+.availability-result p {
+  margin: 0;
+}
+
+.availability-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.availability-result-header h4 {
+  margin: 0;
+}
+
+.availability-result a {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-600);
+  text-decoration: underline;
+}
+
+.availability-note {
+  margin-top: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-0-9rem);
+}
+
+@media (max-width: 700px) {
+  .availability-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .availability-search {
+    padding: var(--space-4);
+  }
+
+  .availability-search button {
+    width: 100%;
+  }
+}

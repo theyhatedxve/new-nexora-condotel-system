@@ -12,13 +12,9 @@ export default function PlaceholderPage({ title }) {
             : "This area is not available yet"}
         </h2>
 
-        <p>
-          No records or actions are available on this page.
-        </p>
+        <p>No records or actions are available on this page.</p>
 
-        <Link to="/">
-          Return to dashboard
-        </Link>
+        <Link to="/">Return to dashboard</Link>
       </div>
     </section>
   );

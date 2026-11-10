@@ -1,22 +1,9 @@
 import { NavLink } from "react-router";
+import { staffNavigation, canVisit } from "../auth/staffNavigation";
 
-import {
-  staffNavigation,
-  canVisit,
-} from "../auth/staffNavigation";
-
-export default function Sidebar({
-  role,
-  open,
-  onNavigate,
-}) {
+export default function Sidebar({ role, open, onNavigate }) {
   return (
-    <aside
-      id="staff-navigation"
-      className={
-        "sidebar" + (open ? " sidebar-open" : "")
-      }
-    >
+    <aside id="staff-navigation" className={"sidebar" + (open ? " sidebar-open" : "")}>
       <div className="sidebar-brand">
         NEXORA
         <span>Staff workspace</span>
@@ -34,15 +21,9 @@ export default function Sidebar({
                 to={item.path}
                 end={item.path === "/"}
                 onClick={onNavigate}
-                className={({ isActive }) =>
-                  "nav-link" +
-                  (isActive ? " active" : "")
-                }
+                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
               >
-                <Icon
-                  size={20}
-                  aria-hidden="true"
-                />
+                <Icon size={20} aria-hidden="true" />
 
                 <span>{item.label}</span>
               </NavLink>

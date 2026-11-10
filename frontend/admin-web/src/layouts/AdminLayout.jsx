@@ -1,75 +1,26 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  Outlet,
-  useLocation,
-} from "react-router";
-
-import {
-  Menu,
-  X,
-  LogOut,
-} from "lucide-react";
-
+import { Outlet } from "react-router";
+import { Menu, X, LogOut } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import BackendStatus from "../components/BackendStatus";
-import { useAuth } from "../auth/useAuth";
-
-import {
-  ROLE_LABELS,
-  staffNavigation,
-} from "../auth/staffNavigation";
+import { ROLE_LABELS } from "../auth/staffNavigation";
+import useAdminLayout from "../hooks/useAdminLayout.js";
 
 export default function AdminLayout() {
-  const { user, signOut } = useAuth();
-  const location = useLocation();
-
-  const [openedAt, setOpenedAt] = useState(null);
-  const open = openedAt === location.key;
-
-  const menuButton = useRef(null);
-  const main = useRef(null);
-
-    const title =
-    staffNavigation.find(
-      (item) =>
-        item.path === location.pathname ||
-        (
-          item.path !== "/" &&
-          location.pathname.startsWith(item.path + "/")
-        ),
-    )?.label ?? "Page not found";
-
-  useEffect(() => {
-    document.title = title + " | NEXORA";
-    main.current?.focus();
-  }, [location.pathname, title]);
-
-  function closeMenu() {
-    setOpenedAt(null);
-    main.current?.focus();
-  }
-
-  function handleKeyDown(event) {
-    if (event.key === "Escape" && open) {
-      setOpenedAt(null);
-      menuButton.current?.focus();
-    }
-  }
+  const {
+    user,
+    open,
+    menuButton,
+    main,
+    title,
+    closeMenu,
+    handleKeyDown,
+    toggleMenu,
+    signOutStaff,
+  } = useAdminLayout();
 
   return (
-    <div
-      className="admin-layout"
-      onKeyDown={handleKeyDown}
-    >
-      <a
-        className="skip-link"
-        href="#main-content"
-      >
+    <div className="admin-layout" onKeyDown={handleKeyDown}>
+      <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
 
@@ -79,9 +30,7 @@ export default function AdminLayout() {
         className="mobile-menu"
         aria-expanded={open}
         aria-controls="staff-navigation"
-        onClick={() =>
-          setOpenedAt(open ? null : location.key)
-        }
+        onClick={toggleMenu}
       >
         {open ? (
           <X size={20} aria-hidden="true" />
@@ -89,43 +38,24 @@ export default function AdminLayout() {
           <Menu size={20} aria-hidden="true" />
         )}
 
-        {open
-          ? "Close navigation"
-          : "Open navigation"}
+        {open ? "Close navigation" : "Open navigation"}
       </button>
 
-      <Sidebar
-        role={user.role}
-        open={open}
-        onNavigate={closeMenu}
-      />
+      <Sidebar role={user.role} open={open} onNavigate={closeMenu} />
 
       <div className="admin-main">
         <header className="admin-header">
           <div>
-            <p className="eyebrow">
-              NEXORA Management System
-            </p>
+            <p className="eyebrow">NEXORA Management System</p>
 
-            <p className="header-title">
-              {title}
-            </p>
+            <p className="header-title">{title}</p>
           </div>
 
           <div className="staff-account">
-            <span>
-              {ROLE_LABELS[user.role]}
-            </span>
+            <span>{ROLE_LABELS[user.role]}</span>
 
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => void signOut()}
-            >
-              <LogOut
-                size={18}
-                aria-hidden="true"
-              />
+            <button type="button" className="secondary-button" onClick={signOutStaff}>
+              <LogOut size={18} aria-hidden="true" />
               Sign out
             </button>
           </div>
@@ -133,18 +63,11 @@ export default function AdminLayout() {
 
         <BackendStatus />
 
-        <main
-          id="main-content"
-          ref={main}
-          tabIndex={-1}
-          className="admin-content"
-        >
+        <main id="main-content" ref={main} tabIndex={-1} className="admin-content">
           <Outlet />
         </main>
 
-        <footer className="admin-footer">
-          NEXORA · Staff workspace
-        </footer>
+        <footer className="admin-footer">NEXORA · Staff workspace</footer>
       </div>
     </div>
   );

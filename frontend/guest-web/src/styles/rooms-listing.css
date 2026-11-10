@@ -2,30 +2,29 @@
   width: min(1200px, calc(100% - 3rem));
   max-width: none;
   margin-inline: auto;
-  padding: 3rem 0 4rem;
+  padding: var(--space-12) 0 var(--space-4rem);
 }
 
 .rooms-page.rooms-directory > h1 {
   margin: 0;
   color: var(--color-primary);
   font-size: clamp(2rem, 4vw, 2.75rem);
-  line-height: 1.2;
+  line-height: var(--line-height-1-2);
   letter-spacing: -0.03em;
   text-align: left;
 }
 
 .rooms-directory > .rooms-intro {
-  margin: 0.85rem 0 2rem;
-  line-height: 1.7;
+  margin: var(--space-0-85rem) 0 var(--space-8);
+  line-height: var(--line-height-1-7);
   text-align: left;
 }
 
 .rooms-directory__layout {
   display: grid;
-  grid-template-columns:
-    260px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(0, 1fr);
   align-items: start;
-  gap: 1.75rem;
+  gap: var(--space-1-75rem);
 }
 
 .rooms-directory__sidebar,
@@ -35,36 +34,36 @@
 
 .rooms-directory__sidebar .availability-search {
   margin: 0;
-  padding: 1.4rem;
-  border-radius: 0.65rem;
-  box-shadow: 0 3px 16px rgb(20 38 63 / 4%);
+  padding: var(--space-1-4rem);
+  border-radius: var(--radius-0-65rem);
+  box-shadow: var(--shadow-2);
 }
 
 .rooms-directory__sidebar .availability-search h2 {
-  font-size: 1.15rem;
-  line-height: 1.4;
+  font-size: var(--font-size-1-15rem);
+  line-height: var(--line-height-1-4);
 }
 
 .rooms-directory__sidebar .availability-description {
-  margin: 0.7rem 0 0;
-  font-size: 0.85rem;
-  line-height: 1.7;
+  margin: var(--space-0-7rem) 0 0;
+  font-size: var(--font-size-0-85rem);
+  line-height: var(--line-height-1-7);
 }
 
 .rooms-directory__sidebar .availability-fields {
   grid-template-columns: minmax(0, 1fr);
-  gap: 1.1rem;
-  margin-block: 1.5rem;
+  gap: var(--space-1-1rem);
+  margin-block: var(--space-6);
 }
 
 .rooms-directory__sidebar .availability-field label {
-  font-size: 0.85rem;
+  font-size: var(--font-size-0-85rem);
 }
 
 .rooms-directory__sidebar .availability-field input {
   min-height: 48px;
   background: var(--color-background);
-  font-size: 0.95rem;
+  font-size: var(--font-size-0-95rem);
 }
 
 .rooms-directory__sidebar input[aria-invalid="true"] {
@@ -73,30 +72,29 @@
 
 .rooms-directory__sidebar .availability-error {
   margin: 0;
-  font-size: 0.8rem;
-  font-weight: 500;
-  line-height: 1.6;
+  font-size: var(--font-size-0-8rem);
+  font-weight: var(--font-weight-500);
+  line-height: var(--line-height-1-6);
 }
 
 .rooms-directory__search-actions {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .rooms-directory__search-actions .availability-button {
   width: 100%;
   min-height: 48px;
-  padding: 0.8rem;
+  padding: var(--space-0-8rem);
   border: 1px solid var(--color-gold-light);
   background: var(--color-gold-light);
   color: var(--color-primary);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: var(--font-size-0-9rem);
+  font-weight: var(--font-weight-700);
 }
 
-.rooms-directory__search-actions
-  .availability-button:hover:not(:disabled) {
-  background: #eed49d;
+.rooms-directory__search-actions .availability-button:hover:not(:disabled) {
+  background: var(--color-gold-hover);
   opacity: 1;
 }
 
@@ -104,22 +102,22 @@
   justify-content: center;
   width: 100%;
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--font-size-0-85rem);
 }
 
 .rooms-directory__search-help {
-  margin: 1.25rem 0 0;
+  margin: var(--space-1-25rem) 0 0;
   color: var(--color-text-muted);
-  font-size: 0.8rem;
-  line-height: 1.7;
+  font-size: var(--font-size-0-8rem);
+  line-height: var(--line-height-1-7);
 }
 
 .rooms-directory__content .availability-section-title,
 .rooms-directory__content .availability-results h2 {
-  margin: 0 0 0.65rem;
+  margin: 0 0 var(--space-0-65rem);
   color: var(--color-primary);
-  font-size: 1.45rem;
-  line-height: 1.35;
+  font-size: var(--font-size-1-45rem);
+  line-height: var(--line-height-1-35);
   text-align: left;
 }
 
@@ -131,8 +129,8 @@
 }
 
 .rooms-directory__content .rooms-intro {
-  margin: 0 0 1.5rem;
-  line-height: 1.7;
+  margin: 0 0 var(--space-6);
+  line-height: var(--line-height-1-7);
 }
 
 .rooms-directory__content .availability-results {
@@ -140,19 +138,19 @@
 }
 
 .rooms-directory__content .availability-summary {
-  margin: 0 0 0.85rem;
-  line-height: 1.7;
+  margin: 0 0 var(--space-0-85rem);
+  line-height: var(--line-height-1-7);
 }
 
 .rooms-directory__content .availability-results-grid {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
 }
 
 .rooms-directory .room-grid,
 .rooms-directory .availability-results-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 1.25rem;
+  gap: var(--space-1-25rem);
 }
 
 .rooms-directory .room-card,
@@ -164,9 +162,9 @@
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border-radius: var(--radius-0-65rem);
   background: var(--color-surface);
-  box-shadow: 0 3px 16px rgb(20 38 63 / 4%);
+  box-shadow: var(--shadow-2);
 }
 
 .rooms-directory .room-card-media {
@@ -186,20 +184,19 @@
 
 .rooms-directory .room-card-placeholder {
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1.25rem;
+  gap: var(--space-3);
+  padding: var(--space-1-25rem);
   text-align: center;
-  font-size: 0.85rem;
+  font-size: var(--font-size-0-85rem);
 }
 
 .rooms-directory .room-card-body {
   display: grid;
-  grid-template-columns:
-    minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1.25rem;
+  gap: var(--space-1-25rem);
   min-width: 0;
-  padding: 1.5rem;
+  padding: var(--space-6);
 }
 
 .rooms-directory .room-card-information,
@@ -208,24 +205,24 @@
 }
 
 .rooms-directory .room-card-information h3 {
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
   color: var(--color-primary);
-  font-size: 1.2rem;
-  line-height: 1.4;
+  font-size: var(--font-size-1-2rem);
+  line-height: var(--line-height-1-4);
   overflow-wrap: anywhere;
 }
 
 .rooms-directory .room-card-description {
-  margin: 0 0 1rem;
-  font-size: 0.9rem;
-  line-height: 1.7;
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-0-9rem);
+  line-height: var(--line-height-1-7);
   overflow-wrap: anywhere;
 }
 
 .rooms-directory .room-card-capacity {
   margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.6;
+  font-size: var(--font-size-0-85rem);
+  line-height: var(--line-height-1-6);
 }
 
 .rooms-directory .room-card-capacity svg {
@@ -236,52 +233,50 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .rooms-directory .room-card-price {
   display: grid;
-  gap: 0.2rem;
+  gap: var(--space-0-2rem);
   margin: 0;
   text-align: right;
 }
 
 .rooms-directory .room-card-price strong {
   color: var(--color-primary);
-  font-size: 1.3rem;
-  line-height: 1.3;
+  font-size: var(--font-size-1-3rem);
+  line-height: var(--line-height-1-3);
 }
 
 .rooms-directory .room-card-price span {
   color: var(--color-text-muted);
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-8rem);
 }
 
 .rooms-directory .outline-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: var(--space-0-45rem);
   min-height: 44px;
   margin-top: 0;
-  padding: 0.65rem 0.85rem;
+  padding: var(--space-0-65rem) var(--space-0-85rem);
   border: 1px solid var(--color-gold);
-  border-radius: 0.35rem;
-  background: #faf5e9;
+  border-radius: var(--radius-0-35rem);
+  background: var(--color-surface-warm);
   color: var(--color-primary);
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1.5;
+  font-size: var(--font-size-0-85rem);
+  font-weight: var(--font-weight-700);
+  line-height: var(--line-height-1-5);
 }
 
 .rooms-directory .outline-button:hover {
-  background: #f3e6c7;
+  background: var(--color-gold-soft);
   color: var(--color-primary);
 }
 
-.rooms-directory
-  .availability-result-card
-  > .room-card-image {
+.rooms-directory .availability-result-card > .room-card-image {
   width: 100%;
   height: 100%;
   min-height: 260px;
@@ -291,51 +286,51 @@
 
 .rooms-directory .availability-result-body {
   min-width: 0;
-  padding: 1.5rem;
+  padding: var(--space-6);
 }
 
 .rooms-directory .availability-result-heading h3 {
   color: var(--color-primary);
-  font-size: 1.2rem;
-  line-height: 1.4;
+  font-size: var(--font-size-1-2rem);
+  line-height: var(--line-height-1-4);
 }
 
 .rooms-directory .availability-result-body > p {
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-size: var(--font-size-0-9rem);
+  line-height: var(--line-height-1-6);
 }
 
 .rooms-directory .availability-total {
-  margin-top: 1rem;
-  padding-top: 0.85rem;
+  margin-top: var(--space-4);
+  padding-top: var(--space-0-85rem);
 }
 
 .rooms-directory .availability-total strong {
-  font-size: 1.3rem;
+  font-size: var(--font-size-1-3rem);
 }
 
 .rooms-directory .availability-booking-actions {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .rooms-directory .availability-disclaimer {
-  margin-top: 1.5rem;
-  font-size: 0.85rem;
+  margin-top: var(--space-6);
+  font-size: var(--font-size-0-85rem);
 }
 
 .rooms-directory__feedback {
-  padding: 1.5rem;
+  padding: var(--space-6);
   border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border-radius: var(--radius-0-65rem);
   background: var(--color-surface);
   color: var(--color-text-muted);
-  line-height: 1.7;
+  line-height: var(--line-height-1-7);
 }
 
 .rooms-directory__feedback h2 {
   margin-top: 0;
   color: var(--color-primary);
-  font-size: 1.3rem;
+  font-size: var(--font-size-1-3rem);
 }
 
 .rooms-directory a:focus-visible,
@@ -348,7 +343,7 @@
 @media (max-width: 1100px) {
   .rooms-directory .room-card-body {
     grid-template-columns: minmax(0, 1fr);
-    gap: 1rem;
+    gap: var(--space-4);
   }
 
   .rooms-directory .room-card-actions {
@@ -369,8 +364,7 @@
   }
 
   .rooms-directory__sidebar .availability-fields {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .rooms-directory__search-actions {
@@ -387,7 +381,7 @@
 @media (max-width: 640px) {
   .rooms-page.rooms-directory {
     width: calc(100% - 2rem);
-    padding-block: 2rem 3rem;
+    padding-block: var(--space-8) var(--space-12);
   }
 
   .rooms-directory__sidebar .availability-fields {
@@ -417,9 +411,7 @@
     min-height: 0;
   }
 
-  .rooms-directory
-    .availability-result-card
-    > .room-card-image {
+  .rooms-directory .availability-result-card > .room-card-image {
     height: auto;
     min-height: 0;
     aspect-ratio: 16 / 10;
@@ -427,6 +419,6 @@
 
   .rooms-directory .room-card-body,
   .rooms-directory .availability-result-body {
-    padding: 1.25rem;
+    padding: var(--space-1-25rem);
   }
 }

@@ -6,31 +6,31 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 1rem;
-  margin: 1.5rem 0;
+  gap: var(--space-1rem);
+  margin: var(--space-1-5rem) 0;
 }
 
 .audit-field {
   display: grid;
   flex: 1 1 12rem;
-  gap: 0.5rem;
+  gap: var(--space-0-5rem);
   min-width: 0;
 }
 
 .audit-field label,
 .audit-page-size label {
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
 }
 
 .audit-field input,
 .audit-page-size select {
   min-height: 44px;
   box-sizing: border-box;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid #9cabc2;
-  border-radius: 0.4rem;
-  background: #ffffff;
-  color: #15283f;
+  padding: var(--space-0-65rem) var(--space-0-75rem);
+  border: 1px solid var(--color-9cabc2);
+  border-radius: var(--radius-0-4rem);
+  background: var(--surface);
+  color: var(--color-15283f);
   font: inherit;
 }
 
@@ -46,7 +46,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-0-75rem);
 }
 
 .audit-filter-help {
@@ -56,7 +56,7 @@
 
 .audit-toolbar {
   justify-content: space-between;
-  margin: 1.5rem 0;
+  margin: var(--space-1-5rem) 0;
 }
 
 .audit-page button {
@@ -73,7 +73,7 @@
 }
 
 .audit-table caption {
-  padding: 0.75rem;
+  padding: var(--space-0-75rem);
   text-align: left;
 }
 
@@ -92,7 +92,7 @@
 
 .audit-pagination {
   justify-content: space-between;
-  margin-top: 1rem;
+  margin-top: var(--space-1rem);
 }
 
 .audit-page input:focus-visible,
@@ -100,7 +100,7 @@
 .audit-page button:focus-visible,
 .audit-table-scroll:focus-visible,
 .audit-results-summary:focus {
-  outline: 3px solid #946b21;
+  outline: 3px solid var(--color-946b21);
   outline-offset: 3px;
 }
 

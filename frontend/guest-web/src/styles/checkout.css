@@ -11,9 +11,9 @@
 .checkout-kicker {
   margin-top: var(--space-8);
   color: var(--color-text-muted);
-  font-weight: 700;
+  font-weight: var(--font-weight-700);
   letter-spacing: 0.12em;
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-8rem);
 }
 
 .checkout-grid {
@@ -48,12 +48,12 @@
 .checkout-legend {
   margin-bottom: var(--space-4);
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-9rem);
 }
 
 .checkout-fields > label {
   margin-top: var(--space-2);
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
 }
 
 .checkout-fields input:not([type="checkbox"]) {
@@ -71,13 +71,13 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-size: var(--font-size-0-9rem);
+  line-height: var(--line-height-1-6);
 }
 
 .checkout-consent input {
   flex-shrink: 0;
-  margin-top: 0.35rem;
+  margin-top: var(--space-0-35rem);
 }
 
 .checkout-button {
@@ -89,7 +89,7 @@
   background: var(--color-primary);
   color: var(--color-on-primary);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
   cursor: pointer;
 }
 
@@ -120,23 +120,23 @@
 
 .checkout-summary dd {
   margin: 0;
-  font-weight: 600;
+  font-weight: var(--font-weight-600);
   overflow-wrap: anywhere;
 }
 
 .checkout-total {
-  font-size: 1.15rem;
+  font-size: var(--font-size-1-15rem);
 }
 
 .checkout-note {
   color: var(--color-text-muted);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  font-size: var(--font-size-0-9rem);
+  line-height: var(--line-height-1-6);
 }
 
 .checkout-error {
   color: var(--color-danger);
-  line-height: 1.6;
+  line-height: var(--line-height-1-6);
 }
 
 .checkout-receipt {

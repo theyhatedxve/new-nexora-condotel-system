@@ -1,6 +1,6 @@
 .guest-footer {
   margin-top: auto;
-  border-top: 1px solid rgb(217 187 124 / 25%);
+  border-top: 1px solid var(--color-rgb-217-187-124-25);
   background: var(--color-primary);
   color: var(--color-on-primary);
 }
@@ -16,8 +16,8 @@
     minmax(0, 1.5fr)
     minmax(0, 0.75fr)
     minmax(0, 1fr);
-  gap: 3rem;
-  padding-block: 3rem;
+  gap: var(--space-12);
+  padding-block: var(--space-12);
 }
 
 .guest-footer__brand,
@@ -28,7 +28,7 @@
 
 .guest-footer__logo-link {
   display: inline-flex;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-0-25rem);
 }
 
 .guest-footer__logo {
@@ -39,24 +39,24 @@
 }
 
 .guest-footer__brand > p {
-  margin: 0.75rem 0 0;
-  color: #d7e0ed;
-  font-size: 0.95rem;
-  line-height: 1.7;
+  margin: var(--space-3) 0 0;
+  color: var(--color-d7e0ed);
+  font-size: var(--font-size-0-95rem);
+  line-height: var(--line-height-1-7);
 }
 
 .guest-footer__navigation h2,
 .guest-footer__booking h2 {
-  margin: 0.75rem 0 1rem;
+  margin: var(--space-3) 0 var(--space-4);
   color: var(--color-on-primary);
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.4;
+  font-size: var(--font-size-1rem);
+  font-weight: var(--font-weight-700);
+  line-height: var(--line-height-1-4);
 }
 
 .guest-footer__links {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -66,10 +66,10 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding-block: 0.5rem;
-  color: #d7e0ed;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  padding-block: var(--space-2);
+  color: var(--color-d7e0ed);
+  font-size: var(--font-size-0-95rem);
+  line-height: var(--line-height-1-5);
 }
 
 .guest-footer__links a:hover {
@@ -80,22 +80,22 @@
 
 .guest-footer__booking > p {
   max-width: 300px;
-  margin: 0 0 0.5rem;
-  color: #d7e0ed;
-  font-size: 0.95rem;
-  line-height: 1.75;
+  margin: 0 0 var(--space-2);
+  color: var(--color-d7e0ed);
+  font-size: var(--font-size-0-95rem);
+  line-height: var(--line-height-1-75);
 }
 
 .guest-footer__booking-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 44px;
-  padding-block: 0.5rem;
+  padding-block: var(--space-2);
   color: var(--color-gold-light);
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.5;
+  font-size: var(--font-size-0-95rem);
+  font-weight: var(--font-weight-700);
+  line-height: var(--line-height-1-5);
 }
 
 .guest-footer__booking-link:hover {
@@ -104,15 +104,15 @@
 }
 
 .guest-footer__bottom {
-  padding-block: 1.25rem;
-  border-top: 1px solid rgb(255 255 255 / 15%);
+  padding-block: var(--space-1-25rem);
+  border-top: 1px solid var(--color-rgb-255-255-255-15);
 }
 
 .guest-footer__bottom p {
   margin: 0;
-  color: #c5d1e2;
-  font-size: 0.8rem;
-  line-height: 1.7;
+  color: var(--color-c5d1e2);
+  font-size: var(--font-size-0-8rem);
+  line-height: var(--line-height-1-7);
 }
 
 .guest-footer a:focus-visible {
@@ -126,10 +126,9 @@
   }
 
   .guest-footer__grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-    gap: 2rem;
-    padding-block: 2.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8);
+    padding-block: var(--space-2-5rem);
   }
 
   .guest-footer__brand {
@@ -149,7 +148,7 @@
 @media (max-width: 420px) {
   .guest-footer__grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.75rem;
+    gap: var(--space-1-75rem);
   }
 
   .guest-footer__brand {

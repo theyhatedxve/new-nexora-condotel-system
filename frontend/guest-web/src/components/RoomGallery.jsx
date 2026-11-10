@@ -1,55 +1,24 @@
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
+import { toApiUrl } from "../services/api.js";
+import useRoomGallery from "../hooks/useRoomGallery.js";
 
-import {
-  ChevronLeft,
-  ChevronRight,
-  ImageOff,
-} from "lucide-react";
-
-import {
-  toApiUrl,
-} from "../services/api.js";
-
-function RoomGallery({
-  roomName,
-  images,
-  status,
-  onRetry,
-}) {
-  const [selectedId, setSelectedId] =
-    useState(null);
-
-  const [failedIds, setFailedIds] =
-    useState([]);
-
-  function markFailed(imageId) {
-    setFailedIds((previous) =>
-      previous.includes(imageId)
-        ? previous
-        : [...previous, imageId],
-    );
-  }
-
-  const selectedIndex = Math.max(
-    0,
-    images.findIndex(
-      (image) => image.id === selectedId,
-    ),
-  );
-
-  const selected = images[selectedIndex];
+function RoomGallery({ roomName, images, status, onRetry }) {
+  const {
+    previousImage,
+    nextImage,
+    selectImage,
+    failedIds,
+    markFailed,
+    selectedIndex,
+    selected,
+    selectedFailed,
+  } = useRoomGallery({ images, status });
 
   if (status === "error" || !selected) {
     return (
-      <section
-        className="room-gallery-view"
-        aria-label={`${roomName} photographs`}
-      >
+      <section className="room-gallery-view" aria-label={`${roomName} photographs`}>
         <div className="room-gallery-view__empty">
-          <ImageOff
-            size={38}
-            aria-hidden="true"
-          />
+          <ImageOff size={38} aria-hidden="true" />
 
           <p>
             {status === "error"
@@ -71,21 +40,12 @@ function RoomGallery({
     );
   }
 
-  const selectedFailed =
-    failedIds.includes(selected.id);
-
   return (
-    <section
-      className="room-gallery-view"
-      aria-label={`${roomName} photographs`}
-    >
+    <section className="room-gallery-view" aria-label={`${roomName} photographs`}>
       <div className="room-gallery-view__main">
         {selectedFailed ? (
           <div className="room-gallery-view__empty">
-            <ImageOff
-              size={38}
-              aria-hidden="true"
-            />
+            <ImageOff size={38} aria-hidden="true" />
 
             <p>This photo is unavailable.</p>
 
@@ -101,17 +61,10 @@ function RoomGallery({
           <img
             key={selected.id}
             src={toApiUrl(selected.url)}
-            alt={
-              selected.altText ||
-              `${roomName}, photo ${
-                selectedIndex + 1
-              }`
-            }
+            alt={selected.altText || `${roomName}, photo ${selectedIndex + 1}`}
             decoding="async"
             className="room-gallery-view__image"
-            onError={() =>
-              markFailed(selected.id)
-            }
+            onError={() => markFailed(selected.id)}
           />
         )}
       </div>
@@ -121,43 +74,26 @@ function RoomGallery({
           type="button"
           className="room-gallery-view__control"
           disabled={selectedIndex === 0}
-          onClick={() =>
-            setSelectedId(
-              images[selectedIndex - 1].id,
-            )
-          }
+          onClick={previousImage}
           aria-label="Previous room photo"
         >
-          <ChevronLeft
-            size={20}
-            aria-hidden="true"
-          />
+          <ChevronLeft size={20} aria-hidden="true" />
           <span>Previous</span>
         </button>
 
         <p role="status">
-          Photo {selectedIndex + 1} of{" "}
-          {images.length}
+          Photo {selectedIndex + 1} of {images.length}
         </p>
 
         <button
           type="button"
           className="room-gallery-view__control"
-          disabled={
-            selectedIndex === images.length - 1
-          }
-          onClick={() =>
-            setSelectedId(
-              images[selectedIndex + 1].id,
-            )
-          }
+          disabled={selectedIndex === images.length - 1}
+          onClick={nextImage}
           aria-label="Next room photo"
         >
           <span>Next</span>
-          <ChevronRight
-            size={20}
-            aria-hidden="true"
-          />
+          <ChevronRight size={20} aria-hidden="true" />
         </button>
       </div>
 
@@ -172,30 +108,19 @@ function RoomGallery({
               key={image.id}
               type="button"
               className="room-gallery-view__thumbnail"
-              aria-pressed={
-                image.id === selected.id
-              }
-              aria-label={`Show photo ${
-                index + 1
-              } of ${roomName}`}
-              onClick={() =>
-                setSelectedId(image.id)
-              }
+              aria-pressed={image.id === selected.id}
+              aria-label={`Show photo ${index + 1} of ${roomName}`}
+              onClick={() => selectImage(image.id)}
             >
               {failedIds.includes(image.id) ? (
-                <ImageOff
-                  size={24}
-                  aria-hidden="true"
-                />
+                <ImageOff size={24} aria-hidden="true" />
               ) : (
                 <img
                   src={toApiUrl(image.url)}
                   alt=""
                   loading="lazy"
                   decoding="async"
-                  onError={() =>
-                    markFailed(image.id)
-                  }
+                  onError={() => markFailed(image.id)}
                 />
               )}
             </button>
@@ -205,5 +130,4 @@ function RoomGallery({
     </section>
   );
 }
-
 export default RoomGallery;

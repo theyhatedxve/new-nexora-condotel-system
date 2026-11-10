@@ -1,14 +1,8 @@
 import { Link } from "react-router";
-
 import { useStaffData } from "../hooks/useStaffData";
-
-import {
-  listStaffRoomTypes,
-} from "../services/roomTypesApi";
-
+import { listStaffRoomTypes } from "../services/roomTypesApi";
 import StaffDataState from "../components/StaffDataState";
 import RoomTypeManagement from "../components/RoomTypeManagement";
-
 import { formatPesos } from "../utils/formatters";
 
 export default function RoomTypes() {
@@ -19,38 +13,26 @@ export default function RoomTypes() {
       <Link to="/rooms">Return to rooms</Link>
 
       <div className="records-heading">
-        <h1 id="room-types-title">
-          Room types and rates
-        </h1>
+        <h1 id="room-types-title">Room types and rates</h1>
 
-        <button
-          type="button"
-          onClick={records.reload}
-          disabled={records.loading}
-        >
+        <button type="button" onClick={records.reload} disabled={records.loading}>
           Refresh room types
         </button>
       </div>
 
       <p>
-        Room types define the description, capacity, and
-        current base nightly rate shared by physical rooms.
-        Creating a type does not create physical rooms.
+        Room types define the description, capacity, and current base nightly rate shared
+        by physical rooms. Creating a type does not create physical rooms.
       </p>
 
-      <StaffDataState
-        state={records}
-        label="Room types"
-      />
+      <StaffDataState state={records} label="Room types" />
 
       {records.status === "ready" && (
         <>
           <p>{records.data.length} room types found.</p>
 
           {records.data.length === 0 ? (
-            <p role="status">
-              No room types found for this property.
-            </p>
+            <p role="status">No room types found for this property.</p>
           ) : (
             <div
               className="records-scroll"
@@ -59,9 +41,7 @@ export default function RoomTypes() {
               tabIndex={0}
             >
               <table className="records-table">
-                <caption>
-                  Active and inactive room types
-                </caption>
+                <caption>Active and inactive room types</caption>
 
                 <thead>
                   <tr>
@@ -78,15 +58,11 @@ export default function RoomTypes() {
                     <tr key={item.id}>
                       <th scope="row">{item.name}</th>
 
-                      <td>
-                        {item.description || "Not recorded"}
-                      </td>
+                      <td>{item.description || "Not recorded"}</td>
 
                       <td>{item.capacity}</td>
 
-                      <td>
-                        {formatPesos(item.baseRateCentavos)}
-                      </td>
+                      <td>{formatPesos(item.baseRateCentavos)}</td>
 
                       <td>{item.isActive ? "Yes" : "No"}</td>
                     </tr>

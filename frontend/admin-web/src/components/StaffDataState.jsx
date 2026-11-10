@@ -1,15 +1,8 @@
-export default function StaffDataState({
-  state,
-  label,
-}) {
+export default function StaffDataState({ state, label }) {
   if (state.status === "ready") return null;
 
   if (state.status === "loading") {
-    return (
-      <p role="status">
-        Loading {label}…
-      </p>
-    );
+    return <p role="status">Loading {label}…</p>;
   }
 
   const message =
@@ -25,10 +18,7 @@ export default function StaffDataState({
     <div className="feedback">
       <p role="alert">{message}</p>
 
-      <button
-        type="button"
-        onClick={state.reload}
-      >
+      <button type="button" onClick={state.reload}>
         Try again
       </button>
     </div>
