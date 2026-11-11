@@ -1,18 +1,28 @@
 # NEXORA — Development Reference and Completion Checklist
 
-**Last synchronized:** 2026-11-06. Paths are relative to D:\Web-JSX\NEXORA unless an isolated path is explicitly named.
+**Last synchronized:** 2026-11-11 (Admin Dashboard redesign completion). Paths are relative to D:\Web-JSX\NEXORA unless an isolated path is explicitly named.
+
+**Admin Dashboard redesign:** COMPLETED, as confirmed by the owner on
+2026-11-11. This records owner-confirmed redesign completion; it does not imply
+new test results or change the status of other project work.
+
+**Latest source checkpoint:** Guest-web, admin-web, and backend responsibility
+refactors are present in the main directory. See section K and the
+[current directory updates](DIRECTORY_STRUCTURE.md#21-current-refactor-directory-updates-2026-11-10).
+This structural update does not change the owner-confirmed roadmap or establish
+new runtime acceptance.
 
 **Current owner-confirmed roadmap (2026-11-06):** Phases 1-8 and 10 are
 COMPLETED. Phase 9 (NFC) is POSTPONED. Phase 11 is PAUSED and incomplete;
 Steps 11.1-11.2 are tentative owner recollection. Phase 12 is DEFERRED.
 The owner explicitly prioritized UI/UX redesign over proceeding with Phases 11/12.
 
-**Current work:** Guest-web UI/UX redesign in the main project after completed
+**UI work checkpoint (2026-11-06):** Guest-web UI/UX redesign in the main project after completed
 isolated backend/frontend transfer. Screens 4-6, 7 (Find Booking), 10 (My Booking)
 and 11 (About) are owner-accepted. Screen 12 Contact is installed with fictional
 sample details and awaits owner-run acceptance results.
 
-**Current continuation checkpoint:** Check Contact at /contact before advancing
+**UI continuation checkpoint (2026-11-06):** Check Contact at /contact before advancing
 to the proposed Screen 13 Policies. Screens 8-9 guest Login/Register require a
 separate scope review. See [section J](#j-current-checkpoint---guest-web-uiux-redesign-2026-11-06).
 Do not resume Phase 11/12 or treat page acceptance as phase completion.
@@ -1026,3 +1036,39 @@ This request authorizes docs/AGENTS.md only. No other Markdown or application
 file is changed by this documentation update. AI_HANDOFF.md and older guides
 may retain stale checkpoints; use this section and current owner instructions
 for continuation, and the architecture/coding guides for system requirements.
+
+## K. Responsibility Separation Checkpoint (2026-11-10)
+
+The same behavior-preserving refactor was applied to guest-web, admin-web, and
+the backend. The changes organize existing code; they do not introduce new
+business rules, routes, database models, or UI designs.
+
+| Application | Current file organization |
+|---|---|
+| Guest web | `src/hooks/` contains state/effects/handlers; `components/rooms/`, `checkout/`, and `booking/` contain extracted presentation; `constants/` holds fixed content; `utils/` holds focused helpers; `styles/tokens.css` holds existing visual values |
+| Admin web | `src/hooks/` contains screen/form/session/layout coordination; feature folders under `components/` contain presentation; existing `auth/` retains context and route guards; `constants/`, `utils/`, and `styles/tokens.css` separate definitions and visual values |
+| Backend | Existing controllers/DTOs retain HTTP validation; services retain authorization and transaction orchestration; 25 feature-local files separate types, policies, projections, validation, refund settlement, and reconciliation helpers |
+
+Guest component CSS was relocated to `styles/availability-search.css`,
+`styles/featured-rooms.css`, and `styles/home-stay-search.css`. Other screen CSS
+remains in place. Frontend API clients remain in their existing service folders.
+Backend helper extraction preserves original service exports where needed and
+passes the same transaction clients to extracted database helpers.
+
+Verification records, with their original limitations:
+
+- [Guest refactor record](superpowers/plans/2026-11-10-guest-web-refactor.md):
+  records lint/build, 14 helper tests, markup/CSS comparison, and source review.
+  Full browser and live payment acceptance were not established.
+- [Admin refactor record](superpowers/plans/2026-11-10-admin-web-refactor.md):
+  records lint/build, 15 helper tests, markup/CSS/state-handler comparison, and
+  source review. The existing bundle-size warning remains; live staff/payment
+  operations were not exercised.
+- [Backend refactor record](superpowers/plans/2026-11-10-backend-refactor.md):
+  source comparison and independent review found no identified behavior changes.
+  Backend tests, lint, build, database operations, and provider calls were not run.
+  Owner verification remains pending.
+
+This Markdown synchronization only updates directory/refactor documentation.
+It does not rerun the recorded checks, change application code, or advance
+Phases 9, 11, or 12.
