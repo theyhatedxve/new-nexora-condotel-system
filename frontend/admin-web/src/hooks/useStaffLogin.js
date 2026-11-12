@@ -1,47 +1,39 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import { useAuth } from "../auth/useAuth";
+import { getSession } from "../services/authApi";
 
 export default function useStaffLogin() {
   const { status, user, message, signIn, signOut, retry } = useAuth();
-
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
-
   const [password, setPassword] = useState("");
-
-  if (status === "authenticated") {
-    return {
-      status,
-      user,
-      message,
-      email,
-      password,
-      retrySession,
-      changeEmail,
-      changePassword,
-    };
-  }
-
-  if (status !== "anonymous") {
-    return {
-      status,
-      user,
-      message,
-      email,
-      password,
-      retrySession,
-      changeEmail,
-      changePassword,
-    };
-  }
+  const submitting = useRef(false);
 
   async function submit(event) {
     event.preventDefault();
 
-    const submittedPassword = password;
+    if (submitting.current || status !== "anonymous") return;
 
+    const submittedEmail = email.trim();
+    const submittedPassword = password;
+    submitting.current = true;
     setPassword("");
 
-    await signIn(email.trim(), submittedPassword);
+    try {
+      const result = await signIn(submittedEmail, submittedPassword);
+
+      if (
+        result?.passwordChangeRequired &&
+        getSession().status === "anonymous"
+      ) {
+        navigate("/staff/change-temporary-password", {
+          state: { email: submittedEmail },
+        });
+      }
+    } finally {
+      submitting.current = false;
+    }
   }
 
   function retrySession() {
@@ -49,11 +41,11 @@ export default function useStaffLogin() {
   }
 
   function changeEmail(event) {
-    return setEmail(event.target.value);
+    setEmail(event.target.value);
   }
 
   function changePassword(event) {
-    return setPassword(event.target.value);
+    setPassword(event.target.value);
   }
 
   return {
