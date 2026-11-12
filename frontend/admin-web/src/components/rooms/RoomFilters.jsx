@@ -1,3 +1,4 @@
+import { Search, SlidersHorizontal } from "lucide-react";
 import { ROOM_LIST_STATUSES } from "../../services/roomsApi";
 import { formatStatus } from "../../utils/formatters";
 import useRoomFilters from "../../hooks/useRoomFilters.js";
@@ -21,21 +22,64 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
   });
 
   return (
-    <form className="room-filters" onSubmit={submit}>
-      {error && <p role="alert">{error}</p>}
-
+    <form
+      className="room-filters"
+      onSubmit={submit}
+      aria-describedby="room-filter-help"
+    >
       <fieldset className="room-filter-fields">
-        <legend>Filter physical rooms</legend>
+        <legend>
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          Filter physical rooms
+        </legend>
+
+        {error && (
+          <p className="rooms-screen__filter-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div className="rooms-screen__search-field">
+          <label htmlFor="room-number-filter">Room number</label>
+
+          <div className="rooms-screen__search-control">
+            <Search size={18} aria-hidden="true" />
+
+            <input
+              id="room-number-filter"
+              type="search"
+              placeholder="Search room number"
+              maxLength={30}
+              value={draft.q}
+              onChange={changeQ}
+            />
+          </div>
+        </div>
 
         <div>
-          <label htmlFor="room-number-filter">Room number</label>
-          <input
-            id="room-number-filter"
-            type="search"
-            maxLength={30}
-            value={draft.q}
-            onChange={changeQ}
-          />
+          <label htmlFor="room-type-filter">Room type</label>
+
+          <select
+            id="room-type-filter"
+            value={draft.roomTypeId}
+            disabled={catalog.status !== "ready"}
+            onChange={changeRoomTypeId}
+          >
+            <option value="">All room types</option>
+
+            {selectedTypeMissing && (
+              <option value={draft.roomTypeId}>
+                Selected type not found in current catalog
+              </option>
+            )}
+
+            {types.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.name}
+                {type.isActive ? "" : " — inactive"}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -65,31 +109,6 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
         </div>
 
         <div>
-          <label htmlFor="room-type-filter">Room type</label>
-          <select
-            id="room-type-filter"
-            value={draft.roomTypeId}
-            disabled={catalog.status !== "ready"}
-            onChange={changeRoomTypeId}
-          >
-            <option value="">All room types</option>
-
-            {selectedTypeMissing && (
-              <option value={draft.roomTypeId}>
-                Selected type not found in current catalog
-              </option>
-            )}
-
-            {types.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-                {type.isActive ? "" : " — inactive"}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
           <label htmlFor="room-page-size">Records per page</label>
           <select id="room-page-size" value={draft.limit} onChange={changeLimit}>
             <option value="20">20</option>
@@ -98,12 +117,24 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
         </div>
 
         <div className="actions room-filter-actions">
-          <button type="submit">Apply filters</button>
+          <button type="submit" className="rooms-screen__primary">
+            <Search size={16} aria-hidden="true" />
+            Apply filters
+          </button>
 
-          <button type="button" onClick={onClear}>
+          <button
+            type="button"
+            className="rooms-screen__secondary"
+            onClick={onClear}
+          >
             Clear filters
           </button>
         </div>
+
+        <p id="room-filter-help" className="rooms-screen__filter-help">
+          Apply filters to update the results. Room-type choices come from the
+          current physical-room catalog.
+        </p>
       </fieldset>
     </form>
   );

@@ -1,4 +1,4 @@
-import RoomChangeReview from "./RoomChangeReview";
+﻿import RoomChangeReview from "./RoomChangeReview";
 import useRoomTypeManagement from "../hooks/useRoomTypeManagement.js";
 
 export default function RoomTypeManagement({ records }) {
@@ -22,94 +22,140 @@ export default function RoomTypeManagement({ records }) {
 
   return (
     <section
-      className="record-section room-management"
+      className="record-section room-management room-types-screen__management"
       aria-labelledby="type-management-title"
     >
-      <h2 id="type-management-title">Create or edit a room type</h2>
+      <h2 id="type-management-title" tabIndex={-1}>
+        Create or edit a room type
+      </h2>
 
-      <p>
-        Changes to current rates do not recalculate existing reservation prices. Capacity
-        and deactivation requests are checked against existing commitments.
+      <p className="room-types-screen__muted">
+        Choose an existing room type to edit, or select “Create a new room type.”
+        Changes to capacity and active state are checked against existing
+        commitments.
       </p>
 
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="room-types-screen__error" role="alert">
+          {error}
+        </p>
+      )}
 
       <form onSubmit={prepare}>
-        <fieldset className="action-fields" disabled={change.disabled}>
-          <legend>{roomTypeId ? "Edit room type" : "New room type"}</legend>
+        <fieldset
+          className="action-fields room-types-screen__fields"
+          disabled={change.disabled}
+        >
+          <legend>
+            {roomTypeId ? "Edit room type" : "New room type"}
+          </legend>
 
-          <label htmlFor="managed-room-type">Room type to manage</label>
-          <select id="managed-room-type" value={roomTypeId} onChange={changeSelectedType}>
-            <option value="">Create a new room type</option>
+          <div className="room-types-screen__full-width">
+            <label htmlFor="managed-room-type">Room type to manage</label>
 
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-                {item.isActive ? "" : " — inactive"}
-              </option>
-            ))}
-          </select>
+            <select
+              id="managed-room-type"
+              value={roomTypeId}
+              onChange={changeSelectedType}
+            >
+              <option value="">Create a new room type</option>
 
-          {roomTypeId ? (
-            <button type="button" disabled={!current} onClick={reloadSelectedType}>
-              Load current room-type values
-            </button>
-          ) : (
-            <button type="button" onClick={startNewType}>
-              Clear new-type inputs
-            </button>
-          )}
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                  {item.isActive ? "" : " — inactive"}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <label htmlFor="type-name">Name</label>
-          <input
-            id="type-name"
-            required
-            maxLength={100}
-            value={draft.name}
-            onChange={changeName}
-          />
+          <div className="room-types-screen__full-width">
+            {roomTypeId ? (
+              <button
+                type="button"
+                className="room-types-screen__secondary"
+                disabled={!current}
+                onClick={reloadSelectedType}
+              >
+                Load current room-type values
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="room-types-screen__secondary"
+                onClick={startNewType}
+              >
+                Clear new-type inputs
+              </button>
+            )}
+          </div>
 
-          <label htmlFor="type-description">Description</label>
-          <textarea
-            id="type-description"
-            maxLength={2000}
-            rows={4}
-            value={draft.description}
-            onChange={changeDescription}
-          />
+          <div className="room-types-screen__full-width">
+            <label htmlFor="type-name">Name</label>
 
-          <label htmlFor="type-capacity">Guest capacity</label>
-          <input
-            id="type-capacity"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]+"
-            required
-            maxLength={10}
-            value={draft.capacity}
-            onChange={changeCapacity}
-          />
+            <input
+              id="type-name"
+              required
+              maxLength={100}
+              value={draft.name}
+              onChange={changeName}
+            />
+          </div>
 
-          <label htmlFor="type-rate">Base nightly rate in PHP</label>
-          <input
-            id="type-rate"
-            type="text"
-            inputMode="decimal"
-            pattern="[0-9]+([.][0-9]{1,2})?"
-            required
-            maxLength={11}
-            aria-describedby="type-rate-help"
-            value={draft.nightlyRate}
-            onChange={changeNightlyRate}
-          />
+          <div className="room-types-screen__full-width">
+            <label htmlFor="type-description">Description</label>
 
-          <p id="type-rate-help">
-            Use up to two decimal places, without commas. Example: 2500.50.
-          </p>
+            <textarea
+              id="type-description"
+              maxLength={2000}
+              rows={4}
+              value={draft.description}
+              onChange={changeDescription}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="type-capacity">Guest capacity</label>
+
+            <input
+              id="type-capacity"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]+"
+              required
+              maxLength={10}
+              value={draft.capacity}
+              onChange={changeCapacity}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="type-rate">Base nightly rate in PHP</label>
+
+            <input
+              id="type-rate"
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9]+([.][0-9]{1,2})?"
+              required
+              maxLength={11}
+              aria-describedby="type-rate-help"
+              value={draft.nightlyRate}
+              onChange={changeNightlyRate}
+            />
+
+            <p
+              id="type-rate-help"
+              className="room-types-screen__field-help"
+            >
+              Use up to two decimal places, without commas. Example: 2500.50.
+            </p>
+          </div>
 
           {roomTypeId && (
-            <>
+            <div>
               <label htmlFor="type-active">Room type active</label>
+
               <select
                 id="type-active"
                 value={draft.isActive ? "yes" : "no"}
@@ -118,19 +164,26 @@ export default function RoomTypeManagement({ records }) {
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
               </select>
-            </>
+            </div>
           )}
 
-          <button type="submit">
-            {roomTypeId ? "Review room-type edit" : "Review new room type"}
-          </button>
+          <div className="room-types-screen__full-width">
+            <button
+              type="submit"
+              className="room-types-screen__primary"
+            >
+              {roomTypeId
+                ? "Review room-type edit"
+                : "Review new room type"}
+            </button>
+          </div>
         </fieldset>
       </form>
 
       <RoomChangeReview
         change={change}
         reviewMessage={
-          "Fresh room types are loaded. Compare the table " +
+          "Fresh room types are loaded. Compare the catalog " +
           "with the requested name, description, capacity, " +
           "nightly rate, and active state."
         }
