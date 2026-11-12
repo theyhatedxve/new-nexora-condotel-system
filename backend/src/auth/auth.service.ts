@@ -70,13 +70,38 @@ export class AuthService {
 
     const refreshToken = generateRefreshToken();
 
-    await this.prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        familyId: randomUUID(),
-        tokenHash: hashRefreshToken(refreshToken),
-        expiresAt: getRefreshExpiry(),
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        UPDATE "User"
+        SET "sessionVersion" = "sessionVersion"
+        WHERE "id" = ${user.id}
+      `;
+
+      const eligible = await tx.user.findFirst({
+        where: {
+          id: user.id,
+          status: 'ACTIVE',
+          mustChangePassword: false,
+          sessionVersion: user.sessionVersion,
+          passwordHash: user.passwordHash,
+        },
+        select: { id: true },
+      });
+
+      if (!eligible) {
+        throw new UnauthorizedException(
+          'Account access changed. Sign in again.',
+        );
+      }
+
+      await tx.refreshToken.create({
+        data: {
+          userId: user.id,
+          familyId: randomUUID(),
+          tokenHash: hashRefreshToken(refreshToken),
+          expiresAt: getRefreshExpiry(),
+        },
+      });
     });
 
     const accessToken = await this.createAccessToken(

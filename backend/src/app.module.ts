@@ -45,6 +45,7 @@ import {
 import {
   SettingsModule,
 } from './settings/settings.module.js';
+import { UsersModule } from './users/users.module.js';
 
 @Module({
   imports: [PrismaModule, ThrottlerModule.forRoot([
@@ -65,7 +66,8 @@ import {
   GuestsModule,
   ReportsModule,
   AuditModule,
-  SettingsModule
+  SettingsModule,
+  UsersModule,
 ],
   controllers: [AppController],
   providers: [AppService, {
