@@ -1,12 +1,23 @@
-import { type AuthResult } from './auth.types.js';
-import { hashRefreshToken, getRefreshExpiry } from './refresh-token.js';
-
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+﻿import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
+
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PasswordService } from './password.service.js';
-import { ACCESS_TOKEN_SECONDS, generateRefreshToken } from './auth.config.js';
+import {
+  ACCESS_TOKEN_SECONDS,
+  generateRefreshToken,
+} from './auth.config.js';
+import {
+  hashRefreshToken,
+  getRefreshExpiry,
+} from './refresh-token.js';
+
+import type { AuthResult } from './auth.types.js';
 import type { LoginDto } from './dto/login.dto.js';
 
 @Injectable()
@@ -17,10 +28,14 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private async createAccessToken(userId: string): Promise<string> {
+  private async createAccessToken(
+    userId: string,
+    sessionVersion: number,
+  ): Promise<string> {
     return this.jwtService.signAsync({
       sub: userId,
       jti: randomUUID(),
+      sv: sessionVersion,
     });
   }
 
@@ -32,11 +47,8 @@ export class AuthService {
       include: { role: true },
     });
 
-    // Keep credential failures indistinguishable to callers.
     if (!user || user.status !== 'ACTIVE') {
-      throw new UnauthorizedException(
-        'Invalid email or password.',
-      );
+      throw new UnauthorizedException('Invalid email or password.');
     }
 
     const passwordMatches =
@@ -46,9 +58,14 @@ export class AuthService {
       );
 
     if (!passwordMatches) {
-      throw new UnauthorizedException(
-        'Invalid email or password.',
-      );
+      throw new UnauthorizedException('Invalid email or password.');
+    }
+
+    if (user.mustChangePassword) {
+      throw new ForbiddenException({
+        code: 'PASSWORD_CHANGE_REQUIRED',
+        message: 'Change your temporary password before signing in.',
+      });
     }
 
     const refreshToken = generateRefreshToken();
@@ -62,7 +79,10 @@ export class AuthService {
       },
     });
 
-    const accessToken = await this.createAccessToken(user.id);
+    const accessToken = await this.createAccessToken(
+      user.id,
+      user.sessionVersion,
+    );
 
     return {
       accessToken,
@@ -78,61 +98,44 @@ export class AuthService {
     };
   }
 
-  async refresh(rawToken: string | undefined): Promise<AuthResult> {
+  async refresh(
+    rawToken: string | undefined,
+  ): Promise<AuthResult> {
     if (!rawToken || !/^[a-f0-9]{64}$/.test(rawToken)) {
-      throw new UnauthorizedException(
-        'Invalid refresh session.',
-      );
+      throw new UnauthorizedException('Invalid refresh session.');
     }
 
-    const tokenHash = hashRefreshToken(rawToken);
-
     const existing = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash },
+      where: { tokenHash: hashRefreshToken(rawToken) },
     });
 
     if (!existing || !existing.familyId) {
-      throw new UnauthorizedException(
-        'Invalid refresh session.',
-      );
+      throw new UnauthorizedException('Invalid refresh session.');
     }
 
+    const familyId = existing.familyId;
     const now = new Date();
 
-    // Reuse of a previously rotated token invalidates its family.
-    if (existing.revokedAt) {
-      await this.revokeFamily(existing.familyId);
-
-      throw new UnauthorizedException(
-        'Invalid refresh session.',
-      );
-    }
-
-    if (existing.expiresAt <= now) {
-      await this.revokeFamily(existing.familyId);
-
-      throw new UnauthorizedException(
-        'Invalid refresh session.',
-      );
+    if (existing.revokedAt || existing.expiresAt <= now) {
+      await this.revokeFamily(familyId);
+      throw new UnauthorizedException('Invalid refresh session.');
     }
 
     const user = await this.prisma.user.findUnique({
       where: { id: existing.userId },
     });
 
-    if (!user || user.status !== 'ACTIVE') {
-      await this.revokeFamily(existing.familyId);
-
-      throw new UnauthorizedException(
-        'Invalid refresh session.',
-      );
+    if (
+      !user ||
+      user.status !== 'ACTIVE' ||
+      user.mustChangePassword
+    ) {
+      await this.revokeFamily(familyId);
+      throw new UnauthorizedException('Invalid refresh session.');
     }
 
     const nextRefreshToken = generateRefreshToken();
-    const nextTokenHash = hashRefreshToken(nextRefreshToken);
 
-    // An atomic conditional update ensures only one request
-    // can consume the same refresh credential.
     const rotated = await this.prisma.$transaction(async (tx) => {
       const consumed = await tx.refreshToken.updateMany({
         where: {
@@ -140,20 +143,33 @@ export class AuthService {
           revokedAt: null,
           expiresAt: { gt: now },
         },
-        data: {
-          revokedAt: now,
-        },
+        data: { revokedAt: now },
       });
 
       if (consumed.count !== 1) {
         return false;
       }
 
+      // Recheck after obtaining the transactional write lock.
+      const eligible = await tx.user.findFirst({
+        where: {
+          id: user.id,
+          status: 'ACTIVE',
+          mustChangePassword: false,
+          sessionVersion: user.sessionVersion,
+        },
+        select: { id: true },
+      });
+
+      if (!eligible) {
+        return false;
+      }
+
       await tx.refreshToken.create({
         data: {
-          userId: existing.userId,
-          familyId: existing.familyId,
-          tokenHash: nextTokenHash,
+          userId: user.id,
+          familyId,
+          tokenHash: hashRefreshToken(nextRefreshToken),
           expiresAt: getRefreshExpiry(),
         },
       });
@@ -162,14 +178,14 @@ export class AuthService {
     });
 
     if (!rotated) {
-      await this.revokeFamily(existing.familyId);
-
-      throw new UnauthorizedException(
-        'Invalid refresh session.',
-      );
+      await this.revokeFamily(familyId);
+      throw new UnauthorizedException('Invalid refresh session.');
     }
 
-    const accessToken = await this.createAccessToken(user.id);
+    const accessToken = await this.createAccessToken(
+      user.id,
+      user.sessionVersion,
+    );
 
     return {
       accessToken,
@@ -179,33 +195,22 @@ export class AuthService {
     };
   }
 
-    async logout(rawToken: string | undefined): Promise<void> {
-    // Missing or malformed cookies should not expose
-    // information about whether a session exists.
+  async logout(rawToken: string | undefined): Promise<void> {
     if (!rawToken || !/^[a-f0-9]{64}$/.test(rawToken)) {
-        return;
+      return;
     }
-
-    // Reuse the same hashing method as login and refresh.
-    const tokenHash = hashRefreshToken(rawToken);
 
     const existing = await this.prisma.refreshToken.findUnique({
-        where: { tokenHash },
-        select: {
-        familyId: true,
-        },
+      where: { tokenHash: hashRefreshToken(rawToken) },
+      select: { familyId: true },
     });
 
-    // Unknown tokens and legacy tokens without a family
-    // do not identify a revocable Step 3 session.
     if (!existing?.familyId) {
-        return;
+      return;
     }
 
-    // End only this login session's token family.
-    // Other devices have different familyIds.
     await this.revokeFamily(existing.familyId);
-    }
+  }
 
   private async revokeFamily(familyId: string): Promise<void> {
     await this.prisma.refreshToken.updateMany({
@@ -213,11 +218,12 @@ export class AuthService {
         familyId,
         revokedAt: null,
       },
-      data: {
-        revokedAt: new Date(),
-      },
+      data: { revokedAt: new Date() },
     });
   }
 }
 
-export { type PublicUser, type AuthResult } from './auth.types.js';
+export {
+  type PublicUser,
+  type AuthResult,
+} from './auth.types.js';
