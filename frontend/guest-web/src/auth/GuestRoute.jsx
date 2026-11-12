@@ -14,5 +14,5 @@ export default function GuestRoute() {
   if (auth.status !== "authenticated" || auth.user.role !== "GUEST") {
     return <section className="guest-auth"><GuestSessionState /></section>;
   }
-  return <Outlet />;
+  return <Outlet key={auth.user.id} />;
 }

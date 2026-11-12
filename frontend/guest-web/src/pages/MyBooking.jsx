@@ -17,8 +17,8 @@ export default function MyBooking() {
             {context.error}
           </p>
 
-          <Link className="my-booking__button" to="/booking-access">
-            Request private email access
+          <Link className="my-booking__button" to="/rooms">
+            Browse rooms
           </Link>
         </section>
       </main>

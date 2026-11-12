@@ -15,6 +15,9 @@ function allowedPath(value) {
 
     const permitted =
       url.pathname === "/rooms" ||
+      url.pathname === "/payment-return" ||
+      url.pathname === "/booking-access" ||
+      url.pathname === "/my-booking" ||
       /^\/rooms\/[^/]+$/.test(url.pathname) ||
       /^\/checkout\/[^/]+$/.test(url.pathname);
 

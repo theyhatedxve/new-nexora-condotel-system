@@ -78,8 +78,8 @@ route. Reject external origins, protocol-relative URLs, and auth redirect loops.
 Carry selected room and dates through registration and verification. Recheck
 availability later. Never place passwords in URLs or persistent browser storage.
 
-- [ ] Prepare complete Step 1 code after EggPie.
-- [ ] Apply after Pandecoco and report each saved file.
+- [x] Prepare complete Step 1 code after EggPie.
+- [x] Apply after Pandecoco and report each saved file.
 - [ ] Owner checks registration, verification, resend, login, refresh, logout,
   invalid credentials, unavailable server, and rejected redirect destinations.
 
@@ -97,7 +97,7 @@ Keep the mobile menu keyboard accessible, close it on navigation, and display
 session-loading and sign-out failures clearly. Add My Bookings with Step 4's
 route so the header never exposes an unfinished destination.
 
-- [ ] Deliver and apply the header through the same approval workflow.
+- [x] Deliver and apply the header through the same approval workflow.
 - [ ] Owner checks the existing logo, active links, desktop spacing, mobile menu,
   keyboard focus, anonymous state, authenticated state, and sign-out failure.
 
@@ -147,12 +147,15 @@ These already expose reservation checkout GET/POST and payment summaries.
 Require sign-in after a provider return if the session expired, then re-fetch
 the owned reservation. Provider return parameters never establish payment success.
 
-- [ ] Deliver creation, recovery, checkout, and payment-return changes together.
+- [x] Deliver creation, recovery, checkout, and payment-return changes together.
 - [ ] Owner checks API rejection without login, contact identity, changed
   availability, duplicate submission, interrupted-response recovery, wrong-account
   recovery, and both payment methods using isolated development checks.
 
 ## Step 4 — My Bookings and reservation details
+
+Step 3 already supplies owned single-booking details by reference and payment
+access. Reuse that implementation when adding the list and detail navigation.
 
 Create backend `src/reservations/guest-reservations.controller.ts`,
 `guest-reservations.service.ts`, and `dto/guest-reservation-list.dto.ts`.
@@ -179,6 +182,14 @@ Pass reservation IDs explicitly to payment and cancellation operations.
   forbidden ownership attempts, expired sessions, and permitted cancellation.
 
 ## Step 5 — Retire accountless entry points and update documentation
+
+Status as of Step 3 application on 2026-11-12 follows.
+
+- [x] Retire old email-access backend endpoints.
+- [x] Replace the old BookingAccess email form with account sign-in and owned
+  booking-reference navigation so existing links remain usable.
+- [ ] Complete remaining obsolete-link/helper cleanup and authenticated test
+  fixture updates, then synchronize affected API/business/security documentation.
 
 Modify frontend `App.jsx`, `components/Footer.jsx`, and links in pages/components
 that still use `/booking-access` or `/my-booking` without a reservation ID.
@@ -225,6 +236,19 @@ migration action needs its own explanation and the owner's execution.
 
 ## Current status
 
-The design is approved. This implementation plan is prepared. Application
-implementation and owner verification are pending. Start with Step 1 code
-delivery when the owner says EggPie, then apply that code after Pandecoco.
+The design is approved. Steps 1-3 are applied on the frontend branch. Static
+source review was performed, including corrections for guest-tab refresh
+coordination, browser Back menu state, and retired email-form navigation.
+
+Step 1 also adds a Logout page at /logout and configures verification links for
+the documented guest origin, http://localhost:5175. Step 3 uses account-bound
+recovery proofs and per-account browser storage with existing database fields.
+No schema migration was performed.
+
+Owner tests, lint, builds, browser checks, and specific acceptance results remain
+pending. Existing accountless test fixtures need authenticated account setup.
+The checked delivery/application boxes record saved source, not passing checks.
+
+Next is Step 4, the My Bookings list with owned detail navigation and its header
+entry. Give the overview and complete code after EggPie, apply after Pandecoco,
+and let the owner run checks. Step 5 finishes remaining cleanup and documentation.

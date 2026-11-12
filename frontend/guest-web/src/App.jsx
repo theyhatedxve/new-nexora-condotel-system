@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 
 import GuestLayout from "./layouts/GuestLayout";
 import GuestAuthProvider from "./auth/GuestAuthProvider";
+import GuestRoute from "./auth/GuestRoute";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
@@ -37,13 +38,12 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/policies" element={<Policies />} />
             <Route path="/rooms/:id" element={<RoomDetails />} />
-            <Route
-              path="/checkout/:roomTypeId"
-              element={<Checkout />}
-            />
+            <Route element={<GuestRoute />}>
+              <Route path="/checkout/:roomTypeId" element={<Checkout />} />
+              <Route path="/payment-return" element={<PaymentReturn />} />
+              <Route path="/my-booking" element={<MyBooking />} />
+            </Route>
             <Route path="/booking-access" element={<BookingAccess />} />
-            <Route path="/payment-return" element={<PaymentReturn />} />
-            <Route path="/my-booking" element={<MyBooking />} />
           </Route>
         </Routes>
       </GuestAuthProvider>
