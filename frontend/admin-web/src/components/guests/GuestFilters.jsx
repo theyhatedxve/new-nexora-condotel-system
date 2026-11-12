@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import useGuestFilters from "../../hooks/useGuestFilters.js";
 
 export function GuestFilters({ query, onApply, onClear }) {
@@ -8,20 +9,31 @@ export function GuestFilters({ query, onApply, onClear }) {
 
   return (
     <form className="guest-filters" onSubmit={submit}>
-      {error && <p role="alert">{error}</p>}
-
       <fieldset className="guest-filter-fields">
         <legend>Search guests</legend>
 
+        {error && (
+          <p className="guests-screen__filter-error" role="alert">
+            {error}
+          </p>
+        )}
+
         <div>
           <label htmlFor="guest-name-search">Guest name</label>
-          <input
-            id="guest-name-search"
-            type="search"
-            maxLength={100}
-            value={draft.q}
-            onChange={changeSearch}
-          />
+
+          <div className="guests-screen__search-control">
+            <Search size={18} aria-hidden="true" />
+
+            <input
+              id="guest-name-search"
+              type="search"
+              placeholder="Search first or last name"
+              maxLength={100}
+              aria-describedby="guest-search-help"
+              value={draft.q}
+              onChange={changeSearch}
+            />
+          </div>
         </div>
 
         <div>
@@ -32,15 +44,22 @@ export function GuestFilters({ query, onApply, onClear }) {
           </select>
         </div>
 
-        <p className="guest-filter-help">
-          All search words must match the guest’s first or last name. Select Apply search
-          to update results.
+        <p id="guest-search-help" className="guest-filter-help">
+          All search words must match the guest’s first or last name. Select
+          Apply search to update results.
         </p>
 
         <div className="actions guest-filter-actions">
-          <button type="submit">Apply search</button>
+          <button type="submit" className="guests-screen__primary">
+            <Search size={16} aria-hidden="true" />
+            Apply search
+          </button>
 
-          <button type="button" onClick={onClear}>
+          <button
+            type="button"
+            className="guests-screen__secondary"
+            onClick={onClear}
+          >
             Clear search
           </button>
         </div>

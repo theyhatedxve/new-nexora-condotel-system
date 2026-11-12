@@ -6,19 +6,16 @@ export default function AuditLogs() {
   const { parsed, changeQuery, clearFilters } = useAuditLogsPage();
 
   return (
-    <section className="audit-page">
-      <p className="eyebrow">Administrator workspace</p>
+    <section className="audit-page" aria-labelledby="audit-title">
+      <header className="audit-page__heading">
+        <h1 id="audit-title">Audit Logs</h1>
+        <p>Review recorded system activity and administrative changes.</p>
+      </header>
 
-      <h1>Audit Logs</h1>
-
-      <p>
-        This screen shows recorded audit events. It does not establish that every system
-        action has been audited.
-      </p>
-
-      <p>
-        Actor references identify recorded users. A missing actor does not necessarily
-        mean the event was generated automatically.
+      <p className="audit-page__notice">
+        Audit coverage depends on the events recorded by the backend. Actor
+        references identify recorded users. Events with missing actor references
+        have an unknown recorded actor.
       </p>
 
       {parsed.query ? (
@@ -27,7 +24,11 @@ export default function AuditLogs() {
         <div className="feedback">
           <p role="alert">{parsed.error}</p>
 
-          <button type="button" onClick={clearFilters}>
+          <button
+            type="button"
+            className="audit-page__secondary"
+            onClick={clearFilters}
+          >
             Clear invalid filters
           </button>
         </div>

@@ -1,4 +1,10 @@
 import { Link } from "react-router";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+} from "lucide-react";
 import StaffDataState from "../StaffDataState";
 import { formatPesos, formatStatus, formatTimestamp } from "../../utils/formatters";
 import usePaymentResults from "../../hooks/usePaymentResults.js";
@@ -17,11 +23,26 @@ export function PaymentResults({ query, onPage }) {
   } = usePaymentResults({ query, onPage });
 
   return (
-    <section className="record-section" aria-labelledby="payment-results-title">
+    <section
+      className="record-section payments-screen__results"
+      aria-labelledby="payment-results-title"
+    >
       <div className="records-heading">
-        <h2 id="payment-results-title">Payment results</h2>
+        <div>
+          <h2 id="payment-results-title">Payment records</h2>
 
-        <button type="button" disabled={state.loading} onClick={refreshResults}>
+          <p className="payments-screen__muted">
+            Open a payment to review its collection and refund details.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="payments-screen__secondary"
+          disabled={state.loading}
+          onClick={refreshResults}
+        >
+          <RefreshCw size={16} aria-hidden="true" />
           Refresh results
         </button>
       </div>
@@ -30,23 +51,22 @@ export function PaymentResults({ query, onPage }) {
 
       {data && (
         <>
-          <p ref={resultSummary} role="status" tabIndex={-1}>
+          <p
+            className="payments-screen__summary"
+            ref={resultSummary}
+            role="status"
+            tabIndex={-1}
+          >
             {data.total === 0
               ? "No payment records match the applied filters."
-              : "Showing " +
-                start +
-                "–" +
-                end +
-                " of " +
-                data.total +
-                " matching payment records."}
+              : `Showing ${start}–${end} of ${data.total} matching payment records.`}
           </p>
 
           {data.items.length > 0 && (
             <>
-              <p>
-                Most recently created first. Stored amounts describe individual payment
-                records.
+              <p className="payments-screen__muted">
+                Most recently created first. Stored amounts describe individual
+                payment records.
               </p>
 
               <div
@@ -75,6 +95,7 @@ export function PaymentResults({ query, onPage }) {
                       <tr key={item.id}>
                         <td>
                           <Link
+                            className="payments-screen__booking-link"
                             to={
                               "/reservations/" + encodeURIComponent(item.reservation.id)
                             }
@@ -84,20 +105,37 @@ export function PaymentResults({ query, onPage }) {
                         </td>
 
                         <td>{formatStatus(item.method)}</td>
-                        <td>{formatStatus(item.status)}</td>
-
                         <td>
+                          <span
+                            className="payments-screen__badge"
+                            data-status={item.status}
+                          >
+                            {formatStatus(item.status)}
+                          </span>
+                        </td>
+
+                        <td className="payments-screen__amount">
                           {item.currency === "PHP"
                             ? formatPesos(item.amountCentavos)
                             : "Requires review"}
                         </td>
 
-                        <td>{formatStatus(item.verification)}</td>
+                        <td>
+                          <span
+                            className="payments-screen__badge"
+                            data-verification={item.verification}
+                          >
+                            {formatStatus(item.verification)}
+                          </span>
+                        </td>
 
-                        <td>{formatTimestamp(item.createdAt)}</td>
+                        <td className="payments-screen__created">
+                          {formatTimestamp(item.createdAt)}
+                        </td>
 
                         <td>
                           <Link
+                            className="payments-screen__details-link"
                             to={"/payments/" + encodeURIComponent(item.id)}
                             state={{
                               paymentListSearch: listSearch,
@@ -110,6 +148,7 @@ export function PaymentResults({ query, onPage }) {
                             }
                           >
                             View payment
+                            <ArrowRight size={16} aria-hidden="true" />
                           </Link>
                         </td>
                       </tr>
@@ -119,25 +158,33 @@ export function PaymentResults({ query, onPage }) {
               </div>
 
               <nav className="payment-pagination" aria-label="Payment result pages">
-                <button type="button" disabled={data.page <= 1} onClick={previousPage}>
+                <button
+                  type="button"
+                  className="payments-screen__secondary"
+                  disabled={data.page <= 1}
+                  onClick={previousPage}
+                >
+                  <ChevronLeft size={16} aria-hidden="true" />
                   Previous
                 </button>
 
-                <span>
+                <span className="payments-screen__page-number">
                   Page {data.page} of {data.totalPages}
                 </span>
 
                 <button
                   type="button"
+                  className="payments-screen__secondary"
                   disabled={data.page >= Math.min(data.totalPages, 10000)}
                   onClick={nextPage}
                 >
                   Next
+                  <ChevronRight size={16} aria-hidden="true" />
                 </button>
               </nav>
 
               {data.totalPages > 10000 && (
-                <p>
+                <p className="payments-screen__muted">
                   Navigation is limited to 10,000 pages. Narrow the filters to reach later
                   records.
                 </p>

@@ -1,8 +1,13 @@
+import { CalendarDays } from "lucide-react";
 import { reportToday } from "../../services/reportsApi";
 import useReportFilters from "../../hooks/useReportFilters.js";
 
 export function ReportFilters({ query, onApply }) {
   const { error, submit } = useReportFilters({ onApply });
+
+  const helpIds = error
+    ? "report-range-help report-range-error"
+    : "report-range-help";
 
   return (
     <form className="reports-filters" onSubmit={submit}>
@@ -16,7 +21,7 @@ export function ReportFilters({ query, onApply }) {
           required
           defaultValue={query.from}
           max={reportToday()}
-          aria-describedby="report-range-help"
+          aria-describedby={helpIds}
         />
       </div>
 
@@ -30,18 +35,26 @@ export function ReportFilters({ query, onApply }) {
           required
           defaultValue={query.to}
           max={reportToday()}
-          aria-describedby="report-range-help"
+          aria-describedby={helpIds}
         />
       </div>
 
-      <button type="submit">Apply dates</button>
+      <button type="submit" className="reports-page__primary">
+        <CalendarDays size={16} aria-hidden="true" />
+        Apply dates
+      </button>
 
       <p id="report-range-help" className="reports-filter-help">
-        Select up to 31 calendar days. Both dates are included and use Philippine time.
+        Select up to 31 calendar days. Both dates are included and use Philippine
+        time. This range affects collections and refunds only.
       </p>
 
       {error && (
-        <p role="alert" className="reports-filter-help feedback">
+        <p
+          id="report-range-error"
+          role="alert"
+          className="reports-filter-help reports-page__error"
+        >
           {error}
         </p>
       )}
