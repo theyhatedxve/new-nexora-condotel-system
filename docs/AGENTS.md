@@ -1,10 +1,16 @@
 # NEXORA — Development Reference and Completion Checklist
 
-**Last synchronized:** 2026-11-11 (Admin Dashboard redesign completion). Paths are relative to D:\Web-JSX\NEXORA unless an isolated path is explicitly named.
+**Last synchronized:** 2026-11-12 (Admin UI redesign completion). Paths are relative to D:\Web-JSX\NEXORA unless an isolated path is explicitly named.
 
-**Admin Dashboard redesign:** COMPLETED, as confirmed by the owner on
-2026-11-11. This records owner-confirmed redesign completion; it does not imply
-new test results or change the status of other project work.
+**Admin UI redesign:** COMPLETED, as confirmed by the owner on 2026-11-12.
+The owner reports completing the full Admin UI redesign, including Users & Roles.
+This status is owner-confirmed. No new test, lint, build, or browser results are
+recorded by this update.
+
+**Admin Screen 10 — Users & Roles:** The frontend implementation is present on
+the `frontend` branch. The matching staff API is on the separate `backend`
+branch. The owner reports completing the Admin UI redesign. Runtime integration
+and acceptance results are not established by this documentation update.
 
 **Latest source checkpoint:** Guest-web, admin-web, and backend responsibility
 refactors are present in the main directory. See section K and the

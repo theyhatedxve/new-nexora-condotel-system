@@ -1,12 +1,39 @@
-import { Link, NavLink } from "react-router";
+﻿import { Link, NavLink } from "react-router";
 import { Menu, X } from "lucide-react";
 import nexoraLogo from "../assets/branding/logo-horizontal-dark.svg";
-import useGuestNavigation from "../hooks/useGuestNavigation.js";
+import { useGuestAuth } from "../auth/useGuestAuth";
+import useGuestNavigation from "../hooks/useGuestNavigation";
 import "../styles/guest-header.css";
 
-function Navbar() {
-  const { menuOpen, toggleMenu, menuButtonRef, closeMenu, handleKeyDown } =
-    useGuestNavigation();
+const navigation = [
+  { to: "/", label: "Home", end: true },
+  { to: "/rooms", label: "Rooms" },
+  { to: "/about", label: "About" },
+  { to: "/contact", label: "Contact" },
+  { to: "/policies", label: "Policies" },
+];
+
+export default function Navbar() {
+  const auth = useGuestAuth();
+  const {
+    menuOpen,
+    toggleMenu,
+    menuButtonRef,
+    closeMenu,
+    handleKeyDown,
+  } = useGuestNavigation();
+
+  const authenticated = auth.status === "authenticated";
+  const sessionError = auth.status === "error" || auth.status === "logout-error";
+
+  function signOut() {
+    closeMenu();
+    void auth.signOut();
+  }
+
+  function retrySession() {
+    void auth.retry();
+  }
 
   return (
     <header className="guest-header" onKeyDown={handleKeyDown}>
@@ -46,35 +73,86 @@ function Navbar() {
           id="guest-main-navigation"
           aria-label="Main navigation"
           className={
-            menuOpen ? "guest-header__navigation is-open" : "guest-header__navigation"
+            menuOpen
+              ? "guest-header__navigation is-open"
+              : "guest-header__navigation"
           }
         >
-          <NavLink to="/" end className="guest-header__link" onClick={closeMenu}>
-            Home
-          </NavLink>
+          <div className="guest-header__links">
+            {navigation.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className="guest-header__link"
+                onClick={closeMenu}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
 
-          <NavLink to="/rooms" className="guest-header__link" onClick={closeMenu}>
-            Rooms
-          </NavLink>
+          <div className="guest-header__actions">
+            {auth.status === "loading" && (
+              <span className="guest-header__session" role="status">
+                Checking session…
+              </span>
+            )}
 
-          <NavLink to="/about" className="guest-header__link" onClick={closeMenu}>
-            About
-          </NavLink>
+            {auth.status === "anonymous" && (
+              <NavLink
+                to="/login"
+                className="guest-header__account"
+                onClick={closeMenu}
+              >
+                Sign In
+              </NavLink>
+            )}
 
-          <NavLink to="/contact" className="guest-header__link" onClick={closeMenu}>
-            Contact
-          </NavLink>
+            {authenticated && (
+              <>
+                {auth.user.role !== "GUEST" && (
+                  <Link
+                    to="/login"
+                    className="guest-header__link"
+                    onClick={closeMenu}
+                  >
+                    Staff account
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  className="guest-header__account"
+                  onClick={signOut}
+                >
+                  Sign Out
+                </button>
+              </>
+            )}
 
-          <NavLink
-            to="/my-booking"
-            className="guest-header__link guest-header__booking-link"
-            onClick={closeMenu}
-          >
-            My Booking
-          </NavLink>
+            <Link
+              to="/rooms"
+              className="guest-header__explore"
+              onClick={closeMenu}
+            >
+              Explore Rooms
+            </Link>
+          </div>
         </nav>
       </div>
+
+      {sessionError && (
+        <div className="guest-header__feedback">
+          <p role="alert">{auth.message}</p>
+          <button
+            type="button"
+            className="guest-header__account"
+            onClick={retrySession}
+          >
+            {auth.status === "logout-error" ? "Retry Sign Out" : "Retry Session"}
+          </button>
+        </div>
+      )}
     </header>
   );
 }
-export default Navbar;
