@@ -16,7 +16,6 @@ export default function GuestBookingReceipt({ flow }) {
     closed,
     paid,
     deadlineReached,
-    accessExpired,
     title,
     canStartAnother,
     startAnother,
@@ -144,7 +143,6 @@ export default function GuestBookingReceipt({ flow }) {
           payment?.state === "READY" &&
           !busy &&
           !deadlineReached &&
-          !accessExpired &&
           !closed && (
             <a
               className="checkout-view__primary-link"
@@ -169,13 +167,6 @@ export default function GuestBookingReceipt({ flow }) {
           </p>
         )}
 
-        {accessExpired && (
-          <p className="checkout-note">
-            This private session has expired. Recovery may also have expired. Use the
-            email access flow if needed.
-          </p>
-        )}
-
         <div className="checkout-view__receipt-actions">
           <button
             className="checkout-view__refresh"
@@ -188,13 +179,9 @@ export default function GuestBookingReceipt({ flow }) {
 
           <Link
             className="checkout-view__secondary-link"
-            to={"/my-booking?booking=" + encodeURIComponent(receipt.reservationNumber)}
+            to="/my-bookings"
           >
-            View my booking
-          </Link>
-
-          <Link className="checkout-view__secondary-link" to="/booking-access">
-            Request private email access
+            View My Bookings
           </Link>
 
           {canStartAnother && (

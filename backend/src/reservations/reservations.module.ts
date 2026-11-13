@@ -23,14 +23,6 @@ import {
 } from './booking-access.controller.js';
 
 import {
-  BookingAccessService,
-} from './booking-access.service.js';
-
-import {
-  BookingAccessEmailService,
-} from './booking-access-email.service.js';
-
-import {
   InventorySafetyModule,
 } from '../common/inventory/inventory-safety.module.js';
 
@@ -107,6 +99,14 @@ import {
   GuestBookingPrivacyMiddleware,
 } from './guest-booking-privacy.middleware.js';
 
+import {
+  GuestReservationsController,
+} from './guest-reservations.controller.js';
+
+import {
+  GuestReservationsService,
+} from './guest-reservations.service.js';
+
 @Module({
   imports: [
     PrismaModule,
@@ -124,13 +124,12 @@ import {
     StaffReservationsController,
     GuestBookingsController,
     GuestBookingStaffController,
+    GuestReservationsController,
   ],
   providers: [
     RoomRateCapacityService,
     ReservationValidationService,
     ReservationAcquisitionService,
-    BookingAccessService,
-    BookingAccessEmailService,
     RoomAssignmentsService,
     ReservationLifecycleService,
     ReservationCancellationService,
@@ -138,6 +137,7 @@ import {
     StaffReservationsService,
     GuestBookingService,
     GuestBookingStaffService,
+    GuestReservationsService,
   ],
 })
 export class ReservationsModule
@@ -152,6 +152,7 @@ export class ReservationsModule
       )
       .forRoutes(
         GuestBookingsController,
+        GuestReservationsController,
       );
   }
 }

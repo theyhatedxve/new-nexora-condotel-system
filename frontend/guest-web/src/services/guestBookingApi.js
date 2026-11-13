@@ -2,12 +2,8 @@ import {
   api,
 } from "./api.js";
 
-import {
-  getBookingPaymentSummary,
-} from "./bookingPaymentsApi.js";
-
 const BOOKING_PATH =
-  "/reservations/access/guest-bookings";
+  "/guest/reservations";
 
 const reservationStatuses = new Set([
   "PENDING",
@@ -65,7 +61,7 @@ function readReceipt(response, requestId) {
     !nullableDate(result.holdExpiresAt) ||
     !nullableDate(result.firstContactedAt) ||
     !nullableDate(result.responseDeadlineAt) ||
-    !validDate(result.sessionExpiresAt) ||
+    !validDate(result.recoveryExpiresAt) ||
     typeof result.replayed !== "boolean" ||
     typeof result.holdExpired !== "boolean" ||
     !Number.isSafeInteger(
@@ -101,8 +97,8 @@ function readReceipt(response, requestId) {
       result.firstContactedAt,
     responseDeadlineAt:
       result.responseDeadlineAt,
-    sessionExpiresAt:
-      result.sessionExpiresAt,
+    recoveryExpiresAt:
+      result.recoveryExpiresAt,
     nightlyRateCentavos:
       result.nightlyRateCentavos,
     totalAmountCentavos:
@@ -271,8 +267,12 @@ export async function getGuestBookingPaymentSummary(
     expectedReservationNumber,
   );
 
-  const result =
-    await getBookingPaymentSummary(signal);
+  const response = await api.post(
+    BOOKING_PATH + "/payment-summary",
+    { expectedReservationNumber },
+    { signal },
+  );
+  const result = response.data?.data;
 
   if (
     !result ||

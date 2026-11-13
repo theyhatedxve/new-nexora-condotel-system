@@ -1,4 +1,4 @@
-import SummaryCard from "../SummaryCard";
+import { RefreshCw } from "lucide-react";
 import StaffDataState from "../StaffDataState";
 import { useStaffData } from "../../hooks/useStaffData";
 import { getDashboardSummary } from "../../services/dashboardApi";
@@ -19,7 +19,13 @@ export function CurrentOccupancy() {
           </p>
         </div>
 
-        <button type="button" onClick={state.reload} disabled={state.loading}>
+        <button
+          type="button"
+          className="reports-page__secondary"
+          onClick={state.reload}
+          disabled={state.loading}
+        >
+          <RefreshCw size={16} aria-hidden="true" />
           Refresh snapshot
         </button>
       </div>
@@ -28,19 +34,22 @@ export function CurrentOccupancy() {
 
       {state.status === "ready" && (
         <>
-          <p>
+          <p className="reports-page__timestamp">
             Philippine date: {state.data.date}. Updated{" "}
-            {timestamp.format(new Date(state.data.asOf))}.
+            {timestamp.format(new Date(state.data.asOf))} (Asia/Manila).
           </p>
 
-          <div className="summary-grid">
+          <div className="reports-page__metrics">
             {operationalCards.map(([key, title, description]) => (
-              <SummaryCard
-                key={key}
-                title={title}
-                value={state.data[key].toLocaleString("en-PH")}
-                description={description}
-              />
+              <article className="reports-page__metric" key={key}>
+                <h3>{title}</h3>
+
+                <p className="reports-page__value">
+                  {state.data[key].toLocaleString("en-PH")}
+                </p>
+
+                <p className="reports-page__description">{description}</p>
+              </article>
             ))}
           </div>
         </>

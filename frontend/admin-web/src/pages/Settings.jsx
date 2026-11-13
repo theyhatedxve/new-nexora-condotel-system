@@ -10,14 +10,15 @@ export default function Settings() {
   const state = useStaffData(getPropertySettings);
 
   return (
-    <section className="settings-page">
-      <p className="eyebrow">Administrator workspace</p>
+    <section className="settings-page" aria-labelledby="settings-title">
+      <header className="settings-page__heading">
+        <h1 id="settings-title">Settings</h1>
+        <p>Manage property information and review operational reference values.</p>
+      </header>
 
-      <h1>Settings</h1>
-
-      <p>
-        Manage the stored property information. These changes do not automatically replace
-        hardcoded guest-page content.
+      <p className="settings-page__notice">
+        Changes update the stored property information. They do not automatically
+        replace hardcoded content on guest pages.
       </p>
 
       <StaffDataState state={state} label="property settings" />

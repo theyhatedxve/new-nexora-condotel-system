@@ -1,4 +1,8 @@
-const STORAGE_KEY = "nexora.guest-booking.v2";
+const STORAGE_KEY = "nexora.account-booking.v1";
+
+function storageKey(apiScope) {
+  return STORAGE_KEY + ":" + encodeURIComponent(apiScope);
+}
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -72,7 +76,7 @@ function normalizedAttempt(value, apiScope) {
 
 export function loadBookingAttempt(apiScope) {
   const raw =
-    window.sessionStorage.getItem(STORAGE_KEY);
+    window.sessionStorage.getItem(storageKey(apiScope));
 
   if (raw === null) {
     return null;
@@ -115,12 +119,12 @@ export function saveBookingAttempt(
     JSON.stringify(attempt);
 
   window.sessionStorage.setItem(
-    STORAGE_KEY,
+    storageKey(apiScope),
     serialized,
   );
 
   if (
-    window.sessionStorage.getItem(STORAGE_KEY) !==
+    window.sessionStorage.getItem(storageKey(apiScope)) !==
     serialized
   ) {
     throw new Error(
@@ -185,11 +189,11 @@ export function clearBookingAttempt(
   }
 
   window.sessionStorage.removeItem(
-    STORAGE_KEY,
+    storageKey(apiScope),
   );
 
   if (
-    window.sessionStorage.getItem(STORAGE_KEY) !==
+    window.sessionStorage.getItem(storageKey(apiScope)) !==
     null
   ) {
     throw new Error(

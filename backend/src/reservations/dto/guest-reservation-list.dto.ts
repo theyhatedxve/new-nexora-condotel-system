@@ -4,8 +4,8 @@ import {
 } from 'class-transformer';
 
 import {
-  IsIn,
   IsInt,
+  IsOptional,
   Max,
   Min,
 } from 'class-validator';
@@ -26,6 +26,7 @@ function queryInteger(value: unknown): number {
 }
 
 export class GuestReservationListDto {
+  @IsOptional()
   @Transform(({ value }: TransformFnParams) =>
     queryInteger(value),
   )
@@ -34,10 +35,12 @@ export class GuestReservationListDto {
   @Max(10000)
   page = 1;
 
+  @IsOptional()
   @Transform(({ value }: TransformFnParams) =>
     queryInteger(value),
   )
   @IsInt()
-  @IsIn([20])
+  @Min(1)
+  @Max(20)
   limit = 20;
 }
