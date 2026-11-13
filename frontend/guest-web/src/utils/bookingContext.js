@@ -1,15 +1,21 @@
 import {
   loadBookingAttempt,
 } from "./bookingAttempt.js";
+import { getGuestSession } from "../services/guestAuthApi.js";
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function getBookingApiScope() {
-  return new URL(
+  const session = getGuestSession();
+  if (session.status !== "authenticated" || session.user.role !== "GUEST") {
+    throw new Error("Sign in with a guest account.");
+  }
+  const backend = new URL(
     import.meta.env.VITE_API_URL || "/",
     window.location.origin,
   ).href;
+  return backend + "|guest:" + session.user.id;
 }
 
 export function bookingReferenceFromSearch(

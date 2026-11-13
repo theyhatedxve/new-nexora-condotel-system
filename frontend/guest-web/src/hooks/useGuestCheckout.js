@@ -354,7 +354,7 @@ export default function useGuestCheckout(
           failure.response?.data?.code;
 
         const explicitlyRejected =
-          [400, 403, 404, 429].includes(status) ||
+          [400, 401, 403, 404, 429].includes(status) ||
           (
             status === 409 &&
             !code
@@ -430,7 +430,7 @@ export default function useGuestCheckout(
     } catch {
       publish({
         error:
-          "Recovery is unavailable or expired. This does not prove the booking failed. Use private email access or contact the property before booking again.",
+          "Recovery is unavailable or expired. This does not prove the booking failed. Check the account booking details or contact the property before booking again.",
       });
     } finally {
       pending.current = false;

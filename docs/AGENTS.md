@@ -1,18 +1,46 @@
 # NEXORA — Development Reference and Completion Checklist
 
-**Last synchronized:** 2026-11-06. Paths are relative to D:\Web-JSX\NEXORA unless an isolated path is explicitly named.
+**Last synchronized:** 2026-11-13.
+
+**Current development checkpoint:** Guest account booking Steps 1-3 are applied.
+Step 4 My Bookings list and reservation-ID detail navigation are present in
+source. Owner runtime verification remains pending.
+
+The approved Step 5 cleanup patch is applied. It updates guest navigation,
+separates shared booking utilities, removes obsolete frontend access files,
+and unregisters obsolete email-access services.
+
+Next: migrate accountless test fixtures to authenticated guest flows, remove
+remaining legacy dependencies after checking their consumers, and complete
+owner-run verification. Step 5 remains incomplete until these checks finish.
+
+**Admin UI redesign:** COMPLETED, as confirmed by the owner on 2026-11-12.
+The owner reports completing the full Admin UI redesign, including Users & Roles.
+This status is owner-confirmed. No new test, lint, build, or browser results are
+recorded by this update.
+
+**Admin Screen 10 — Users & Roles:** The frontend implementation is present on
+the `frontend` branch. The matching staff API is on the separate `backend`
+branch. The owner reports completing the Admin UI redesign. Runtime integration
+and acceptance results are not established by this documentation update.
+
+**Latest source checkpoint:** Guest-web, admin-web, and backend responsibility
+refactors are present in the main directory. See section K and the
+[current directory updates](DIRECTORY_STRUCTURE.md#21-current-refactor-directory-updates-2026-11-10).
+This structural update does not change the owner-confirmed roadmap or establish
+new runtime acceptance.
 
 **Current owner-confirmed roadmap (2026-11-06):** Phases 1-8 and 10 are
 COMPLETED. Phase 9 (NFC) is POSTPONED. Phase 11 is PAUSED and incomplete;
 Steps 11.1-11.2 are tentative owner recollection. Phase 12 is DEFERRED.
 The owner explicitly prioritized UI/UX redesign over proceeding with Phases 11/12.
 
-**Current work:** Guest-web UI/UX redesign in the main project after completed
+**Historical UI work checkpoint (2026-11-06):** Guest-web UI/UX redesign in the main project after completed
 isolated backend/frontend transfer. Screens 4-6, 7 (Find Booking), 10 (My Booking)
 and 11 (About) are owner-accepted. Screen 12 Contact is installed with fictional
 sample details and awaits owner-run acceptance results.
 
-**Current continuation checkpoint:** Check Contact at /contact before advancing
+**Historical UI continuation checkpoint (2026-11-06):** Check Contact at /contact before advancing
 to the proposed Screen 13 Policies. Screens 8-9 guest Login/Register require a
 separate scope review. See [section J](#j-current-checkpoint---guest-web-uiux-redesign-2026-11-06).
 Do not resume Phase 11/12 or treat page acceptance as phase completion.
@@ -23,7 +51,8 @@ payment modules. Older "not started" statements are not a current inventory or
 instructions to restart those phases. The roadmap above and section C govern
 current phase status; section J governs the current redesign. Where
 AI_HANDOFF.md or another guide retains an older phase status, use this latest
-owner update. Completion below is owner-reported, not a new source/test audit.
+owner update. Section L governs the current guest account work. Completion below
+is owner-reported, not a new source/test audit.
 
 **Earlier completion record:** Phases 1–6 are COMPLETED per owner confirmation,
 including Phase 3 (8/8), Phase 4 (7/7), Phase 5 (7/7) and Phase 6 (10/10).
@@ -49,12 +78,12 @@ including Phase 3 (8/8), Phase 4 (7/7), Phase 5 (7/7) and Phase 6 (10/10).
   JWT/Passport, Argon2id, and explicit role/ownership enforcement.
 - SQLite is used for development. PostgreSQL is recommended for production,
   subject to the production decision and separate migration verification.
-- Guest accounts remain optional. Accountless Pay at Property checkout and
-  private email-link booking access are implemented. A booking number alone is
-  not private authorization. Existing account holders can use the same email
-  access flow; automatic User/Guest linking and a JWT booking-list API are not
-  established by the inspected checkout. Read-only payment summaries are now
-  implemented. Test-mode Hosted Checkout and verified webhook receipt processing
+- The owner approved mandatory guest accounts for prototype website bookings.
+  Steps 1-3 now provide registration, verification, login, authenticated booking,
+  and reservation ownership through Guest.userId. Old email-access APIs are
+  retired. The account-owned booking-list API remains Step 4. A booking reference
+  requires authenticated ownership before private details or payment access.
+  Read-only payment summaries are implemented. Test-mode Hosted Checkout and verified webhook receipt processing
   are installed. Staff collection and payment operations were developed in later
   owner-completed phases; the older handoff sections below do not describe their
   full current scope. NFC remains postponed. Live payments are not authorized.
@@ -1026,3 +1055,102 @@ This request authorizes docs/AGENTS.md only. No other Markdown or application
 file is changed by this documentation update. AI_HANDOFF.md and older guides
 may retain stale checkpoints; use this section and current owner instructions
 for continuation, and the architecture/coding guides for system requirements.
+
+## K. Responsibility Separation Checkpoint (2026-11-10)
+
+The same behavior-preserving refactor was applied to guest-web, admin-web, and
+the backend. The changes organize existing code; they do not introduce new
+business rules, routes, database models, or UI designs.
+
+| Application | Current file organization |
+|---|---|
+| Guest web | `src/hooks/` contains state/effects/handlers; `components/rooms/`, `checkout/`, and `booking/` contain extracted presentation; `constants/` holds fixed content; `utils/` holds focused helpers; `styles/tokens.css` holds existing visual values |
+| Admin web | `src/hooks/` contains screen/form/session/layout coordination; feature folders under `components/` contain presentation; existing `auth/` retains context and route guards; `constants/`, `utils/`, and `styles/tokens.css` separate definitions and visual values |
+| Backend | Existing controllers/DTOs retain HTTP validation; services retain authorization and transaction orchestration; 25 feature-local files separate types, policies, projections, validation, refund settlement, and reconciliation helpers |
+
+Guest component CSS was relocated to `styles/availability-search.css`,
+`styles/featured-rooms.css`, and `styles/home-stay-search.css`. Other screen CSS
+remains in place. Frontend API clients remain in their existing service folders.
+Backend helper extraction preserves original service exports where needed and
+passes the same transaction clients to extracted database helpers.
+
+Verification records, with their original limitations:
+
+- [Guest refactor record](superpowers/plans/2026-11-10-guest-web-refactor.md):
+  records lint/build, 14 helper tests, markup/CSS comparison, and source review.
+  Full browser and live payment acceptance were not established.
+- [Admin refactor record](superpowers/plans/2026-11-10-admin-web-refactor.md):
+  records lint/build, 15 helper tests, markup/CSS/state-handler comparison, and
+  source review. The existing bundle-size warning remains; live staff/payment
+  operations were not exercised.
+- [Backend refactor record](superpowers/plans/2026-11-10-backend-refactor.md):
+  source comparison and independent review found no identified behavior changes.
+  Backend tests, lint, build, database operations, and provider calls were not run.
+  Owner verification remains pending.
+
+This Markdown synchronization only updates directory/refactor documentation.
+It does not rerun the recorded checks, change application code, or advance
+Phases 9, 11, or 12.
+
+## L. Guest accounts and booking checkpoint (2026-11-12)
+
+This section supersedes earlier optional-account and private email-access
+continuation instructions for the current prototype website. The Admin UI
+redesign remains owner-confirmed complete. NFC remains postponed, Phase 11
+remains paused, and deployment remains deferred.
+
+### Approved scope
+
+- Require a verified GUEST account before website booking creation.
+- Reuse existing authentication, linked Guest profiles, inventory acquisition,
+  pricing, and payment services. Follow CODING_PRINCIPLES.md and keep the
+  implementation suitable for a prototype.
+- Existing accountless reservations are development records. No data cleanup or
+  account-claiming migration was performed.
+- Retain the existing system logo and use the supplied Home/Login references.
+- Password recovery is deferred by owner approval.
+
+### Applied source changes
+
+| Step | Saved implementation | Verification status |
+|---|---|---|
+| 1 - Guest accounts | Register, Login, Verify Email, and Logout pages; session restore, refresh, logout, safe internal return paths, and guest route guard. Verification links use the documented guest origin on port 5175. | Applied; owner checks pending. |
+| 2 - Shared header | Existing logo, public navigation including Policies, active gold underline, Sign In/Out, Explore Rooms, responsive menu, Escape focus, and browser Back menu-state correction. | Applied; owner checks pending. |
+| 3 - Account-owned booking | Authenticated creation/recovery, backend-derived profile identity, existing Guest connection within the inventory transaction, per-account recovery storage, owned details/payment operations, and protected checkout/payment-return/detail routes. | Applied; static review complete; owner checks pending. |
+
+Step 3 moved supported booking requests to `/api/guest/reservations`.
+Profile and booking-reference reads require GUEST authentication. Payment and
+recovery operations check account ownership. Existing payment confirmation,
+inventory, and timing rules remain delegated to their existing services.
+
+Old `/api/reservations/access` email-access endpoints now return the retired
+response. The old accountless creation path is no longer registered by
+GuestBookingsController. Existing `/booking-access` website links now open an
+account sign-in/reference lookup page instead of the retired email form.
+
+Single-booking details and payment returns were adapted in Step 3 so the new
+checkout flow has working account-based source entry points. The complete
+My Bookings list is still pending. Existing accountless test fixtures require
+updates for authenticated requests during the remaining verification work.
+
+### Verification boundary
+
+Steps 1-3 were saved and reviewed through source inspection. No tests, lint,
+builds, apps, browser checks, migrations, or provider calls were run for these
+steps by the assistant. The owner has authorized advancement but has not supplied
+specific acceptance results for this account-booking work.
+
+The changed source is currently on `frontend`. This checkpoint does not establish
+merging with the separate staff backend branch, runtime deployment, or provider
+success. Existing historical test reports apply only to their recorded scope.
+
+### Next step
+
+Step 4 adds the authenticated My Bookings list, with 20 records per page, an
+empty state, refresh, and links to owned reservation details. Reuse the Step 3
+details and payment paths. Add My Bookings to the signed-in guest header when
+its route is ready. Verify two guest accounts cannot access each other's data.
+
+Deliver the next step's overview and complete code after EggPie. Apply it after
+Pandecoco. The owner runs all checks. Step 5 completes remaining obsolete-link
+cleanup, affected test-fixture updates, and contract documentation synchronization.

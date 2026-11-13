@@ -100,6 +100,7 @@ export class ReservationAcquisitionService {
     input: CreateReservationDto,
     policy: AcquisitionPolicy,
     now: Date,
+    trustedGuestId?: string,
   ) {
     const dto = this.validatedInput(
       input,
@@ -111,6 +112,7 @@ export class ReservationAcquisitionService {
       dto,
       policy,
       now,
+      trustedGuestId,
     );
   }
 
@@ -119,6 +121,7 @@ export class ReservationAcquisitionService {
     dto: CreateReservationDto,
     policy: AcquisitionPolicy,
     now: Date,
+    trustedGuestId?: string,
   ) {
     if (!Number.isFinite(now.getTime())) {
       throw new BadRequestException(
@@ -263,7 +266,9 @@ export class ReservationAcquisitionService {
           reservationNumber:
             `NX-${randomUUID()}`,
 
-          guest: {
+          guest: trustedGuestId ? {
+            connect: { id: trustedGuestId },
+          } : {
             create: {
               firstName:
                 dto.firstName.trim(),

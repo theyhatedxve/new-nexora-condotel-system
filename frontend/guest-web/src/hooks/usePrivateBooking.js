@@ -1,166 +1,82 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getAccountBooking } from "../services/accountBookingsApi.js";
+import { getMyBookingById } from "../services/guestReservationsApi.js";
 
-import {
-  getCurrentBooking,
-} from "../services/bookingAccessApi.js";
+export default function usePrivateBooking(target = null) {
+  const reservationId =
+    target && typeof target === "object"
+      ? target.reservationId ?? null
+      : null;
 
-const statuses = new Set([
-  "PENDING",
-  "CONFIRMED",
-  "CHECKED_IN",
-  "CHECKED_OUT",
-  "CANCELLED",
-  "EXPIRED",
-]);
+  const expectedReference =
+    typeof target === "string"
+      ? target
+      : target && typeof target === "object"
+        ? target.expectedReference ?? null
+        : null;
 
-export default function usePrivateBooking(
-  expectedReference = null,
-) {
-  const pinnedReference = useRef(
-    expectedReference,
+  const [revision, setRevision] = useState(0);
+  const [result, setResult] = useState(null);
+
+  const request = useMemo(
+    () => ({ reservationId, expectedReference, revision }),
+    [reservationId, expectedReference, revision],
   );
 
-  const [revision, setRevision] =
-    useState(0);
-
-  const [state, setState] = useState({
-    status: "loading",
-    booking: null,
-  });
+  const hasTarget = Boolean(
+    request.reservationId || request.expectedReference,
+  );
 
   useEffect(() => {
+    if (!request.reservationId && !request.expectedReference) {
+      return;
+    }
+
     const controller = new AbortController();
 
-    getCurrentBooking(controller.signal)
-      .then((booking) => {
-        if (controller.signal.aborted) return;
+    const pending = request.reservationId
+      ? getMyBookingById(request.reservationId, controller.signal)
+      : getAccountBooking(
+          request.expectedReference,
+          controller.signal,
+        );
 
-        if (
-          !booking ||
-          typeof booking.reservationNumber !==
-            "string" ||
-          !statuses.has(booking.status) ||
-          !Number.isFinite(
-            Date.parse(
-              booking.accessExpiresAt,
-            ),
-          )
-        ) {
-          throw new Error(
-            "Invalid private booking response.",
-          );
+    pending.then(
+      (booking) => {
+        if (!controller.signal.aborted) {
+          setResult({
+            request,
+            status: "ready",
+            booking,
+          });
         }
-
-        if (
-          pinnedReference.current &&
-          booking.reservationNumber !==
-            pinnedReference.current
-        ) {
-          throw new Error(
-            "BOOKING_SCOPE_CHANGED",
-          );
-        }
-
-        pinnedReference.current =
-          booking.reservationNumber;
-
-        if (
-          Date.parse(
-            booking.accessExpiresAt,
-          ) <= Date.now()
-        ) {
-          setState({
-            status: "unavailable",
+      },
+      (error) => {
+        if (!controller.signal.aborted) {
+          setResult({
+            request,
+            status:
+              error.response?.status === 404
+                ? "unavailable"
+                : "error",
             booking: null,
           });
-          return;
         }
-
-        setState({
-          status: "ready",
-          booking,
-        });
-      })
-      .catch((failure) => {
-        if (controller.signal.aborted) return;
-
-        setState({
-          status:
-            failure.response?.status === 404 ||
-            failure.message ===
-              "BOOKING_SCOPE_CHANGED"
-              ? "unavailable"
-              : "error",
-          booking: null,
-        });
-      });
+      },
+    );
 
     return () => controller.abort();
-  }, [revision]);
-
-  const booking = state.booking;
-
-  useEffect(() => {
-    if (!booking) return;
-
-    const expiresAt = Date.parse(
-      booking.accessExpiresAt,
-    );
-
-    const expire = () => {
-      if (Date.now() >= expiresAt) {
-        setState({
-          status: "unavailable",
-          booking: null,
-        });
-      }
-    };
-
-    const timer = window.setTimeout(
-      expire,
-      Math.max(
-        0,
-        expiresAt - Date.now(),
-      ),
-    );
-
-    window.addEventListener(
-      "focus",
-      expire,
-    );
-
-    document.addEventListener(
-      "visibilitychange",
-      expire,
-    );
-
-    return () => {
-      window.clearTimeout(timer);
-
-      window.removeEventListener(
-        "focus",
-        expire,
-      );
-
-      document.removeEventListener(
-        "visibilitychange",
-        expire,
-      );
-    };
-  }, [booking]);
+  }, [request]);
 
   function refresh() {
-    setState({
-      status: "loading",
-      booking: null,
-    });
-
     setRevision((value) => value + 1);
   }
+
+  const state = !hasTarget
+    ? { status: "unavailable", booking: null }
+    : result?.request === request
+      ? { status: result.status, booking: result.booking }
+      : { status: "loading", booking: null };
 
   return {
     ...state,

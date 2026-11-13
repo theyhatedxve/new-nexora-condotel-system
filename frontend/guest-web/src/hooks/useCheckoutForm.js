@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { searchAvailability } from "../services/availabilityApi.js";
 import useGuestCheckout from "./useGuestCheckout.js";
-import { API_SCOPE } from "../constants/checkout.js";
+import { getBookingApiScope } from "../utils/bookingContext.js";
 
-export default function useCheckoutForm({ selection }) {
-  const flow = useGuestCheckout(API_SCOPE);
+export default function useCheckoutForm({ selection, profile }) {
+  const flow = useGuestCheckout(getBookingApiScope());
 
   const [quote, setQuote] = useState(null);
 
@@ -15,10 +15,10 @@ export default function useCheckoutForm({ selection }) {
   const [formError, setFormError] = useState("");
 
   const [details, setDetails] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    email: profile.email,
+    phone: profile.phone ?? "",
   });
 
   const [arrivalTime, setArrivalTime] = useState("");

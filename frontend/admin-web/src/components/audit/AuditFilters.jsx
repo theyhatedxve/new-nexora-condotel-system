@@ -1,10 +1,23 @@
+import { Search } from "lucide-react";
 import useAuditFilters from "../../hooks/useAuditFilters.js";
 
 export function AuditFilters({ query, onApply, onClear }) {
   const { error, submit } = useAuditFilters({ query, onApply });
 
+  const dateHelp = error
+    ? "audit-date-help audit-filter-error"
+    : "audit-date-help";
+
+  const exactHelp = error
+    ? "audit-exact-help audit-filter-error"
+    : "audit-exact-help";
+
   return (
-    <form className="audit-filters" onSubmit={submit}>
+    <form
+      className="audit-filters"
+      onSubmit={submit}
+      aria-label="Filter audit history"
+    >
       <div className="audit-field">
         <label htmlFor="audit-from">From</label>
 
@@ -13,7 +26,7 @@ export function AuditFilters({ query, onApply, onClear }) {
           name="from"
           type="date"
           defaultValue={query.from}
-          aria-describedby="audit-date-help"
+          aria-describedby={dateHelp}
         />
       </div>
 
@@ -25,7 +38,7 @@ export function AuditFilters({ query, onApply, onClear }) {
           name="to"
           type="date"
           defaultValue={query.to}
-          aria-describedby="audit-date-help"
+          aria-describedby={dateHelp}
         />
       </div>
 
@@ -38,7 +51,7 @@ export function AuditFilters({ query, onApply, onClear }) {
           type="text"
           maxLength={100}
           defaultValue={query.action}
-          aria-describedby="audit-exact-help"
+          aria-describedby={exactHelp}
         />
       </div>
 
@@ -51,14 +64,21 @@ export function AuditFilters({ query, onApply, onClear }) {
           type="text"
           maxLength={100}
           defaultValue={query.entityType}
-          aria-describedby="audit-exact-help"
+          aria-describedby={exactHelp}
         />
       </div>
 
       <div className="audit-filter-actions">
-        <button type="submit">Apply filters</button>
+        <button type="submit" className="audit-page__primary">
+          <Search size={16} aria-hidden="true" />
+          Apply filters
+        </button>
 
-        <button type="button" onClick={onClear}>
+        <button
+          type="button"
+          className="audit-page__secondary"
+          onClick={onClear}
+        >
           Clear filters
         </button>
       </div>
@@ -73,7 +93,11 @@ export function AuditFilters({ query, onApply, onClear }) {
       </p>
 
       {error && (
-        <p role="alert" className="audit-filter-help feedback">
+        <p
+          id="audit-filter-error"
+          role="alert"
+          className="audit-filter-help audit-page__error"
+        >
           {error}
         </p>
       )}
