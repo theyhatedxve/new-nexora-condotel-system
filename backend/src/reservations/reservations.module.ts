@@ -107,6 +107,14 @@ import {
   GuestBookingPrivacyMiddleware,
 } from './guest-booking-privacy.middleware.js';
 
+import {
+  GuestReservationsController,
+} from './guest-reservations.controller.js';
+
+import {
+  GuestReservationsService,
+} from './guest-reservations.service.js';
+
 @Module({
   imports: [
     PrismaModule,
@@ -124,6 +132,7 @@ import {
     StaffReservationsController,
     GuestBookingsController,
     GuestBookingStaffController,
+    GuestReservationsController,
   ],
   providers: [
     RoomRateCapacityService,
@@ -138,6 +147,7 @@ import {
     StaffReservationsService,
     GuestBookingService,
     GuestBookingStaffService,
+    GuestReservationsService,
   ],
 })
 export class ReservationsModule
@@ -152,6 +162,7 @@ export class ReservationsModule
       )
       .forRoutes(
         GuestBookingsController,
+        GuestReservationsController,
       );
   }
 }
