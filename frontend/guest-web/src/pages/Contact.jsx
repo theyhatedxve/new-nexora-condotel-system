@@ -76,12 +76,12 @@ export default function Contact() {
             <h3>Already have a booking?</h3>
 
             <p>
-              Use your booking reference and reservation email to request private access
-              to your stay details.
+              Sign in to your guest account to view your bookings
+              and stay details.
             </p>
 
-            <Link to="/booking-access">
-              Find my booking
+            <Link to="/my-bookings">
+              My Bookings
               <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>

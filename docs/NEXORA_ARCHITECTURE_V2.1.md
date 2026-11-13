@@ -36,8 +36,8 @@
 | Property scope | One condotel property |
 | Public website | NEXORA Guest Website |
 | Internal system | NEXORA Admin Dashboard |
-| Guest accounts | Registration and login optional |
-| Guest checkout | Booking without an account supported |
+| Guest accounts | Registration and login required for website booking |
+| Guest checkout | Active authenticated GUEST account required |
 | Online payments | PayMongo Hosted Checkout |
 | Offline payments | Pay at Property |
 | NFC | Included; device hardware not yet selected |
@@ -420,7 +420,7 @@ Guest/admin applications can be statically hosted; NestJS needs persistent Node.
 |---|---|---|
 | 01 | Project Foundation | Development environment; React **JavaScript + Vite** guest and admin frontends; NestJS **TypeScript** backend; verify API connection |
 | 02 | Database Foundation | Prisma models, migrations, relationships, seed data |
-| 03 | Authentication & RBAC | Staff login, optional guest accounts, secure sessions/roles |
+| 03 | Authentication & RBAC | Staff login, required guest accounts for website booking, secure sessions/roles |
 | 04 | Room Management | Types, rooms, rates, photos, amenities, room states |
 | 05 | Guest Website | Homepage, listing, room details, availability search, responsive UI |
 | 06 | Reservation System | Guest checkout, inventory holds, room assignments, booking statuses, cancellation, check-in/out |
@@ -455,7 +455,8 @@ NFC management is in software v1.0, but **real lock integration cannot be comple
 
 1. Guest searches rooms.
 2. Backend checks actual available inventory and rates.
-3. Guest enters booking information; account is optional.
+3. Guest signs in with an active GUEST account before submitting a website
+   booking. The backend links the reservation to that account's Guest profile.
 4. Guest selects PayMongo or Pay at Property.
 5. Reservation becomes confirmed under applicable verified payment/property policy.
 6. Receptionist verifies guest and checks them in.
