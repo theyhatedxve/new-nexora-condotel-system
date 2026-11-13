@@ -4,9 +4,15 @@ import {
   getGuestBookingPaymentSummary,
   startGuestBookingCheckout,
 } from "../services/guestBookingApi.js";
+import {
+  getReservationCheckout,
+  getReservationPaymentSummary,
+  startReservationCheckout,
+} from "../services/bookingPaymentsApi.js";
 import { checkoutRequestIdFor } from "../utils/bookingContext.js";
 
 export default function useBookingPayment({ booking }) {
+  const reservationId = booking.id;
   const reference = booking.reservationNumber;
 
   const pendingOnline =
@@ -31,7 +37,9 @@ export default function useBookingPayment({ booking }) {
 
   const inspect = useCallback(
     async (signal) => {
-      const summary = await getGuestBookingPaymentSummary(reference, signal);
+      const summary = reservationId
+        ? await getReservationPaymentSummary(reservationId, reference, signal)
+        : await getGuestBookingPaymentSummary(reference, signal);
 
       const closed = ["CANCELLED", "EXPIRED", "CHECKED_IN", "CHECKED_OUT"].includes(
         summary.reservationStatus,
@@ -50,14 +58,18 @@ export default function useBookingPayment({ booking }) {
         summary.balanceDueCentavos > 0 &&
         (summary.reservationStatus === "CONFIRMED" || activePending);
 
-      const checkout = eligible ? await getGuestBookingCheckout(reference, signal) : null;
+      const checkout = eligible
+        ? reservationId
+          ? await getReservationCheckout(reservationId, signal)
+          : await getGuestBookingCheckout(reference, signal)
+        : null;
 
       return {
         summary,
         checkout,
       };
     },
-    [reference, pendingOnline, holdExpiresAt],
+    [reservationId, reference, pendingOnline, holdExpiresAt],
   );
 
   useEffect(() => {
@@ -81,7 +93,7 @@ export default function useBookingPayment({ booking }) {
             busy: false,
             record: null,
             error:
-              "Payment records could not be checked for this booking. Refresh its details or request private access before paying again.",
+              "Payment records could not be checked for this booking. Refresh its details or sign in again before paying.",
           });
         }
       });
@@ -118,10 +130,17 @@ export default function useBookingPayment({ booking }) {
     try {
       const requestId = checkoutRequestIdFor(reference);
 
-      await startGuestBookingCheckout({
-        requestId,
-        expectedReservationNumber: reference,
-      });
+      if (reservationId) {
+        await startReservationCheckout({
+          reservationId,
+          requestId,
+        });
+      } else {
+        await startGuestBookingCheckout({
+          requestId,
+          expectedReservationNumber: reference,
+        });
+      }
 
       const record = await inspect();
 

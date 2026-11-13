@@ -1,24 +1,33 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router";
 
 export default function useGuestNavigation() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+  const [openLocationKey, setOpenLocationKey] = useState(null);
 
   const menuButtonRef = useRef(null);
+  const menuOpen = openLocationKey === location.key;
+
+  useEffect(() => {
+    setOpenLocationKey(null);
+  }, [location.key]);
 
   function closeMenu() {
-    setMenuOpen(false);
+    setOpenLocationKey(null);
   }
 
   function handleKeyDown(event) {
     if (event.key === "Escape" && menuOpen) {
       event.preventDefault();
-      setMenuOpen(false);
+      closeMenu();
       menuButtonRef.current?.focus();
     }
   }
 
   function toggleMenu() {
-    setMenuOpen((open) => !open);
+    setOpenLocationKey((current) =>
+      current === location.key ? null : location.key,
+    );
   }
 
   return { menuOpen, menuButtonRef, closeMenu, handleKeyDown, toggleMenu };

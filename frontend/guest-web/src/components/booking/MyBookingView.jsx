@@ -6,9 +6,9 @@ import useMyBookingView from "../../hooks/useMyBookingView.js";
 import { displayTime } from "../../utils/bookingDisplayTime.js";
 import { SummaryRow } from "./SummaryRow.jsx";
 
-export function MyBookingView({ expectedReference }) {
+export function MyBookingView({ reservationId = null, expectedReference = null }) {
   const { view, error, signingOut, booking, signOut, method, propertyPending, closed } =
-    useMyBookingView({ expectedReference });
+    useMyBookingView({ reservationId, expectedReference });
 
   return (
     <main className="my-booking">
@@ -44,8 +44,8 @@ export function MyBookingView({ expectedReference }) {
 
       {view.status === "unavailable" && (
         <div className="my-booking__feedback" role="status">
-          Private access is unavailable, expired, or belongs to a different booking.
-          Request access to the intended booking.
+          This reservation is unavailable for your guest account.
+          Check the booking reference and try again.
         </div>
       )}
 
@@ -183,12 +183,21 @@ export function MyBookingView({ expectedReference }) {
                 redirect.
               </p>
             )}
+
+            {booking.cancellationPolicy && (
+              <p className="my-booking__notice">
+                <strong>Cancellation policy:</strong>{" "}
+                {booking.cancellationPolicy.unpaidEligible
+                  ? booking.cancellationPolicy.text
+                  : "This reservation cannot use unpaid pre-check-in cancellation. Contact the property for assistance."}
+              </p>
+            )}
           </section>
 
           <footer className="my-booking__actions">
-            <Link className="my-booking__back" to="/rooms">
+            <Link className="my-booking__back" to="/my-bookings">
               <ArrowLeft size={17} aria-hidden="true" />
-              Return to rooms
+              Back to My Bookings
             </Link>
 
             <button
@@ -199,7 +208,7 @@ export function MyBookingView({ expectedReference }) {
             >
               <LogOut size={17} aria-hidden="true" />
 
-              {signingOut ? "Signing out..." : "End private access"}
+              {signingOut ? "Signing out..." : "Sign out"}
             </button>
           </footer>
         </>
@@ -212,8 +221,8 @@ export function MyBookingView({ expectedReference }) {
       )}
 
       {!booking && view.status !== "loading" && (
-        <Link className="my-booking__button" to="/booking-access">
-          Request private email access
+        <Link className="my-booking__button" to="/my-bookings">
+          Back to My Bookings
         </Link>
       )}
     </main>

@@ -28,6 +28,7 @@ export class GuestBookingPrivacyMiddleware
 
     response.vary('Cookie');
     response.vary('Origin');
+    response.vary('Authorization');
 
     next();
   }
