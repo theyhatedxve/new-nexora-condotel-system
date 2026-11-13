@@ -203,7 +203,10 @@ For NEXORA, this primarily concerns the public guest-facing website.
 - Keep calls to action and booking steps easy to find on phones and larger screens.
 - Ensure public pages function with clear loading, empty, and failure feedback.
 - Avoid introducing SEO, rendering, or analytics frameworks outside the approved stack without review.
-- Preserve optional guest accounts and approved accountless booking behavior.
+- Require an active authenticated GUEST account for website booking.
+- Enforce reservation ownership on the backend before returning private
+  booking details or allowing guest payment operations.
+- Preserve staff booking workflows and existing development records.
 
 ## 9. Web-App Development
 

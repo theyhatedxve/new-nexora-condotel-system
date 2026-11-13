@@ -68,15 +68,15 @@ function Footer() {
             <h2>Your booking</h2>
 
             <p>
-              Request a private link to access
-              your reservation.
+              Sign in to view and manage
+              your reservations.
             </p>
 
             <Link
-              to="/booking-access"
+              to="/my-bookings"
               className="guest-footer__booking-link"
             >
-              Find my booking
+              My Bookings
               <ArrowRight
                 size={17}
                 aria-hidden="true"
