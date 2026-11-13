@@ -1,5 +1,22 @@
 # NEXORA — System Directory Structure
 
+## Guest booking cleanup checkpoint — 2026-11-13
+
+Applied source changes:
+
+- Add backend/src/reservations/reservation-crypto.ts for shared token utilities.
+- Add backend/src/reservations/guest-booking-recovery.config.ts for account-bound
+  booking recovery timing.
+- Unregister the obsolete BookingAccessService and BookingAccessEmailService.
+- Replace BookingAccess.jsx with a redirect to /my-bookings.
+- Remove useBookingAccess.js, bookingAccessApi.js, and booking-access.css.
+
+Retain retirement controllers, legacy test dependencies, and Prisma models
+until their remaining consumers and regression checks are migrated.
+
+Status: source applied. Owner runtime verification and authenticated test
+fixture migration are pending.
+
 ## 1. Purpose and Scope
 
 Project Markdown documentation belongs in docs/. README.md is the only

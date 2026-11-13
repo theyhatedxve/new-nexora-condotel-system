@@ -1,13 +1,9 @@
-import { createHash } from 'node:crypto';
 import { NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client.js';
+import { hash, validToken } from './reservation-crypto.js';
 
-export function hash(token: string) {
-  return createHash('sha256').update(token).digest('hex');
-}
-export function validToken(value: unknown): value is string {
-  return typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
-}
+// Compatibility exports for legacy consumers awaiting cleanup.
+export { hash, validToken } from './reservation-crypto.js';
 export function denied(): never {
   throw new NotFoundException('Booking access is invalid or expired.');
 }

@@ -173,6 +173,9 @@ model User {
   passwordHash String
   status       UserStatus @default(PENDING)
 
+  mustChangePassword Boolean @default(false)
+  sessionVersion     Int     @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -180,6 +183,7 @@ model User {
   updatedSettings SystemSetting[] @relation("SystemSettingUpdater")
 
   emailVerificationTokens EmailVerificationToken[]
+  staffSetupTokens        StaffSetupToken[]
   role                    Role                     @relation(fields: [roleId], references: [id], onDelete: Restrict)
   refreshTokens           RefreshToken[]
   guest                   Guest?
@@ -694,6 +698,21 @@ model SystemSetting {
 }
 
 model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model StaffSetupToken {
   id        String    @id @default(cuid())
   userId    String
   tokenHash String    @unique

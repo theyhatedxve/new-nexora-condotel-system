@@ -15,6 +15,8 @@ import {
 import { RegistrationService } from './registration.service.js';
 import { EmailVerificationService } from './email-verification.service.js';
 import { EmailService } from './email.service.js';
+import { StaffPasswordController } from './staff-password.controller.js';
+import { StaffPasswordService } from './staff-password.service.js';
 
 @Module({
   imports: [
@@ -30,7 +32,10 @@ import { EmailService } from './email.service.js';
       },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [
+    AuthController,
+    StaffPasswordController,
+  ],
   providers: [
     AuthService,
     PasswordService,
@@ -38,6 +43,7 @@ import { EmailService } from './email.service.js';
     RegistrationService,
     EmailVerificationService,
     EmailService, 
+    StaffPasswordService,
   ],
 })
 export class AuthModule {}

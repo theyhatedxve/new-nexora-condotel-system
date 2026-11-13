@@ -1,12 +1,18 @@
 # NEXORA — Development Reference and Completion Checklist
 
-**Last synchronized:** 2026-11-12 (guest account booking Step 3 applied). Paths are relative to D:\Web-JSX\NEXORA unless an isolated path is explicitly named.
+**Last synchronized:** 2026-11-13.
 
-**Current development checkpoint:** Guest account booking Steps 1-3 are applied
-on the `frontend` branch. Source review is complete and owner verification is
-pending. The next planned implementation is Step 4, the account-owned My Bookings
-list. See [section L](#l-guest-accounts-and-booking-checkpoint-2026-11-12) and the
-[implementation plan](superpowers/plans/2026-11-12-guest-account-booking.md).
+**Current development checkpoint:** Guest account booking Steps 1-3 are applied.
+Step 4 My Bookings list and reservation-ID detail navigation are present in
+source. Owner runtime verification remains pending.
+
+The approved Step 5 cleanup patch is applied. It updates guest navigation,
+separates shared booking utilities, removes obsolete frontend access files,
+and unregisters obsolete email-access services.
+
+Next: migrate accountless test fixtures to authenticated guest flows, remove
+remaining legacy dependencies after checking their consumers, and complete
+owner-run verification. Step 5 remains incomplete until these checks finish.
 
 **Admin UI redesign:** COMPLETED, as confirmed by the owner on 2026-11-12.
 The owner reports completing the full Admin UI redesign, including Users & Roles.

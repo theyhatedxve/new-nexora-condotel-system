@@ -69,8 +69,8 @@ export default function About() {
           </p>
         </div>
 
-        <Link className="about-page__secondary" to="/booking-access">
-          Find my booking
+        <Link className="about-page__secondary" to="/my-bookings">
+          My Bookings
           <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </section>
