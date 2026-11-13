@@ -1,0 +1,262 @@
+.my-bookings {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding: clamp(2rem, 5vw, 3.5rem) 1rem;
+  color: var(--color-text);
+}
+
+.my-bookings__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.my-bookings__eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-0-75rem, 0.75rem);
+  font-weight: var(--font-weight-700, 700);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.my-bookings h1 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: clamp(1.9rem, 5vw, 2.5rem);
+  line-height: var(--line-height-1-2, 1.2);
+}
+
+.my-bookings__intro {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-muted);
+  line-height: var(--line-height-1-7, 1.7);
+}
+
+.my-bookings__refresh,
+.my-bookings__page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: var(--font-size-0-9rem, 0.9rem);
+  font-weight: var(--font-weight-600, 600);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.my-bookings__refresh:hover:not(:disabled),
+.my-bookings__page-btn:hover:not(:disabled) {
+  background: var(--color-edf0f5);
+}
+
+.my-bookings__refresh:disabled,
+.my-bookings__page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.my-bookings__refresh:focus-visible,
+.my-bookings__page-btn:focus-visible,
+.my-bookings__action:focus-visible,
+.my-bookings__card:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.my-bookings__feedback {
+  padding: var(--space-8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  text-align: center;
+  color: var(--color-text-muted);
+  line-height: var(--line-height-1-7, 1.7);
+}
+
+.my-bookings__feedback p {
+  margin: 0;
+}
+
+.my-bookings__feedback--error {
+  color: var(--color-danger);
+  background: var(--color-fff7f7);
+  border-color: var(--color-e8b6b6);
+}
+
+.my-bookings__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: var(--space-4);
+  padding: 0.6rem 1.25rem;
+  background: var(--color-gold);
+  border-radius: var(--radius-small);
+  color: var(--color-on-gold);
+  font-weight: var(--font-weight-700, 700);
+  text-decoration: none;
+}
+
+.my-bookings__action:hover {
+  background: var(--color-gold-light);
+}
+
+.my-bookings__list {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-bookings__card {
+  display: block;
+  min-width: 0;
+  padding: clamp(1.1rem, 3vw, 1.5rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-gold);
+  border-radius: var(--radius-medium);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.my-bookings__card:hover {
+  border-color: var(--color-gold);
+  box-shadow: 0 2px 8px var(--color-rgb-20-38-63-6);
+}
+
+.my-bookings__card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.my-bookings__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-primary);
+  background: var(--color-background);
+  border-radius: var(--radius-small);
+}
+
+.my-bookings__card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.my-bookings__room {
+  margin: 0 0 var(--space-1);
+  color: var(--color-primary);
+  font-size: var(--font-size-1-1rem, 1.1rem);
+  font-weight: var(--font-weight-700, 700);
+}
+
+.my-bookings__reference {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-0-8rem, 0.8rem);
+  overflow-wrap: anywhere;
+}
+
+.my-bookings__status {
+  flex-shrink: 0;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-999px, 999px);
+  background: var(--color-background);
+  color: var(--color-primary);
+  font-size: var(--font-size-0-75rem, 0.75rem);
+  font-weight: var(--font-weight-700, 700);
+  text-transform: uppercase;
+}
+
+.my-bookings__status[data-status="CONFIRMED"],
+.my-bookings__status[data-status="CHECKED_IN"] {
+  color: var(--color-success);
+  background: var(--color-edf8ef);
+  border-color: var(--color-b9dfc0);
+}
+
+.my-bookings__status[data-status="PENDING"] {
+  color: var(--color-754d08);
+  background: var(--color-fff7e5);
+  border-color: var(--color-ead19a);
+}
+
+.my-bookings__status[data-status="CANCELLED"],
+.my-bookings__status[data-status="EXPIRED"] {
+  color: var(--color-8a2929);
+  background: var(--color-fff1f1);
+  border-color: var(--color-e8bcbc);
+}
+
+.my-bookings__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--space-3) var(--space-6);
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.my-bookings__detail dt {
+  margin-bottom: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-0-75rem, 0.75rem);
+  font-weight: var(--font-weight-700, 700);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.my-bookings__detail dd {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-0-9rem, 0.9rem);
+  font-weight: var(--font-weight-600, 600);
+  overflow-wrap: anywhere;
+}
+
+.my-bookings__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.my-bookings__page-info {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-0-9rem, 0.9rem);
+}
+
+@media (max-width: 560px) {
+  .my-bookings__card-top {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-bookings__card {
+    transition: none;
+  }
+}

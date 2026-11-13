@@ -17,8 +17,8 @@ export default function MyBooking() {
             {context.error}
           </p>
 
-          <Link className="my-booking__button" to="/rooms">
-            Browse rooms
+          <Link className="my-booking__button" to="/my-bookings">
+            Back to My Bookings
           </Link>
         </section>
       </main>
@@ -27,7 +27,8 @@ export default function MyBooking() {
 
   return (
     <MyBookingView
-      key={context.reference || "current"}
+      key={context.reservationId || context.reference || "current"}
+      reservationId={context.reservationId}
       expectedReference={context.reference}
     />
   );

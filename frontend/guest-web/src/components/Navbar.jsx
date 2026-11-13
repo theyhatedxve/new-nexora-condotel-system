@@ -1,4 +1,4 @@
-﻿import { Link, NavLink } from "react-router";
+import { Link, NavLink } from "react-router";
 import { Menu, X } from "lucide-react";
 import nexoraLogo from "../assets/branding/logo-horizontal-dark.svg";
 import { useGuestAuth } from "../auth/useGuestAuth";
@@ -90,6 +90,16 @@ export default function Navbar() {
                 {item.label}
               </NavLink>
             ))}
+
+            {authenticated && auth.user.role === "GUEST" && (
+              <NavLink
+                to="/my-bookings"
+                className="guest-header__link"
+                onClick={closeMenu}
+              >
+                My Bookings
+              </NavLink>
+            )}
           </div>
 
           <div className="guest-header__actions">

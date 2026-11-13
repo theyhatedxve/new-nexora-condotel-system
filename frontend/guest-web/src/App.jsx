@@ -20,6 +20,7 @@ import "./styles/global.css";
 import Checkout from "./pages/Checkout.jsx";
 import BookingAccess from "./pages/BookingAccess.jsx";
 import MyBooking from "./pages/MyBooking.jsx";
+import MyBookings from "./pages/MyBookings.jsx";
 import PaymentReturn from './pages/PaymentReturn.jsx';
 
 function App() {
@@ -41,6 +42,8 @@ function App() {
             <Route element={<GuestRoute />}>
               <Route path="/checkout/:roomTypeId" element={<Checkout />} />
               <Route path="/payment-return" element={<PaymentReturn />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/my-bookings/:reservationId" element={<MyBooking />} />
               <Route path="/my-booking" element={<MyBooking />} />
             </Route>
             <Route path="/booking-access" element={<BookingAccess />} />

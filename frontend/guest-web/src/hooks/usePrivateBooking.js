@@ -1,19 +1,39 @@
-﻿import { useEffect, useState } from "react";
-import { getAccountBooking } from "../services/accountBookingsApi";
+import { useEffect, useState } from "react";
+import { getAccountBooking } from "../services/accountBookingsApi.js";
+import { getMyBookingById } from "../services/guestReservationsApi.js";
 
-export default function usePrivateBooking(expectedReference = null) {
+export default function usePrivateBooking(target = null) {
+  const reservationId =
+    target && typeof target === "object" ? target.reservationId ?? null : null;
+  const expectedReference =
+    typeof target === "string"
+      ? target
+      : target && typeof target === "object"
+        ? target.expectedReference ?? null
+        : null;
+
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState({ status: "loading", booking: null });
 
   useEffect(() => {
     const controller = new AbortController();
-    if (!expectedReference) {
+
+    if (!reservationId && !expectedReference) {
       setState({ status: "unavailable", booking: null });
       return () => controller.abort();
     }
-    getAccountBooking(expectedReference, controller.signal).then(
+
+    setState({ status: "loading", booking: null });
+
+    const request = reservationId
+      ? getMyBookingById(reservationId, controller.signal)
+      : getAccountBooking(expectedReference, controller.signal);
+
+    request.then(
       (booking) => {
-        if (!controller.signal.aborted) setState({ status: "ready", booking });
+        if (!controller.signal.aborted) {
+          setState({ status: "ready", booking });
+        }
       },
       (error) => {
         if (!controller.signal.aborted) {
@@ -24,12 +44,14 @@ export default function usePrivateBooking(expectedReference = null) {
         }
       },
     );
+
     return () => controller.abort();
-  }, [expectedReference, revision]);
+  }, [reservationId, expectedReference, revision]);
 
   function refresh() {
     setState({ status: "loading", booking: null });
     setRevision((value) => value + 1);
   }
+
   return { ...state, revision, refresh };
 }

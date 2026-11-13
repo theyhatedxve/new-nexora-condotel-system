@@ -3,10 +3,13 @@ import { useNavigate } from "react-router";
 import { signOutGuest } from "../services/guestAuthApi.js";
 import usePrivateBooking from "./usePrivateBooking.js";
 
-export default function useMyBookingView({ expectedReference }) {
+export default function useMyBookingView({
+  reservationId = null,
+  expectedReference = null,
+}) {
   const navigate = useNavigate();
 
-  const view = usePrivateBooking(expectedReference);
+  const view = usePrivateBooking({ reservationId, expectedReference });
 
   const [error, setError] = useState("");
 
