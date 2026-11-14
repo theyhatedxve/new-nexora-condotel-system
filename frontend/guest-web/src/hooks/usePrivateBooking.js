@@ -79,7 +79,8 @@ export default function usePrivateBooking(target = null) {
       : { status: "loading", booking: null };
 
   return {
-    ...state,
+    status,
+    booking,
     revision,
     refresh,
   };

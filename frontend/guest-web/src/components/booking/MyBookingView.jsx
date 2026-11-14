@@ -16,7 +16,7 @@ export function MyBookingView({ reservationId = null, expectedReference = null }
         <div>
           <p className="my-booking__eyebrow">Your stay at NEXORA</p>
 
-          <h1>My booking</h1>
+          <h1>Booking Details</h1>
 
           <p className="my-booking__intro">
             Review your stay, booking status, and recorded payments.
