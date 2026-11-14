@@ -1,10 +1,6 @@
 import 'reflect-metadata';
 
-import {
-  createHash,
-  randomBytes,
-  randomUUID,
-} from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
 import {
   mkdtempSync,
@@ -34,7 +30,6 @@ import {
   PrismaBetterSqlite3,
 } from '@prisma/adapter-better-sqlite3';
 
-import cookieParser from 'cookie-parser';
 import request from 'supertest';
 
 import {
@@ -72,10 +67,6 @@ import {
   ReservationsModule,
 } from '../reservations/reservations.module.js';
 
-import {
-  BOOKING_COOKIE,
-} from '../reservations/booking-access.config.js';
-
 const secret =
   'isolated-payment-summary-test-secret-at-least-32-bytes';
 
@@ -85,7 +76,6 @@ let prisma: PrismaClient;
 let jwt: JwtService;
 let bookingId: string;
 let otherId: string;
-let cookie: string;
 let users: Record<string, string>;
 
 const privatePath =
@@ -99,6 +89,7 @@ function bearer(role = 'MANAGER') {
   return `Bearer ${jwt.sign({
     sub: users[role],
     jti: randomUUID(),
+    sv: 0,
   })}`;
 }
 
@@ -112,6 +103,7 @@ describe(
       );
 
       vi.stubEnv('NODE_ENV', 'test');
+      vi.stubEnv('NEXORA_BOOKING_DEADLINE_WORKER_ENABLED', 'false');
 
       directory = mkdtempSync(
         resolve(
@@ -267,24 +259,6 @@ describe(
         }
       }
 
-      const token =
-        randomBytes(32).toString('hex');
-
-      await prisma.reservationAccessSession.create({
-        data: {
-          reservationId: bookingId,
-          tokenHash: createHash('sha256')
-            .update(token)
-            .digest('hex'),
-          expiresAt: new Date(
-            Date.now() + 60_000,
-          ),
-        },
-      });
-
-      cookie =
-        `${BOOKING_COOKIE}=${token}`;
-
       const module =
         await Test.createTestingModule({
           imports: [
@@ -333,7 +307,6 @@ describe(
       app = module.createNestApplication();
 
       app.setGlobalPrefix('api');
-      app.use(cookieParser());
 
       app.useGlobalPipes(
         new ValidationPipe({
@@ -411,6 +384,8 @@ describe(
           .get(path())
           .expect(401);
 
+        const authorization = bearer();
+
         await prisma.user.update({
           where: {
             id: users.MANAGER,
@@ -424,7 +399,7 @@ describe(
           .get(path())
           .set(
             'Authorization',
-            bearer(),
+            authorization,
           )
           .expect(401);
       },
@@ -460,7 +435,7 @@ describe(
     );
 
     it(
-      'uses only the verified session booking and exposes no payment identifiers',
+      'uses the owned reservation path and exposes no payment identifiers',
       async () => {
         await prisma.payment.create({
           data: {
@@ -479,10 +454,13 @@ describe(
         const result =
           await request(app.getHttpServer())
             .get(
-              `${privatePath}?reservationId=${otherId}`,
+              `${path()}?reservationId=${otherId}`,
             )
-            .set('Cookie', cookie)
+            .set('Authorization', bearer('GUEST'))
             .expect(200);
+
+        expect(result.headers['cache-control']).toBe('no-store');
+        expect(result.headers['set-cookie']).toBeUndefined();
 
         expect(
           result.body.data,
@@ -531,40 +509,46 @@ describe(
       },
     );
 
-    it(
-      'rejects missing, expired and revoked accountless sessions',
-      async () => {
-        await request(app.getHttpServer())
-          .get(privatePath)
-          .expect(404);
+    it('rejects a guest disabled after token issuance', async () => {
+      const authorization = bearer('GUEST');
 
-        await prisma.reservationAccessSession.updateMany({
-          data: {
-            expiresAt: new Date(
-              Date.now() - 1000,
-            ),
-          },
+      await prisma.user.update({
+        where: { id: users.GUEST },
+        data: { status: 'DISABLED' },
+      });
+
+      await request(app.getHttpServer())
+        .get(path())
+        .set('Authorization', authorization)
+        .expect(401);
+    });
+
+    it('rejects a legacy cookie on the authenticated summary route', async () => {
+      await request(app.getHttpServer())
+        .get(path())
+        .set('Cookie', `nexora_booking_access=${'a'.repeat(64)}`)
+        .expect(401);
+    });
+
+    for (const method of ['get', 'post'] as const) {
+      for (const withCookie of [false, true]) {
+        it(`retires ${method.toUpperCase()} accountless summaries with cookie=${withCookie}`, async () => {
+          const pending = request(app.getHttpServer())[method](privatePath);
+
+          if (withCookie) {
+            pending.set('Cookie', `nexora_booking_access=${'a'.repeat(64)}`);
+          }
+
+          const result = await pending.expect(410);
+
+          expect(result.headers['cache-control']).toBe('no-store');
+          expect(result.headers['set-cookie']).toBeUndefined();
+          expect(result.body).not.toHaveProperty('data');
+          expect(await prisma.payment.count()).toBe(0);
+          expect(await prisma.refund.count()).toBe(0);
+          expect(await prisma.auditLog.count()).toBe(0);
         });
-
-        await request(app.getHttpServer())
-          .get(privatePath)
-          .set('Cookie', cookie)
-          .expect(404);
-
-        await prisma.reservationAccessSession.updateMany({
-          data: {
-            expiresAt: new Date(
-              Date.now() + 60_000,
-            ),
-            revokedAt: new Date(),
-          },
-        });
-
-        await request(app.getHttpServer())
-          .get(privatePath)
-          .set('Cookie', cookie)
-          .expect(404);
-      },
-    );
+      }
+    }
   },
 );
