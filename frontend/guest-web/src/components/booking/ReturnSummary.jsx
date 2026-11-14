@@ -64,9 +64,9 @@ export function ReturnSummary({ booking, onRefresh }) {
 
       <Link
         className="checkout-link"
-        to={"/my-booking?booking=" + encodeURIComponent(booking.reservationNumber)}
+        to="/my-bookings"
       >
-        View this booking
+        View My Bookings
       </Link>
     </>
   );

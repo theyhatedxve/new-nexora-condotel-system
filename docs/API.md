@@ -1,5 +1,29 @@
 # NEXORA — REST API Documentation
 
+## Guest account API checkpoint — 2026-11-13
+
+This checkpoint supersedes earlier descriptions of optional accounts and
+accountless email-link access.
+
+Website booking requires an active authenticated GUEST account.
+Reservation details and guest payment operations enforce account ownership.
+
+Current account routes include:
+
+- GET /api/guest/reservations
+- GET /api/guest/reservations/:id
+- GET /api/guest/reservations/profile
+- GET /api/guest/reservations/by-reference/:reference
+- POST /api/guest/reservations
+- POST /api/guest/reservations/recover
+
+The former /api/reservations/access endpoints and
+POST /api/reservations/pay-at-property are retired. Their existing
+retirement controllers return HTTP 410 and grant no booking access.
+
+Historical accountless endpoint descriptions below are retained as history
+and do not describe supported guest entry points.
+
 ## 1. Contract Status
 
 Phases 1–6 are owner-confirmed complete, including Phase 6 (10/10).

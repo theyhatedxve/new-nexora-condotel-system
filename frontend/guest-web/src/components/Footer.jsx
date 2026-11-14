@@ -68,7 +68,8 @@ function Footer() {
             <h2>Your booking</h2>
 
             <p>
-              Sign in to view and manage your reservations.
+              Sign in to view and manage
+              your reservations.
             </p>
 
             <Link

@@ -6,7 +6,7 @@ import useMyBookingView from "../../hooks/useMyBookingView.js";
 import { displayTime } from "../../utils/bookingDisplayTime.js";
 import { SummaryRow } from "./SummaryRow.jsx";
 
-export function MyBookingView({ reservationId, expectedReference }) {
+export function MyBookingView({ reservationId = null, expectedReference = null }) {
   const { view, error, signingOut, booking, signOut, method, propertyPending, closed } =
     useMyBookingView({ reservationId, expectedReference });
 
@@ -183,6 +183,15 @@ export function MyBookingView({ reservationId, expectedReference }) {
                 redirect.
               </p>
             )}
+
+            {booking.cancellationPolicy && (
+              <p className="my-booking__notice">
+                <strong>Cancellation policy:</strong>{" "}
+                {booking.cancellationPolicy.unpaidEligible
+                  ? booking.cancellationPolicy.text
+                  : "This reservation cannot use unpaid pre-check-in cancellation. Contact the property for assistance."}
+              </p>
+            )}
           </section>
 
           <footer className="my-booking__actions">
@@ -212,8 +221,8 @@ export function MyBookingView({ reservationId, expectedReference }) {
       )}
 
       {!booking && view.status !== "loading" && (
-        <Link className="my-booking__button" to="/rooms">
-          Browse rooms
+        <Link className="my-booking__button" to="/my-bookings">
+          Back to My Bookings
         </Link>
       )}
     </main>

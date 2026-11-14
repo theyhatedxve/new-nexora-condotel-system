@@ -58,7 +58,7 @@ export default function ReservationActions({
       aria-labelledby="reservation-actions-title"
       onKeyDown={handleKeyDown}
     >
-      <h2 id="reservation-actions-title">Reservation actions</h2>
+      <h2 id="reservation-actions-title" tabIndex={-1}>Reservation actions</h2>
 
       <p>Reservation rules are checked again before an action is applied.</p>
 
@@ -139,6 +139,7 @@ export default function ReservationActions({
         </p>
       )}
 
+      <div className="reservation-action-groups">
       {confirmed && (
         <fieldset disabled={disabled} className="action-fields">
           <legend>Physical room assignment</legend>
@@ -181,12 +182,12 @@ export default function ReservationActions({
       )}
 
       {cancellableState && (
-        <fieldset disabled={disabled} className="action-fields">
+        <fieldset disabled={disabled} className="action-fields reservation-cancellation">
           <legend>Cancellation</legend>
 
-          <p>
+          <p id="cancellation-policy-help">
             The reservation cannot be cancelled when any payment record exists, including
-            failed or refunded records.
+            failed or refunded records. Cancellation does not issue a refund.
           </p>
 
           <label htmlFor="cancellation-reason">Cancellation reason</label>
@@ -197,7 +198,7 @@ export default function ReservationActions({
             minLength={3}
             maxLength={500}
             rows={3}
-            aria-describedby="cancellation-reason-help"
+            aria-describedby="cancellation-policy-help cancellation-reason-help"
             onChange={changeReason}
           />
 
@@ -253,6 +254,7 @@ export default function ReservationActions({
           </button>
         </fieldset>
       )}
+      </div>
 
       {!["CONFIRMED", "PENDING", "CHECKED_IN"].includes(booking.status) && (
         <p>No actions are available for this reservation state.</p>
@@ -294,6 +296,7 @@ export default function ReservationActions({
           <div className="actions">
             <button
               type="button"
+              className={confirmation.command.kind === "cancel" ? "danger-button" : undefined}
               disabled={!confirmationCurrent || pending || locked}
               onClick={confirmReservationAction}
             >

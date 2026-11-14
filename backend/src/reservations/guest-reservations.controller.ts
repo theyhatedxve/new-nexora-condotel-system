@@ -13,6 +13,9 @@ import type { Request } from 'express';
 import {
   Roles,
 } from '../common/decorators/roles.decorator.js';
+import type { Request } from 'express';
+
+import { Roles } from '../common/decorators/roles.decorator.js';
 
 import type {
   AuthenticatedUser,
@@ -46,6 +49,16 @@ export class GuestReservationsController {
   constructor(
     private readonly reservations: GuestReservationsService,
   ) {}
+import { GuestReservationListDto } from './dto/guest-reservation-list.dto.js';
+
+import { GuestReservationsService } from './guest-reservations.service.js';
+
+type GuestRequest = Request & { user: AuthenticatedUser };
+
+@Controller('guest/reservations')
+@Roles('GUEST')
+export class GuestReservationsController {
+  constructor(private readonly reservations: GuestReservationsService) {}
 
   @Get()
   @Header('Cache-Control', 'no-store')
@@ -59,6 +72,7 @@ export class GuestReservationsController {
         request.user,
         query,
       ),
+      data: await this.reservations.listForGuest(request.user, query),
     };
   }
 
@@ -74,6 +88,11 @@ export class GuestReservationsController {
         params.id,
         request.user,
       ),
+    @Param('id') id: string,
+    @Req() request: GuestRequest,
+  ) {
+    return {
+      data: await this.reservations.findOneForGuest(id, request.user),
     };
   }
 }

@@ -22,6 +22,24 @@ patterns are recorded below. Phase 5 is in progress: Steps 1–3 complete; Steps
 4–5 backend complete with frontend integration in progress; Steps 6–7 pending.
 Phase 6 onward is NOT STARTED / AWAITING APPROVAL.
 
+### Current source organization (2026-11-10)
+
+The guest/admin refactors apply the patterns below through `src/hooks/` for
+state, effects, and handlers; `src/pages/` and feature folders under
+`src/components/` for presentation; `src/services/` for existing API access;
+and `src/constants/` and `src/utils/` for focused definitions and helpers.
+Both applications keep existing visual values in their own
+`src/styles/tokens.css`.
+
+Backend controllers and DTOs retain their HTTP/validation roles. Services retain
+authorization and transaction orchestration. Feature-local modules now hold
+extracted definitions and helpers, including `auth/registration-policy.ts`,
+`payments/refund-settlement.ts`, and `payments/reconciliation-queue.ts`.
+Transaction helpers receive the service's existing transaction client; they do
+not create a replacement transaction boundary. See the
+[current directory updates](DIRECTORY_STRUCTURE.md#21-current-refactor-directory-updates-2026-11-10)
+for exact locations. The older illustrative examples below remain examples.
+
 ## 2. React Component Composition
 
 A reusable component receives data through props.

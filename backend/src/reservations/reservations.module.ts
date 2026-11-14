@@ -23,14 +23,6 @@ import {
 } from './booking-access.controller.js';
 
 import {
-  BookingAccessService,
-} from './booking-access.service.js';
-
-import {
-  BookingAccessEmailService,
-} from './booking-access-email.service.js';
-
-import {
   InventorySafetyModule,
 } from '../common/inventory/inventory-safety.module.js';
 
@@ -138,8 +130,6 @@ import {
     RoomRateCapacityService,
     ReservationValidationService,
     ReservationAcquisitionService,
-    BookingAccessService,
-    BookingAccessEmailService,
     RoomAssignmentsService,
     ReservationLifecycleService,
     ReservationCancellationService,

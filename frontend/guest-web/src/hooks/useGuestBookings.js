@@ -1,34 +1,59 @@
-import { useEffect, useMemo, useState } from "react";
-import { listMyBookings } from "../services/guestReservationsApi.js";
+import { useCallback, useEffect, useState } from "react";
+import { getMyBookings } from "../services/guestReservationsApi.js";
 
-export default function useGuestBookings(page) {
+const PAGE_LIMIT = 20;
+
+export default function useGuestBookings() {
+  const [page, setPage] = useState(1);
   const [revision, setRevision] = useState(0);
-  const [result, setResult] = useState(null);
-  const request = useMemo(() => ({ page, revision }), [page, revision]);
+  const [state, setState] = useState({
+    status: "loading",
+    items: [],
+    total: 0,
+    totalPages: 0,
+  });
 
   useEffect(() => {
     const controller = new AbortController();
-    listMyBookings(request.page, controller.signal).then(
+
+    getMyBookings(page, PAGE_LIMIT, controller.signal).then(
       (data) => {
-        if (!controller.signal.aborted) {
-          setResult({ request, status: "ready", data });
-        }
+        if (controller.signal.aborted) return;
+        setState({
+          status: data.items.length === 0 ? "empty" : "ready",
+          items: data.items,
+          total: data.total,
+          totalPages: data.totalPages,
+        });
       },
       () => {
-        if (!controller.signal.aborted) {
-          setResult({ request, status: "error", data: null });
-        }
+        if (controller.signal.aborted) return;
+        setState({
+          status: "error",
+          items: [],
+          total: 0,
+          totalPages: 0,
+        });
       },
     );
+
     return () => controller.abort();
-  }, [request]);
+  }, [page, revision]);
 
-  function refresh() {
+  const goToPage = useCallback((nextPage) => {
+    setState((prev) => ({ ...prev, status: "loading" }));
+    setPage(nextPage);
+  }, []);
+
+  const refresh = useCallback(() => {
+    setState((prev) => ({ ...prev, status: "loading" }));
     setRevision((value) => value + 1);
-  }
+  }, []);
 
-  if (result?.request !== request) {
-    return { status: "loading", data: null, refresh };
-  }
-  return { status: result.status, data: result.data, refresh };
+  return {
+    ...state,
+    page,
+    goToPage,
+    refresh,
+  };
 }

@@ -4,15 +4,27 @@ import { getMyBookingById } from "../services/guestReservationsApi.js";
 
 export default function usePrivateBooking(target = null) {
   const reservationId =
-    target && typeof target === "object" ? target.reservationId ?? null : null;
+    target && typeof target === "object"
+      ? target.reservationId ?? null
+      : null;
+
   const expectedReference =
-    typeof target === "string" ? target : target?.expectedReference ?? null;
+    typeof target === "string"
+      ? target
+      : target && typeof target === "object"
+        ? target.expectedReference ?? null
+        : null;
+
   const [revision, setRevision] = useState(0);
   const [result, setResult] = useState(null);
 
   const request = useMemo(
     () => ({ reservationId, expectedReference, revision }),
     [reservationId, expectedReference, revision],
+  );
+
+  const hasTarget = Boolean(
+    request.reservationId || request.expectedReference,
   );
 
   useEffect(() => {
@@ -24,7 +36,10 @@ export default function usePrivateBooking(target = null) {
 
     const pending = request.reservationId
       ? getMyBookingById(request.reservationId, controller.signal)
-      : getAccountBooking(request.expectedReference, controller.signal);
+      : getAccountBooking(
+          request.expectedReference,
+          controller.signal,
+        );
 
     pending.then(
       (booking) => {
@@ -57,15 +72,11 @@ export default function usePrivateBooking(target = null) {
     setRevision((value) => value + 1);
   }
 
-  let status = "loading";
-  let booking = null;
-
-  if (!request.reservationId && !request.expectedReference) {
-    status = "unavailable";
-  } else if (result?.request === request) {
-    status = result.status;
-    booking = result.booking;
-  }
+  const state = !hasTarget
+    ? { status: "unavailable", booking: null }
+    : result?.request === request
+      ? { status: result.status, booking: result.booking }
+      : { status: "loading", booking: null };
 
   return {
     status,

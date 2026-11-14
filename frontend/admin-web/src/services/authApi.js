@@ -125,6 +125,19 @@ export function signIn(email, password) {
 
       const status = error.response?.status;
 
+      if (
+        status === 403 &&
+        error.response?.data?.code === "PASSWORD_CHANGE_REQUIRED"
+      ) {
+        publish(
+          "anonymous",
+          null,
+          "Replace your temporary password before signing in.",
+        );
+
+        return { passwordChangeRequired: true };
+      }
+
       const message =
         status === 401
           ? "Sign-in failed. Check your credentials and account access."

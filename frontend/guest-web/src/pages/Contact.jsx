@@ -76,7 +76,8 @@ export default function Contact() {
             <h3>Already have a booking?</h3>
 
             <p>
-              Sign in to your guest account to view your bookings and stay details.
+              Sign in to your guest account to view your bookings
+              and stay details.
             </p>
 
             <Link to="/my-bookings">

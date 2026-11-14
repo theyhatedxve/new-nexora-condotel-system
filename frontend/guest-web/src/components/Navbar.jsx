@@ -90,18 +90,19 @@ export default function Navbar() {
                 {item.label}
               </NavLink>
             ))}
-          </div>
 
-          <div className="guest-header__actions">
             {authenticated && auth.user.role === "GUEST" && (
               <NavLink
                 to="/my-bookings"
-                className="guest-header__account"
+                className="guest-header__link"
                 onClick={closeMenu}
               >
                 My Bookings
               </NavLink>
             )}
+          </div>
+
+          <div className="guest-header__actions">
             {auth.status === "loading" && (
               <span className="guest-header__session" role="status">
                 Checking session…

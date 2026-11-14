@@ -1,4 +1,11 @@
 import { Link } from "react-router";
+import {
+  ArrowRight,
+  BedDouble,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+} from "lucide-react";
 import StaffDataState from "../StaffDataState";
 import CreateRoomForm from "../CreateRoomForm";
 import { formatStatus } from "../../utils/formatters";
@@ -24,9 +31,16 @@ export function RoomDirectory({ query, queryKey, onApply, onClear, onPage }) {
   return (
     <>
       {canManage && (
-        <p>
-          <Link to="/rooms/types">Manage room types and nightly rates</Link>
-        </p>
+        <div className="rooms-screen__tools">
+          <Link
+            className="rooms-screen__secondary"
+            to="/rooms/types"
+          >
+            <BedDouble size={18} aria-hidden="true" />
+            Manage room types and nightly rates
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
       )}
 
       <StaffDataState state={catalog} label="Room filter options" />
@@ -39,15 +53,26 @@ export function RoomDirectory({ query, queryKey, onApply, onClear, onPage }) {
         onClear={onClear}
       />
 
-      <section className="record-section" aria-labelledby="room-results-title">
+      <section
+        className="record-section rooms-screen__results"
+        aria-labelledby="room-results-title"
+      >
         <div className="records-heading">
-          <h2 id="room-results-title">Room results</h2>
+          <div>
+            <h2 id="room-results-title">Room inventory</h2>
+
+            <p className="rooms-screen__muted">
+              Open a room to view its details and permitted management actions.
+            </p>
+          </div>
 
           <button
             type="button"
+            className="rooms-screen__secondary"
             disabled={records.loading || catalog.loading}
             onClick={refreshResults}
           >
+            <RefreshCw size={16} aria-hidden="true" />
             Refresh rooms
           </button>
         </div>
@@ -56,16 +81,15 @@ export function RoomDirectory({ query, queryKey, onApply, onClear, onPage }) {
 
         {data && (
           <>
-            <p ref={resultSummary} role="status" tabIndex={-1}>
+            <p
+              className="rooms-screen__summary"
+              ref={resultSummary}
+              role="status"
+              tabIndex={-1}
+            >
               {data.total === 0
                 ? "No rooms match the applied filters."
-                : "Showing " +
-                  start +
-                  "–" +
-                  end +
-                  " of " +
-                  data.total +
-                  " matching rooms."}
+                : `Showing ${start}–${end} of ${data.total} matching rooms.`}
             </p>
 
             {data.items.length > 0 && (
@@ -77,41 +101,78 @@ export function RoomDirectory({ query, queryKey, onApply, onClear, onPage }) {
                   tabIndex={0}
                 >
                   <table className="records-table">
-                    <caption>Matching physical rooms, by room number</caption>
+                    <caption>
+                      Matching physical rooms, ordered by room number
+                    </caption>
 
                     <thead>
                       <tr>
                         <th scope="col">Room</th>
-                        <th scope="col">Floor</th>
                         <th scope="col">Room type</th>
+                        <th scope="col">Floor</th>
                         <th scope="col">Capacity</th>
-                        <th scope="col">Status</th>
+                        <th scope="col">Operational status</th>
                         <th scope="col">Room active</th>
                         <th scope="col">Type active</th>
+                        <th scope="col">Actions</th>
                       </tr>
                     </thead>
 
                     <tbody>
                       {data.items.map((room) => (
                         <tr key={room.id}>
-                          <td>
+                          <th scope="row">
                             <Link
+                              className="rooms-screen__room-link"
                               to={"/rooms/" + encodeURIComponent(room.id)}
-                              state={{
-                                roomListSearch: listSearch,
-                              }}
+                              state={{ roomListSearch: listSearch }}
                             >
                               {room.roomNumber}
                             </Link>
-                          </td>
-
-                          <td>{room.floor || "Not recorded"}</td>
+                          </th>
 
                           <td>{room.roomType.name}</td>
+                          <td>{room.floor || "Not recorded"}</td>
                           <td>{room.roomType.capacity}</td>
-                          <td>{formatStatus(room.status)}</td>
-                          <td>{room.isActive ? "Yes" : "No"}</td>
-                          <td>{room.roomType.isActive ? "Yes" : "No"}</td>
+
+                          <td>
+                            <span
+                              className="rooms-screen__badge"
+                              data-status={room.status}
+                            >
+                              {formatStatus(room.status)}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span
+                              className="rooms-screen__badge"
+                              data-active={String(room.isActive)}
+                            >
+                              {room.isActive ? "Active" : "Inactive"}
+                            </span>
+                          </td>
+
+                          <td>
+                            <span
+                              className="rooms-screen__badge"
+                              data-active={String(room.roomType.isActive)}
+                            >
+                              {room.roomType.isActive ? "Active" : "Inactive"}
+                            </span>
+                          </td>
+
+                          <td>
+                            <Link
+                              className="rooms-screen__details-link"
+                              to={"/rooms/" + encodeURIComponent(room.id)}
+                              state={{ roomListSearch: listSearch }}
+                              aria-label={`View details for room ${room.roomNumber}`}
+                            >
+                              View details
+                              <ArrowRight size={16} aria-hidden="true" />
+                            </Link>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -119,25 +180,33 @@ export function RoomDirectory({ query, queryKey, onApply, onClear, onPage }) {
                 </div>
 
                 <nav className="room-pagination" aria-label="Room result pages">
-                  <button type="button" disabled={data.page <= 1} onClick={previousPage}>
+                  <button
+                    type="button"
+                    className="rooms-screen__secondary"
+                    disabled={data.page <= 1}
+                    onClick={previousPage}
+                  >
+                    <ChevronLeft size={16} aria-hidden="true" />
                     Previous
                   </button>
 
-                  <span>
+                  <span className="rooms-screen__page-number">
                     Page {data.page} of {data.totalPages}
                   </span>
 
                   <button
                     type="button"
+                    className="rooms-screen__secondary"
                     disabled={data.page >= Math.min(data.totalPages, 10000)}
                     onClick={nextPage}
                   >
                     Next
+                    <ChevronRight size={16} aria-hidden="true" />
                   </button>
                 </nav>
 
                 {data.totalPages > 10000 && (
-                  <p>
+                  <p className="rooms-screen__muted">
                     Navigation is limited to 10,000 pages. Narrow the filters to reach
                     later records.
                   </p>
@@ -148,7 +217,12 @@ export function RoomDirectory({ query, queryKey, onApply, onClear, onPage }) {
         )}
       </section>
 
-      {canManage && <CreateRoomForm rooms={creationCatalog} returnSearch={listSearch} />}
+      {canManage && (
+        <CreateRoomForm
+          rooms={creationCatalog}
+          returnSearch={listSearch}
+        />
+      )}
     </>
   );
 }

@@ -1,3 +1,4 @@
+import { RotateCcw, Search } from "lucide-react";
 import { RESERVATION_LIST_STATUSES } from "../../services/reservationsApi";
 import { formatStatus } from "../../utils/formatters";
 import useReservationFilters from "../../hooks/useReservationFilters.js";
@@ -16,16 +17,20 @@ export function ReservationFilters({ query, onApply, onClear }) {
 
   return (
     <form className="reservation-filters" onSubmit={submit}>
-      {error && <p role="alert">{error}</p>}
-
-      <fieldset className="reservation-filter-fields">
+      <fieldset
+        className="reservation-filter-fields"
+        aria-describedby={error ? "reservation-filter-help reservation-filter-error" : "reservation-filter-help"}
+      >
         <legend>Filter reservations</legend>
 
-        <div>
+        {error && <p id="reservation-filter-error" role="alert" className="reservations-screen__filter-error">{error}</p>}
+
+        <div className="reservations-screen__reference-field">
           <label htmlFor="reservation-reference-filter">Booking reference</label>
           <input
             id="reservation-reference-filter"
             type="search"
+            placeholder="Search by booking reference"
             maxLength={100}
             value={draft.q}
             onChange={changeQ}
@@ -77,14 +82,18 @@ export function ReservationFilters({ query, onApply, onClear }) {
           </select>
         </div>
 
-        <p className="reservation-filter-help">
+        <p id="reservation-filter-help" className="reservation-filter-help">
           Both selected check-in dates are included. Apply filters to update the results.
         </p>
 
         <div className="actions reservation-filter-actions">
-          <button type="submit">Apply filters</button>
+          <button type="submit" className="reservations-screen__primary">
+            <Search size={17} aria-hidden="true" />
+            Apply filters
+          </button>
 
-          <button type="button" onClick={onClear}>
+          <button type="button" onClick={onClear} className="reservations-screen__secondary">
+            <RotateCcw size={17} aria-hidden="true" />
             Clear filters
           </button>
         </div>

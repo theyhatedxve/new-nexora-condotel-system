@@ -30,6 +30,14 @@ For the inspected current directory tree and links between folders and project
 documentation, see [System Directory Structure](DIRECTORY_STRUCTURE.md).
 The tree below describes the intended expanded layout, including future folders.
 
+**Current directory update (2026-11-10):** Both frontends now also use
+`src/constants/` and `src/utils/`. Feature-specific components and hooks hold
+presentation and state/handler logic separately, and each frontend has
+`src/styles/tokens.css`. Backend feature directories contain extracted policy,
+projection, validation, and payment-evidence helpers alongside existing services.
+The [current directory updates](DIRECTORY_STRUCTURE.md#21-current-refactor-directory-updates-2026-11-10)
+list the actual locations; the expanded tree below is still a blueprint.
+
 The existing frontend/ parent directory is retained.
 
 This reconciles the blueprint's illustrative root-level frontend folders

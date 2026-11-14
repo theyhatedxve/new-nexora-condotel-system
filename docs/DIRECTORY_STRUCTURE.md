@@ -1,5 +1,22 @@
 # NEXORA — System Directory Structure
 
+## Guest booking cleanup checkpoint — 2026-11-13
+
+Applied source changes:
+
+- Add backend/src/reservations/reservation-crypto.ts for shared token utilities.
+- Add backend/src/reservations/guest-booking-recovery.config.ts for account-bound
+  booking recovery timing.
+- Unregister the obsolete BookingAccessService and BookingAccessEmailService.
+- Replace BookingAccess.jsx with a redirect to /my-bookings.
+- Remove useBookingAccess.js, bookingAccessApi.js, and booking-access.css.
+
+Retain retirement controllers, legacy test dependencies, and Prisma models
+until their remaining consumers and regression checks are migrated.
+
+Status: source applied. Owner runtime verification and authenticated test
+fixture migration are pending.
+
 ## 1. Purpose and Scope
 
 Project Markdown documentation belongs in docs/. README.md is the only
@@ -22,7 +39,11 @@ migrations; Step 7.1 adds no schema change. See [AGENTS.md](AGENTS.md) for the
 checkpoint and reported-versus-executed verification boundaries. This update
 ran no application checks or database operations.
 
-## 2. Current Directory Structure
+## 2. Earlier Directory Snapshot (2026-11-01)
+
+The tree below retains the earlier inventory. For the current responsibility
+separation and moved files, see section 2.1 below; this snapshot is not an
+exhaustive list of today's source files.
 
 This tree shows application source, configuration, tests, and documentation.
 Dependency contents, build output, generated-client contents, local databases,
@@ -334,6 +355,83 @@ NEXORA/
 └── README.md
 ```
 
+## 2.1. Current Refactor Directory Updates (2026-11-10)
+
+The guest website, admin website, and backend now separate presentation,
+workflow coordination, and feature definitions. Paths below were checked against
+the current directory. These are structural changes, not new business features.
+
+```text
+frontend/guest-web/src/
+  pages/                    Route screens
+  components/
+    booking/                Private booking and payment-return presentation
+    checkout/               Checkout form presentation
+    rooms/                  Catalog, availability results, and search presentation
+  hooks/                    State, effects, validation coordination, and handlers
+  services/                 Existing API clients
+  constants/                Home/About/Contact/Policies content and checkout scope
+  utils/                    Search validation, summaries, and display helpers
+  styles/
+    tokens.css              Existing guest style values as CSS custom properties
+    availability-search.css
+    featured-rooms.css
+    home-stay-search.css
+
+frontend/admin-web/src/
+  pages/                    Route screens
+  components/
+    audit/
+    guests/
+    payments/reconciliation/
+    reports/
+    reservations/
+    rooms/
+    settings/
+  hooks/                    Screen/form state, handlers, session, and layout logic
+  auth/                     Existing context and route authorization boundary
+  services/                 Existing API, session, and action clients
+  constants/                Display metadata, action labels, and status options
+  utils/                    Display/date helpers, drafts, and queue pagination
+  styles/tokens.css         Existing admin style values as CSS custom properties
+
+backend/src/<feature>/
+  *.controller.ts           Existing HTTP boundary
+  dto/                      Existing request validation
+  *.service.ts              Authorization and business workflow coordination
+  Feature-local .ts files   Extracted policy, projection, validation, and helpers
+```
+
+The three guest component stylesheets now live in `src/styles/`; the earlier
+`src/components/AvailabilitySearch.css` path is historical. Other existing
+stylesheets remain in `styles/`. Each frontend keeps its own `tokens.css`.
+
+Key backend additions:
+
+| Feature | New files in its `backend/src/` directory |
+|---|---|
+| `auth/` | `auth.types.ts`, `refresh-token.ts`, `registration-policy.ts` |
+| `availability/` | `availability-stay.ts` |
+| `audit/` | `audit-filters.ts` |
+| `reports/` | `collections-report-range.ts` |
+| `amenities/` | `amenity-projection.ts`, `amenity-validation.ts` |
+| `rooms/` | `room-query.ts`, `room-validation.ts` |
+| `room-types/` | `room-type-projection.ts` |
+| `room-blocks/` | `room-block-query.ts` |
+| `room-images/` | `room-image-projection.ts` |
+| `settings/` | `property-settings-definition.ts` |
+| `guests/` | `staff-guest-policy.ts` |
+| `reservations/` | `reservation-acquisition-policy.ts`, `staff-reservation-query.ts`, `guest-booking-staff-policy.ts`, `guest-booking-staff-receipt.ts` |
+| `payments/` | `checkout-response.ts`, `staff-payment-projection.ts`, `refund-policy.ts`, `refund-settlement.ts`, `reconciliation-evidence.ts`, `reconciliation-queue.ts` |
+
+The refactor records are in `docs/superpowers/plans/`:
+[guest-web](superpowers/plans/2026-11-10-guest-web-refactor.md),
+[admin-web](superpowers/plans/2026-11-10-admin-web-refactor.md), and
+[backend](superpowers/plans/2026-11-10-backend-refactor.md).
+They record file responsibilities and verification limits. Existing service
+exports remain compatible where definitions moved; schema and API contracts
+were not changed by these refactors.
+
 ## 3. Directory Responsibilities
 
 | Location | Responsibility | Related documentation |
@@ -343,6 +441,9 @@ NEXORA/
 | Frontend `src/components/` | Reusable interface pieces | [Coding patterns](CODING_PATTERNS.md), [design guidelines](design_guidelines.md) |
 | Frontend `src/pages/` and existing `src/layouts/` | Route-level screens and shared page shells | [Technical plan](TECHNICAL_PLAN.md), [business flows](BUSINESS_FLOWS.md) |
 | Frontend `src/services/` | HTTP client configuration and API access | [API contracts](API.md), [coding patterns](CODING_PATTERNS.md) |
+| Frontend `src/hooks/` | Screen/form state, effects, event handlers, and workflow coordination | [Coding patterns](CODING_PATTERNS.md) |
+| Frontend `src/constants/` and `src/utils/` | Feature display definitions and focused validation/formatting helpers | [Coding principles](CODING_PRINCIPLES.md) |
+| Each frontend's `src/styles/tokens.css` | Existing application-specific visual constants | [Design guidelines](design_guidelines.md) |
 | Frontend `src/styles/`, `src/assets/`, and `public/` | Shared CSS, imported assets, and static public files | [Design guidelines](design_guidelines.md) |
 | `backend/src/` | API bootstrap, modules, controllers, and services | [System design](SYSTEM_DESIGN.md), [API contracts](API.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/src/payments/` | Read-only payment-summary calculation, JWT/ownership service, controller/module and two test suites | [API](API.md#7-payments-and-webhooks), [payment semantics](DATABASE_SCHEMA.md#phase-71-payment-semantics), [security](SECURITY.md#phase-71-payment-summary-authorization) |
@@ -383,9 +484,9 @@ needs them:
 
 - Guest `layouts/`, `hooks/`, and `utils/` now exist. Add `routes/` or other
   frontend directories only when required; existing route declarations are in App.jsx.
-- Backend future feature directories: `users/`, `guests/`,
-  `nfc/`, `dashboard/`, `reports/`, `uploads/`,
-  `settings/`, and `audit/`.
+- Backend future feature directories: `users/`, `nfc/`, and `uploads/`.
+- Backend `guests/`, `dashboard/`, `reports/`, `settings/`, and `audit/`
+  now exist in the current directory.
 - Backend `auth/`, `room-types/`, `rooms/`, `amenities/`, `room-images/`,
   `room-blocks/`, `availability/`, `reservations/`, `payments/`, and `common/`
   already exist; add further shared concerns only when needed.

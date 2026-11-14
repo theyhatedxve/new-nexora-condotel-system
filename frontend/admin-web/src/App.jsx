@@ -19,6 +19,9 @@ import PaymentReconciliation from "./pages/PaymentReconciliation";
 import Reports from "./pages/Reports";
 import AuditLogs from "./pages/AuditLogs";
 import Settings from "./pages/Settings";
+import Users from "./pages/Users";
+import StaffUserEditor from "./pages/StaffUserEditor";
+import StaffPassword from "./pages/StaffPassword";
 import "./styles/tokens.css";
 import "./styles/global.css";
 
@@ -31,6 +34,7 @@ const pages = {
   "/reports": <Reports />,
   "/audit-logs": <AuditLogs />,
   "/settings": <Settings />,
+  "/users": <Users />,
 };
 
 export default function App() {
@@ -39,6 +43,16 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+
+          <Route
+            path="/staff/setup-password"
+            element={<StaffPassword key="invitation" mode="invitation" />}
+          />
+
+          <Route
+            path="/staff/change-temporary-password"
+            element={<StaffPassword key="temporary" mode="temporary" />}
+          />
 
           <Route element={<StaffRoute />}>
             <Route element={<AdminLayout />}>
@@ -50,6 +64,17 @@ export default function App() {
                   />
                 </Route>
               ))}
+
+              <Route element={<StaffRoute roles={["ADMIN"]} />}>
+                <Route
+                  path="/users/new"
+                  element={<StaffUserEditor key="new" />}
+                />
+                <Route
+                  path="/users/:userId"
+                  element={<StaffUserEditor key="existing" />}
+                />
+              </Route>
 
               <Route
                 path="/reservations/:reservationId"

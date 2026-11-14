@@ -1,0 +1,1 @@
+export const GUEST_BOOKING_RECOVERY_MS = 30 * 60 * 1000;

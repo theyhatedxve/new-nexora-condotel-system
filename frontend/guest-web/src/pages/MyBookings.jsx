@@ -1,124 +1,152 @@
-import { Link, useSearchParams } from "react-router";
+import { Link } from "react-router";
+import { CalendarDays, RefreshCw } from "lucide-react";
 import useGuestBookings from "../hooks/useGuestBookings.js";
 import { formatPesos } from "../utils/formatMoney.js";
 import "../styles/my-bookings.css";
 
-export default function MyBookings() {
-  const [params, setParams] = useSearchParams();
-  const suppliedPage = Number(params.get("page") ?? 1);
-  const page =
-    Number.isInteger(suppliedPage) && suppliedPage >= 1 && suppliedPage <= 10000
-      ? suppliedPage
-      : 1;
-  const { status, data, refresh } = useGuestBookings(page);
-  const loading = status === "loading";
+function paymentMethodLabel(preference) {
+  if (preference === "PAYMONGO") return "PayMongo test checkout";
+  if (preference === "PAY_AT_PROPERTY") return "Pay at Property";
+  return "Not recorded";
+}
 
-  function changePage(nextPage) {
-    setParams({ page: String(nextPage) });
-  }
+export default function MyBookings() {
+  const { status, items, total, page, totalPages, goToPage, refresh } =
+    useGuestBookings();
 
   return (
     <main className="my-bookings">
       <header className="my-bookings__heading">
         <div>
+          <p className="my-bookings__eyebrow">Your stay at NEXORA</p>
           <h1>My Bookings</h1>
-          <p>View your reservations and stay details.</p>
+          {status === "ready" && (
+            <p className="my-bookings__intro">
+              {total} reservation{total !== 1 ? "s" : ""} on your guest account.
+            </p>
+          )}
         </div>
+
         <button
-          className="my-bookings__button"
           type="button"
+          className="my-bookings__refresh"
           onClick={refresh}
-          disabled={loading}
+          disabled={status === "loading"}
         >
+          <RefreshCw size={17} aria-hidden="true" />
           Refresh
         </button>
       </header>
 
-      {loading && (
-        <p className="my-bookings__feedback" role="status">
-          Loading your bookings…
-        </p>
-      )}
-
-      {status === "error" && (
-        <div className="my-bookings__feedback" role="alert">
-          <p>Your bookings could not be loaded.</p>
-          <button className="my-bookings__button" type="button" onClick={refresh}>
-            Try again
-          </button>
+      {status === "loading" && (
+        <div className="my-bookings__feedback" role="status">
+          Loading your bookings...
         </div>
       )}
 
-      {status === "ready" && data.items.length === 0 && (
-        <div className="my-bookings__feedback">
-          <p>You have no bookings yet.</p>
-          <Link className="my-bookings__button" to="/rooms">
+      {status === "error" && (
+        <div
+          className="my-bookings__feedback my-bookings__feedback--error"
+          role="alert"
+        >
+          Your bookings could not be loaded. Try refreshing the list.
+        </div>
+      )}
+
+      {status === "empty" && (
+        <div className="my-bookings__feedback" role="status">
+          <p>You have no reservations on this guest account yet.</p>
+          <Link className="my-bookings__action" to="/rooms">
             Explore rooms
           </Link>
         </div>
       )}
 
-      {status === "ready" && data.items.length > 0 && (
+      {status === "ready" && (
         <>
-          <ul className="my-bookings__list">
-            {data.items.map((booking) => (
-              <li key={booking.id} className="my-bookings__card">
-                <div className="my-bookings__card-heading">
-                  <div>
-                    <h2>{booking.roomType.name}</h2>
-                    <p className="my-bookings__reference">{booking.reservationNumber}</p>
-                  </div>
-                  <span className="my-bookings__status" data-status={booking.status}>
-                    {booking.status.replaceAll("_", " ")}
-                  </span>
-                </div>
-                <dl className="my-bookings__details">
-                  <div>
-                    <dt>Check-in</dt>
-                    <dd>{booking.checkInDate.slice(0, 10)}</dd>
-                  </div>
-                  <div>
-                    <dt>Check-out</dt>
-                    <dd>{booking.checkOutDate.slice(0, 10)}</dd>
-                  </div>
-                  <div>
-                    <dt>Guests</dt>
-                    <dd>{booking.guestCount}</dd>
-                  </div>
-                  <div>
-                    <dt>Total</dt>
-                    <dd>{formatPesos(booking.totalAmountCentavos)}</dd>
-                  </div>
-                </dl>
+          <ul className="my-bookings__list" aria-label="Your reservations">
+            {items.map((item) => (
+              <li key={item.id} className="my-bookings__item">
                 <Link
-                  className="my-bookings__button"
-                  to={`/my-bookings/${encodeURIComponent(booking.id)}`}
-                  aria-label={`View booking ${booking.reservationNumber}`}
+                  to={`/my-bookings/${encodeURIComponent(item.id)}`}
+                  className="my-bookings__card"
                 >
-                  View details
+                  <div className="my-bookings__card-top">
+                    <span className="my-bookings__icon">
+                      <CalendarDays size={20} aria-hidden="true" />
+                    </span>
+
+                    <div className="my-bookings__card-info">
+                      <h2 className="my-bookings__room">{item.roomType.name}</h2>
+                      <p className="my-bookings__reference">
+                        Ref: {item.reservationNumber}
+                      </p>
+                    </div>
+
+                    <span
+                      className="my-bookings__status"
+                      data-status={item.status}
+                    >
+                      {item.status.replaceAll("_", " ")}
+                    </span>
+                  </div>
+
+                  <dl className="my-bookings__details">
+                    <div className="my-bookings__detail">
+                      <dt>Check-in</dt>
+                      <dd>{item.checkInDate.slice(0, 10)}</dd>
+                    </div>
+
+                    <div className="my-bookings__detail">
+                      <dt>Check-out</dt>
+                      <dd>{item.checkOutDate.slice(0, 10)}</dd>
+                    </div>
+
+                    <div className="my-bookings__detail">
+                      <dt>Guests</dt>
+                      <dd>{item.guestCount}</dd>
+                    </div>
+
+                    <div className="my-bookings__detail">
+                      <dt>Payment preference</dt>
+                      <dd>{paymentMethodLabel(item.paymentPreference)}</dd>
+                    </div>
+
+                    <div className="my-bookings__detail">
+                      <dt>Total</dt>
+                      <dd>{formatPesos(item.totalAmountCentavos)}</dd>
+                    </div>
+                  </dl>
                 </Link>
               </li>
             ))}
           </ul>
-          <nav className="my-bookings__pagination" aria-label="Booking pages">
-            <button
-              className="my-bookings__button"
-              type="button"
-              disabled={data.page <= 1}
-              onClick={() => changePage(data.page - 1)}
-            >
-              Previous
-            </button>
-            <span aria-live="polite">Page {data.page} of {data.totalPages}</span>
-            <button
-              className="my-bookings__button"
-              type="button"
-              disabled={data.page >= data.totalPages}
-              onClick={() => changePage(data.page + 1)}
-            >
-              Next
-            </button>
-          </nav>
+
+          {totalPages > 1 && (
+            <nav className="my-bookings__pagination" aria-label="Booking pages">
+              <button
+                type="button"
+                className="my-bookings__page-btn"
+                onClick={() => goToPage(page - 1)}
+                disabled={page <= 1}
+              >
+                Previous
+              </button>
+
+              <span className="my-bookings__page-info">
+                Page {page} of {totalPages}
+              </span>
+
+              <button
+                type="button"
+                className="my-bookings__page-btn"
+                onClick={() => goToPage(page + 1)}
+                disabled={page >= totalPages}
+              >
+                Next
+              </button>
+            </nav>
+          )}
         </>
       )}
     </main>

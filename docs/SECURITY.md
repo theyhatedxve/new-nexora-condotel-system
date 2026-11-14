@@ -1,5 +1,21 @@
 # NEXORA — Security Requirements
 
+## Guest account security checkpoint — 2026-11-13
+
+Website bookings require an active authenticated GUEST account.
+Private reservation reads and guest payment operations require backend
+ownership checks.
+
+The old emailed reservation-access flow is retired. Its public endpoints
+return HTTP 410. An old reservation-access cookie does not authorize those
+endpoints.
+
+Legacy session helpers and database models remain during cleanup.
+Their presence does not make accountless guest access a supported flow.
+
+Existing accountless test fixtures still require migration to authenticated
+guest flows. Owner-run verification remains pending.
+
 ## 1. Security Approach
 
 Apply security throughout development.

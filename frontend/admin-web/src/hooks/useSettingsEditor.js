@@ -231,6 +231,10 @@ export default function useSettingsEditor({ initial, actorId }) {
     return applyLoadedSettings(false);
   }
 
+  function handleKeepDraftSettings() {
+    return applyLoadedSettings(true);
+  }
+
   return {
     current,
     draft,
@@ -246,5 +250,6 @@ export default function useSettingsEditor({ initial, actorId }) {
     changeDraft,
     backToEdit,
     handleApplyLoadedSettings,
+    handleKeepDraftSettings,
   };
 }

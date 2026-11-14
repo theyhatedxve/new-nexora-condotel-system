@@ -28,9 +28,9 @@ export default function MyBooking() {
 
   return (
     <MyBookingView
-      key={reservationId || context.reference || "current"}
-      reservationId={reservationId}
-      expectedReference={reservationId ? null : context.reference}
+      key={context.reservationId || context.reference || "current"}
+      reservationId={context.reservationId}
+      expectedReference={context.reference}
     />
   );
 }

@@ -9,8 +9,8 @@
 import type { GuestBookingAttempt, Prisma } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { BOOKING_SESSION_MS } from './booking-access.config.js';
-import { hash } from './booking-access-security.js';
+import { GUEST_BOOKING_RECOVERY_MS } from './guest-booking-recovery.config.js';
+import { hash } from './reservation-crypto.js';
 import {
   GUEST_BOOKING_POLICY_VERSION,
   initialGuestBookingTiming,
@@ -211,7 +211,7 @@ export class GuestBookingService {
             paymentPreference: dto.paymentPreference,
             policyVersion: GUEST_BOOKING_POLICY_VERSION,
             state: 'PROCESSING',
-            recoveryExpiresAt: new Date(now.getTime() + BOOKING_SESSION_MS),
+            recoveryExpiresAt: new Date(now.getTime() + GUEST_BOOKING_RECOVERY_MS),
           },
         });
         const reservation = await this.acquisition.acquireInTx(tx, {

@@ -23,7 +23,7 @@ import {
 import {
   hash,
   validToken,
-} from './booking-access-security.js';
+} from './reservation-crypto.js';
 
 import {
   GUEST_BOOKING_POLICY_VERSION,

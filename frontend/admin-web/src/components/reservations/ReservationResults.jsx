@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import StaffDataState from "../StaffDataState";
 import { formatStayDate, formatStatus, guestName } from "../../utils/formatters";
 import useReservationResults from "../../hooks/useReservationResults.js";
@@ -19,10 +20,14 @@ export function ReservationResults({ query, onPage }) {
   return (
     <section className="record-section" aria-labelledby="reservation-results-title">
       <div className="records-heading">
-        <h2 id="reservation-results-title">Reservation results</h2>
+        <div>
+          <h2 id="reservation-results-title">Reservation results</h2>
+          <p className="reservations-screen__muted">Most recently created first.</p>
+        </div>
 
-        <button type="button" disabled={state.loading} onClick={refreshResults}>
-          Refresh results
+        <button type="button" className="reservations-screen__secondary" disabled={state.loading} onClick={refreshResults}>
+          <RefreshCw size={17} aria-hidden="true" />
+          {state.loading ? "Refreshing…" : "Refresh results"}
         </button>
       </div>
 
@@ -30,7 +35,7 @@ export function ReservationResults({ query, onPage }) {
 
       {data && (
         <>
-          <p ref={summaryHeading} tabIndex={-1} role="status">
+          <p ref={summaryHeading} tabIndex={-1} role="status" className="reservations-screen__summary">
             {data.total === 0
               ? "No reservations match the applied filters."
               : "Showing " +
@@ -44,8 +49,6 @@ export function ReservationResults({ query, onPage }) {
 
           {data.items.length > 0 && (
             <>
-              <p>Most recently created first.</p>
-
               <div
                 className="records-scroll"
                 role="region"
@@ -60,10 +63,10 @@ export function ReservationResults({ query, onPage }) {
                       <th scope="col">Booking reference</th>
                       <th scope="col">Guest</th>
                       <th scope="col">Room type</th>
-                      <th scope="col">Check-in</th>
-                      <th scope="col">Check-out</th>
+                      <th scope="col">Stay dates</th>
                       <th scope="col">Guests</th>
                       <th scope="col">Reservation status</th>
+                      <th scope="col">Actions</th>
                     </tr>
                   </thead>
 
@@ -89,13 +92,30 @@ export function ReservationResults({ query, onPage }) {
 
                         <td>{item.roomType.name}</td>
 
-                        <td>{formatStayDate(item.checkInDate)}</td>
-
-                        <td>{formatStayDate(item.checkOutDate)}</td>
+                        <td>
+                          <span className="reservations-screen__stay-date">Check-in: {formatStayDate(item.checkInDate)}</span>
+                          <span className="reservations-screen__stay-date">Check-out: {formatStayDate(item.checkOutDate)}</span>
+                        </td>
 
                         <td>{item.guestCount}</td>
 
-                        <td>{formatStatus(item.status)}</td>
+                        <td>
+                          <span className="reservations-screen__badge" data-status={item.status}>
+                            {formatStatus(item.status)}
+                          </span>
+                        </td>
+
+                        <td>
+                          <Link
+                            className="reservations-screen__details-link"
+                            to={"/reservations/" + encodeURIComponent(item.id)}
+                            state={{ reservationListSearch: listSearch }}
+                            aria-label={`View details for ${item.reservationNumber}`}
+                          >
+                            View details
+                            <ArrowRight size={16} aria-hidden="true" />
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -106,20 +126,23 @@ export function ReservationResults({ query, onPage }) {
                 className="reservation-pagination"
                 aria-label="Reservation result pages"
               >
-                <button type="button" disabled={data.page <= 1} onClick={previousPage}>
+                <button type="button" className="reservations-screen__secondary" disabled={data.page <= 1} onClick={previousPage}>
+                  <ChevronLeft size={17} aria-hidden="true" />
                   Previous
                 </button>
 
-                <span>
+                <span className="reservations-screen__page-number" aria-current="page">
                   Page {data.page} of {data.totalPages}
                 </span>
 
                 <button
                   type="button"
+                  className="reservations-screen__secondary"
                   disabled={data.page >= Math.min(data.totalPages, 10000)}
                   onClick={nextPage}
                 >
                   Next
+                  <ChevronRight size={17} aria-hidden="true" />
                 </button>
               </nav>
 

@@ -1,5 +1,19 @@
 # NEXORA — Business Flows
 
+## Current guest booking flow — 2026-11-13
+
+This flow supersedes earlier optional-account and email-link booking flows.
+
+1. Guests can browse rooms publicly.
+2. Guests register, verify their email, and sign in before booking.
+3. The backend uses the authenticated guest profile to create the reservation.
+4. My Bookings lists reservations owned by that account.
+5. Selecting a reservation opens its owned details and payment actions.
+6. The backend verifies ownership for private details and payment operations.
+
+Old email-access links lead to My Bookings. Accountless reservation access
+is retired. Staff booking workflows remain supported.
+
 Phases 1–6 are owner-confirmed complete. Phase 7 is IN PROGRESS with the
 read-only payment-summary foundation prepared/verified in the review copy;
 owner-local verification is pending. Payment collection/provider/refund writes

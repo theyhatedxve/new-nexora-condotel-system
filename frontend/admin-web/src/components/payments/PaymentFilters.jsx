@@ -1,4 +1,8 @@
-import { PAYMENT_LIST_METHODS, PAYMENT_LIST_STATUSES } from "../../services/paymentsApi";
+import { Search } from "lucide-react";
+import {
+  PAYMENT_LIST_METHODS,
+  PAYMENT_LIST_STATUSES,
+} from "../../services/paymentsApi";
 import { formatStatus } from "../../utils/formatters";
 import usePaymentFilters from "../../hooks/usePaymentFilters.js";
 
@@ -8,20 +12,31 @@ export function PaymentFilters({ query, onApply, onClear }) {
 
   return (
     <form className="payment-filters" onSubmit={submit}>
-      {error && <p role="alert">{error}</p>}
-
       <fieldset className="payment-filter-fields">
         <legend>Filter payment records</legend>
 
-        <div>
+        {error && (
+          <p className="payments-screen__filter-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div className="payments-screen__reference-field">
           <label htmlFor="payment-booking-filter">Booking reference</label>
-          <input
-            id="payment-booking-filter"
-            type="search"
-            maxLength={100}
-            value={draft.q}
-            onChange={changeQ}
-          />
+
+          <div className="payments-screen__search-control">
+            <Search size={18} aria-hidden="true" />
+
+            <input
+              id="payment-booking-filter"
+              type="search"
+              placeholder="Search booking reference"
+              maxLength={100}
+              aria-describedby="payment-filter-help"
+              value={draft.q}
+              onChange={changeQ}
+            />
+          </div>
         </div>
 
         <div>
@@ -58,15 +73,22 @@ export function PaymentFilters({ query, onApply, onClear }) {
           </select>
         </div>
 
-        <p className="payment-filter-help">
-          Filters apply to individual payment records. Collection verification is shown
-          separately.
+        <p id="payment-filter-help" className="payment-filter-help">
+          Filters apply to individual payment records. Collection verification
+          is shown separately. Select Apply filters to update results.
         </p>
 
         <div className="actions payment-filter-actions">
-          <button type="submit">Apply filters</button>
+          <button type="submit" className="payments-screen__primary">
+            <Search size={16} aria-hidden="true" />
+            Apply filters
+          </button>
 
-          <button type="button" onClick={onClear}>
+          <button
+            type="button"
+            className="payments-screen__secondary"
+            onClick={onClear}
+          >
             Clear filters
           </button>
         </div>

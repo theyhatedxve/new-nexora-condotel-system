@@ -5,6 +5,21 @@ restart the redesign. Read [AGENTS.md](AGENTS.md), especially section J, and the
 relevant guides before proposing another change. This document is suitable for
 uploading to another AI account; it contains no credentials or guest records.
 
+**Source organization update (2026-11-10):** The historical redesign/transfer
+record below is retained. The main directory now also contains the guest-web,
+admin-web, and backend responsibility refactors. Frontend state and handlers
+live in `src/hooks/`, presentation is organized under pages and feature component
+folders, definitions/helpers live in `constants/` and `utils/`, and each frontend
+has `styles/tokens.css`. Backend services use feature-local policy, projection,
+validation, refund-settlement, and reconciliation helpers while retaining their
+authorization and transaction boundaries.
+
+Use [AGENTS.md section K](AGENTS.md#k-responsibility-separation-checkpoint-2026-11-10)
+and the [current directory updates](DIRECTORY_STRUCTURE.md#21-current-refactor-directory-updates-2026-11-10)
+for these file locations and verification records. This addition records source
+organization only; it does not establish new browser, backend runtime, or
+provider acceptance, or change the historical instructions below.
+
 ## 1. Instructions for the receiving assistant
 
 - Start with read-only inspection and compare this checkpoint with actual files.

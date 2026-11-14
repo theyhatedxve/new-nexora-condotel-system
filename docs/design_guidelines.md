@@ -23,6 +23,15 @@ Exact tokens below are proposed starting values.
 
 Keep shared visual values in CSS variables.
 
+**Current implementation (2026-11-10):** Guest style constants live in
+`frontend/guest-web/src/styles/tokens.css`; admin style constants live in
+`frontend/admin-web/src/styles/tokens.css`. The refactors extracted each
+application's existing colors, spacing, typography, radii, and shadows without
+restyling its screens. Use the application's implemented tokens when maintaining
+those screens; the example below remains a proposed palette, not a replacement
+for their existing values. Layout expressions and media-query breakpoints remain
+in their existing stylesheet rules.
+
 ```css
 :root {
   --color-background: #f5f7fb;
