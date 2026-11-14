@@ -1,18 +1,33 @@
 # NEXORA — Development Reference and Completion Checklist
 
-**Last synchronized:** 2026-11-13.
+**Last synchronized:** 2026-11-14.
 
-**Current development checkpoint:** Guest account booking Steps 1-3 are applied.
-Step 4 My Bookings list and reservation-ID detail navigation are present in
-source. Owner runtime verification remains pending.
+**Current development checkpoint:** Guest account booking Steps 1-4 are
+present in source. Step 5 source migration and legacy cleanup are applied.
 
-The approved Step 5 cleanup patch is applied. It updates guest navigation,
-separates shared booking utilities, removes obsolete frontend access files,
-and unregisters obsolete email-access services.
+Migrated test coverage includes booking-access retirement, guest-booking
+HTTP requests, guest-booking services, checkout, payment summaries,
+PayMongo webhooks, and reservation journeys.
 
-Next: migrate accountless test fixtures to authenticated guest flows, remove
-remaining legacy dependencies after checking their consumers, and complete
-owner-run verification. Step 5 remains incomplete until these checks finish.
+Website booking, reservation details, and guest payment operations require
+an authenticated GUEST account and account ownership. Authorized staff
+operations use their existing role permissions.
+
+Unused email-access services, DTOs, configuration, security helpers, and
+session-based checkout methods are removed. Shared reservation utilities
+remain in reservation-crypto.ts.
+
+The property settings reference exposes reservationHoldMinutes.
+The obsolete bookingLinkMinutes field and its admin display are removed.
+
+Retirement controllers return HTTP 410. Legacy database models remain.
+
+**Verification status:** Owner execution of tests, lint, builds, and browser
+acceptance checks is pending. Step 5 remains in progress until the owner
+confirms those results.
+
+**Next step:** Run the consolidated verification commands, check the complete
+guest booking flow, resolve reported failures, and record owner acceptance.
 
 **Admin UI redesign:** COMPLETED, as confirmed by the owner on 2026-11-12.
 The owner reports completing the full Admin UI redesign, including Users & Roles.

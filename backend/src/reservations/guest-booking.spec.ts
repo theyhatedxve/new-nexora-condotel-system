@@ -54,7 +54,7 @@ import {
 
 import {
   hash,
-} from './booking-access-security.js';
+} from './reservation-crypto.js';
 
 import {
   CreateGuestBookingDto,

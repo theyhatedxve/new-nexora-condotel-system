@@ -27,7 +27,6 @@ import {
   PrismaBetterSqlite3,
 } from '@prisma/adapter-better-sqlite3';
 
-import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import {
   afterEach,
@@ -62,12 +61,7 @@ import { RoomsModule } from '../rooms/rooms.module.js';
 import {
   ReservationsModule,
 } from './reservations.module.js';
-import {
-  BookingAccessService,
-} from './booking-access.service.js';
-import {
-  BookingAccessEmailService,
-} from './booking-access-email.service.js';
+import { withInventoryWrite } from './inventory-write.js';
 import {
   ReservationAcquisitionService,
 } from './reservation-acquisition.service.js';
@@ -91,7 +85,6 @@ let directory: string;
 let prisma: PrismaClient;
 let jwt: JwtService;
 
-let access: BookingAccessService;
 let acquisition: ReservationAcquisitionService;
 let lifecycle: ReservationLifecycleService;
 let stays: ReservationStayService;
@@ -99,17 +92,14 @@ let stays: ReservationStayService;
 let roomTypeId: string;
 let roomId: string;
 let guestUserId: string;
+let guestProfileId: string;
+let otherGuestUserId: string;
 
 let staff: {
   id: string;
   email: string;
   role: string;
 };
-
-let delivered: {
-  email: string;
-  token: string;
-}[];
 
 function date(days: number) {
   return new Date(
@@ -138,17 +128,17 @@ function bearer(id = staff.id) {
   return `Bearer ${jwt.sign({
     sub: id,
     jti: randomUUID(),
+    sv: 0,
   })}`;
 }
 
-function publicBooking(
-  email = 'guest@example.test',
-) {
+function guestBooking(userId = guestUserId) {
   return request(app.getHttpServer())
-    .post('/api/reservations/access/guest-bookings')
+    .post('/api/guest/reservations')
     .set('Origin', origin)
+    .set('Authorization', bearer(userId))
     .send({
-      ...input(email),
+      ...input(),
       requestId: randomUUID(),
       recoveryToken: randomBytes(32).toString('hex'),
       paymentPreference: 'PAY_AT_PROPERTY',
@@ -184,56 +174,20 @@ async function confirmCreatedBooking(
 }
 
 async function book() {
-  const response = await publicBooking().expect(200);
+  const response = await guestBooking().expect(200);
 
   return confirmCreatedBooking(
     response.body.data.reservationNumber,
   );
 }
 
-async function privateCookie(
-  reference: string,
-) {
-  await request(app.getHttpServer())
-    .post('/api/reservations/access/request')
-    .set('Origin', origin)
-    .send({
-      reservationNumber: reference,
-      email: 'guest@example.test',
-    })
-    .expect(202);
-
-  // Drain mocked delivery. No real SMTP is used.
-  await access.onModuleDestroy();
-
-  expect(delivered).toHaveLength(1);
-
-  const response =
-    await request(app.getHttpServer())
-      .post('/api/reservations/access/exchange')
-      .set('Origin', origin)
-      .send({
-        token: delivered[0].token,
-      })
-      .expect(200);
-
-  const cookies =
-    response.headers[
-      'set-cookie'
-    ] as unknown as string[];
-
-  return cookies[0].split(';')[0];
-}
-
-async function view(
-  cookie: string,
+function view(
+  reservationId: string,
   query = '',
 ) {
   return request(app.getHttpServer())
-    .get(
-      `/api/reservations/access/current${query}`,
-    )
-    .set('Cookie', cookie)
+    .get(`/api/guest/reservations/${reservationId}${query}`)
+    .set('Authorization', bearer(guestUserId))
     .expect(200);
 }
 
@@ -307,9 +261,16 @@ function acquirer(client: PrismaClient) {
 }
 
 async function expiredAssignedHold() {
-  const hold = await acquisition.acquire(
-    input(),
-    'HOLD',
+  const hold = await withInventoryWrite(
+    prisma,
+    (tx) =>
+      acquisition.acquireInTx(
+        tx,
+        input(),
+        'HOLD',
+        new Date(),
+        guestProfileId,
+      ),
   );
 
   // Model a legacy pending assignment.
@@ -353,7 +314,10 @@ describe(
       );
       vi.stubEnv('NODE_ENV', 'test');
 
-      delivered = [];
+      vi.stubEnv(
+        'NEXORA_BOOKING_DEADLINE_WORKER_ENABLED',
+        'false',
+      );
 
       directory = mkdtempSync(
         resolve(
@@ -438,11 +402,16 @@ describe(
       for (const name of [
         'MANAGER',
         'GUEST',
+        'OTHER_GUEST',
       ]) {
-        const role =
-          await prisma.role.create({
-            data: { name },
-          });
+        const roleName =
+          name === 'MANAGER' ? 'MANAGER' : 'GUEST';
+
+        const role = await prisma.role.upsert({
+          where: { name: roleName },
+          create: { name: roleName },
+          update: {},
+        });
 
         const user =
           await prisma.user.create({
@@ -459,10 +428,25 @@ describe(
           staff = {
             id: user.id,
             email: user.email,
-            role: name,
+            role: roleName,
           };
-        } else {
+          continue;
+        }
+
+        const guest = await prisma.guest.create({
+          data: {
+            userId: user.id,
+            firstName: 'Test',
+            lastName: 'Guest',
+            email: user.email,
+          },
+        });
+
+        if (name === 'GUEST') {
           guestUserId = user.id;
+          guestProfileId = guest.id;
+        } else {
+          otherGuestUserId = user.id;
         }
       }
 
@@ -509,27 +493,9 @@ describe(
         })
           .overrideProvider(PrismaService)
           .useValue(prisma)
-          .overrideProvider(
-            BookingAccessEmailService,
-          )
-          .useValue({
-            send: async (
-              email: string,
-              token: string,
-            ) => {
-              delivered.push({
-                email,
-                token,
-              });
-            },
-          })
           .compile();
 
       jwt = module.get(JwtService);
-
-      access = module.get(
-        BookingAccessService,
-      );
 
       acquisition = module.get(
         ReservationAcquisitionService,
@@ -546,7 +512,6 @@ describe(
       app = module.createNestApplication();
 
       app.setGlobalPrefix('api');
-      app.use(cookieParser());
 
       app.useGlobalPipes(
         new ValidationPipe({
@@ -585,14 +550,9 @@ describe(
     });
 
     it(
-      'keeps a real private session read-only and shows staff cancellation with the original prices',
+      'keeps the authenticated guest view read-only and shows staff cancellation with the original prices',
       async () => {
         const booking = await book();
-
-        const cookie =
-          await privateCookie(
-            booking.reservationNumber,
-          );
 
         const assignmentId =
           await assign(booking.id);
@@ -635,13 +595,19 @@ describe(
           const [operation, body]
           of forbiddenOperations
         ) {
+          const operationPath =
+            `/api/reservations/${booking.id}/${operation}`;
+
           await request(app.getHttpServer())
-            .post(
-              `/api/reservations/${booking.id}/${operation}`,
-            )
-            .set('Cookie', cookie)
+            .post(operationPath)
             .send(body)
             .expect(401);
+
+          await request(app.getHttpServer())
+            .post(operationPath)
+            .set('Authorization', bearer(guestUserId))
+            .send(body)
+            .expect(403);
         }
 
         await request(app.getHttpServer())
@@ -676,8 +642,8 @@ describe(
           .expect(200);
 
         const replacement =
-          await publicBooking(
-            'other@example.test',
+          await guestBooking(
+            otherGuestUserId,
           ).expect(200);
 
         await confirmCreatedBooking(
@@ -698,10 +664,17 @@ describe(
             },
           });
 
+        await request(app.getHttpServer())
+          .get(`/api/guest/reservations/${other.id}`)
+          .set('Authorization', bearer(guestUserId))
+          .expect(404);
+
         const current = await view(
-          cookie,
+          booking.id,
           `?reservationId=${other.id}`,
         );
+
+        expect(current.body.data.id).toBe(booking.id);
 
         expect(
           current.headers['cache-control'],
@@ -729,7 +702,6 @@ describe(
         ).toBe(750_000);
 
         for (const field of [
-          'id',
           'guestId',
           'roomTypeId',
           'roomId',
@@ -780,11 +752,6 @@ describe(
       async () => {
         const booking = await book();
 
-        const cookie =
-          await privateCookie(
-            booking.reservationNumber,
-          );
-
         const assignmentId =
           await assign(booking.id);
 
@@ -801,7 +768,7 @@ describe(
 
         expect(
           (
-            await view(cookie)
+            await view(booking.id)
           ).body.data.status,
         ).toBe('CHECKED_IN');
 
@@ -830,13 +797,13 @@ describe(
           dirtyRoom.status,
         ).toBe('CLEANING');
 
-        await publicBooking(
-          'next@example.test',
+        await guestBooking(
+          otherGuestUserId,
         ).expect(409);
 
         expect(
           await prisma.guest.count(),
-        ).toBe(1);
+        ).toBe(2);
 
         await request(app.getHttpServer())
           .patch(
@@ -849,8 +816,8 @@ describe(
           .expect(200);
 
         const next =
-          await publicBooking(
-            'next@example.test',
+          await guestBooking(
+            otherGuestUserId,
           ).expect(200);
 
         await confirmCreatedBooking(
@@ -880,7 +847,7 @@ describe(
         ).expect(200);
 
         const original = (
-          await view(cookie)
+          await view(booking.id)
         ).body.data;
 
         expect(
@@ -1031,7 +998,7 @@ describe(
 
           expect(
             await prisma.guest.count(),
-          ).toBe(2);
+          ).toBe(3);
 
           expect(
             await prisma.auditLog.count({
@@ -1065,11 +1032,6 @@ describe(
           assignment,
         } = await expiredAssignedHold();
 
-        const cookie =
-          await privateCookie(
-            hold.reservationNumber,
-          );
-
         await prisma.$executeRawUnsafe(`
           CREATE TRIGGER reject_replacement_policy
           BEFORE INSERT ON "AuditLog"
@@ -1094,7 +1056,7 @@ describe(
 
         expect(
           (
-            await view(cookie)
+            await view(hold.id)
           ).body.data.status,
         ).toBe('PENDING');
 
@@ -1113,7 +1075,7 @@ describe(
 
         expect(
           await prisma.guest.count(),
-        ).toBe(1);
+        ).toBe(2);
 
         expect(
           await prisma.auditLog.count({
@@ -1139,11 +1101,6 @@ describe(
       'keeps the private view and occupied room consistent when checkout fails, then permits a retry',
       async () => {
         const booking = await book();
-
-        const cookie =
-          await privateCookie(
-            booking.reservationNumber,
-          );
 
         const assignmentId =
           await assign(booking.id);
@@ -1182,7 +1139,7 @@ describe(
 
         expect(
           (
-            await view(cookie)
+            await view(booking.id)
           ).body.data.status,
         ).toBe('CHECKED_IN');
 
@@ -1225,7 +1182,7 @@ describe(
 
         expect(
           (
-            await view(cookie)
+            await view(booking.id)
           ).body.data.status,
         ).toBe('CHECKED_OUT');
 
@@ -1337,7 +1294,7 @@ describe(
 
           expect(
             await prisma.guest.count(),
-          ).toBe(2);
+          ).toBe(3);
 
           expect(
             await prisma.auditLog.count({

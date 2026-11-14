@@ -15,7 +15,6 @@ import {
   OwnershipService,
   type AuthenticatedUser,
 } from '../common/ownership/ownership.service.js';
-import { requireBookingSession } from '../reservations/booking-access-security.js';
 import { withInventoryWrite } from '../reservations/inventory-write.js';
 import { calculatePaymentSummary } from './payment-summary.js';
 import { PaymongoAdapter } from './paymongo.adapter.js';
@@ -25,17 +24,10 @@ import {
   isPendingOnlineBooking,
 } from './pending-online-booking.js';
 
-type Access =
-  | {
-      kind: 'user';
-      reservationId: string;
-      actor: AuthenticatedUser | undefined;
-    }
-  | {
-      kind: 'session';
-      cookie: unknown;
-      expectedReservationNumber?: string;
-    };
+type Access = {
+  reservationId: string;
+  actor: AuthenticatedUser | undefined;
+};
 
     const digest = (value: string): string =>
   createHash('sha256')
@@ -47,70 +39,72 @@ export class CheckoutService {
   constructor(private readonly prisma: PrismaService, private readonly ownership: OwnershipService,
     private readonly provider: PaymongoAdapter) {}
 
-  startForUser(id: string, requestId: string, actor: AuthenticatedUser | undefined) {
-    return this.start({ kind: 'user', reservationId: id, actor }, requestId);
-  }
-
-    startForSession(
-    cookie: unknown,
+  startForUser(
+    id: string,
     requestId: string,
-    expectedReservationNumber?: string,
+    actor: AuthenticatedUser | undefined,
   ) {
     return this.start(
-      {
-        kind: 'session',
-        cookie,
-        expectedReservationNumber,
-      },
+      { reservationId: id, actor },
       requestId,
     );
   }
 
-  currentForUser(id: string, actor: AuthenticatedUser | undefined) {
-    return this.current({ kind: 'user', reservationId: id, actor });
-  }
-
-    currentForSession(
-    cookie: unknown,
-    expectedReservationNumber?: string,
+  currentForUser(
+    id: string,
+    actor: AuthenticatedUser | undefined,
   ) {
     return this.current({
-      kind: 'session',
-      cookie,
-      expectedReservationNumber,
+      reservationId: id,
+      actor,
     });
   }
 
-  private async booking(tx: Prisma.TransactionClient, access: Access) {
-    const id = access.kind === 'session'
-      ? (await requireBookingSession(tx, access.cookie)).reservationId : access.reservationId;
+  private async booking(
+    tx: Prisma.TransactionClient,
+    access: Access,
+  ) {
+    const id = access.reservationId;
 
-    if (access.kind === 'user') {
-      await this.ownership.assertReservationAccess(access.actor, id, ['ADMIN', 'MANAGER', 'RECEPTIONIST'], tx);
-    }
+    await this.ownership.assertReservationAccess(
+      access.actor,
+      id,
+      ['ADMIN', 'MANAGER', 'RECEPTIONIST'],
+      tx,
+    );
 
-    const properties = await tx.property.findMany({ select: { id: true }, take: 2 });
+    const properties = await tx.property.findMany({
+      select: { id: true },
+      take: 2,
+    });
 
     if (properties.length !== 1) {
-      throw new InternalServerErrorException('Exactly one property must be configured.');
+      throw new InternalServerErrorException(
+        'Exactly one property must be configured.',
+      );
     }
 
     const booking = await tx.reservation.findFirst({
-      where: { id, roomType: { propertyId: properties[0].id } },
-      include: { payments: { include: { refunds: true, events: { select: paymentEvidenceSelect } } } },
+      where: {
+        id,
+        roomType: {
+          propertyId: properties[0].id,
+        },
+      },
+      include: {
+        payments: {
+          include: {
+            refunds: true,
+            events: {
+              select: paymentEvidenceSelect,
+            },
+          },
+        },
+      },
     });
 
-    if (!booking) throw new NotFoundException('Record not found.');
-
-        if (
-      access.kind === 'session' &&
-      access.expectedReservationNumber !== undefined &&
-      booking.reservationNumber !==
-        access.expectedReservationNumber
-    ) {
-      throw new NotFoundException(
-        'Record not found.',
-      );
+    if (!booking) {
+      throw new NotFoundException('Record not found.');
     }
 
     assertCheckoutBookingEligible(booking);
@@ -207,8 +201,8 @@ export class CheckoutService {
       }
 
       const settings = this.provider.settings();
-      const actorId = access.kind === 'user' ? access.actor!.id : null;
-      const scope = actorId ?? `booking-session:${booking.id}`;
+      const actorId = access.actor!.id;
+      const scope = actorId;
       const verifiedPaidRetry = existing?.status === 'PAID' && hasVerifiedPaymongoEvidence(existing);
 
       // A settled request keeps its original amount; the remaining balance is now zero.

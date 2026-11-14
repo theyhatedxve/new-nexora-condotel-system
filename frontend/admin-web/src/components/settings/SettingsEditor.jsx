@@ -248,11 +248,6 @@ export function SettingsEditor({ initial, actorId }) {
             <dt>Pending reservation hold duration</dt>
             <dd>{current.reference.reservationHoldMinutes} minutes</dd>
           </div>
-
-          <div>
-            <dt>Private booking-link lifetime</dt>
-            <dd>{current.reference.bookingLinkMinutes} minutes</dd>
-          </div>
         </dl>
 
         <p className="settings-page__muted">

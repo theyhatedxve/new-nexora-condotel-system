@@ -1,21 +1,24 @@
 # NEXORA — System Directory Structure
 
-## Guest booking cleanup checkpoint — 2026-11-13
+## Guest booking cleanup checkpoint — 2026-11-14
 
-Applied source changes:
+Current account booking files include:
 
-- Add backend/src/reservations/reservation-crypto.ts for shared token utilities.
-- Add backend/src/reservations/guest-booking-recovery.config.ts for account-bound
-  booking recovery timing.
-- Unregister the obsolete BookingAccessService and BookingAccessEmailService.
-- Replace BookingAccess.jsx with a redirect to /my-bookings.
-- Remove useBookingAccess.js, bookingAccessApi.js, and booking-access.css.
+- backend/src/reservations/guest-bookings.controller.ts
+- backend/src/reservations/guest-reservations.controller.ts
+- backend/src/reservations/guest-reservations.service.ts
+- backend/src/reservations/reservation-crypto.ts
+- backend/src/reservations/guest-booking-recovery.config.ts
 
-Retain retirement controllers, legacy test dependencies, and Prisma models
-until their remaining consumers and regression checks are migrated.
+The booking-access controller and its HTTP tests cover retired endpoints.
 
-Status: source applied. Owner runtime verification and authenticated test
-fixture migration are pending.
+Obsolete booking-access service, email service, security helper,
+configuration, and DTO files are removed.
+
+Checkout uses authenticated user access. Accountless fixture migration
+covers guest booking, checkout, summaries, webhooks, and reservation journeys.
+
+Owner verification remains pending.
 
 ## 1. Purpose and Scope
 
@@ -144,16 +147,12 @@ NEXORA/
 │   │   ├── reservations/
 │   │   │   ├── dto/
 │   │   │   │   ├── assign-room.dto.ts
-│   │   │   │   ├── booking-access.dto.ts
 │   │   │   │   ├── cancel-reservation.dto.ts
 │   │   │   │   ├── create-reservation.dto.ts
 │   │   │   │   ├── expire-holds.dto.ts
 │   │   │   │   └── reservation-stay.dto.ts
-│   │   │   ├── booking-access-email.service.ts
-│   │   │   ├── booking-access.config.ts
 │   │   │   ├── booking-access.controller.ts
 │   │   │   ├── booking-access.http.spec.ts
-│   │   │   ├── booking-access.service.ts
 │   │   │   ├── cancellation-policy.ts
 │   │   │   ├── inventory-write.spec.ts
 │   │   │   ├── inventory-write.ts
@@ -537,7 +536,7 @@ and the [implementation guide](IMPLEMENTATION_GUIDE.md) for verification steps.
 ## Phase 7.2 source additions
 
 - backend/prisma/migrations/20261101090000_payment_checkout_attempts/migration.sql
-- backend/src/reservations/booking-access-security.ts
+- backend/src/reservations/reservation-crypto.ts
 - backend/src/payments/dto/create-checkout.dto.ts
 - backend/src/payments/paymongo.adapter.ts
 - backend/src/payments/checkout.service.ts

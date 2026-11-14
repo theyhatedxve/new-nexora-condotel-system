@@ -1,5 +1,24 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
+## Current continuation checkpoint — 2026-11-14
+
+Continue from the Guest Account Booking upgrade.
+
+Steps 1-4 are present in source. Step 5 source cleanup and authenticated
+test fixture migration are applied. Owner verification remains pending.
+
+Legacy booking-access service, email service, security helper, configuration,
+DTO, and session-based checkout methods are removed. Retirement controllers
+return HTTP 410.
+
+Property settings no longer expose bookingLinkMinutes.
+
+Next, obtain owner-run backend tests, lint and build results, frontend lint
+and build results, and complete guest booking browser acceptance.
+
+Use the current checkpoint in AGENTS.md. Earlier transfer records and
+accountless implementation descriptions below are historical.
+
 Updated 2026-11-03. This is a continuation of implemented work, not a request to
 restart the redesign. Read [AGENTS.md](AGENTS.md), especially section J, and the
 relevant guides before proposing another change. This document is suitable for

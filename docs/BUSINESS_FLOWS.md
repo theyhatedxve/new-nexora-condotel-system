@@ -1,5 +1,21 @@
 # NEXORA — Business Flows
 
+## Step 5 flow checkpoint — 2026-11-14
+
+Guests browse rooms publicly, then register, verify their email, and sign
+in before submitting a website booking.
+
+Bookings use the authenticated guest profile. My Bookings and reservation
+details expose records owned by that account. Checkout and payment summaries
+enforce the same ownership rules.
+
+Reservation journey fixtures now use authenticated guest accounts.
+They retain staff lifecycle, cancellation, inventory, rollback, and
+concurrency coverage.
+
+Earlier optional-account and email-link flows below are historical.
+Owner verification remains pending.
+
 ## Current guest booking flow — 2026-11-13
 
 This flow supersedes earlier optional-account and email-link booking flows.

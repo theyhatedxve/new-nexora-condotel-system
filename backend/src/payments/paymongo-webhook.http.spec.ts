@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { CheckoutService } from './checkout.service.js';
 import { PaymongoAdapter } from './paymongo.adapter.js';
-import { createHmac, createHash, randomBytes, randomUUID } from 'node:crypto';
+import { createHmac, randomUUID } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
@@ -11,7 +11,6 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrismaClient } from '../generated/prisma/client.js';
@@ -21,7 +20,6 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
 import { ReservationsModule } from '../reservations/reservations.module.js';
-import { BOOKING_COOKIE } from '../reservations/booking-access.config.js';
 
 import { PaymongoWebhookService } from './paymongo-webhook.service.js';
 import { requireFullRecordedPayment } from '../reservations/stay-payment-policy.js';
@@ -34,26 +32,35 @@ let prisma: PrismaClient;
 let jwt: JwtService;
 let bookingId: string;
 let otherId: string;
-let cookie: string;
 let users: Record<string, string>;
 const path = () => `/api/payments/reservations/${bookingId}/checkout`;
 let checkout: CheckoutService;
 let provider: { settings: PaymongoAdapter['settings']; create: ReturnType<typeof vi.fn> };
-function start(requestId = randomUUID(), role = 'MANAGER') {
-  return request(app.getHttpServer()).post(path()).set('Origin', 'http://localhost:5173')
-    .set('Authorization', bearer(role)).send({ requestId });
+function start(requestId = randomUUID(), role = 'GUEST') {
+  return request(app.getHttpServer())
+    .post(path())
+    .set('Origin', 'http://localhost:5173')
+    .set('Authorization', bearer(role))
+    .send({ requestId });
 }
 function otherClient() {
   return new PrismaClient({ adapter: new PrismaBetterSqlite3({
     url: 'file:' + resolve(directory, 'summary.test.db').replaceAll('\\', '/'), timeout: 0,
   }) });
 }
-function bearer(role = 'MANAGER') { return `Bearer ${jwt.sign({ sub: users[role], jti: randomUUID() })}`; }
+function bearer(role = 'MANAGER') {
+  return `Bearer ${jwt.sign({
+    sub: users[role],
+    jti: randomUUID(),
+    sv: 0,
+  })}`;
+}
 
 describe('Step 7.3 — verified test webhooks', () => {
   beforeEach(async () => {
     vi.stubEnv('JWT_ACCESS_SECRET', secret);
     vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv('NEXORA_BOOKING_DEADLINE_WORKER_ENABLED', 'false');
     vi.stubEnv('PAYMONGO_TEST_WEBHOOK_SECRET', webhookSecret);
     vi.stubEnv('AUTH_ALLOWED_ORIGINS', 'http://localhost:5173');
     vi.stubEnv('PAYMONGO_TEST_SECRET_KEY', 'sk_test_fixture_only');
@@ -90,10 +97,6 @@ describe('Step 7.3 — verified test webhooks', () => {
         guestCount: 2, nightlyRateCentavos: 250_000, totalAmountCentavos: 750_000 } });
       if (role === 'GUEST') bookingId = booking.id; else otherId = booking.id;
     }
-    const token = randomBytes(32).toString('hex');
-    await prisma.reservationAccessSession.create({ data: { reservationId: bookingId,
-      tokenHash: createHash('sha256').update(token).digest('hex'), expiresAt: new Date(Date.now() + 60_000) } });
-    cookie = `${BOOKING_COOKIE}=${token}`;
     const module = await Test.createTestingModule({
       imports: [ReservationsModule, PassportModule,
         JwtModule.register({ secret, signOptions: { algorithm: 'HS256', issuer: 'nexora-api', audience: 'nexora-web', expiresIn: '5m' } }),
@@ -105,7 +108,6 @@ describe('Step 7.3 — verified test webhooks', () => {
     checkout = module.get(CheckoutService);
     app = module.createNestApplication({ rawBody: true });
     app.setGlobalPrefix('api');
-    app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
     await app.init();
   });
@@ -143,7 +145,9 @@ describe('Step 7.3 — verified test webhooks', () => {
     return prisma.payment.findFirstOrThrow();
   }
   function summary() {
-    return request(app.getHttpServer()).get('/api/reservations/access/payment-summary').set('Cookie', cookie);
+    return request(app.getHttpServer())
+      .get(`/api/payments/reservations/${bookingId}/summary`)
+      .set('Authorization', bearer('GUEST'));
   }
 
   it('verifies raw bytes without browser identity, records gross money once and exposes a safe summary', async () => {
@@ -166,9 +170,25 @@ describe('Step 7.3 — verified test webhooks', () => {
     expect(stored).not.toContain('checkout.paymongo.com');
   });
   it('retains route authorization on normal payment reads', async () => {
-    await request(app.getHttpServer()).get(path()).expect(401);
-    await request(app.getHttpServer()).get('/api/payments/reservations/' + otherId + '/summary')
-      .set('Authorization', bearer('GUEST')).expect(404);
+    await request(app.getHttpServer())
+      .get(path())
+      .expect(401);
+
+    await request(app.getHttpServer())
+      .get(`/api/payments/reservations/${bookingId}/summary`)
+      .expect(401);
+
+    await request(app.getHttpServer())
+      .get(`/api/payments/reservations/${otherId}/summary`)
+      .set('Authorization', bearer('GUEST'))
+      .expect(404);
+
+    await summary().expect(200);
+
+    await request(app.getHttpServer())
+      .get(`/api/payments/reservations/${bookingId}/summary`)
+      .set('Authorization', bearer('MANAGER'))
+      .expect(200);
   });
   it('rejects missing, wrong, duplicate, live-only and tampered signatures without a journal', async () => {
     const raw = JSON.stringify(eventFor('not-a-payment'));
@@ -296,7 +316,15 @@ describe('Step 7.3 — verified test webhooks', () => {
       await deliver(eventFor(paymentId)).expect(200);
       return { id: 'cs_test_session', url: 'https://checkout.paymongo.com/test-session' };
     });
-    const result = await checkout.startForUser(bookingId, randomUUID(), { id: users.MANAGER, email: 'test@example.test', role: 'MANAGER' });
+    const result = await checkout.startForUser(
+      bookingId,
+      randomUUID(),
+      {
+        id: users.GUEST,
+        email: 'GUEST@example.test',
+        role: 'GUEST',
+      },
+    );
     expect(result.state).toBe('PAID');
     expect(result.checkoutUrl).toBeNull();
     expect((await prisma.payment.findFirstOrThrow()).status).toBe('PAID');

@@ -1,5 +1,22 @@
 # NEXORA — Security Requirements
 
+## Step 5 security checkpoint — 2026-11-14
+
+Private guest reservation and payment operations require authenticated
+account ownership. Authorized staff access uses explicit role permissions.
+
+Obsolete email-access services and cookie-based checkout methods are
+removed. Retired accountless endpoints return HTTP 410.
+
+PayMongo webhook requests use provider signature verification. A browser
+redirect does not establish verified payment.
+
+Legacy database models remain for historical data. Their presence grants
+no reservation access.
+
+Earlier accountless implementation descriptions below are historical.
+Owner execution of security regression checks remains pending.
+
 ## Guest account security checkpoint — 2026-11-13
 
 Website bookings require an active authenticated GUEST account.

@@ -1,5 +1,22 @@
 # NEXORA — REST API Documentation
 
+## Step 5 API cleanup checkpoint — 2026-11-14
+
+Guest booking creation, recovery, reservation details, and payment access
+use authenticated account ownership.
+
+Guest account routes are under /api/guest/reservations.
+Reservation-ID checkout and summary routes are under
+/api/payments/reservations/:reservationId.
+
+The former /api/reservations/access endpoints return HTTP 410.
+
+Property settings reference responses expose reservationHoldMinutes.
+The obsolete bookingLinkMinutes field is removed.
+
+Earlier accountless contracts below are historical. Owner verification of
+the Step 5 cleanup remains pending.
+
 ## Guest account API checkpoint — 2026-11-13
 
 This checkpoint supersedes earlier descriptions of optional accounts and

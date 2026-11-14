@@ -1,4 +1,3 @@
-import { BOOKING_LINK_MS } from '../reservations/booking-access.config.js';
 import { HOLD_DURATION_MS } from '../reservations/reservation-acquisition-policy.js';
 
 export const PROPERTY_FIELDS = [
@@ -29,7 +28,5 @@ export function propertySettingsReference() {
   return {
     reservationHoldMinutes:
       HOLD_DURATION_MS / 60_000,
-    bookingLinkMinutes:
-      BOOKING_LINK_MS / 60_000,
   };
 }

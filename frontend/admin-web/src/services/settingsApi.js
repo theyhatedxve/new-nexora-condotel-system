@@ -100,11 +100,7 @@ function projectSettings(data) {
     !Number.isSafeInteger(
       reference.reservationHoldMinutes,
     ) ||
-    reference.reservationHoldMinutes <= 0 ||
-    !Number.isSafeInteger(
-      reference.bookingLinkMinutes,
-    ) ||
-    reference.bookingLinkMinutes <= 0
+    reference.reservationHoldMinutes <= 0
   ) {
     throw new Error(
       "Property settings are unavailable.",
@@ -136,8 +132,6 @@ function projectSettings(data) {
     reference: {
       reservationHoldMinutes:
         reference.reservationHoldMinutes,
-      bookingLinkMinutes:
-        reference.bookingLinkMinutes,
     },
   };
 }
