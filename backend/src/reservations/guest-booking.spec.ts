@@ -28,6 +28,7 @@ import Database from 'better-sqlite3';
 import {
   ConflictException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import {
@@ -53,7 +54,6 @@ import {
 
 import {
   hash,
-  requireBookingSession,
 } from './booking-access-security.js';
 
 import {
@@ -134,6 +134,78 @@ let directory = '';
 let clients: PrismaService[] = [];
 let prisma: PrismaService;
 let service: GuestBookingService;
+let guestIdentity: AuthenticatedUser;
+let guestProfileId: string;
+
+async function createGuestFixture() {
+  const role = await prisma.role.upsert({
+    where: { name: 'GUEST' },
+    update: {},
+    create: { name: 'GUEST' },
+  });
+  const user = await prisma.user.create({
+    data: {
+      roleId: role.id,
+      name: 'Synthetic Guest',
+      email: 'guest-booking@example.invalid',
+      passwordHash: 'synthetic-unused-password-hash',
+      status: 'ACTIVE',
+      mustChangePassword: false,
+      sessionVersion: 0,
+    },
+  });
+  const guest = await prisma.guest.create({
+    data: {
+      userId: user.id,
+      firstName: 'Synthetic',
+      lastName: 'Guest',
+      email: user.email,
+    },
+  });
+  guestProfileId = guest.id;
+  guestIdentity = {
+    id: user.id,
+    email: user.email,
+    role: 'GUEST',
+  };
+}
+
+function createGuestBooking(bookingService: GuestBookingService, input: unknown) {
+  return bookingService.create(input, guestIdentity);
+}
+
+function recoverGuestBooking(
+  bookingService: GuestBookingService,
+  requestId: unknown,
+  recoveryToken: unknown,
+) {
+  return bookingService.recover(requestId, recoveryToken, guestIdentity);
+}
+
+async function reservationIdFor(receipt: { reservationNumber: string }) {
+  const reservation = await prisma.reservation.findUniqueOrThrow({
+    where: { reservationNumber: receipt.reservationNumber },
+    select: { id: true },
+  });
+  return reservation.id;
+}
+
+function startGuestCheckout(
+  checkout: CheckoutService,
+  reservationId: string,
+  requestId: string,
+) {
+  return checkout.startForUser(reservationId, requestId, guestIdentity);
+}
+
+function currentGuestCheckout(checkout: CheckoutService, reservationId: string) {
+  return checkout.currentForUser(reservationId, guestIdentity);
+}
+
+async function readGuestSummary(summaries: PaymentSummaryService, reference: string) {
+  const id = await reservationIdFor({ reservationNumber: reference });
+  return summaries.forUser(id, guestIdentity);
+}
 
 function makeService(client: PrismaService) {
   const validation =
@@ -250,6 +322,7 @@ beforeEach(async () => {
 
   prisma = await openClient();
   service = makeService(prisma);
+  await createGuestFixture();
 
   await prisma.property.create({
     data: {
@@ -326,19 +399,55 @@ afterEach(async () => {
 });
 
 describe('durable guest booking creation', () => {
-  it('creates a pending property request and a scoped private session', async () => {
+  it('requires an authenticated identity for creation', async () => {
+    await expect(
+      service.create(payload(), undefined),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(await prisma.reservation.count()).toBe(0);
+  });
+
+  it('rejects recovery when the account identity changes', async () => {
+    const input = payload();
+    await createGuestBooking(service, input);
+    const role = await prisma.role.findUniqueOrThrow({ where: { name: 'GUEST' } });
+    const otherUser = await prisma.user.create({
+      data: {
+        roleId: role.id,
+        name: 'Other Guest',
+        email: 'other-guest@example.invalid',
+        passwordHash: 'synthetic-unused-password-hash',
+        status: 'ACTIVE',
+      },
+    });
+    await prisma.guest.create({
+      data: {
+        userId: otherUser.id,
+        firstName: 'Other',
+        lastName: 'Guest',
+        email: otherUser.email,
+      },
+    });
+    await expect(service.recover(input.requestId, input.recoveryToken, {
+      id: otherUser.id,
+      email: otherUser.email,
+      role: 'GUEST',
+    })).rejects.toBeInstanceOf(NotFoundException);
+    expect(await prisma.reservation.count()).toBe(1);
+  });
+
+  it('creates a pending property request owned by the guest account', async () => {
     const input = payload();
 
-    const result = await service.create(input);
+    const result = await createGuestBooking(service, input);
 
-    expect(result.receipt.status).toBe('PENDING');
+    expect(result.status).toBe('PENDING');
 
     expect(
-      result.receipt.paymentPreference,
+      result.paymentPreference,
     ).toBe('PAY_AT_PROPERTY');
 
     expect(
-      result.receipt.holdExpiresAt,
+      result.holdExpiresAt,
     ).toEqual(
       new Date(
         `${input.checkIn}T14:30:00+08:00`,
@@ -366,34 +475,38 @@ describe('durable guest booking creation', () => {
     );
 
     expect(attempt.recoveryTokenHash).toBe(
-      hash(input.recoveryToken),
+      hash(JSON.stringify([
+        'guest-account-booking-v1',
+        guestIdentity.id,
+        input.requestId,
+        hash(input.recoveryToken),
+      ])),
     );
 
     expect(attempt.recoveryTokenHash).not.toBe(
       input.recoveryToken,
     );
 
-    const session = await requireBookingSession(
-      prisma,
-      result.session.token,
-    );
-
-    expect(session.reservationId).toBe(
-      attempt.reservationId,
-    );
+    const reservation = await prisma.reservation.findUniqueOrThrow({
+      where: { id: attempt.reservationId! },
+      include: { guest: true },
+    });
+    expect(reservation.guestId).toBe(guestProfileId);
+    expect(reservation.guest.userId).toBe(guestIdentity.id);
+    expect(await prisma.reservationAccessSession.count()).toBe(0);
   });
 
   it('replays the original request without another guest or reservation', async () => {
     const input = payload();
 
-    const first = await service.create(input);
-    const second = await service.create(input);
+    const first = await createGuestBooking(service, input);
+    const second = await createGuestBooking(service, input);
 
     expect(second.replayed).toBe(true);
 
     expect(
-      second.receipt.reservationNumber,
-    ).toBe(first.receipt.reservationNumber);
+      second.reservationNumber,
+    ).toBe(first.reservationNumber);
 
     expect(
       await prisma.reservation.count(),
@@ -411,12 +524,12 @@ describe('durable guest booking creation', () => {
   it('rejects a changed payload under the original request', async () => {
     const input = payload();
 
-    await service.create(input);
+    await createGuestBooking(service, input);
 
-    input.firstName = 'Different';
+    input.guests = 2;
 
     await expect(
-      service.create(input),
+      createGuestBooking(service, input),
     ).rejects.toBeInstanceOf(
       ConflictException,
     );
@@ -429,10 +542,10 @@ describe('durable guest booking creation', () => {
   it('requires the recovery credential, not only the request ID', async () => {
     const input = payload();
 
-    await service.create(input);
+    await createGuestBooking(service, input);
 
     await expect(
-      service.recover(
+      recoverGuestBooking(service,
         input.requestId,
         randomBytes(32).toString('hex'),
       ),
@@ -444,16 +557,16 @@ describe('durable guest booking creation', () => {
   it('recovers the stored booking without creating another reservation', async () => {
     const input = payload();
 
-    const created = await service.create(input);
+    const created = await createGuestBooking(service, input);
 
-    const recovered = await service.recover(
+    const recovered = await recoverGuestBooking(service,
       input.requestId,
       input.recoveryToken,
     );
 
     expect(
-      recovered.receipt.reservationNumber,
-    ).toBe(created.receipt.reservationNumber);
+      recovered.reservationNumber,
+    ).toBe(created.reservationNumber);
 
     expect(
       await prisma.reservation.count(),
@@ -463,7 +576,7 @@ describe('durable guest booking creation', () => {
   it('rejects an expired recovery credential', async () => {
     const input = payload();
 
-    await service.create(input);
+    await createGuestBooking(service, input);
 
     await prisma.guestBookingAttempt.update({
       where: {
@@ -477,7 +590,7 @@ describe('durable guest booking creation', () => {
     });
 
     await expect(
-      service.recover(
+      recoverGuestBooking(service,
         input.requestId,
         input.recoveryToken,
       ),
@@ -497,20 +610,20 @@ describe('durable guest booking creation', () => {
 
     const before = Date.now();
 
-    const result = await service.create(input);
+    const result = await createGuestBooking(service, input);
 
-    expect(result.receipt.status).toBe(
+    expect(result.status).toBe(
       'PENDING',
     );
 
     expect(
-      result.receipt.holdExpiresAt?.getTime(),
+      result.holdExpiresAt?.getTime(),
     ).toBeGreaterThanOrEqual(
       before + HOLD_DURATION_MS,
     );
 
     expect(
-      result.receipt.holdExpiresAt?.getTime(),
+      result.holdExpiresAt?.getTime(),
     ).toBeLessThanOrEqual(
       Date.now() + HOLD_DURATION_MS,
     );
@@ -520,22 +633,26 @@ describe('durable guest booking creation', () => {
     ).toBe(0);
   });
 
-  it('does not reuse a recovery credential for a different request ID', async () => {
-    const input = payload();
-
-    await service.create(input);
-
-    input.requestId = randomUUID();
-
-    await expect(
-      service.create(input),
-    ).rejects.toBeInstanceOf(
-      ConflictException,
-    );
-
-    expect(
-      await prisma.reservation.count(),
-    ).toBe(1);
+  it('binds recovery proofs to their request IDs', async () => {
+    const firstInput = payload();
+    const first = await createGuestBooking(service, firstInput);
+    const secondInput = {
+      ...firstInput,
+      requestId: randomUUID(),
+      checkIn: new Date(Date.parse(firstInput.checkIn) + 2 * DAY_MS).toISOString().slice(0, 10),
+      checkOut: new Date(Date.parse(firstInput.checkOut) + 2 * DAY_MS).toISOString().slice(0, 10),
+    };
+    const second = await createGuestBooking(service, secondInput);
+    expect(second.reservationNumber).not.toBe(first.reservationNumber);
+    const firstAttempt = await prisma.guestBookingAttempt.findUniqueOrThrow({
+      where: { requestId: firstInput.requestId },
+    });
+    const secondAttempt = await prisma.guestBookingAttempt.findUniqueOrThrow({
+      where: { requestId: secondInput.requestId },
+    });
+    expect(firstAttempt.recoveryTokenHash).not.toBe(secondAttempt.recoveryTokenHash);
+    expect(await prisma.reservation.count()).toBe(2);
+    expect(await prisma.guest.count()).toBe(1);
   });
 
   it('creates one reservation across concurrent identical requests', async () => {
@@ -546,15 +663,15 @@ describe('durable guest booking creation', () => {
     );
 
     const results = await Promise.all([
-      service.create(input),
-      other.create(input),
+      createGuestBooking(service, input),
+      createGuestBooking(other, input),
     ]);
 
     expect(
       new Set(
         results.map(
           (result) =>
-            result.receipt.reservationNumber,
+            result.reservationNumber,
         ),
       ).size,
     ).toBe(1);
@@ -580,8 +697,8 @@ describe('durable guest booking creation', () => {
     );
 
     const results = await Promise.allSettled([
-      service.create(payload()),
-      other.create(payload()),
+      createGuestBooking(service, payload()),
+      createGuestBooking(other, payload()),
     ]);
 
     expect(
@@ -617,7 +734,7 @@ describe('durable guest booking creation', () => {
     ).toBe(1);
   });
 
-  it('rolls back the attempt, guest, reservation, and session when auditing fails', async () => {
+  it('rolls back booking writes and preserves the account profile when auditing fails', async () => {
     await prisma.$executeRawUnsafe(`
       CREATE TRIGGER "test_reject_guest_booking_audit"
       BEFORE INSERT ON "AuditLog"
@@ -628,7 +745,7 @@ describe('durable guest booking creation', () => {
     `);
 
     await expect(
-      service.create(payload()),
+      createGuestBooking(service, payload()),
     ).rejects.toThrow();
 
     expect(
@@ -641,7 +758,11 @@ describe('durable guest booking creation', () => {
 
     expect(
       await prisma.guest.count(),
-    ).toBe(0);
+    ).toBe(1);
+
+    expect(await prisma.guest.findUnique({
+      where: { id: guestProfileId },
+    })).not.toBeNull();
 
     expect(
       await prisma.reservationAccessSession.count(),
@@ -718,7 +839,7 @@ describe('pending online booking payment confirmation', () => {
 
     input.paymentPreference = 'PAYMONGO';
 
-    const created = await service.create(input);
+    const created = await createGuestBooking(service, input);
 
     const attempt =
       await prisma.guestBookingAttempt.findUniqueOrThrow({
@@ -734,8 +855,7 @@ describe('pending online booking payment confirmation', () => {
     return {
       id: attempt.reservationId,
       reference:
-        created.receipt.reservationNumber,
-      token: created.session.token,
+        created.reservationNumber,
     };
   }
 
@@ -744,8 +864,8 @@ describe('pending online booking payment confirmation', () => {
     const requestId = randomUUID();
 
     const response =
-      await checkoutService.startForSession(
-        booking.token,
+      await startGuestCheckout(checkoutService,
+        booking.id,
         requestId,
       );
 
@@ -855,8 +975,8 @@ describe('pending online booking payment confirmation', () => {
     const result = await startOnline();
 
     const repeated =
-      await checkoutService.startForSession(
-        result.booking.token,
+      await startGuestCheckout(checkoutService,
+        result.booking.id,
         result.requestId,
       );
 
@@ -882,8 +1002,8 @@ describe('pending online booking payment confirmation', () => {
     });
 
     await expect(
-      checkoutService.startForSession(
-        booking.token,
+      startGuestCheckout(checkoutService,
+        booking.id,
         randomUUID(),
       ),
     ).rejects.toBeInstanceOf(
@@ -910,8 +1030,8 @@ describe('pending online booking payment confirmation', () => {
     });
 
     await expect(
-      checkoutService.currentForSession(
-        result.booking.token,
+      currentGuestCheckout(checkoutService,
+        result.booking.id,
       ),
     ).rejects.toBeInstanceOf(
       ConflictException,
@@ -919,13 +1039,13 @@ describe('pending online booking payment confirmation', () => {
   });
 
   it('does not allow pending property requests into online checkout', async () => {
-    const created = await service.create(
+    const created = await createGuestBooking(service,
       payload(),
     );
 
     await expect(
-      checkoutService.startForSession(
-        created.session.token,
+      startGuestCheckout(checkoutService,
+        await reservationIdFor(created),
         randomUUID(),
       ),
     ).rejects.toBeInstanceOf(
@@ -967,7 +1087,7 @@ describe('pending online booking payment confirmation', () => {
     expect(stored.confirmedAt).toBeInstanceOf(Date);
 
     expect(
-      await summaryService.forVerifiedBookingNumber(
+      await readGuestSummary(summaryService,
         result.booking.reference,
       ),
     ).toMatchObject({
@@ -979,8 +1099,8 @@ describe('pending online booking payment confirmation', () => {
     });
 
     expect(
-      await checkoutService.currentForSession(
-        result.booking.token,
+      await currentGuestCheckout(checkoutService,
+        result.booking.id,
       ),
     ).toMatchObject({
       state: 'PAID',
@@ -1179,7 +1299,7 @@ describe('pending online booking payment confirmation', () => {
     });
 
     expect(
-      await summaryService.forVerifiedBookingNumber(
+      await readGuestSummary(summaryService,
         result.booking.reference,
       ),
     ).toMatchObject({
@@ -1500,7 +1620,7 @@ describe('pending online booking payment confirmation', () => {
       });
 
       expect(
-        await summaryService.forVerifiedBookingNumber(
+        await readGuestSummary(summaryService,
           result.booking.reference,
         ),
       ).toMatchObject({
@@ -1566,7 +1686,7 @@ describe('pending online booking payment confirmation', () => {
     });
 
     it('processes overdue property confirmation requests without a provider call', async () => {
-      const created = await service.create(
+      const created = await createGuestBooking(service,
         payload(),
       );
 
@@ -1574,7 +1694,7 @@ describe('pending online booking payment confirmation', () => {
         await prisma.reservation.findUniqueOrThrow({
           where: {
             reservationNumber:
-              created.receipt.reservationNumber,
+              created.reservationNumber,
           },
         });
 
@@ -1685,7 +1805,7 @@ describe('staff confirmation of property requests', () => {
   async function request() {
     const input = payload();
 
-    await service.create(input);
+    await createGuestBooking(service, input);
 
     const attempt =
       await prisma.guestBookingAttempt.findUniqueOrThrow({
@@ -1968,10 +2088,8 @@ describe('staff confirmation of property requests', () => {
   it('rejects stale staff permissions', async () => {
     const booking = await request();
 
-    const guestRole = await prisma.role.create({
-      data: {
-        name: 'GUEST',
-      },
+    const guestRole = await prisma.role.findUniqueOrThrow({
+      where: { name: 'GUEST' },
     });
 
     await prisma.user.update({
@@ -2011,7 +2129,7 @@ describe('staff confirmation of property requests', () => {
 
     input.paymentPreference = 'PAYMONGO';
 
-    await service.create(input);
+    await createGuestBooking(service, input);
 
     const attempt =
       await prisma.guestBookingAttempt.findUniqueOrThrow({
