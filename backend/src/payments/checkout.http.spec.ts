@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { CheckoutService } from './checkout.service.js';
 import { PaymongoAdapter } from './paymongo.adapter.js';
 import { OwnershipService } from '../common/ownership/ownership.service.js';
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
@@ -12,7 +12,6 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrismaClient } from '../generated/prisma/client.js';
@@ -22,7 +21,6 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
 import { ReservationsModule } from '../reservations/reservations.module.js';
-import { BOOKING_COOKIE } from '../reservations/booking-access.config.js';
 
 const secret = 'isolated-payment-summary-test-secret-at-least-32-bytes';
 let app: INestApplication;
@@ -31,22 +29,30 @@ let prisma: PrismaClient;
 let jwt: JwtService;
 let bookingId: string;
 let otherId: string;
-let cookie: string;
 let users: Record<string, string>;
 const path = () => `/api/payments/reservations/${bookingId}/checkout`;
 const privatePath = '/api/reservations/access/checkout';
 let checkout: CheckoutService;
 let provider: { settings: PaymongoAdapter['settings']; create: ReturnType<typeof vi.fn> };
-function start(requestId = randomUUID(), role = 'MANAGER') {
-  return request(app.getHttpServer()).post(path()).set('Origin', 'http://localhost:5173')
-    .set('Authorization', bearer(role)).send({ requestId });
+function start(requestId = randomUUID(), role = 'GUEST') {
+  return request(app.getHttpServer())
+    .post(path())
+    .set('Origin', 'http://localhost:5173')
+    .set('Authorization', bearer(role))
+    .send({ requestId });
 }
 function otherClient() {
   return new PrismaClient({ adapter: new PrismaBetterSqlite3({
     url: 'file:' + resolve(directory, 'summary.test.db').replaceAll('\\', '/'), timeout: 0,
   }) });
 }
-function bearer(role = 'MANAGER') { return `Bearer ${jwt.sign({ sub: users[role], jti: randomUUID() })}`; }
+function bearer(role = 'MANAGER') {
+  return `Bearer ${jwt.sign({
+    sub: users[role],
+    jti: randomUUID(),
+    sv: 0,
+  })}`;
+}
 
 describe('Step 7.2 — duplicate-safe test checkout', () => {
   beforeEach(async () => {
@@ -56,6 +62,7 @@ describe('Step 7.2 — duplicate-safe test checkout', () => {
     vi.stubEnv('PAYMONGO_TEST_SECRET_KEY', 'sk_test_fixture_only');
     vi.stubEnv('PAYMONGO_RETURN_URL', 'http://localhost:5173/payment-return');
     vi.stubEnv('PAYMONGO_PAYMENT_METHODS', 'qrph');
+    vi.stubEnv('NEXORA_BOOKING_DEADLINE_WORKER_ENABLED', 'false');
     const realAdapter = new PaymongoAdapter();
     provider = { settings: () => realAdapter.settings(), create: vi.fn().mockResolvedValue({
       id: 'cs_test_session', url: 'https://checkout.paymongo.com/test-session',
@@ -87,10 +94,6 @@ describe('Step 7.2 — duplicate-safe test checkout', () => {
         guestCount: 2, nightlyRateCentavos: 250_000, totalAmountCentavos: 750_000 } });
       if (role === 'GUEST') bookingId = booking.id; else otherId = booking.id;
     }
-    const token = randomBytes(32).toString('hex');
-    await prisma.reservationAccessSession.create({ data: { reservationId: bookingId,
-      tokenHash: createHash('sha256').update(token).digest('hex'), expiresAt: new Date(Date.now() + 60_000) } });
-    cookie = `${BOOKING_COOKIE}=${token}`;
     const module = await Test.createTestingModule({
       imports: [ReservationsModule, PassportModule,
         JwtModule.register({ secret, signOptions: { algorithm: 'HS256', issuer: 'nexora-api', audience: 'nexora-web', expiresIn: '5m' } }),
@@ -102,7 +105,6 @@ describe('Step 7.2 — duplicate-safe test checkout', () => {
     checkout = module.get(CheckoutService);
     app = module.createNestApplication();
     app.setGlobalPrefix('api');
-    app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: true }));
     await app.init();
   });
@@ -137,19 +139,94 @@ describe('Step 7.2 — duplicate-safe test checkout', () => {
     expect((await start()).body.data.amountCentavos).toBe(500_000);
     expect(provider.create.mock.calls[0][0].amountCentavos).toBe(500_000);
   });
-  it('scopes cookie checkout to its session and ignores a different booking in the query', async () => {
-    await request(app.getHttpServer()).post(`${privatePath}?reservationId=${otherId}`)
-      .set('Origin', 'http://localhost:5173').set('Cookie', cookie).send({ requestId: randomUUID() }).expect(200);
-    expect((await prisma.payment.findFirstOrThrow()).reservationId).toBe(bookingId);
-    await request(app.getHttpServer()).get(privatePath).set('Cookie', cookie).expect(200);
+  it('uses the owned route reservation despite a different query ID', async () => {
+    await request(app.getHttpServer())
+      .post(`${path()}?reservationId=${otherId}`)
+      .set('Origin', 'http://localhost:5173')
+      .set('Authorization', bearer('GUEST'))
+      .send({ requestId: randomUUID() })
+      .expect(200);
+
+    const payment = await prisma.payment.findFirstOrThrow();
+    expect(payment.reservationId).toBe(bookingId);
+
+    const current = await request(app.getHttpServer())
+      .get(path())
+      .set('Authorization', bearer('GUEST'))
+      .expect(200);
+
+    expect(current.body.data.state).toBe('READY');
+    expect(provider.create).toHaveBeenCalledTimes(1);
   });
-  it('rejects missing identity, another guest, missing cookies and unapproved origins', async () => {
-    await request(app.getHttpServer()).post(path()).send({ requestId: randomUUID() }).expect(401);
+
+  it('rejects anonymous checkout and another guest’s reservation', async () => {
+    await request(app.getHttpServer())
+      .post(path())
+      .set('Origin', 'http://localhost:5173')
+      .send({ requestId: randomUUID() })
+      .expect(401);
+
+    await request(app.getHttpServer()).get(path()).expect(401);
     await start(randomUUID(), 'OTHER_GUEST').expect(404);
-    await request(app.getHttpServer()).post(privatePath).set('Origin', 'http://localhost:5173')
-      .send({ requestId: randomUUID() }).expect(404);
-    await request(app.getHttpServer()).post(path()).set('Authorization', bearer())
-      .set('Origin', 'https://evil.example').send({ requestId: randomUUID() }).expect(403);
+
+    await request(app.getHttpServer())
+      .get(path())
+      .set('Authorization', bearer('OTHER_GUEST'))
+      .expect(404);
+
+    expect(provider.create).not.toHaveBeenCalled();
+    expect(await prisma.payment.count()).toBe(0);
+  });
+
+  it('rejects an unapproved checkout origin', async () => {
+    await request(app.getHttpServer())
+      .post(path())
+      .set('Authorization', bearer('GUEST'))
+      .set('Origin', 'https://evil.example')
+      .send({ requestId: randomUUID() })
+      .expect(403);
+
+    expect(provider.create).not.toHaveBeenCalled();
+    expect(await prisma.payment.count()).toBe(0);
+  });
+
+  it('rejects retired cookie checkout without creating payment', async () => {
+    const staleCookie = `nexora_booking_access=${'a'.repeat(64)}`;
+
+    const created = await request(app.getHttpServer())
+      .post(privatePath)
+      .set('Origin', 'http://localhost:5173')
+      .set('Cookie', staleCookie)
+      .send({ requestId: randomUUID() })
+      .expect(410);
+
+    const current = await request(app.getHttpServer())
+      .get(privatePath)
+      .set('Cookie', staleCookie)
+      .expect(410);
+
+    expect(created.headers['cache-control']).toBe('no-store');
+    expect(current.headers['cache-control']).toBe('no-store');
+    expect(created.headers['set-cookie']).toBeUndefined();
+    expect(provider.create).not.toHaveBeenCalled();
+    expect(await prisma.payment.count()).toBe(0);
+  });
+
+  it('rejects a guest disabled after token issuance', async () => {
+    const authorization = bearer('GUEST');
+
+    await prisma.user.update({
+      where: { id: users.GUEST },
+      data: { status: 'DISABLED' },
+    });
+
+    await request(app.getHttpServer())
+      .post(path())
+      .set('Authorization', authorization)
+      .set('Origin', 'http://localhost:5173')
+      .send({ requestId: randomUUID() })
+      .expect(401);
+
     expect(provider.create).not.toHaveBeenCalled();
     expect(await prisma.payment.count()).toBe(0);
   });
