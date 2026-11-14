@@ -1,51 +1,82 @@
-.guest-header {
+﻿.guest-header {
   position: relative;
   z-index: 20;
-  background: var(--color-primary);
   color: var(--color-on-primary);
+  background: var(--color-primary);
   border-bottom: 1px solid var(--color-rgb-217-187-124-22);
 }
 
 .guest-header__inner {
-  width: min(1200px, calc(100% - 3rem));
-  min-height: 88px;
-  margin-inline: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-8);
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  width: min(1744px, calc(100% - 2rem));
+  min-height: 76px;
+  margin-inline: auto;
 }
 
 .guest-header__brand {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  border-radius: var(--radius-0-25rem);
+  border-radius: 0.25rem;
 }
 
 .guest-header__logo {
   display: block;
-  width: 224px;
+  width: 190px;
   height: auto;
 }
 
-.guest-header__navigation {
-  display: flex;
+.guest-header__toggle {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2-25rem);
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--color-on-primary);
+  background: transparent;
+  border: 1px solid var(--color-rgb-217-187-124-45);
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.guest-header__navigation {
+  display: none;
+  flex: 1 0 100%;
+  min-width: 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--color-rgb-217-187-124-22);
+}
+
+.guest-header__navigation.is-open {
+  display: grid;
+  gap: 1rem;
+}
+
+.guest-header__links,
+.guest-header__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .guest-header__link {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   min-height: 44px;
-  padding: var(--space-2) 0;
-  border-bottom: 2px solid transparent;
+  padding: 0.65rem 0.75rem;
   color: var(--color-on-primary);
-  font-size: var(--font-size-0-95rem);
-  font-weight: var(--font-weight-600);
-  line-height: var(--line-height-1-4);
+  border-bottom: 2px solid transparent;
+  border-radius: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
   text-decoration: none;
   transition:
     color 160ms ease,
@@ -56,86 +87,141 @@
 .guest-header__link:hover,
 .guest-header__link[aria-current="page"] {
   color: var(--color-gold-light);
+  background: var(--color-rgb-217-187-124-10);
   border-bottom-color: var(--color-gold-light);
 }
 
-.guest-header__booking-link {
-  padding: var(--space-0-65rem) var(--space-1-15rem);
-  border: 1px solid var(--color-rgb-217-187-124-65);
-  border-radius: var(--radius-0-4rem);
+.guest-header__account,
+.guest-header__explore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0.7rem 1.15rem;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.guest-header__booking-link:hover,
-.guest-header__booking-link[aria-current="page"] {
+.guest-header .guest-header__account {
+  color: var(--color-on-primary);
+  background: transparent;
+  border-color: var(--color-rgb-217-187-124-65);
+}
+
+.guest-header .guest-header__account:hover,
+.guest-header .guest-header__account[aria-current="page"] {
+  color: var(--color-gold-light);
   background: var(--color-rgb-217-187-124-10);
   border-color: var(--color-gold-light);
 }
 
-.guest-header__toggle {
-  display: none;
+.guest-header .guest-header__explore {
+  color: var(--color-on-gold);
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+.guest-header .guest-header__explore:hover {
+  background: var(--color-gold-light);
+  border-color: var(--color-gold-light);
+}
+
+.guest-header__session {
+  align-self: center;
+  padding: 0.5rem;
+  color: var(--color-text-on-dark-muted);
+  font-size: 0.9rem;
+}
+
+.guest-header__feedback {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid var(--color-rgb-217-187-124-45);
-  border-radius: var(--radius-0-4rem);
-  background: transparent;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: min(1744px, calc(100% - 2rem));
+  margin-inline: auto;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--color-rgb-217-187-124-22);
+}
+
+.guest-header__feedback p {
+  margin: 0;
   color: var(--color-on-primary);
-  cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .guest-header a:focus-visible,
 .guest-header button:focus-visible {
   outline: 3px solid var(--color-gold-light);
-  outline-offset: 5px;
+  outline-offset: 4px;
 }
 
-@media (max-width: 760px) {
+@media (min-width: 1100px) {
   .guest-header__inner {
-    width: calc(100% - 2rem);
-    min-height: 76px;
-    flex-wrap: wrap;
-    column-gap: var(--space-4);
-    row-gap: 0;
+    width: min(1744px, calc(100% - 3rem));
+    min-height: 88px;
+    flex-wrap: nowrap;
+    gap: 2rem;
   }
 
   .guest-header__logo {
-    width: 190px;
+    width: 224px;
   }
 
   .guest-header__toggle {
-    display: inline-flex;
-  }
-
-  .guest-header__navigation {
     display: none;
-    flex: 1 0 100%;
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-2);
-    padding: var(--space-3) 0 var(--space-1-25rem);
-    border-top: 1px solid var(--color-rgb-217-187-124-18);
   }
 
+  .guest-header__navigation,
   .guest-header__navigation.is-open {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    flex: 1;
+    gap: 1.5rem;
+    padding: 0;
+    border: 0;
+  }
+
+  .guest-header__links {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.75rem, 1.5vw, 2rem);
+  }
+
+  .guest-header__actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .guest-header__link {
-    justify-content: flex-start;
-    padding: var(--space-0-8rem) var(--space-3);
-    border-bottom: 0;
-    border-radius: var(--radius-0-4rem);
+    padding: 0.5rem 0;
+    border-radius: 0;
+    white-space: nowrap;
   }
 
   .guest-header__link:hover,
   .guest-header__link[aria-current="page"] {
-    background: var(--color-rgb-217-187-124-10);
+    background: transparent;
   }
 
-  .guest-header__booking-link {
-    margin-top: var(--space-1);
+  .guest-header__account,
+  .guest-header__explore {
+    white-space: nowrap;
+  }
+
+  .guest-header__feedback {
+    width: min(1744px, calc(100% - 3rem));
   }
 }
 

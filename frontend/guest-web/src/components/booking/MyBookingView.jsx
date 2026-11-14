@@ -44,8 +44,8 @@ export function MyBookingView({ expectedReference }) {
 
       {view.status === "unavailable" && (
         <div className="my-booking__feedback" role="status">
-          Private access is unavailable, expired, or belongs to a different booking.
-          Request access to the intended booking.
+          This reservation is unavailable for your guest account.
+          Check the booking reference and try again.
         </div>
       )}
 
@@ -199,7 +199,7 @@ export function MyBookingView({ expectedReference }) {
             >
               <LogOut size={17} aria-hidden="true" />
 
-              {signingOut ? "Signing out..." : "End private access"}
+              {signingOut ? "Signing out..." : "Sign out"}
             </button>
           </footer>
         </>
@@ -212,8 +212,8 @@ export function MyBookingView({ expectedReference }) {
       )}
 
       {!booking && view.status !== "loading" && (
-        <Link className="my-booking__button" to="/booking-access">
-          Request private email access
+        <Link className="my-booking__button" to="/rooms">
+          Browse rooms
         </Link>
       )}
     </main>

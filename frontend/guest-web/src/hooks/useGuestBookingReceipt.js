@@ -39,8 +39,6 @@ export default function useGuestBookingReceipt({ flow }) {
     receipt.holdExpiresAt &&
     now >= Date.parse(receipt.holdExpiresAt);
 
-  const accessExpired = now >= Date.parse(receipt.sessionExpiresAt);
-
   const title = closed
     ? "Booking request closed"
     : receipt.status === "CONFIRMED"
@@ -69,7 +67,6 @@ export default function useGuestBookingReceipt({ flow }) {
     closed,
     paid,
     deadlineReached,
-    accessExpired,
     title,
     canStartAnother,
     startAnother,

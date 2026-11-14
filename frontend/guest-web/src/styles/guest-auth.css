@@ -1,0 +1,128 @@
+.guest-auth {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 5rem) 1rem;
+}
+
+.guest-auth__heading {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.guest-auth__heading h1 {
+  margin: 0 0 1rem;
+  color: var(--color-primary);
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.15;
+}
+
+.guest-auth__heading p {
+  color: var(--color-text-muted);
+}
+
+.guest-auth__heading .guest-auth__eyebrow {
+  margin-bottom: 1.25rem;
+  color: var(--color-gold);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.guest-auth__card {
+  padding: clamp(1.25rem, 4vw, 2.25rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  box-shadow: 0 8px 28px rgb(20 38 63 / 5%);
+}
+
+.guest-auth form,
+.guest-auth fieldset {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.guest-auth form {
+  margin: 1rem 0;
+}
+
+.guest-auth fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.guest-auth legend {
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.guest-auth label {
+  margin-top: 0.4rem;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.guest-auth input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.guest-auth input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.guest-auth button {
+  min-height: 46px;
+  margin-top: 0.5rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--color-gold);
+  border-radius: 0.5rem;
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guest-auth button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.guest-auth small,
+.guest-auth__links {
+  color: var(--color-text-muted);
+}
+
+.guest-auth__links {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+
+.guest-auth a {
+  color: var(--color-primary);
+  text-underline-offset: 0.2em;
+}
+
+.guest-auth__feedback {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-left: 3px solid var(--color-gold);
+  background: var(--color-background);
+  overflow-wrap: anywhere;
+}
+
+.guest-auth :focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}

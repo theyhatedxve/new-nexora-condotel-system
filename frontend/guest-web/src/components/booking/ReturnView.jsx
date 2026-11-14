@@ -12,7 +12,7 @@ export function ReturnView({ reference }) {
 
         {view.status === "loading" && (
           <>
-            <h1>Checking private access</h1>
+            <h1>Checking your booking</h1>
             <p role="status">Loading the intended booking...</p>
           </>
         )}
@@ -29,10 +29,10 @@ export function ReturnView({ reference }) {
           <>
             <h1>Payment status unavailable</h1>
             <p role="alert">
-              Private access is unavailable, expired, or belongs to another booking.
-              Request access to the intended booking.
+              This reservation could not be loaded for your guest account.
+              Check its reference or contact the property.
             </p>
-            <Link to="/booking-access">Request private email access</Link>
+            <Link to="/rooms">Browse rooms</Link>
           </>
         )}
 

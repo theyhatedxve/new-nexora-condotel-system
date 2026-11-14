@@ -4,7 +4,7 @@ import { formatPesos } from "../../utils/formatMoney.js";
 import GuestBookingReceipt from "../GuestBookingReceipt.jsx";
 import useCheckoutForm from "../../hooks/useCheckoutForm.js";
 
-export function CheckoutForm({ selection, selectionError }) {
+export function CheckoutForm({ selection, selectionError, profile }) {
   const {
     flow,
     quote,
@@ -23,7 +23,7 @@ export function CheckoutForm({ selection, selectionError }) {
     online,
     locked,
     backToRooms,
-  } = useCheckoutForm({ selection });
+  } = useCheckoutForm({ selection, profile });
 
   if (flow.receipt) {
     return <GuestBookingReceipt flow={flow} />;
@@ -80,8 +80,8 @@ export function CheckoutForm({ selection, selectionError }) {
               {flow.busy ? "Please wait..." : "Recover original request"}
             </button>
 
-            <Link className="checkout-view__secondary-link" to="/booking-access">
-              Request private email access
+            <Link className="checkout-view__secondary-link" to="/rooms">
+              Browse rooms
             </Link>
           </div>
         </section>
@@ -102,7 +102,8 @@ export function CheckoutForm({ selection, selectionError }) {
         <h1>Complete your booking</h1>
 
         <p>
-          Choose how to pay and tell us when you expect to arrive. An account is optional.
+          Choose how to pay and tell us when you expect to arrive.
+          Your booking will use your guest account details.
         </p>
       </header>
 
@@ -122,6 +123,7 @@ export function CheckoutForm({ selection, selectionError }) {
                   <input
                     id="booking-first-name"
                     name="firstName"
+                    readOnly
                     autoComplete="given-name"
                     maxLength={100}
                     required
@@ -135,6 +137,7 @@ export function CheckoutForm({ selection, selectionError }) {
                   <input
                     id="booking-last-name"
                     name="lastName"
+                    readOnly
                     autoComplete="family-name"
                     maxLength={100}
                     required
@@ -148,6 +151,7 @@ export function CheckoutForm({ selection, selectionError }) {
                   <input
                     id="booking-email"
                     name="email"
+                  readOnly
                     type="email"
                     autoComplete="email"
                     maxLength={254}

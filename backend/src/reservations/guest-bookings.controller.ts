@@ -1,264 +1,155 @@
-import {
-  BadRequestException,
+﻿import {
   Body,
   Controller,
   ForbiddenException,
+  Get,
+  Header,
   Headers,
   HttpCode,
+  NotFoundException,
+  Param,
   Post,
   Req,
-  Res,
 } from '@nestjs/common';
-
-import {
-  Throttle,
-} from '@nestjs/throttler';
-
-import type {
-  Request,
-  Response,
-} from 'express';
-
-import {
-  getAllowedOrigins,
-} from '../auth/auth.config.js';
-
-import {
-  Public,
-} from '../common/decorators/public.decorator.js';
-
-import {
-  BOOKING_COOKIE,
-  bookingCookieOptions,
-} from './booking-access.config.js';
-
-import {
-  CreateGuestBookingDto,
-} from './dto/create-guest-booking.dto.js';
-
-import {
-  RecoverGuestBookingDto,
-} from './dto/recover-guest-booking.dto.js';
-
-import {
-  GuestBookingService,
-} from './guest-booking.service.js';
-
-import {
-  CheckoutService,
-} from '../payments/checkout.service.js';
-
+import { Throttle } from '@nestjs/throttler';
+import type { Request } from 'express';
+import { Roles } from '../common/decorators/roles.decorator.js';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
+import { getAllowedOrigins } from '../auth/auth.config.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { CheckoutService } from '../payments/checkout.service.js';
+import { PaymentSummaryService } from '../payments/payment-summary.service.js';
+import { GuestBookingService } from './guest-booking.service.js';
+import { CreateGuestBookingDto } from './dto/create-guest-booking.dto.js';
+import { RecoverGuestBookingDto } from './dto/recover-guest-booking.dto.js';
 import {
   CreateGuestBookingCheckoutDto,
   GuestBookingCheckoutScopeDto,
 } from './dto/guest-booking-checkout.dto.js';
 
-type BookingResult = Awaited<
-  ReturnType<GuestBookingService['create']>
->;
+type GuestRequest = Request & { user: AuthenticatedUser };
 
-@Public()
-@Controller(
-  'reservations/access/guest-bookings',
-)
+@Controller('guest/reservations')
+@Roles('GUEST')
 export class GuestBookingsController {
-    constructor(
-    private readonly bookings:
-      GuestBookingService,
-    private readonly checkout:
-      CheckoutService,
+  constructor(
+    private readonly bookings: GuestBookingService,
+    private readonly checkout: CheckoutService,
+    private readonly summaries: PaymentSummaryService,
+    private readonly prisma: PrismaService,
   ) {}
 
-  private checkRequest(
-    origin: string | undefined,
-    request: Request,
-  ): void {
-    if (
-      !origin ||
-      !getAllowedOrigins().includes(origin)
-    ) {
-      throw new ForbiddenException(
-        'Request origin is not allowed.',
-      );
-    }
-
-    if (
-      Object.keys(request.query).length !== 0
-    ) {
-      throw new BadRequestException(
-        'Send booking details in the request body.',
-      );
+  private checkOrigin(origin: string | undefined): void {
+    if (!origin || !getAllowedOrigins().includes(origin)) {
+      throw new ForbiddenException('Request origin is not allowed.');
     }
   }
 
-  private respond(
-    result: BookingResult,
-    response: Response,
-  ) {
-    response.cookie(
-      BOOKING_COOKIE,
-      result.session.token,
-      {
-        ...bookingCookieOptions(),
-        maxAge: Math.max(
-          0,
-          result.session.expiresAt.getTime() -
-            Date.now(),
-        ),
-        expires: result.session.expiresAt,
+  private async owned(reference: string, identity: AuthenticatedUser) {
+    const booking = await this.prisma.reservation.findFirst({
+      where: { reservationNumber: reference, guest: { userId: identity.id } },
+      select: {
+        id: true,
+        reservationNumber: true,
+        status: true,
+        checkInDate: true,
+        checkOutDate: true,
+        guestCount: true,
+        nightlyRateCentavos: true,
+        totalAmountCentavos: true,
+        holdExpiresAt: true,
+        bookingPolicyVersion: true,
+        paymentPreference: true,
+        expectedArrivalAt: true,
+        firstContactedAt: true,
+        responseDeadlineAt: true,
+        confirmedAt: true,
+        roomType: { select: { name: true } },
+        guest: { select: { firstName: true, lastName: true } },
       },
-    );
-
-    const receipt = result.receipt;
-
+    });
+    if (!booking) throw new NotFoundException('Booking not found.');
     return {
-      data: {
-        requestId: receipt.requestId,
-        reservationNumber:
-          receipt.reservationNumber,
-        status: receipt.status,
-        paymentPreference:
-          receipt.paymentPreference,
-        expectedArrivalAt:
-          receipt.expectedArrivalAt,
-        holdExpiresAt:
-          receipt.holdExpiresAt,
-        firstContactedAt:
-          receipt.firstContactedAt,
-        responseDeadlineAt:
-          receipt.responseDeadlineAt,
-        nightlyRateCentavos:
-          receipt.nightlyRateCentavos,
-        totalAmountCentavos:
-          receipt.totalAmountCentavos,
-        holdExpired:
-          receipt.holdExpired,
-        sessionExpiresAt:
-          result.session.expiresAt,
-        replayed: result.replayed,
-      },
+      ...booking,
+      holdExpired: booking.status === 'PENDING' &&
+        booking.holdExpiresAt !== null && booking.holdExpiresAt.getTime() <= Date.now(),
     };
+  }
+
+  @Get('profile')
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  async profile(@Req() request: GuestRequest) {
+    return { data: await this.bookings.profile(request.user) };
+  }
+
+  @Get('by-reference/:reference')
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  async read(@Param('reference') reference: string, @Req() request: GuestRequest) {
+    return { data: await this.owned(reference, request.user) };
   }
 
   @Post()
   @HttpCode(200)
-  @Throttle({
-    default: {
-      limit: 5,
-      ttl: 60_000,
-    },
-  })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async create(
     @Body() input: CreateGuestBookingDto,
-    @Headers('origin')
-    origin: string | undefined,
-    @Req() request: Request,
-    @Res({ passthrough: true })
-    response: Response,
+    @Headers('origin') origin: string | undefined,
+    @Req() request: GuestRequest,
   ) {
-    this.checkRequest(
-      origin,
-      request,
-    );
-
-    const result =
-      await this.bookings.create(input);
-
-    return this.respond(
-      result,
-      response,
-    );
+    this.checkOrigin(origin);
+    return { data: await this.bookings.create(input, request.user) };
   }
 
   @Post('recover')
   @HttpCode(200)
-  @Throttle({
-    default: {
-      limit: 5,
-      ttl: 60_000,
-    },
-  })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async recover(
     @Body() input: RecoverGuestBookingDto,
-    @Headers('origin')
-    origin: string | undefined,
-    @Req() request: Request,
-    @Res({ passthrough: true })
-    response: Response,
+    @Headers('origin') origin: string | undefined,
+    @Req() request: GuestRequest,
   ) {
-    this.checkRequest(
-      origin,
-      request,
-    );
-
-    const result =
-      await this.bookings.recover(
-        input.requestId,
-        input.recoveryToken,
-      );
-
-    return this.respond(
-      result,
-      response,
-    );
+    this.checkOrigin(origin);
+    return {
+      data: await this.bookings.recover(input.requestId, input.recoveryToken, request.user),
+    };
   }
 
-    @Post('checkout/current')
+  @Post('checkout/current')
   @HttpCode(200)
-  @Throttle({
-    default: {
-      limit: 30,
-      ttl: 60_000,
-    },
-  })
   async currentCheckout(
-    @Body()
-    input: GuestBookingCheckoutScopeDto,
-    @Headers('origin')
-    origin: string | undefined,
-    @Req() request: Request,
+    @Body() input: GuestBookingCheckoutScopeDto,
+    @Headers('origin') origin: string | undefined,
+    @Req() request: GuestRequest,
   ) {
-    this.checkRequest(
-      origin,
-      request,
-    );
-
-    return {
-      data:
-        await this.checkout.currentForSession(
-          request.cookies?.[BOOKING_COOKIE],
-          input.expectedReservationNumber,
-        ),
-    };
+    this.checkOrigin(origin);
+    const booking = await this.owned(input.expectedReservationNumber, request.user);
+    return { data: await this.checkout.currentForUser(booking.id, request.user) };
   }
 
   @Post('checkout')
   @HttpCode(200)
-  @Throttle({
-    default: {
-      limit: 5,
-      ttl: 60_000,
-    },
-  })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async createCheckout(
-    @Body()
-    input: CreateGuestBookingCheckoutDto,
-    @Headers('origin')
-    origin: string | undefined,
-    @Req() request: Request,
+    @Body() input: CreateGuestBookingCheckoutDto,
+    @Headers('origin') origin: string | undefined,
+    @Req() request: GuestRequest,
   ) {
-    this.checkRequest(
-      origin,
-      request,
-    );
+    this.checkOrigin(origin);
+    const booking = await this.owned(input.expectedReservationNumber, request.user);
+    return { data: await this.checkout.startForUser(booking.id, input.requestId, request.user) };
+  }
 
-    return {
-      data:
-        await this.checkout.startForSession(
-          request.cookies?.[BOOKING_COOKIE],
-          input.requestId,
-          input.expectedReservationNumber,
-        ),
-    };
+  @Post('payment-summary')
+  @HttpCode(200)
+  async summary(
+    @Body() input: GuestBookingCheckoutScopeDto,
+    @Headers('origin') origin: string | undefined,
+    @Req() request: GuestRequest,
+  ) {
+    this.checkOrigin(origin);
+    const booking = await this.owned(input.expectedReservationNumber, request.user);
+    return { data: await this.summaries.forUser(booking.id, request.user) };
   }
 }
