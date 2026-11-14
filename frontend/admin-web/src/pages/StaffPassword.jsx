@@ -1,9 +1,20 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useAuth } from "../auth/useAuth";
 import useStaffPassword from "../hooks/useStaffPassword";
 import "../styles/staff-users.css";
 
 export default function StaffPassword({ mode }) {
+  const location = useLocation();
+
+  return (
+    <StaffPasswordForm
+      key={`${mode}:${location.key}:${location.hash}`}
+      mode={mode}
+    />
+  );
+}
+
+function StaffPasswordForm({ mode }) {
   const auth = useAuth();
   const password = useStaffPassword(mode);
   const { state } = password;

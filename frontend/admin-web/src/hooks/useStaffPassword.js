@@ -13,7 +13,7 @@ export default function useStaffPassword(mode) {
   const location = useLocation();
   const invitation = mode === "invitation";
 
-  const [token, setToken] = useState(() => readInvitationToken(location.hash));
+  const [token] = useState(() => readInvitationToken(location.hash));
 
   const [email, setEmail] = useState(
     typeof location.state?.email === "string" ? location.state.email : "",
@@ -37,14 +37,6 @@ export default function useStaffPassword(mode) {
 
   useEffect(() => {
     if (!invitation || !location.hash) return;
-
-    requestVersion.current += 1;
-    busy.current = false;
-    setToken(readInvitationToken(location.hash));
-    setTemporaryPassword("");
-    setNewPassword("");
-    setConfirmation("");
-    setState({ status: "idle", message: "" });
 
     window.history.replaceState(
       window.history.state,

@@ -1,14 +1,13 @@
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
 import useMyBookingContext from "../hooks/useMyBookingContext.js";
 import { MyBookingView } from "../components/booking/MyBookingView.jsx";
 import "../styles/checkout.css";
 import "../styles/my-booking.css";
 
 export default function MyBooking() {
-  const { reservationId } = useParams();
   const { context } = useMyBookingContext();
 
-  if (!reservationId && context.error) {
+  if (context.error) {
     return (
       <main className="my-booking">
         <section className="my-booking__card">
