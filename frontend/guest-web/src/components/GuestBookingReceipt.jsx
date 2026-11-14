@@ -179,9 +179,9 @@ export default function GuestBookingReceipt({ flow }) {
 
           <Link
             className="checkout-view__secondary-link"
-            to={"/my-booking?booking=" + encodeURIComponent(receipt.reservationNumber)}
+            to="/my-bookings"
           >
-            View my booking
+            View My Bookings
           </Link>
 
           {canStartAnother && (

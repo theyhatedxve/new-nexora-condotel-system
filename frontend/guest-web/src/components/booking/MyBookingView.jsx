@@ -6,9 +6,9 @@ import useMyBookingView from "../../hooks/useMyBookingView.js";
 import { displayTime } from "../../utils/bookingDisplayTime.js";
 import { SummaryRow } from "./SummaryRow.jsx";
 
-export function MyBookingView({ expectedReference }) {
+export function MyBookingView({ reservationId, expectedReference }) {
   const { view, error, signingOut, booking, signOut, method, propertyPending, closed } =
-    useMyBookingView({ expectedReference });
+    useMyBookingView({ reservationId, expectedReference });
 
   return (
     <main className="my-booking">
@@ -16,7 +16,7 @@ export function MyBookingView({ expectedReference }) {
         <div>
           <p className="my-booking__eyebrow">Your stay at NEXORA</p>
 
-          <h1>My booking</h1>
+          <h1>Booking Details</h1>
 
           <p className="my-booking__intro">
             Review your stay, booking status, and recorded payments.
@@ -186,9 +186,9 @@ export function MyBookingView({ expectedReference }) {
           </section>
 
           <footer className="my-booking__actions">
-            <Link className="my-booking__back" to="/rooms">
+            <Link className="my-booking__back" to="/my-bookings">
               <ArrowLeft size={17} aria-hidden="true" />
-              Return to rooms
+              Back to My Bookings
             </Link>
 
             <button

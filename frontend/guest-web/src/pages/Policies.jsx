@@ -76,11 +76,11 @@ export default function Policies() {
       <footer className="policies-page__footer">
         <div>
           <h2>Already have a reservation?</h2>
-          <p>Request private access to review your latest booking and payment status.</p>
+          <p>Sign in to your guest account to review your bookings and payment status.</p>
         </div>
 
-        <Link to="/booking-access" className="policies-page__booking-link">
-          Find my booking
+        <Link to="/my-bookings" className="policies-page__booking-link">
+          My Bookings
           <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </footer>

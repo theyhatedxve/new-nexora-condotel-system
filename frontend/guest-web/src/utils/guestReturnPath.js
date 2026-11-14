@@ -18,6 +18,8 @@ function allowedPath(value) {
       url.pathname === "/payment-return" ||
       url.pathname === "/booking-access" ||
       url.pathname === "/my-booking" ||
+      url.pathname === "/my-bookings" ||
+      /^\/my-bookings\/[^/]+$/.test(url.pathname) ||
       /^\/rooms\/[^/]+$/.test(url.pathname) ||
       /^\/checkout\/[^/]+$/.test(url.pathname);
 

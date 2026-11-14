@@ -1,26 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAccountBooking } from "../services/accountBookingsApi.js";
+import { getMyBookingById } from "../services/guestReservationsApi.js";
 
-export default function usePrivateBooking(expectedReference = null) {
+export default function usePrivateBooking(target = null) {
+  const reservationId =
+    target && typeof target === "object" ? target.reservationId ?? null : null;
+  const expectedReference =
+    typeof target === "string" ? target : target?.expectedReference ?? null;
   const [revision, setRevision] = useState(0);
   const [result, setResult] = useState(null);
 
   const request = useMemo(
-    () => ({ expectedReference, revision }),
-    [expectedReference, revision],
+    () => ({ reservationId, expectedReference, revision }),
+    [reservationId, expectedReference, revision],
   );
 
   useEffect(() => {
-    if (!request.expectedReference) {
+    if (!request.reservationId && !request.expectedReference) {
       return;
     }
 
     const controller = new AbortController();
 
-    getAccountBooking(
-      request.expectedReference,
-      controller.signal,
-    ).then(
+    const pending = request.reservationId
+      ? getMyBookingById(request.reservationId, controller.signal)
+      : getAccountBooking(request.expectedReference, controller.signal);
+
+    pending.then(
       (booking) => {
         if (!controller.signal.aborted) {
           setResult({
@@ -54,7 +60,7 @@ export default function usePrivateBooking(expectedReference = null) {
   let status = "loading";
   let booking = null;
 
-  if (!request.expectedReference) {
+  if (!request.reservationId && !request.expectedReference) {
     status = "unavailable";
   } else if (result?.request === request) {
     status = result.status;
