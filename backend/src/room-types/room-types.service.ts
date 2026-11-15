@@ -1,3 +1,4 @@
+import { remainingReservationWhere } from '../common/inventory/reservation-window.js';
 import { publicFields, staffFields } from './room-type-projection.js';
 import { synchronizeNightlyRate } from './rental-rates.persistence.js';
 
@@ -222,9 +223,10 @@ export class RoomTypesService {
                     'CHECKED_IN',
                   ],
                 },
-                checkOutDate: {
-                  gt: new Date(),
-                },
+                OR: [
+                  { status: 'CHECKED_IN' },
+                  remainingReservationWhere(),
+                ],
               },
               select: { guestCount: true },
             });

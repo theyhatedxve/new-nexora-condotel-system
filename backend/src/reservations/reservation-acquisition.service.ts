@@ -1,3 +1,5 @@
+import { blockWindow, calendarInstant, reservationWindow } from '../common/inventory/reservation-window.js';
+import { rentalReservationSnapshot, RENTAL_RESERVATION_SELECT } from './rental-reservation.js';
 import { HOLD_DURATION_MS, type AcquisitionPolicy } from './reservation-acquisition-policy.js';
 import { randomUUID } from 'node:crypto';
 
@@ -130,7 +132,7 @@ export class ReservationAcquisitionService {
     }
 
     const stay =
-      await this.validation.validate(dto, tx);
+      await this.validation.validate(dto, tx, now);
 
     const type =
       await tx.roomType.findUniqueOrThrow({
@@ -140,7 +142,7 @@ export class ReservationAcquisitionService {
       });
 
     const total =
-      type.baseRateCentavos * stay.nights;
+      stay.quote?.totalAmountCentavos ?? type.baseRateCentavos * stay.nights;
 
     if (
       !Number.isSafeInteger(total) ||
@@ -234,19 +236,18 @@ export class ReservationAcquisitionService {
 
     const requested: Stay = {
       id: 'new',
-      start: stay.checkInDate,
-      end: stay.checkOutDate,
+      start: stay.quote ? new Date(stay.quote.scheduledArrivalAt) : calendarInstant(stay.checkInDate),
+      end: stay.quote ? new Date(stay.quote.scheduledDepartureAt) : calendarInstant(stay.checkOutDate),
       roomIds: [],
       readyOnly:
-        stay.checkInDate.getTime() ===
+        !stay.quote && stay.checkInDate.getTime() ===
         todayInPhilippines().getTime(),
     };
 
     const existing: Stay[] =
       reservations.map((row) => ({
         id: row.id,
-        start: row.checkInDate,
-        end: row.checkOutDate,
+        ...reservationWindow(row),
         roomIds: row.roomAssignments.map(
           (assignment) => assignment.roomId,
         ),
@@ -255,7 +256,7 @@ export class ReservationAcquisitionService {
     assertAllocatable(
       rooms.map((room) => ({
         ...room,
-        blocks: room.roomBlocks,
+        blocks: room.roomBlocks.map(blockWindow),
       })),
       connectedStays(requested, existing),
     );
@@ -290,6 +291,7 @@ export class ReservationAcquisitionService {
           checkInDate: stay.checkInDate,
           checkOutDate: stay.checkOutDate,
           guestCount: stay.guestCount,
+          ...(stay.quote ? rentalReservationSnapshot(stay.quote) : {}),
 
           nightlyRateCentavos:
             type.baseRateCentavos,
@@ -310,6 +312,7 @@ export class ReservationAcquisitionService {
         },
 
         select: {
+          ...RENTAL_RESERVATION_SELECT,
           id: true,
           reservationNumber: true,
           status: true,

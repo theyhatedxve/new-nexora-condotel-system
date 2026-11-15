@@ -1,3 +1,4 @@
+import { calendarInstant, reservationOverlapWhere } from '../common/inventory/reservation-window.js';
 import { protectedStatuses, blockFields } from './room-block-query.js';
 
 import {
@@ -115,8 +116,7 @@ export class RoomBlocksService {
           releasedAt: null,
           reservation: {
             status: { in: [...protectedStatuses] },
-            checkInDate: { lt: endDate },
-            checkOutDate: { gt: startDate },
+            ...reservationOverlapWhere(calendarInstant(startDate), calendarInstant(endDate)),
           },
         },
         select: { id: true },

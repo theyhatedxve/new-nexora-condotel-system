@@ -31,10 +31,6 @@ export class CreateGuestBookingDto
   @IsIn(GUEST_PAYMENT_METHODS)
   paymentPreference!: GuestPaymentMethod;
 
-  @IsString()
-  @Matches(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
-  arrivalTime!: string;
-
   @IsBoolean()
   @Equals(true)
   acknowledgmentAccepted!: boolean;

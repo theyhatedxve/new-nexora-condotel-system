@@ -8,9 +8,7 @@ import type {
   Reservation,
 } from '../generated/prisma/client.js';
 
-import {
-  todayInPhilippines,
-} from '../common/validation/philippine-date-range.js';
+import { stayHasEnded } from '../common/inventory/reservation-window.js';
 
 import {
   GUEST_BOOKING_POLICY_VERSION,
@@ -33,7 +31,7 @@ type CheckoutBooking = Pick<
   | 'expectedArrivalAt'
   | 'holdExpiresAt'
   | 'checkOutDate'
->;
+> & Partial<Pick<Reservation, 'inventoryEndAt'>>;
 
 export function isPendingOnlineBooking(
   booking: CheckoutBooking,
@@ -52,7 +50,7 @@ export function assertCheckoutBookingEligible(
 ): void {
   if (
     !Number.isFinite(now.getTime()) ||
-    booking.checkOutDate <= todayInPhilippines()
+    stayHasEnded(booking, now)
   ) {
     throw new ConflictException(
       'Checkout requires remaining stay dates.',
@@ -115,7 +113,7 @@ export async function confirmPendingOnlineBookingInTx(
     !booking.expectedArrivalAt ||
     !booking.holdExpiresAt ||
     booking.holdExpiresAt <= now ||
-    booking.checkOutDate <= todayInPhilippines() ||
+    stayHasEnded(booking, now) ||
     payment.status !== 'PAID' ||
     payment.method !== 'PAYMONGO' ||
     payment.provider !== 'PAYMONGO' ||

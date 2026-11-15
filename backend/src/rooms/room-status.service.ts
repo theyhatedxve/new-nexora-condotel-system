@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
-import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
 import type { ManualRoomStatus } from './dto/update-room-status.dto.js';
 
 import {
@@ -99,8 +98,6 @@ export class RoomStatusService {
         );
       }
 
-      const today = todayInPhilippines();
-
       // An active checked-in assignment must never be
       // displaced by an administrative status change.
       const checkedInAssignment =
@@ -110,7 +107,6 @@ export class RoomStatusService {
             releasedAt: null,
             reservation: {
               status: 'CHECKED_IN',
-              checkOutDate: { gt: today },
             },
           },
           select: { id: true },

@@ -1,3 +1,4 @@
+import { RENTAL_RESERVATION_SELECT, actualRentalWindow } from './rental-reservation.js';
 import {
   BadRequestException,
   ConflictException,
@@ -194,6 +195,7 @@ export class ReservationStayService {
               reservationNumber: true,
               roomTypeId: true,
               status: true,
+              ...RENTAL_RESERVATION_SELECT,
               checkInDate: true,
               checkOutDate: true,
               guestCount: true,
@@ -243,7 +245,7 @@ export class ReservationStayService {
         const today = todayInPhilippines();
 
         if (
-          target === 'CHECKED_IN' &&
+          target === 'CHECKED_IN' && !booking.rentalType &&
           (
             booking.checkInDate > today ||
             booking.checkOutDate <= today
@@ -253,6 +255,9 @@ export class ReservationStayService {
             'Check-in must be within the booked Philippine calendar dates.',
           );
         }
+
+        const actualWindow = target === 'CHECKED_IN' && booking.rentalType
+          ? actualRentalWindow(booking, now) : undefined;
 
         const active =
           await tx.roomAssignment.findMany({
@@ -360,6 +365,7 @@ export class ReservationStayService {
               mode: 'IMMEDIATE',
               excludeReservationId: booking.id,
             },
+            actualWindow,
           );
         } else if (
           assigned.room.status !== 'OCCUPIED'
@@ -377,6 +383,11 @@ export class ReservationStayService {
             },
             data: {
               status: target,
+              ...(booking.rentalType ? (actualWindow ? {
+                actualArrivalAt: now,
+                inventoryStartAt: actualWindow.start,
+                inventoryEndAt: actualWindow.end,
+              } : { actualDepartureAt: now }) : {}),
             },
           });
 
@@ -441,6 +452,10 @@ export class ReservationStayService {
             detailsJson: JSON.stringify({
               assignmentId,
               roomId: assigned.roomId,
+              ...(actualWindow ? {
+                actualArrivalAt: now.toISOString(),
+                inventoryEndAt: actualWindow.end.toISOString(),
+              } : booking.rentalType ? { actualDepartureAt: now.toISOString() } : {}),
               paymentPolicy:
                 'FULL_RECORDED_PAYMENT_V1',
               recordedPaidCentavos: paid,

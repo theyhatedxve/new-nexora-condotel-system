@@ -68,7 +68,7 @@ export function equalGuestDigests(
 
 export function normalizedGuestBooking(
   input: unknown,
-): CreateGuestBookingDto {
+): CreateGuestBookingDto & { arrivalTime: string } {
   if (
     !input ||
     typeof input !== 'object' ||
@@ -91,6 +91,7 @@ export function normalizedGuestBooking(
 
   if (
     errors.length > 0 ||
+    typeof dto.arrivalTime !== 'string' ||
     !dto.firstName.trim() ||
     !dto.lastName.trim() ||
     !dto.roomTypeId.trim()
@@ -107,7 +108,7 @@ export function normalizedGuestBooking(
   dto.email = dto.email.trim().toLowerCase();
   dto.phone = dto.phone?.trim() || undefined;
 
-  return dto;
+  return { ...dto, arrivalTime: dto.arrivalTime };
 }
 
 export function guestBookingFingerprint(
@@ -129,6 +130,10 @@ export function guestBookingFingerprint(
     phone: input.phone ?? null,
     acknowledgmentAccepted:
       input.acknowledgmentAccepted,
+    ...(input.rentalType === undefined ? {} : {
+      rentalType: input.rentalType,
+      rentalUnits: input.rentalUnits,
+    }),
   };
 
   return createHmac(

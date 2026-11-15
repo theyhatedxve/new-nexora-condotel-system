@@ -9,8 +9,8 @@ import type { Prisma } from '../generated/prisma/client.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 
 import {
-  todayInPhilippines,
-} from '../common/validation/philippine-date-range.js';
+  blockWindow, remainingReservationWhere, reservationWindow,
+} from '../common/inventory/reservation-window.js';
 
 import {
   assertAllocatable,
@@ -96,15 +96,10 @@ export async function assertInventoryCommitments(
   roomTypeIds: string[],
 ): Promise<void> {
   const now = new Date();
-  const today = todayInPhilippines();
 
   for (const roomTypeId of new Set(roomTypeIds)) {
     const reservations = await tx.reservation.findMany({
       where: {
-        checkOutDate: {
-          gt: today,
-        },
-
         OR: [
           {
             roomTypeId,
@@ -122,6 +117,7 @@ export async function assertInventoryCommitments(
         ],
 
         AND: [
+          remainingReservationWhere(now),
           {
             OR: [
               {
@@ -198,21 +194,15 @@ export async function assertInventoryCommitments(
     });
 
     let remaining: Stay[] = reservations.map(
-      (reservation) => ({
-        id: reservation.id,
-
-        // Only the remaining stay needs inventory.
-        start:
-          reservation.checkInDate < today
-            ? today
-            : reservation.checkInDate,
-
-        end: reservation.checkOutDate,
-
-        roomIds: reservation.roomAssignments.map(
-          (assignment) => assignment.roomId,
-        ),
-      }),
+      (reservation) => {
+        const window = reservationWindow(reservation);
+        return {
+          id: reservation.id,
+          start: new Date(Math.max(window.start.getTime(), now.getTime())),
+          end: window.end,
+          roomIds: reservation.roomAssignments.map((assignment) => assignment.roomId),
+        };
+      },
     );
 
     // Check each connected group separately so
@@ -228,7 +218,7 @@ export async function assertInventoryCommitments(
       assertAllocatable(
         rooms.map((room) => ({
           ...room,
-          blocks: room.roomBlocks,
+          blocks: room.roomBlocks.map(blockWindow),
         })),
         component,
       );

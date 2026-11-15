@@ -1,113 +1,113 @@
-import { parseAvailabilityStay } from './availability-stay.js';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-
-import { hasRoomEveryNight } from './availability-calculator.js';
+import { parseAvailabilityStay } from './availability-stay.js';
+import { parsePhilippineDate, todayInPhilippines } from '../common/validation/philippine-date-range.js';
+import { blockWindow, calendarInstant, reservationWindow } from '../common/inventory/reservation-window.js';
+import { assertAllocatable, connectedStays, type Stay } from '../reservations/room-allocation.js';
+import { reservationRentalQuote } from '../reservations/rental-reservation.js';
 import type { SearchAvailabilityDto } from './dto/search-availability.dto.js';
 
 @Injectable()
 export class AvailabilityService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Only the approved single property is supported.
-  private async getPropertyId(): Promise<string> {
-    const properties = await this.prisma.property.findMany({
-      select: { id: true },
-      take: 2,
-    });
-
+  private async getPropertyId(db: Prisma.TransactionClient): Promise<string> {
+    const properties = await db.property.findMany({ select: { id: true }, take: 2 });
     if (properties.length !== 1) {
-      throw new InternalServerErrorException(
-        'Exactly one property must be configured.',
-      );
+      throw new InternalServerErrorException('Exactly one property must be configured.');
     }
-
     return properties[0].id;
   }
 
   async search(query: SearchAvailabilityDto) {
-    const { startDate, endDate, nights } = parseAvailabilityStay(
-      query.checkIn,
-      query.checkOut,
-    );
-
-    const propertyId = await this.getPropertyId();
-
-    // Rooms in a usable status, with only the active blocks that touch the stay.
-    const roomTypes = await this.prisma.roomType.findMany({
-      where: {
-        propertyId,
-        isActive: true,
-        capacity: { gte: query.guests },
-      },
-      select: {
-        id: true,
-        name: true,
-        capacity: true,
-        baseRateCentavos: true,
-        rooms: {
-          where: {
-            isActive: true,
-            status: { notIn: ['MAINTENANCE', 'OUT_OF_SERVICE'] },
-          },
-          select: {
-            roomBlocks: {
-              where: {
-                canceledAt: null,
-                startDate: { lt: endDate },
-                endDate: { gt: startDate },
-              },
-              select: { startDate: true, endDate: true },
+    const typed = query.rentalType !== undefined || query.rentalUnits !== undefined;
+    const legacy = typed ? null : parseAvailabilityStay(query.checkIn, query.checkOut);
+    if (parsePhilippineDate(query.checkIn) < todayInPhilippines()) {
+      throw new BadRequestException('Check-in cannot be in the past.');
+    }
+    return this.prisma.$transaction(async (tx) => {
+      const now = new Date();
+      const propertyId = await this.getPropertyId(tx);
+      const roomTypes = await tx.roomType.findMany({
+        where: { propertyId, isActive: true, capacity: { gte: query.guests } },
+        include: {
+          rentalRates: true,
+          rooms: {
+            where: {
+              isActive: true, status: { notIn: ['MAINTENANCE', 'OUT_OF_SERVICE'] },
             },
+            include: { roomBlocks: { where: { canceledAt: null } } },
           },
         },
-      },
-      orderBy: [{ baseRateCentavos: 'asc' }, { name: 'asc' }],
+        orderBy: [{ baseRateCentavos: 'asc' }, { name: 'asc' }],
+      });
+      const ids = roomTypes.map((room) => room.id);
+      // Include neighboring commitments: a whole-stay room must remain possible.
+      const bookings = await tx.reservation.findMany({
+        where: {
+          OR: [
+            { roomTypeId: { in: ids } },
+            { roomAssignments: { some: {
+              releasedAt: null, room: { roomTypeId: { in: ids } },
+            } } },
+          ],
+          AND: [{ OR: [
+            { status: { in: ['CONFIRMED', 'CHECKED_IN'] } },
+            { status: 'PENDING', OR: [
+              { holdExpiresAt: null }, { holdExpiresAt: { gt: now } },
+            ] },
+          ] }],
+        },
+        include: { roomAssignments: { where: { releasedAt: null } } },
+      });
+      return roomTypes.flatMap((room) => {
+        // Disabled/missing optional rates remove that category from typed searches.
+        if (typed && query.rentalType !== 'NIGHTLY' &&
+            !room.rentalRates.some((rate) => rate.rentalType === query.rentalType && rate.isActive)) {
+          return [];
+        }
+        if (typed && room.rentalRates.some(
+          (rate) => rate.rentalType === query.rentalType && !rate.isActive,
+        )) return [];
+        const quote = typed ? reservationRentalQuote(query, room, now) : null;
+        const requested: Stay = {
+          id: 'availability-request',
+          start: quote ? new Date(quote.scheduledArrivalAt) : calendarInstant(legacy!.startDate),
+          end: quote ? new Date(quote.scheduledDepartureAt) : calendarInstant(legacy!.endDate),
+          roomIds: [],
+          readyOnly: !typed && legacy!.startDate.getTime() === todayInPhilippines().getTime(),
+        };
+        const existing: Stay[] = bookings.filter((booking) =>
+          booking.roomTypeId === room.id ||
+          booking.roomAssignments.some((assignment) => room.rooms.some((item) => item.id === assignment.roomId)),
+        ).map((booking) => ({
+          id: booking.id,
+          ...reservationWindow(booking),
+          roomIds: booking.roomAssignments.map((assignment) => assignment.roomId),
+        }));
+        let available = true;
+        try {
+          assertAllocatable(room.rooms.map((item) => ({
+            id: item.id, status: item.status, blocks: item.roomBlocks.map(blockWindow),
+          })), connectedStays(requested, existing));
+        } catch (error) {
+          if (!(error instanceof ConflictException)) throw error;
+          available = false;
+        }
+        return [{
+          id: room.id, name: room.name, capacity: room.capacity, available,
+          nightlyRateCentavos: room.baseRateCentavos,
+          ...(quote ? {
+            ...quote, rentalUnits: quote.units, nights: null,
+            quoteOnly: true, inventoryChecked: true,
+          } : {
+            nights: legacy!.nights,
+            totalAmountCentavos: room.baseRateCentavos * legacy!.nights,
+          }),
+        }];
+      });
     });
-
-    // Reservations that hold inventory. A pending reservation holds a room
-    // unless its hold has expired.
-    const reservations = await this.prisma.reservation.findMany({
-      where: {
-        roomTypeId: { in: roomTypes.map((roomType) => roomType.id) },
-        checkInDate: { lt: endDate },
-        checkOutDate: { gt: startDate },
-        OR: [
-          { status: { in: ['CONFIRMED', 'CHECKED_IN'] } },
-          {
-            status: 'PENDING',
-            OR: [
-              { holdExpiresAt: null },
-              { holdExpiresAt: { gt: new Date() } },
-            ],
-          },
-        ],
-      },
-      select: {
-        roomTypeId: true,
-        checkInDate: true,
-        checkOutDate: true,
-      },
-    });
-
-    return roomTypes.map((roomType) => ({
-      id: roomType.id,
-      name: roomType.name,
-      capacity: roomType.capacity,
-      available: hasRoomEveryNight({
-        rooms: roomType.rooms.map((room) => ({ blocks: room.roomBlocks })),
-        reservations: reservations.filter(
-          (reservation) => reservation.roomTypeId === roomType.id,
-        ),
-        startDate,
-        endDate,
-      }),
-      nights,
-      nightlyRateCentavos: roomType.baseRateCentavos,
-      // The price is calculated here. The frontend only displays it.
-      totalAmountCentavos: roomType.baseRateCentavos * nights,
-    }));
   }
 }
 export { MAX_STAY_NIGHTS } from './availability-stay.js';

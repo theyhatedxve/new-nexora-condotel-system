@@ -1,7 +1,7 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import type { Payment, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
+import { stayHasEnded } from '../common/inventory/reservation-window.js';
 import { withInventoryWrite } from '../reservations/inventory-write.js';
 import {
   CHECKOUT_PAID_EVENT,
@@ -234,8 +234,7 @@ export class PaymongoWebhookService {
       newlyPaid &&
       (
         matched.reservation.status !== 'CONFIRMED' ||
-        matched.reservation.checkOutDate <=
-          todayInPhilippines()
+        stayHasEnded(matched.reservation)
       );
 
     if (
@@ -467,7 +466,7 @@ export class PaymongoWebhookService {
       saved.errorMessage === 'BOOKING_REVIEW_REQUIRED' ||
       (newlyPaid &&
         (payment.reservation.status !== 'CONFIRMED' ||
-          payment.reservation.checkOutDate <= todayInPhilippines()));
+          stayHasEnded(payment.reservation)));
 
     const reason =
       late && !acknowledgeLateCapture ? 'BOOKING_REVIEW_REQUIRED' : null;

@@ -11,6 +11,7 @@
   Post,
   Req,
 } from '@nestjs/common';
+import { RENTAL_RESERVATION_SELECT } from './rental-reservation.js';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { Roles } from '../common/decorators/roles.decorator.js';
@@ -52,6 +53,7 @@ export class GuestBookingsController {
         id: true,
         reservationNumber: true,
         status: true,
+        ...RENTAL_RESERVATION_SELECT,
         checkInDate: true,
         checkOutDate: true,
         guestCount: true,

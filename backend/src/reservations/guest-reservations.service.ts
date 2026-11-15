@@ -1,3 +1,4 @@
+import { RENTAL_RESERVATION_SELECT } from './rental-reservation.js';
 import {
   Injectable,
   NotFoundException,
@@ -23,6 +24,7 @@ const GUEST_RESERVATION_SELECT = {
   id: true,
   reservationNumber: true,
   status: true,
+  ...RENTAL_RESERVATION_SELECT,
   checkInDate: true,
   checkOutDate: true,
   guestCount: true,

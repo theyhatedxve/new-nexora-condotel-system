@@ -6,6 +6,7 @@
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { RENTAL_RESERVATION_SELECT } from './rental-reservation.js';
 import type { GuestBookingAttempt, Prisma } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -130,6 +131,7 @@ export class GuestBookingService {
     const booking = await tx.reservation.findFirst({
       where: { id: attempt.reservationId, guest: { userId } },
       select: {
+        ...RENTAL_RESERVATION_SELECT,
         reservationNumber: true,
         status: true,
         bookingPolicyVersion: true,
@@ -152,6 +154,19 @@ export class GuestBookingService {
     }
 
     return {
+      rentalType: booking.rentalType,
+      rentalUnits: booking.rentalUnits,
+      rentalRateCentavos: booking.rentalRateCentavos,
+      includedOccupancy: booking.includedOccupancy,
+      extraPersonFeeCentavos: booking.extraPersonFeeCentavos,
+      accommodationCentavos: booking.accommodationCentavos,
+      extraPersonTotalCentavos: booking.extraPersonTotalCentavos,
+      scheduledArrivalAt: booking.scheduledArrivalAt,
+      scheduledDepartureAt: booking.scheduledDepartureAt,
+      inventoryStartAt: booking.inventoryStartAt,
+      inventoryEndAt: booking.inventoryEndAt,
+      actualArrivalAt: booking.actualArrivalAt,
+      actualDepartureAt: booking.actualDepartureAt,
       requestId: attempt.requestId,
       reservationNumber: booking.reservationNumber,
       status: booking.status,
@@ -182,6 +197,9 @@ export class GuestBookingService {
           checkIn: submitted.checkIn,
           checkOut: submitted.checkOut,
           guests: submitted.guests,
+          ...(submitted.rentalType === undefined ? {} : {
+            rentalType: submitted.rentalType, rentalUnits: submitted.rentalUnits,
+          }),
           firstName: guest.firstName,
           lastName: guest.lastName,
           email: guest.email,
@@ -229,6 +247,9 @@ export class GuestBookingService {
           checkIn: dto.checkIn,
           checkOut: dto.checkOut,
           guests: dto.guests,
+          ...(dto.rentalType === undefined ? {} : {
+            rentalType: dto.rentalType, rentalUnits: dto.rentalUnits, arrivalTime: dto.arrivalTime,
+          }),
           firstName: guest.firstName,
           lastName: guest.lastName,
           email: guest.email,

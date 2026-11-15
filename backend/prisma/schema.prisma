@@ -297,6 +297,21 @@ model Reservation {
   // Optional temporary inventory hold.
   holdExpiresAt DateTime?
 
+  // Null fields identify historical calendar-date reservations.
+  rentalType                RentalType?
+  rentalUnits               Int?
+  rentalRateCentavos        Int?
+  includedOccupancy         Int?
+  extraPersonFeeCentavos    Int?
+  accommodationCentavos     Int?
+  extraPersonTotalCentavos  Int?
+  scheduledArrivalAt        DateTime?
+  scheduledDepartureAt      DateTime?
+  inventoryStartAt          DateTime?
+  inventoryEndAt            DateTime?
+  actualArrivalAt           DateTime?
+  actualDepartureAt         DateTime?
+
   bookingPolicyVersion String?
   paymentPreference    PaymentMethod?
   expectedArrivalAt    DateTime?
@@ -322,6 +337,7 @@ model Reservation {
 
   @@index([bookingPolicyVersion, status, holdExpiresAt])
   @@index([guestId])
+  @@index([roomTypeId, inventoryStartAt, inventoryEndAt])
   @@index([roomTypeId, checkInDate, checkOutDate])
   @@index([status, holdExpiresAt])
 }

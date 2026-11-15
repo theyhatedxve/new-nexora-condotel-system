@@ -14,9 +14,7 @@ import type {
   AuthenticatedUser,
 } from '../common/ownership/ownership.service.js';
 
-import {
-  todayInPhilippines,
-} from '../common/validation/philippine-date-range.js';
+import { remainingReservationWhere, stayHasEnded } from '../common/inventory/reservation-window.js';
 
 import {
   withInventoryWrite,
@@ -103,6 +101,7 @@ export class ReservationCancellationService {
               id: true,
               reservationNumber: true,
               status: true,
+              inventoryEndAt: true,
               checkOutDate: true,
               holdExpiresAt: true,
             },
@@ -132,9 +131,8 @@ export class ReservationCancellationService {
         );
 
         const now = new Date();
-        const today = todayInPhilippines();
 
-        if (booking.checkOutDate <= today) {
+        if (stayHasEnded(booking, now)) {
           throw new ConflictException(
             'The stay has ended and cannot use this cancellation operation.',
           );
@@ -174,9 +172,7 @@ export class ReservationCancellationService {
             where: {
               id: booking.id,
               status: booking.status,
-              checkOutDate: {
-                gt: today,
-              },
+              AND: [remainingReservationWhere(now)],
               ...(booking.status === 'PENDING'
                 ? {
                     OR: [

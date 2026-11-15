@@ -1,3 +1,4 @@
+import { remainingReservationWhere } from '../common/inventory/reservation-window.js';
 import { roomFields, protectedStatuses } from './room-query.js';
 import {
   normalizeRoomNumber,
@@ -330,7 +331,10 @@ export class RoomsService {
                     status: {
                       in: [...protectedStatuses],
                     },
-                    checkOutDate: { gt: now },
+                    OR: [
+                      { status: 'CHECKED_IN' },
+                      remainingReservationWhere(now),
+                    ],
                   },
                 },
                 select: { id: true },

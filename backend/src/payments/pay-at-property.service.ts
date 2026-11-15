@@ -16,7 +16,7 @@ import {
 import { isUUID } from 'class-validator';
 import type { Payment } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
-import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
+import { stayHasEnded } from '../common/inventory/reservation-window.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { withInventoryWrite } from '../reservations/inventory-write.js';
 import type { RecordPropertyPaymentDto } from './dto/record-property-payment.dto.js';
@@ -235,7 +235,7 @@ export class PayAtPropertyService {
 
         if (
           !['CONFIRMED', 'CHECKED_IN'].includes(booking.status) ||
-          booking.checkOutDate <= todayInPhilippines()
+          stayHasEnded(booking, now)
         ) {
           throw new ConflictException(
             'Only active bookings with remaining stay dates can receive a new collection.',

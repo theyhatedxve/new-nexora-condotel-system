@@ -1,3 +1,4 @@
+import { RENTAL_RESERVATION_SELECT } from './rental-reservation.js';
 export const roles = [
   'SUPER_ADMIN',
   'ADMIN',
@@ -9,6 +10,7 @@ export const fields = {
   id: true,
   reservationNumber: true,
   status: true,
+  ...RENTAL_RESERVATION_SELECT,
   checkInDate: true,
   checkOutDate: true,
   guestCount: true,

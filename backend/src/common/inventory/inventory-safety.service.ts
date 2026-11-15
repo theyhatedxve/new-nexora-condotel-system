@@ -1,3 +1,6 @@
+import {
+  assertTimeWindow, calendarInstant, reservationOverlapWhere, type TimeWindow,
+} from './reservation-window.js';
 
 import {
   ConflictException,
@@ -77,11 +80,19 @@ export class InventorySafetyService {
   async assertEligibleInTx(
     db: InventoryDatabase,
     request: InventoryCheckRequest,
+    interval?: TimeWindow,
   ): Promise<InventoryCheckResult> {
-    const { startDate, endDate } = parseBlockRange(
+    const markers = interval ? null : parseBlockRange(
       request.checkInDate,
       request.checkOutDate,
     );
+    const window = interval ? assertTimeWindow(interval) : {
+      start: calendarInstant(markers!.startDate),
+      end: calendarInstant(markers!.endDate),
+    };
+    // Block dates remain calendar labels in storage.
+    const startDate = new Date(window.start.getTime() + 8 * 60 * 60_000);
+    const endDate = new Date(window.end.getTime() + 8 * 60 * 60_000);
 
     this.rateCapacity.validateCapacity(request.guestCount);
 
@@ -168,9 +179,9 @@ export class InventorySafetyService {
         );
       }
 
-      const today = todayInPhilippines();
+      const at = interval ? new Date() : calendarInstant(todayInPhilippines());
 
-      if (startDate > today || endDate <= today) {
+      if (window.start > at || window.end <= at) {
         throw new ConflictException(
           'Immediate-use dates must include today.',
         );
@@ -205,8 +216,7 @@ export class InventorySafetyService {
             status: {
               in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'],
             },
-            checkInDate: { lt: endDate },
-            checkOutDate: { gt: startDate },
+            ...reservationOverlapWhere(window.start, window.end),
             ...(request.excludeReservationId
               ? {
                   id: {

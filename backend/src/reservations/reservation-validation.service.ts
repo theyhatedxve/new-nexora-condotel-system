@@ -1,3 +1,4 @@
+import { reservationRentalQuote } from './rental-reservation.js';
 import {
   BadRequestException,
   Injectable,
@@ -35,6 +36,7 @@ export class ReservationValidationService {
     Prisma.TransactionClient,
     'property' | 'roomType'
   > = this.prisma,
+  now = new Date(),
 ) {
     // 1. Parse real Philippine calendar dates.
     const checkInDate = parsePhilippineDate(input.checkIn);
@@ -46,7 +48,7 @@ export class ReservationValidationService {
       );
     }
 
-    if (checkOutDate <= checkInDate) {
+    if (input.rentalType === undefined && checkOutDate <= checkInDate) {
       throw new BadRequestException(
         'Check-out must be after check-in.',
       );
@@ -95,11 +97,7 @@ export class ReservationValidationService {
         propertyId,
         isActive: true,
       },
-      select: {
-        id: true,
-        capacity: true,
-        baseRateCentavos: true,
-      },
+      include: { rentalRates: true },
     });
 
     if (!roomType) {
@@ -119,7 +117,9 @@ export class ReservationValidationService {
       roomType.baseRateCentavos,
     );
 
-    // This is validated input, NOT a reservation or quote.
+    const quote = reservationRentalQuote(input, roomType, now);
+
+    // Authoritative validation and pricing within the caller's transaction.
     return {
       propertyId,
       roomTypeId: roomType.id,
@@ -127,6 +127,7 @@ export class ReservationValidationService {
       checkOutDate,
       guestCount: input.guests,
       nights,
+      quote,
     };
   }
 }

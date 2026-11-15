@@ -30,6 +30,24 @@ export function assertRentalRate(rate: {
   }
 }
 
+export function rentalDurationMinutes(rentalType: RentalType, units: number): number {
+  if (!RENTAL_TYPES.includes(rentalType) ||
+      !Number.isSafeInteger(units) || units < 1 || units > 30) {
+    throw new BadRequestException('Choose a supported rental type and 1 to 30 units.');
+  }
+  const unitMinutes = {
+    HOURLY: 60,
+    NIGHTLY: 24 * 60,
+    WEEKLY: 7 * 24 * 60,
+    MONTHLY: 30 * 24 * 60,
+  }[rentalType];
+  const durationMinutes = unitMinutes * units;
+  if (durationMinutes > MAX_RENTAL_DAYS * 24 * 60) {
+    throw new BadRequestException('This prototype supports stays up to 30 days.');
+  }
+  return durationMinutes;
+}
+
 export function calculateRentalQuote(
   input: RentalQuoteInput,
   room: { capacity: number; includedOccupancy: number | null },
@@ -53,16 +71,7 @@ export function calculateRentalQuote(
     throw new BadRequestException('Scheduled arrival starts at 3 PM.');
   }
 
-  const unitMinutes = {
-    HOURLY: 60,
-    NIGHTLY: 24 * 60,
-    WEEKLY: 7 * 24 * 60,
-    MONTHLY: 30 * 24 * 60,
-  }[input.rentalType];
-  const durationMinutes = unitMinutes * input.units;
-  if (durationMinutes > MAX_RENTAL_DAYS * 24 * 60) {
-    throw new BadRequestException('This prototype supports stays up to 30 days.');
-  }
+  const durationMinutes = rentalDurationMinutes(input.rentalType, input.units);
   if (
     input.rentalType === 'HOURLY' &&
     arrivalMinutes + durationMinutes > 23 * 60

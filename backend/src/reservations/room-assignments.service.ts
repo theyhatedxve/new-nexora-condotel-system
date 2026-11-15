@@ -1,4 +1,7 @@
 import {
+  INVENTORY_WINDOW_SELECT, reservationWindow, stayHasEnded,
+} from '../common/inventory/reservation-window.js';
+import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -102,6 +105,7 @@ export class RoomAssignmentsService {
         id: true,
         roomTypeId: true,
         status: true,
+        ...INVENTORY_WINDOW_SELECT,
         checkInDate: true,
         checkOutDate: true,
         guestCount: true,
@@ -205,7 +209,7 @@ export class RoomAssignmentsService {
 
         if (
           booking.status !== 'CONFIRMED' ||
-          booking.checkOutDate <= today
+          stayHasEnded(booking)
         ) {
           throw new ConflictException(
             'Only confirmed reservations with remaining stay dates can change assignments.',
@@ -281,12 +285,12 @@ export class RoomAssignmentsService {
               checkOutDate: booking.checkOutDate
                 .toISOString()
                 .slice(0, 10),
-              mode:
-                booking.checkInDate <= today
-                  ? 'IMMEDIATE'
-                  : 'FUTURE',
+              mode: booking.inventoryStartAt
+                ? (booking.inventoryStartAt <= now ? 'IMMEDIATE' : 'FUTURE')
+                : (booking.checkInDate <= today ? 'IMMEDIATE' : 'FUTURE'),
               excludeReservationId: booking.id,
             },
+            booking.inventoryStartAt ? reservationWindow(booking) : undefined,
           );
         }
 
