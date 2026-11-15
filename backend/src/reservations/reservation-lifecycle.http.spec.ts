@@ -822,7 +822,7 @@ describe(
           expect(
             results
               .map((result) => result.expiredCount)
-              .sort(),
+              .sort((first, second) => first - second),
           ).toEqual([0, 2]);
 
           expect(

@@ -1,5 +1,13 @@
 # Guest-web responsibility separation
 
+## Later source checkpoint — 2026-11-15
+
+This refactor record remains historical. Later guest account work added shared
+session state, required login, My Bookings list/detail navigation, and retirement
+redirects while retaining focused hooks/services/views. Earlier owner frontend
+lint/build checks passed. Current browser acceptance is pending.
+See [current work and verification](../../AGENTS.md).
+
 **Goal:** Separate guest-web logic, presentation, fixed content, and style values while preserving current behavior and appearance.
 
 **Architecture:** Keep the existing pages/components/hooks/services/utils structure. Extract state, effects, handlers, and derived screen data into focused JavaScript hooks. Keep JSX, classes, text, routes, effect dependencies, request guards, and existing API services unchanged. Put fixed page content in constants and keep plain CSS.

@@ -1,5 +1,17 @@
 # NEXORA — Security Requirements
 
+## Current security regression checkpoint — 2026-11-15
+
+JwtStrategy checks ACTIVE status, mustChangePassword, and sessionVersion against
+JWT sv, with version zero supported for older tokens. Staff HTTP fixtures now
+supply these fields. The role guard test preserves decorator metadata through
+the original handler and this: void. Guest private operations enforce ownership.
+Old email-access services and session checkout methods are removed. Retirement
+controllers and historical database models remain.
+The owner reported 33 failed tests and stale isolated schemas. Four test databases
+were migrated before P3018 stopped the Phase 4 sequence. The remaining recovery
+and final lint/backend/browser rechecks are pending. See [AGENTS.md](AGENTS.md).
+
 ## Step 5 security checkpoint — 2026-11-14
 
 Private guest reservation and payment operations require authenticated
@@ -27,11 +39,9 @@ The old emailed reservation-access flow is retired. Its public endpoints
 return HTTP 410. An old reservation-access cookie does not authorize those
 endpoints.
 
-Legacy session helpers and database models remain during cleanup.
-Their presence does not make accountless guest access a supported flow.
-
-Existing accountless test fixtures still require migration to authenticated
-guest flows. Owner-run verification remains pending.
+Legacy access tables remain for historical records. The obsolete session helpers
+are removed. The seven guest booking/payment suites have migrated fixtures.
+Owner regression verification and isolated test database recovery remain pending.
 
 ## 1. Security Approach
 

@@ -1,5 +1,15 @@
 # NEXORA — System Directory Structure
 
+## Latest source-file checkpoint — 2026-11-15
+
+The current correction batch touches guest-booking-staff.http.spec.ts,
+guest-booking.http.spec.ts, guest-booking.service.ts, guest-booking.spec.ts,
+reservation-acquisition.spec.ts, reservation-lifecycle.http.spec.ts,
+reservation-cancellation.http.spec.ts, and common/guards/roles.guard.spec.ts.
+The removed booking-access service/email/security/configuration/DTO files have
+no active source callers. Checkout uses authenticated users. Schema and
+migration files were retained. See [AGENTS.md](AGENTS.md) for owner-run results.
+
 ## Guest booking cleanup checkpoint — 2026-11-14
 
 Current account booking files include:
@@ -35,12 +45,10 @@ that a feature has been tested or deployed. The [approved architecture v2.1](NEX
 defines system scope; the [development reference](AGENTS.md) records current scope and approval gates.
 The [system overview](README.md) describes the product without development logs.
 
-Phases 1–6 are owner-confirmed complete. Phase 7 is IN PROGRESS: Step 7.1 is
-prepared/verified in the review copy, with owner-local verification pending;
-Steps 7.2–7.8 are NOT STARTED. The current schema has 27 models and five
-migrations; Step 7.1 adds no schema change. See [AGENTS.md](AGENTS.md) for the
-checkpoint and reported-versus-executed verification boundaries. This update
-ran no application checks or database operations.
+The owner-confirmed roadmap records Phases 1-8 and 10 complete. Guest Account
+Booking Step 5 source cleanup is applied. Current schema source has 29 models
+and eight migrations. Isolated test database recovery and owner verification
+are pending. See [AGENTS.md](AGENTS.md) for the exact checkpoint.
 
 ## 2. Earlier Directory Snapshot (2026-11-01)
 
@@ -454,7 +462,7 @@ were not changed by these refactors.
 | `backend/src/room-types/`, `rooms/`, `amenities/`, `room-images/`, `room-blocks/` | Implemented room-management modules, DTOs, controllers, services, and isolated tests | [API](API.md), [security](SECURITY.md) |
 | `backend/src/common/validation/` and `common/inventory/` | Shared numeric/date validation and transaction-scoped room eligibility; no public booking endpoint | [Database safety](DATABASE_SCHEMA.md), [development reference](AGENTS.md) |
 | `backend/src/prisma/` | NestJS database provider, connection lifecycle, and guarded development seed | [Database schema](DATABASE_SCHEMA.md), [coding patterns](CODING_PATTERNS.md) |
-| `backend/prisma/` | All 27 model definitions and five migrations | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
+| `backend/prisma/` | All 29 model definitions and eight migration sources | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `backend/src/generated/prisma/` | Prisma-generated client used by backend code; regenerate through Prisma tooling | [Database schema](DATABASE_SCHEMA.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/src/*.spec.ts` and `backend/test/` | Colocated unit tests and separate end-to-end tests using Vitest configuration | [Implementation guide](IMPLEMENTATION_GUIDE.md), [technical plan](TECHNICAL_PLAN.md) |
 | `backend/test/database/` | Database integrity tests using an existing migrated `backend/step10.test.db`; covers connectivity, constraints, relations, rollback, and persistence | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |

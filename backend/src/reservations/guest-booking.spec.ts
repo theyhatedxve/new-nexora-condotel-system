@@ -636,12 +636,17 @@ describe('durable guest booking creation', () => {
   it('binds recovery proofs to their request IDs', async () => {
     const firstInput = payload();
     const first = await createGuestBooking(service, firstInput);
-    const secondInput = {
-      ...firstInput,
-      requestId: randomUUID(),
-      checkIn: new Date(Date.parse(firstInput.checkIn) + 2 * DAY_MS).toISOString().slice(0, 10),
-      checkOut: new Date(Date.parse(firstInput.checkOut) + 2 * DAY_MS).toISOString().slice(0, 10),
-    };
+    const secondInput = payload();
+
+    secondInput.recoveryToken = firstInput.recoveryToken;
+
+    secondInput.checkIn = new Date(
+      Date.parse(firstInput.checkIn) + 2 * DAY_MS,
+    ).toISOString().slice(0, 10);
+
+    secondInput.checkOut = new Date(
+      Date.parse(firstInput.checkOut) + 2 * DAY_MS,
+    ).toISOString().slice(0, 10);
     const second = await createGuestBooking(service, secondInput);
     expect(second.reservationNumber).not.toBe(first.reservationNumber);
     const firstAttempt = await prisma.guestBookingAttempt.findUniqueOrThrow({

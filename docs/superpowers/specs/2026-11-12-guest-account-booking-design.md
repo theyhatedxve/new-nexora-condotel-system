@@ -1,7 +1,16 @@
 # Guest accounts and booking design
 
+## Implementation checkpoint — 2026-11-15
+
+The approved design is implemented in source through Steps 1-4. Step 5 source
+cleanup and authenticated test migrations are applied. Website booking requires
+verified guest login and ownership. Password recovery remains deferred.
+The owner is completing isolated test database recovery and verification.
+Existing-foundation observations below describe the original design review.
+See [current source and acceptance evidence](../../AGENTS.md).
+
 Design approved by the owner on 2026-11-12, including deferred password recovery.
-Implementation is pending under the step-specific EggPie/Pandecoco workflow.
+Steps 1-4 and Step 5 source cleanup are applied. Owner verification and database recovery remain pending.
 
 ## Purpose
 
@@ -19,7 +28,7 @@ system logo. Use the supplied Login reference for the sign-in page.
 - Provide code in chat after EggPie. Apply the approved code after Pandecoco.
 - The owner runs tests, lint, builds, and browser checks.
 
-## Existing foundations
+## Original design-review foundations (2026-11-12)
 
 The current guest App.jsx has public room browsing, checkout, booking-access,
 payment-return, and a private single-booking page. GuestLayout renders Navbar.

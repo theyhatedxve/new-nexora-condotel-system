@@ -1,5 +1,15 @@
 # NEXORA — Implementation Guide
 
+## Current continuation gate — 2026-11-15
+
+Guest Account Booking Step 5 has source cleanup and test corrections applied.
+The owner runs all database operations, tests, lint, builds, apps, and browser
+acceptance. Source review found no actionable defects in the applied batches.
+The latest owner regression result is 33 failures, 583 passes, and 53 skips.
+Backend build passed. The final lint correction and database recovery await
+owner output. Complete those checks before marking Step 5 accepted.
+See [AGENTS.md](AGENTS.md) for the database recovery checkpoint.
+
 ## 1. Working Method
 
 For every implementation step:
@@ -21,24 +31,27 @@ Documentation approval does not authorize all application phases.
 
 ## 2. Preflight Review
 
-Current accepted milestones (synchronized 2026-11-01; this table and the final
-Step 7.3 record supersede older status narratives):
+Current owner-confirmed roadmap, synchronized 2026-11-15.
 
-| Phase | Status |
+| Phase | Owner-confirmed status |
 |---|---|
-| Phase 1 | COMPLETED |
-| Phase 2 | COMPLETED |
-| Phase 3 | COMPLETED — 8/8 steps |
-| Phase 4 | COMPLETED — 7/7 steps |
-| Phase 5 | COMPLETED — 7/7 steps, owner-confirmed |
-| Phase 6 | COMPLETED — 10/10 steps, owner-confirmed |
-| Phase 7 | IN PROGRESS — Steps 7.1–7.2 accepted for advancement; Step 7.3 locally verified with an actual verified test receipt; final manual acceptance pending |
-| Phases 8–12 | NOT STARTED / AWAITING APPROVAL |
+| Phases 1-8 | COMPLETED |
+| Phase 9 - NFC | POSTPONED |
+| Phase 10 - Reports and Settings | COMPLETED |
+| Phase 11 - Testing and Security | PAUSED and incomplete |
+| Phase 12 - Deployment | DEFERRED |
+
+The current work is the Guest Account Booking upgrade. Steps 1-4 and Step 5
+source cleanup are applied. Step 5 remains in progress during isolated database
+recovery, owner regression checks, and browser acceptance. These checks apply to
+the current upgrade and do not resume the paused Phase 11 program.
+
+The implementation and acceptance records below retain their original dated evidence.
 
 Phase 1 delivered the two React JavaScript/JSX foundations and connected NestJS
 API. Phase 2 delivered the 24-model foundation, migrations, Prisma/NestJS
 integration, guarded development seed, and isolated integrity tests. Phase 3
-added authentication/security and EmailVerificationToken (25 current models).
+added authentication/security and EmailVerificationToken (25 models at that historical checkpoint).
 Phase 4 is completed per owner instruction, with room management, validated image
 uploads, shared numeric/date validation, status/blocks, and inventory safety.
 The owner reports 23/23 final acceptance checks passed without reported errors,
@@ -185,13 +198,11 @@ Phase 6 onward requires explicit approval.
   attributes, skip links, focus styles, and responsive CSS exist; no new browser
   or keyboard acceptance pass was performed in this documentation task.
 
-**Evidence and next work:** The owner's latest clarification supersedes earlier
-5/7 completion claims: only Steps 1–3 are fully complete. Backend portions of
-Steps 4–5 are complete; their frontend portions are still in progress. Current
-Rooms.jsx and RoomDetails.jsx have no date/guest search form, availability API
-request, or searched-stay total. roomTypesApi.js currently fetches room metadata
-only. No dedicated availability test file or frontend test script was found;
-this documentation task ran no application tests, builds, migrations, or seeds.
+**Current evidence and next work:** The owner confirmed completion of the earlier
+Guest Website phase. The current account upgrade has source changes applied
+through Step 5 cleanup. Public search and protected booking/My Bookings are
+present. Current owner regression and browser results govern acceptance.
+The earlier checklist above retains its original delivery evidence.
 
 Availability is informational and reserves nothing. The nightly capacity check
 does not prove one physical room is available for a whole stay or acquire

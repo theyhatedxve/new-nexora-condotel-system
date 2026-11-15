@@ -226,24 +226,38 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  const target = directory ? resolve(directory) : '';
+
+  const unsafeTarget = Boolean(
+    target &&
+    (
+      !target.startsWith(resolve(tmpdir()) + sep) ||
+      !basename(target).startsWith('nexora-guest-http-')
+    ),
+  );
+
   try {
-    await app?.close();
-    await prisma?.$disconnect();
+    try {
+      await app?.close();
+    } finally {
+      await prisma?.$disconnect();
+    }
   } finally {
     app = undefined;
     prisma = undefined;
     vi.unstubAllEnvs();
-    if (directory) {
-      const target = resolve(directory);
-      if (
-        !target.startsWith(resolve(tmpdir()) + sep) ||
-        !basename(target).startsWith('nexora-guest-http-')
-      ) {
-        throw new Error('Refusing unsafe fixture cleanup.');
-      }
-      rmSync(target, { recursive: true, force: true });
+
+    if (target && !unsafeTarget) {
+      rmSync(target, {
+        recursive: true,
+        force: true,
+      });
       directory = '';
     }
+  }
+
+  if (unsafeTarget) {
+    throw new Error('Refusing unsafe fixture cleanup.');
   }
 });
 

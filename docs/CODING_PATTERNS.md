@@ -1,5 +1,15 @@
 # NEXORA — Coding Patterns
 
+## Current applied patterns — 2026-11-15
+
+Guest booking copies validated DTO fields explicitly before substituting account
+names and email. HTTP fixtures supply sessionVersion/mustChangePassword and JWT
+sv. Guard tests retain decorated handler identity and declare this: void when
+no receiver is used. Synchronous validation uses throw assertions. Numeric and
+boolean test results use explicit comparators. Guest fixture cleanup closes app
+and database resources and checks its deletion target. Private booking requests
+use authenticated ownership. See [source checkpoint](AGENTS.md).
+
 ## 1. Pattern Selection
 
 Use a pattern when it makes an approved feature clearer or safer.
@@ -16,11 +26,11 @@ Preferred foundations:
 - Database transactions.
 - Integration adapters where needed.
 
-Examples below illustrate structure. They are not complete authorized future
-feature implementations. Phase 3 is COMPLETED — 8/8 steps; its current reusable
-patterns are recorded below. Phase 5 is in progress: Steps 1–3 complete; Steps
-4–5 backend complete with frontend integration in progress; Steps 6–7 pending.
-Phase 6 onward is NOT STARTED / AWAITING APPROVAL.
+Examples below illustrate structure. Current source includes shared guest/staff
+authentication, authenticated booking and My Bookings, staff operations, and
+payment processing. Guest account Step 5 source cleanup is applied. Owner
+verification and isolated database recovery are pending. Use AGENTS.md for the
+current roadmap and distinguish historical examples from active entry points.
 
 ### Current source organization (2026-11-10)
 

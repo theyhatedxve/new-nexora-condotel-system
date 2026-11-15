@@ -1,5 +1,17 @@
 # NEXORA — Conventional Commits
 
+## Examples for the current source changes — 2026-11-15
+
+Suitable messages for the reviewed changes include the following examples.
+
+- test(auth): align staff fixtures with session-version validation
+- fix(reservations): copy validated booking fields explicitly
+- refactor(payments): remove retired cookie checkout methods
+- docs: synchronize guest account cleanup and verification status
+
+These examples describe source work. Current verification evidence is recorded
+in [AGENTS.md](AGENTS.md).
+
 ## 1. Purpose
 
 Use consistent commit messages so changes are easy to review and find.

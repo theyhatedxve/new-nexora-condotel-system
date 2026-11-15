@@ -722,7 +722,7 @@ describe(
     it(
       'rejects client price/status overrides',
       async () => {
-        await expect(
+        expect(() =>
           services[0].acquire(
             {
               ...input(),
@@ -730,7 +730,7 @@ describe(
             } as ReturnType<typeof input>,
             'HOLD',
           ),
-        ).rejects.toThrow(
+        ).toThrow(
           'Invalid reservation details',
         );
 

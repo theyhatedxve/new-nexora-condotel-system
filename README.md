@@ -1,5 +1,14 @@
 # NEXORA
 
+## Current development checkpoint — 2026-11-15
+
+Guest Account Booking Steps 1-4 and Step 5 source cleanup are applied. Website
+booking requires verified guest login and account ownership. Admin UI redesign
+is owner-confirmed complete. Step 5 is in progress during test database recovery.
+The latest owner run reported 33 failed tests, 583 passed, and 53 skipped.
+Backend build passed. The final lint correction and database recovery await
+owner rechecks. See [current status and evidence](docs/AGENTS.md).
+
 **Condotel Management System**
 
 NEXORA is a web-based system for managing one condotel property. It is designed
@@ -16,17 +25,16 @@ work from a shared administrative workspace.
 - **Property managers** who oversee room availability and daily operations.
 - **Administrators** who manage staff access and system settings.
 
-## Planned Capabilities
+## System Capabilities
 
-These capabilities describe the intended system. Development is ongoing;
-completion of the project and database foundations does not mean all features
-are available.
+The source supports the following areas. Current owner acceptance and remaining
+verification are recorded in the development checkpoint. NFC hardware work is postponed.
 
 | Area | Intended capabilities |
 |---|---|
 | Room discovery | Browse room types, amenities, photos, and availability |
 | Reservations | Book stays, review booking details, and manage reservations |
-| Guest services | Support optional guest accounts and booking without an account |
+| Guest services | Verified guest accounts, My Bookings, and owned reservation details |
 | Reception operations | Coordinate room assignments, check-in, and check-out |
 | Payments | Support online checkout and payment at the property |
 | Room management | Organize room information, rates, and operational status |
@@ -59,27 +67,20 @@ NEXORA/
 
 ## Development Status
 
-As of **October 31, 2026**:
-
-| Phase | Status |
+| Phase | Owner-confirmed status |
 |---|---|
-| Phase 1 — Project Foundation | COMPLETED |
-| Phase 2 — Database Foundation | COMPLETED |
-| Phase 3 — Authentication and Access Control | COMPLETED — 8/8 steps |
-| Phase 4 | COMPLETED — 7/7 steps |
-| Phase 5 — Guest Website | IN PROGRESS — Steps 1–3 complete; Steps 4–5 backend complete/frontend in progress; Steps 6–7 pending |
-| Phase 6 onward | NOT STARTED / AWAITING APPROVAL |
+| Phases 1-8 | COMPLETED |
+| Phase 9 - NFC | POSTPONED |
+| Phase 10 - Reports and Settings | COMPLETED |
+| Phase 11 - Testing and Security | PAUSED and incomplete |
+| Phase 12 - Deployment | DEFERRED |
 
-The current foundation includes the starter guest and admin applications,
-backend connectivity, database structure, and accepted backend authentication
-and access controls, including optional guest registration and email verification,
-plus room-management APIs for rooms, categories, amenities, images, states, and blocks.
-Guest room listings/details use backend data. Availability search and stay-price
-quotes are implemented in the backend; their guest-interface integration is in progress.
-The project owner reports successful Phase 3 acceptance checks; no fresh
-application tests ran during this documentation update. Frontend sign-in
-integration and operational features remain later work. The system is under
-development and has not been declared ready for production use.
+The current work is the Guest Account Booking upgrade. Steps 1-4 and Step 5
+source cleanup are applied. Step 5 remains in progress during isolated database
+recovery, owner regression checks, and browser acceptance. These checks apply to
+the current upgrade and do not resume the paused Phase 11 program.
+
+See [AGENTS.md](docs/AGENTS.md) for current source, owner results, and recovery.
 
 ## Project Scope
 
@@ -91,7 +92,7 @@ integration testing.
 
 ## Test-mode online checkout
 
-Verified booking guests can prepare and resume a PayMongo test checkout link from My Booking. Returning from the hosted page does not confirm payment. Verified online payment processing is a subsequent integration step.
+Authenticated guests can prepare and resume PayMongo test checkout from owned reservation details. Signed webhook processing records verified payment. The browser return displays the backend result.
 
 
 ## Verified test-mode payment recording

@@ -1,5 +1,21 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
+## Latest continuation and database recovery — 2026-11-15
+
+Continue with Guest Account Booking Step 5 verification. Steps 1-4, source
+cleanup, seven authenticated/retirement test migrations, and eight regression
+corrections are applied. The final role-test this: void annotation awaits lint.
+The latest owner run reported 10 failed files, 38 passed files, 33 failed tests,
+583 passed tests, and 53 skipped. Backend build passed. Frontend checks passed
+in earlier owner output, with an admin bundle-size warning.
+Four isolated auth/ownership/registration/security databases migrated. The run
+stopped at phase4.step1.test.db with P3018 because RoomBlock.canceledAt already
+exists. Recovery instructions verify that column and migration history before
+reconciling its record and deploying the remaining migrations. Recovery output
+is pending. The owner runs migrations, tests, lint, builds, and browser checks.
+Next, recover the five Phase 4 test databases, rerun backend checks, and obtain
+browser acceptance. Use [AGENTS.md](AGENTS.md) for exact names and status.
+
 ## Current continuation checkpoint — 2026-11-14
 
 Continue from the Guest Account Booking upgrade.
@@ -126,39 +142,45 @@ main changes. Schema source does not prove database deployment or client alignme
    uncertain results for retry/review.
 
 Both methods require guest-selected arrival time in Asia/Manila. It does not
-change nights or prices. Preserve backend snapshots and optional accounts.
+change nights or prices. Preserve backend snapshots and authenticated guest ownership.
 References and email addresses are not private authorization. Existing bookings
 must not receive invented arrival times or retrospective policy changes.
 
 ## 4. Implemented isolated source map
 
-Paths are relative to the isolated workspace. Inspect them before editing.
+Paths below describe the current repository. Earlier isolated-transfer notes retain their dated scope. Inspect the current source before editing.
 
 | Area | Important files |
 |---|---|
 | Schema/contracts | `backend/prisma/schema.prisma`; `backend/prisma/migrations/20261103090000_guest_booking_flow/migration.sql`; guest DTOs under `backend/src/reservations/dto/` |
 | Booking/recovery | `backend/src/reservations/guest-booking-policy.ts`, `guest-booking-security.ts`, `guest-booking.service.ts`, `reservation-acquisition.service.ts` |
-| Staff foundation | `backend/src/reservations/guest-booking-staff.service.ts`; internal service, not proof of an installed staff API/admin interface |
-| Guest transport | `backend/src/reservations/guest-bookings.controller.ts`, `guest-booking-privacy.middleware.ts`, `booking-access.service.ts`, `reservations.module.ts` |
+| Staff guest-booking operations | `backend/src/reservations/guest-booking-staff.service.ts` and `guest-booking-staff.controller.ts`; permitted contact, confirmation, and rejection actions |
+| Guest transport | `backend/src/reservations/guest-bookings.controller.ts`, `guest-reservations.controller.ts`, `guest-reservations.service.ts`, `guest-booking-privacy.middleware.ts`, `reservations.module.ts` |
 | Inventory/deadlines | `backend/src/reservations/reservation-lifecycle.ts`, `inventory-write.ts`; `backend/src/payments/guest-booking-deadline.service.ts`, `guest-booking-deadline.worker.ts` |
 | Online processing | `backend/src/payments/pending-online-booking.ts`, `checkout.service.ts`, `paymongo-webhook.service.ts`, `paymongo.adapter.ts`, `paymongo-checkout-expiration.adapter.ts`, `payments.module.ts` |
 | Guest API/context | `frontend/guest-web/src/services/guestBookingApi.js`; `src/utils/bookingAttempt.js`, `bookingContext.js` |
 | Guest state | `frontend/guest-web/src/hooks/useGuestCheckout.js`, `usePrivateBooking.js` |
 | Guest views | `frontend/guest-web/src/pages/Checkout.jsx`, `MyBooking.jsx`, `PaymentReturn.jsx`; `src/components/GuestBookingReceipt.jsx`, `BookingPayment.jsx`; `src/styles/guest-checkout.css` |
 
-Guest routes under `/api/reservations/access/guest-bookings`:
+Current guest routes use `/api/guest/reservations` and require an active GUEST
+identity. Private reads and payment operations enforce account ownership.
 
 | Method/path suffix | Meaning |
 |---|---|
-| POST base path | Create/replay booking; returns a limited receipt and sets private cookie |
-| POST `/recover` | Recover original request using requestId and recoveryToken |
-| POST `/checkout/current` | Read the current attempt, requiring cookie and expectedReservationNumber |
-| POST `/checkout` | Prepare/replay checkout, requiring cookie, expectedReservationNumber and requestId |
+| GET base path | Paginated owned reservation list |
+| GET `/:id` | Owned reservation details |
+| GET `/profile` | Authenticated profile used by the booking form |
+| GET `/by-reference/:reference` | Owned booking-reference read |
+| POST base path | Create/replay booking using the authenticated profile |
+| POST `/recover` | Recover an account-bound request |
+| POST `/checkout/current` | Read the account-owned payment attempt |
+| POST `/checkout` | Prepare/replay account-owned checkout |
+| POST `/payment-summary` | Read the account-owned financial summary |
 
-Use existing Origin allowlisting, throttling, DTO validation and no-store headers.
-Raw session tokens go only into the HttpOnly, SameSite=Strict booking cookie,
-Secure in production, path `/api/reservations/access`. Private reads expose
-stored preference, arrival/contact/deadline timestamps and derived holdExpired.
+Origin allowlisting, throttling, DTO validation, and no-store headers remain in
+use. Old email-access routes return HTTP 410. Access JWTs stay in memory and the
+existing auth refresh cookie restores sessions. Guest booking session cookies
+are retired. Staff and provider routes use their own authorization boundaries.
 
 Session storage retains original request IDs, recovery credential and stay
 selection, not guest names/email/phone. Do not clear unknown outcomes to retry

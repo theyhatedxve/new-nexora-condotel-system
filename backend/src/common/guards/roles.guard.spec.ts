@@ -148,14 +148,12 @@ describe('RolesGuard', () => {
   it('does not give ADMIN an implicit bypass', () => {
     class ManagerOnlyController {
       @Roles(USER_ROLES.MANAGER)
-      managerOnly() {}
+      managerOnly(this: void) {}
     }
 
     const context = {
       getHandler: () =>
-        ManagerOnlyController.prototype.managerOnly.bind(
-          ManagerOnlyController.prototype,
-        ),
+        ManagerOnlyController.prototype.managerOnly,
       getClass: () => ManagerOnlyController,
       switchToHttp: () => ({
         getRequest: () => ({

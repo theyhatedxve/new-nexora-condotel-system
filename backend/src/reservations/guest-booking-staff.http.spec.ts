@@ -80,6 +80,7 @@ function token(userId = 'ADMIN') {
       sub: userId,
       jti: randomUUID(),
       role: 'ADMIN',
+      sv: 0,
     },
     {
       issuer: 'nexora-api',
@@ -115,7 +116,11 @@ beforeEach(async () => {
         id,
         email: `${id.toLowerCase()}@example.invalid`,
         status: id === 'disabled' ? 'DISABLED' : 'ACTIVE',
-        role: { name: id === 'disabled' ? 'ADMIN' : id },
+        mustChangePassword: false,
+        sessionVersion: 0,
+        role: {
+          name: id === 'disabled' ? 'ADMIN' : id,
+        },
       };
     },
   );

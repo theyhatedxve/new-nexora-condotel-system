@@ -1,5 +1,14 @@
 # NEXORA — Business Flows
 
+## Current flow and acceptance checkpoint — 2026-11-15
+
+Guests browse publicly and sign in with a verified active GUEST account before
+booking. My Bookings and payment actions enforce ownership. Staff lifecycle
+operations retain their role and inventory rules. Hosted checkout and signed
+PayMongo test webhooks are installed. Browser returns display backend results.
+Step 5 source cleanup is applied. Owner test database recovery and acceptance
+remain pending. See [latest verification evidence](AGENTS.md).
+
 ## Step 5 flow checkpoint — 2026-11-14
 
 Guests browse rooms publicly, then register, verify their email, and sign
@@ -30,17 +39,14 @@ This flow supersedes earlier optional-account and email-link booking flows.
 Old email-access links lead to My Bookings. Accountless reservation access
 is retired. Staff booking workflows remain supported.
 
-Phases 1–6 are owner-confirmed complete. Phase 7 is IN PROGRESS with the
-read-only payment-summary foundation prepared/verified in the review copy;
-owner-local verification is pending. Payment collection/provider/refund writes
-and NFC integration remain future work. Current routes, permissions and
-operational limits are recorded in [AGENTS.md](AGENTS.md). No application tests
-ran for this documentation update.
+Phases 1-8 and 10 are owner-confirmed complete. Source includes checkout, signed
+webhooks, staff collection, refunds, reports, and settings. Guest Account Booking
+Step 5 regression verification remains in progress. NFC is postponed. Current
+routes and owner evidence are recorded in [AGENTS.md](AGENTS.md).
 
-### Implemented optional account and session flow
+### Implemented account and session flow
 
-1. Guest may register with first/last name, email, and password; account creation
-   remains optional for booking.
+1. Guest registers with first/last name, email, and password before website booking.
 2. Backend assigns GUEST and transactionally creates the PENDING user, linked
    guest profile, and hashed email-verification credential.
 3. After commit, SMTP sends a verification link valid for 30 minutes. Delivery
@@ -54,8 +60,8 @@ ran for this documentation update.
 
 Private record access must explicitly call OwnershipService using the trusted
 identity and allowed staff roles. Cross-guest and missing records return 404;
-roles do not imply record ownership. Private accountless booking access now
-uses a scoped email-link/session flow; reservation numbers alone are insufficient. See [API](API.md) for
+roles do not imply record ownership. Private guest access requires an authenticated
+owning account. Retired email-access routes return HTTP 410. See [API](API.md) for
 contracts and [security](SECURITY.md) for acceptance and delivery limits.
 
 ## 1. Room Search
@@ -79,8 +85,8 @@ Search does not guarantee inventory until the backend safely acquires it.
 
 ## 2. Guest Booking
 
-Accountless Pay at Property checkout is implemented. Selecting an online
-payment method remains future Phase 7 work.
+Authenticated website booking supports Pay at Property and PayMongo test checkout.
+The backend links the reservation to the signed-in Guest profile.
 
 ```text
 Select room type
@@ -96,14 +102,13 @@ Backend rechecks inventory
 Create reservation under the applicable hold/confirmation policy
 ```
 
-Guest accounts are optional.
-
-For accountless bookings, issue access only through the approved private
-verification mechanism.
+Website booking requires an active verified GUEST account. Private reservation
+details and payment operations enforce ownership of the linked profile.
 
 ## 3. PayMongo Checkout
 
-**PLANNED — NOT IMPLEMENTED as a complete operational workflow.**
+PayMongo test checkout and signed webhook processing are installed. Current
+owner regression and browser acceptance remain pending.
 
 1. Validate the reservation and the caller's access.
 2. Safely acquire or validate the inventory hold.
@@ -125,8 +130,8 @@ Do not create duplicate sessions blindly after a network timeout.
 
 ## 4. Pay at Property
 
-Booking confirmation is implemented; collection writes in steps 6–7 below
-remain future work. Step 7.1 already derives read-only summaries.
+Booking confirmation, authorized staff collection, and read-only summaries are
+installed. Current owner acceptance is tracked separately in AGENTS.md.
 
 1. Guest selects Pay at Property.
 2. Backend validates booking details and inventory.

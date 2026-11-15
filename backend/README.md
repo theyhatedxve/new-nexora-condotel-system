@@ -1,3 +1,39 @@
+# NEXORA Backend
+
+## Current source and verification — 2026-11-15
+
+NestJS/TypeScript provides shared guest and staff APIs. Website bookings use
+verified GUEST accounts and account ownership. Guest account Step 5 cleanup,
+authenticated test migration, and regression corrections are applied.
+The latest owner run reported 33 failed tests, 583 passed, and 53 skipped.
+Backend build passed. The final role-test lint correction and isolated test
+database recovery await rechecks. See [AGENTS.md](../docs/AGENTS.md).
+
+## Local development
+
+Run from D:\Web-JSX\NEXORA\backend in its own PowerShell terminal.
+
+```powershell
+$env:NODE_ENV = 'development'
+$env:NEXORA_RUNTIME_DATABASE_URL = 'file:D:/Web-JSX/NEXORA/backend/dev.db'
+$env:NEXORA_BOOKING_DEADLINE_WORKER_ENABLED = 'false'
+$env:AUTH_ALLOWED_ORIGINS = 'http://localhost:5175,http://localhost:5176'
+$env:AUTH_VERIFY_URL = 'http://localhost:5175/verify-email'
+npm.cmd run start:dev
+```
+
+Prisma CLI migrations use DATABASE_URL through prisma7.config.ts. Runtime Prisma
+uses NEXORA_RUNTIME_DATABASE_URL. The owner selects each isolated test database
+explicitly for recovery and runs checks after its migrations succeed.
+
+```powershell
+npm.cmd run test
+npm.cmd run lint
+npm.cmd run build
+```
+
+## Framework template background
+
 > NEXORA backend: NestJS/Express, TypeScript, Prisma, and Vitest. This retained
 > framework-template README is background, not the project acceptance record.
 > Use the [master architecture](../docs/NEXORA_ARCHITECTURE_V2.1.md),

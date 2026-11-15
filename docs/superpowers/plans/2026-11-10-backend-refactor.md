@@ -1,5 +1,14 @@
 # Backend Responsibility Separation Implementation Plan
 
+## Later source checkpoint — 2026-11-15
+
+This refactor record remains historical. Later guest account cleanup removed
+email-access services and session checkout methods while preserving ownership,
+transaction clients, payment evidence, and user-scoped idempotency. Regression
+fixtures and DTO copying are corrected in source. The latest owner build passed.
+Database recovery and regression rechecks are pending.
+See [current work and verification](../../AGENTS.md).
+
 > Use the executing-plans workflow for implementation and a fresh code reviewer before handoff.
 
 **Goal:** Apply the same responsibility separation as the guest/admin refactors while preserving backend behavior.

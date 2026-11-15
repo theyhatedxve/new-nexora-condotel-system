@@ -1,5 +1,21 @@
 # Guest accounts and booking implementation plan
 
+## Latest implementation status — 2026-11-15
+
+| Step | Source status | Acceptance |
+|---|---|---|
+| 1 - Guest accounts | Applied | Owner browser checks pending |
+| 2 - Shared header | Applied | Owner browser checks pending |
+| 3 - Account-owned booking | Applied | Current regression recheck pending |
+| 4 - My Bookings | Applied | Owner list/detail checks pending |
+| 5 - Retirement and cleanup | Source and test migrations applied | In progress during database recovery and owner verification |
+
+Eight backend regression/lint corrections and the final role-test annotation
+are applied. The owner reported 33 test failures, 583 passes, and 53 skips.
+Backend build passed. Four isolated databases migrated before canceledAt caused
+P3018 on phase4.step1.test.db. Recovery of the five Phase 4 test databases and
+final checks are pending. See [AGENTS.md](../../AGENTS.md).
+
 > For agentic workers, use superpowers:executing-plans to implement this plan task by task. Follow the owner's code delivery and verification workflow.
 
 ## Goal
@@ -183,13 +199,14 @@ Pass reservation IDs explicitly to payment and cancellation operations.
 
 ## Step 5 — Retire accountless entry points and update documentation
 
-Status as of Step 3 application on 2026-11-12 follows.
+Source checkpoint synchronized 2026-11-15. Owner acceptance remains pending.
 
 - [x] Retire old email-access backend endpoints.
 - [x] Replace the old BookingAccess email form with account sign-in and owned
   booking-reference navigation so existing links remain usable.
-- [ ] Complete remaining obsolete-link/helper cleanup and authenticated test
-  fixture updates, then synchronize affected API/business/security documentation.
+- [x] Complete obsolete-link/helper cleanup and authenticated test fixture
+  updates, then synchronize affected API/business/security documentation.
+- [ ] Complete isolated database recovery and obtain owner regression/browser results.
 
 Modify frontend `App.jsx`, `components/Footer.jsx`, and links in pages/components
 that still use `/booking-access` or `/my-booking` without a reservation ID.
@@ -197,12 +214,12 @@ Replace prompts with Sign In or My Bookings according to session state.
 Remove obsolete BookingAccess page/hook/service imports and code after checking
 their remaining callers. Remove obsolete single-booking context requirements.
 
-Remove public access handlers from backend `booking-access.controller.ts` and
+Retain HTTP 410 retirement handlers in backend `booking-access.controller.ts` and
 unregister unused services in `reservations.module.ts`. Inventory every public
 booking route, including `reservations.controller.ts`, so an alternate anonymous
 creation path cannot remain. Preserve staff creation and internal dependencies.
-Retired API routes return the normal unavailable-route response and grant no
-access, including when a browser still has an old private booking cookie.
+Retired API routes return HTTP 410, including requests carrying an old private
+booking cookie.
 
 Revise relevant existing automated checks to expect authenticated ownership and
 retired access behavior. The owner runs them with the approved isolated test
@@ -236,19 +253,17 @@ migration action needs its own explanation and the owner's execution.
 
 ## Current status
 
-The design is approved. Steps 1-3 are applied on the frontend branch. Static
-source review was performed, including corrections for guest-tab refresh
-coordination, browser Back menu state, and retired email-form navigation.
+Steps 1-4 and Step 5 source cleanup are applied in the current backend checkout.
+Authenticated fixtures cover retirement, guest HTTP/service booking, checkout,
+payment summaries, webhooks, and reservation journeys. Eight regression/lint
+corrections and the final this: void annotation are saved.
 
-Step 1 also adds a Logout page at /logout and configures verification links for
-the documented guest origin, http://localhost:5175. Step 3 uses account-bound
-recovery proofs and per-account browser storage with existing database fields.
-No schema migration was performed.
+The latest owner test result is 33 failures, 583 passes, and 53 skips.
+Backend build passed. Frontend lint/build passed in earlier owner output.
+The owner migrated four auth-related test databases, then encountered duplicate
+canceledAt on phase4.step1.test.db. The remaining Phase 4 database recovery and
+final backend/browser verification are pending.
 
-Owner tests, lint, builds, browser checks, and specific acceptance results remain
-pending. Existing accountless test fixtures need authenticated account setup.
-The checked delivery/application boxes record saved source, not passing checks.
-
-Next is Step 4, the My Bookings list with owned detail navigation and its header
-entry. Give the overview and complete code after EggPie, apply after Pandecoco,
-and let the owner run checks. Step 5 finishes remaining cleanup and documentation.
+Next, obtain the recovery output, rerun backend tests/lint/build, resolve any
+remaining failures, and complete account-owned booking/payment browser checks.
+Record acceptance only after the owner supplies the results.

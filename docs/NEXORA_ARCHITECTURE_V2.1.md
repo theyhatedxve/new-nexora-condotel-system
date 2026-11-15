@@ -1,5 +1,17 @@
 # NEXORA — Final Condotel Management System Architecture
 
+## Current approved implementation checkpoint — 2026-11-15
+
+The owner approved required verified guest accounts for prototype website
+bookings. Guest.userId provides account ownership for creation, recovery,
+reservation lists/details, and guest payments. Shared authentication, staff
+session security, inventory transactions, and payment evidence remain in use.
+The Admin UI redesign is owner-confirmed complete. Guest account Step 5 source
+cleanup is applied and verification is pending. The owner-confirmed roadmap
+is Phases 1-8 and 10 complete, Phase 9 postponed, Phase 11 paused, and Phase 12
+deferred. Historical dated addenda retain their original evidence.
+See [current acceptance and recovery status](AGENTS.md).
+
 > **Authoritative file:** docs/NEXORA_ARCHITECTURE_V2.1.md. Project documentation is maintained in docs/; only README.md remains at the repository root.
 > **Master architecture blueprint:** Version 2.1  
 > **Status:** Approved architecture v2.1; historical baseline with current progress addendum below.
@@ -119,7 +131,7 @@ Four primary roles: **Guest**, **Receptionist**, **Manager**, **Administrator**.
 | Manage staff users | No | No | No | Yes |
 | System settings | No | No | No | Yes |
 
-The backend must enforce permissions with authorization guards. Guest booking lookup without an account requires private ownership verification; knowing a predictable booking reference alone must not expose records.
+The backend must enforce permissions with authorization guards. Guest booking reads require an authenticated owning account; a booking reference alone grants no private access.
 
 ## 5. Guest Website architecture
 
@@ -130,18 +142,18 @@ The backend must enforce permissions with authorization guards. Guest booking lo
 | Homepage | `/` | Landing, room search, featured rooms |
 | Rooms | `/rooms` | Search, filter, and check room availability |
 | Room Details | `/rooms/:id` | Amenities, photos, rates, capacity |
-| Booking | `/booking` | Stay dates and guest data |
-| Checkout | `/checkout/:reservationId` | Payment method selection |
-| Booking Confirmation | `/booking/confirmation` | Show verified booking result |
-| Find Booking | `/find-booking` | Secure lookup for guests |
-| Login | `/login` | Optional sign-in |
-| Register | `/register` | Optional guest registration |
+| Booking | `/checkout/:roomTypeId` | Authenticated stay submission and payment preference |
+| Payment return | `/payment-return` | Authenticated backend payment result |
+| Booking details | `/my-bookings/:reservationId` | Owned booking result and payment actions |
+| Legacy booking access | `/booking-access` | Redirect to My Bookings |
+| Login | `/login` | Guest sign-in before website booking |
+| Register | `/register` | Guest registration and verification |
 | My Bookings | `/my-bookings` | Registered guest reservations |
 | About | `/about` | Property information |
 | Contact | `/contact` | Contact and location |
 | Policies | `/policies` | Terms, cancellation, privacy |
 
-Guests may book with or without accounts; guest records and user accounts must be separable. Search uses check-in/out, number of guests, room category, and availability. Frontend renders state but backend decides inventory and pricing.
+Website bookings require an authenticated guest account. Guest records remain separable from User records for existing development data and staff workflows. Search uses check-in/out, number of guests, room category, and availability. Frontend renders state but backend decides inventory and pricing.
 
 ## 6. Admin Dashboard architecture
 
@@ -438,8 +450,8 @@ Guest/admin applications can be statically hosted; NestJS needs persistent Node.
 | Initial release | Possible future enhancement |
 |---|---|
 | Single-property management | Multi-property support |
-| Guest booking without login | Loyalty program |
-| Optional guest accounts | Social login |
+| Guest booking with verified login | Loyalty program |
+| Required guest website accounts | Social login |
 | Room inventory and date availability | Dynamic pricing |
 | PayMongo | Other payment gateways |
 | Pay at Property | POS integrations |

@@ -1,5 +1,13 @@
 # NEXORA — Coding Principles
 
+## Current application of these principles — 2026-11-15
+
+The guest account upgrade reuses authentication, Guest.userId, ownership,
+inventory, and payment services. Explicit DTO field copying, focused hooks,
+account-scoped recovery, and small regression corrections keep prototype code
+readable. Test fixtures include the active session-security contract. Source
+cleanup and verification are tracked separately in [AGENTS.md](AGENTS.md).
+
 ## 1. Purpose and Scope
 
 Write code that is easy to understand, review, test, secure, and maintain.

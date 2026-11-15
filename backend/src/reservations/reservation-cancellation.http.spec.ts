@@ -1217,7 +1217,10 @@ describe(
                 (result) =>
                   result.alreadyCancelled,
               )
-              .sort(),
+              .sort(
+                (first, second) =>
+                  Number(first) - Number(second),
+              ),
           ).toEqual([false, true]);
 
           expect(

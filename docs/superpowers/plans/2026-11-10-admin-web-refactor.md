@@ -1,5 +1,13 @@
 # Admin-web responsibility separation
 
+## Later source checkpoint — 2026-11-15
+
+This refactor record remains historical. Admin redesign is owner-confirmed
+complete. Later integration removed bookingLinkMinutes from backend settings,
+admin projection, and display. Earlier owner admin lint/build checks passed,
+with a bundle-size warning. Browser acceptance is pending.
+See [current work and verification](../../AGENTS.md).
+
 **Goal:** Apply the approved guest-web refactor approach to admin-web while preserving its current behavior and UI/UX.
 
 **Architecture:** Keep React/JSX, plain CSS, the existing API clients, auth boundaries, and action hooks. Extract remaining state/effects/handlers into focused hooks, move large screen sections into feature component folders, and centralize existing visual values in styles/tokens.css.

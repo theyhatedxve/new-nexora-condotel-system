@@ -1,5 +1,19 @@
 # NEXORA — Database Schema Documentation
 
+## Current schema and migration evidence — 2026-11-15
+
+The source schema contains 29 models and eight migration directories. User
+includes mustChangePassword and sessionVersion. StaffSetupToken supports staff
+account setup. GuestBookingAttempt stores account-bound booking recovery data.
+Reservation includes guest-booking timing/policy fields. Guest.userId links
+website reservations to accounts. ReservationAccessToken and
+ReservationAccessSession remain as legacy tables.
+The owner migrated four isolated test databases, then hit P3018 on
+phase4.step1.test.db because the nullable RoomBlock.canceledAt column already
+exists. The remaining five Phase 4 recovery results are pending.
+See [owner migration evidence](AGENTS.md). This documentation records source
+and owner output without independently querying a database.
+
 ## 1. Status and Scope
 
 Phase 2 — Database Foundation is COMPLETED and accepted: initial schema,
@@ -7,17 +21,14 @@ relationships, migrations, Prisma Client/NestJS integration, development seed,
 and isolated integrity tests. Architecture v2.1 listed 23 core models plus the
 supporting RoomTypeAmenity join model (24 in Phase 2). Phase 3 Step 7 added
 EmailVerificationToken brought the count to 25. Phase 6 added
-ReservationAccessToken and ReservationAccessSession: the current schema has
-**27 models and five migrations**. Step 7.1 introduces no schema change.
+ReservationAccessToken and ReservationAccessSession. Later work added
+StaffSetupToken and GuestBookingAttempt. The source schema now has
+**29 models and eight migrations**.
 
-Phase 3 is COMPLETED — 8/8 steps based on owner-reported acceptance. Current
-fields below follow backend/prisma/schema.prisma; this documents the approved
-extension without replacing the historical architecture. Phase 4 room-type, room,
-amenity, image, status, and dated-block services are implemented. Phases 5–6
-are owner-confirmed complete, including reservation workflows. Phase 7 is in
-progress with read-only payment summaries; collection/provider/refund writes,
-NFC, reports and settings remain future work.
-This documentation task did not query databases or apply migrations.
+Fields follow backend/prisma/schema.prisma. The owner-confirmed roadmap records
+Phases 1-8 and 10 complete. Payments, collection/refund processing, reports, and
+settings are present in source. Guest Account Booking Step 5 verification and
+isolated test database recovery are pending. NFC hardware work is postponed.
 
 ### Migration source history
 
@@ -28,6 +39,9 @@ This documentation task did not query databases or apply migrations.
 | 20261030134255_add_email_verification_tokens | EmailVerificationToken table, unique hash, user/expiry indexes, restrictive User foreign key |
 | 20261031_phase4_step6_room_block_cancellation | Add nullable RoomBlock.canceledAt; existing rows stay active, canceled history is preserved |
 | 20261101070000_reservation_private_access | Add ReservationAccessToken and ReservationAccessSession, restrictive Reservation FKs, unique token hashes and lookup/expiry indexes |
+| 20261101090000_payment_checkout_attempts | Payment checkout request key/fingerprint, checkout state, and hosted URL |
+| 20261103090000_guest_booking_flow | GuestBookingAttempt and reservation booking-policy, payment preference, arrival/contact/deadline fields |
+| 20261112030159_staff_account_security | StaffSetupToken plus User.mustChangePassword and User.sessionVersion |
 
 Migration files were inspected. Successful validation and preservation of the
 development database are reported acceptance results, not fresh checks here.
@@ -95,9 +109,10 @@ capability and protocol remain subject to selection and testing.
 | Model | Current fields | Constraints / rules |
 |---|---|---|
 | Role | id, name, description?, createdAt, updatedAt | Unique name |
-| User | id, roleId, name, email, passwordHash, status, createdAt, updatedAt | Unique email; Role FK; UserStatus defaults PENDING |
+| User | id, roleId, name, email, passwordHash, status, mustChangePassword, sessionVersion, createdAt, updatedAt | Unique email; Role FK; PENDING default; password-change flag defaults false; session version defaults zero |
 | RefreshToken | id, userId, familyId?, tokenHash, expiresAt, revokedAt?, createdAt | Unique hash; familyId index; User FK with Restrict |
 | EmailVerificationToken | id, userId, tokenHash, expiresAt, usedAt?, createdAt | Unique hash; userId and expiresAt indexes; User FK with Restrict |
+| StaffSetupToken | id, userId, tokenHash, expiresAt, usedAt?, createdAt | Unique hash; user and expiry indexes; restrictive User FK |
 | Guest | id, userId?, firstName, lastName, email?, phone?, createdAt, updatedAt | Optional unique User link with Restrict |
 
 UserStatus values: ACTIVE, DISABLED, PENDING. User has many refresh tokens and
@@ -111,9 +126,9 @@ it, and refresh rejects records without it. Only credential hashes are stored.
 EmailVerificationToken has a 30-minute service-enforced lifetime and single-use
 usedAt marker. Expiry is not a database cleanup scheduler.
 
-A Guest may exist without a User. Booking without registration remains required;
-no accountless booking API has been built. Do not attach historical bookings by
-email matching alone.
+A Guest may exist without a User for historical records and staff workflows.
+Website bookings require an active verified GUEST account linked by Guest.userId.
+Existing reservations retain their records. Email matching alone grants no ownership.
 
 ## 5. Property and Room Models
 
@@ -146,8 +161,9 @@ do not enforce those service-level rules.
 
 | Model | Current fields | Constraints / relations |
 |---|---|---|
-| Reservation | id, reservationNumber, guestId, roomTypeId, checkInDate, checkOutDate, guestCount, nightlyRateCentavos, totalAmountCentavos, status, holdExpiresAt?, createdAt, updatedAt | Unique reference; restrictive Guest and RoomType FKs; indexes on guestId, roomTypeId/checkInDate/checkOutDate, status/holdExpiresAt |
-| ReservationAccessToken | id, reservationId, tokenHash, expiresAt, usedAt?, createdAt | Restrictive Reservation FK; unique tokenHash; reservationId/createdAt and expiresAt indexes |
+| Reservation | id, reservationNumber, guestId, roomTypeId, checkInDate, checkOutDate, guestCount, nightlyRateCentavos, totalAmountCentavos, status, holdExpiresAt?, bookingPolicyVersion?, paymentPreference?, expectedArrivalAt?, firstContactedAt?, responseDeadlineAt?, confirmedAt?, createdAt, updatedAt | Unique reference; restrictive Guest and RoomType FKs; inventory and booking-policy indexes |
+| GuestBookingAttempt | id, requestId, recoveryTokenHash, requestFingerprint, paymentPreference, policyVersion, state, reservationId?, recoveryExpiresAt, rejectionCode?, createdAt, updatedAt | Unique requestId, proof hash, and optional reservationId; restrictive Reservation FK; expiry and state/update indexes |
+| ReservationAccessToken | id, reservationId, tokenHash, expiresAt, usedAt?, createdAt | Legacy access model retained; restrictive Reservation FK and token/expiry indexes |
 | ReservationAccessSession | id, reservationId, tokenHash, expiresAt, revokedAt?, createdAt | Restrictive Reservation FK; unique tokenHash; reservationId and expiresAt indexes |
 | ReservationGuest | id, reservationId, firstName, lastName, createdAt | Restrictive Reservation FK; reservationId index |
 | RoomAssignment | id, reservationId, roomId, assignedAt, releasedAt?, createdAt | Restrictive Reservation/Room FKs; reservationId and roomId indexes |
@@ -171,9 +187,9 @@ one configured property and shared positive rate/capacity bounds at runtime.
 
 ## 7. Payment Models
 
-Phase 7 is IN PROGRESS. Step 7.1 derives read-only booking-level payment
-summaries from these existing models without changing the schema. Payment
-collection, provider verification and refund writes remain future work.
+Phase 7 is owner-confirmed complete. Payment summaries, checkout attempts, signed
+provider evidence, staff collection, and refund writes use these models.
+Current guest account regression acceptance remains pending.
 Current scalar field groups:
 
 | Model | Current fields | Constraints / relations |
@@ -369,8 +385,8 @@ PostgreSQL deployment remains separate future compatibility work.
 ## 15. Informational Availability Queries
 
 AvailabilityModule adds read-only search and server-calculated nightly/stay
-pricing without a schema change. The current schema has 27 models and five
-migrations because Phase 6 separately added private-access records. It counts usable active rooms minus active dated blocks and
+pricing without a schema change. The current schema has 29 models and eight
+migrations after the guest-booking and staff-security extensions. It counts usable active rooms minus active dated blocks and
 inventory-holding reservations per night. PENDING records with null or future
 holdExpiresAt hold capacity; expired pending holds do not. It does not separately
 subtract assignments and double-count their reservations.
@@ -386,7 +402,7 @@ frontend quote integration are owner-confirmed complete. See
 
 ## Phase 7.2 — Additive checkout-attempt fields
 
-Migration: 20261101090000_payment_checkout_attempts. Current total is 27 models and six migration sources.
+Migration: 20261101090000_payment_checkout_attempts. That historical checkpoint had 27 models and six migrations. Current source has 29 models and eight migration sources.
 
 | Payment field | Type | Purpose |
 |---|---|---|

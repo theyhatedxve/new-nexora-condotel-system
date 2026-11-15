@@ -176,10 +176,20 @@ export class GuestBookingService {
         const now = new Date();
         const guest = await this.requireGuest(tx, identity);
         const dto = normalizedGuestBooking({
-          ...submitted,
+          requestId: submitted.requestId,
+          recoveryToken: submitted.recoveryToken,
+          roomTypeId: submitted.roomTypeId,
+          checkIn: submitted.checkIn,
+          checkOut: submitted.checkOut,
+          guests: submitted.guests,
           firstName: guest.firstName,
           lastName: guest.lastName,
           email: guest.email,
+          phone: submitted.phone,
+          paymentPreference: submitted.paymentPreference,
+          arrivalTime: submitted.arrivalTime,
+          acknowledgmentAccepted:
+            submitted.acknowledgmentAccepted,
         });
         const credentials = this.credentials(dto.requestId, dto.recoveryToken, guest.userId);
         const fingerprint = guestBookingFingerprint(dto);

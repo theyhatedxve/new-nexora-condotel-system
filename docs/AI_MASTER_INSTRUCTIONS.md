@@ -104,3 +104,9 @@ Here's what your task:
 8. Make sure that it is direct to the point.
 9. You will only execute this instructions until i explicitly said "Pandecoco"
 10. Also lastly you will give me Overview on what phase is next. (If applicable or if it have a next phase or step.)
+
+## NEXORA documentation synchronization — 2026-11-15
+
+Current code changes, owner-run verification results, and isolated test database
+recovery are recorded in [AGENTS.md](AGENTS.md) and [AI_HANDOFF.md](AI_HANDOFF.md).
+Guest Account Booking Step 5 remains in progress during recovery and acceptance.

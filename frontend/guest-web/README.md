@@ -1,4 +1,29 @@
-# React + Vite
+# NEXORA Guest Web
+
+## Current source checkpoint — 2026-11-15
+
+The guest app includes login, registration, verification, protected checkout,
+payment return, My Bookings, owned reservation details, and the shared header.
+Earlier owner lint/build checks passed. Browser acceptance remains pending.
+See [AGENTS.md](../../docs/AGENTS.md) for current verification and recovery.
+
+## Local development
+
+Run in its own PowerShell terminal from this application directory.
+
+```powershell
+$env:VITE_API_URL = 'http://localhost:3000/api'
+npm.cmd run dev -- --port 5175 --strictPort
+```
+
+The owner runs the application checks.
+
+```powershell
+npm.cmd run lint
+npm.cmd run build
+```
+
+## Framework template background
 
 NEXORA uses this React JavaScript/JSX application with Vite, React Router,
 Axios, plain CSS, and Lucide React. The [master architecture](../../docs/NEXORA_ARCHITECTURE_V2.1.md)

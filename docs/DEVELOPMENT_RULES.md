@@ -1,4 +1,13 @@
 
+
+## Current development checkpoint — 2026-11-15
+
+The current approved work is Guest Account Booking Step 5 verification after
+source cleanup and regression corrections. In this chat, EggPie requests code,
+Pandecoco authorizes applying it, and the owner runs tests, lint, builds, apps,
+browser checks, and migrations. Current owner directions govern execution.
+See [AGENTS.md](AGENTS.md) for verified source and owner-reported results.
+
 # NEXORA Development Rules
 
 Architecture: Final Architecture v2.1
@@ -102,6 +111,6 @@ helpers alone do not expose public booking or guarantee complete allocation.
 Never reset, overwrite, or redirect tests to backend/dev.db. Approve additive
 migrations and consistent backups separately; use dedicated test databases and
 temporary image storage. Record actual regression results and update documentation
-after approved steps. Remaining work must follow the approved step workflow. Phase 5 Steps 4–5
-frontend integration is in progress; Phase 6 onward requires explicit approval. Exact installed
-dependencies and current workflow are maintained in [AGENTS.md](AGENTS.md).
+after approved steps. Remaining work follows the approved Guest Account Booking
+Step 5 verification workflow. Exact installed dependencies, owner results, and
+current execution rules are maintained in [AGENTS.md](AGENTS.md).

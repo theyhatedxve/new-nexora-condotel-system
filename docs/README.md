@@ -1,5 +1,13 @@
 # 1. NEXORA
 
+## Current project checkpoint — 2026-11-15
+
+The guest account upgrade, My Bookings, authenticated payments, and legacy source
+cleanup are present. Admin redesign is owner-confirmed complete. Step 5 awaits
+isolated test database recovery, backend rechecks, and browser acceptance.
+See [current source changes and owner results](AGENTS.md) and
+[continuation instructions](AI_HANDOFF.md).
+
 NEXORA is an integrated, web-based Condotel Management System for one property.
 It connects accommodation information, guest services, and staff operations
 through a shared platform designed for secure and maintainable daily use.
@@ -11,21 +19,20 @@ workflows. A guest-facing website provides a public entry point, while an
 administration dashboard gives staff a dedicated workspace. Both use one backend
 API and a central database so access rules and business decisions stay consistent.
 
-The backend currently supports accounts, authentication, authorization, room-type
-and physical-room management, amenities, room images, operational room states,
-and dated room blocks. The guest website connects room listings and details to public backend data.
-Date-based search and stay-price quotes are supported by the backend; their
-frontend integration is still being built. The administration dashboard retains
-starter/placeholder screens; complete booking and staff workflows remain intended capabilities.
+The backend supports accounts, authentication, authorization, room inventory,
+reservations, guests, payment processing, reports, settings, audit, and staff
+account management. The guest website connects public room discovery and stay
+quotes to authenticated booking and My Bookings. The owner confirmed completing
+the Admin UI redesign. Current regression and browser acceptance are pending.
 
 ## 3. System Users
 
 | User | Responsibilities and typical interactions |
 |---|---|
-| Guest | Explore accommodation and, as guest workflows become available, arrange and manage a stay; account creation is optional |
+| Guest | Browse accommodation publicly, then register, verify email, and sign in to create and view owned bookings |
 | Receptionist | Review physical rooms and blocks; perform permitted ready/cleaning transitions; intended reception workflows include guest assistance and arrivals/departures |
 | Manager | Manage room types, physical rooms, amenities, images, rates, capacity, operational states, and dated blocks; intended oversight includes reservations and reports |
-| Administrator | Manage permitted room operations and system access; wider staff-account and settings interfaces remain intended capabilities |
+| Administrator | Manage permitted staff accounts, property settings, and operational records |
 
 Permissions are enforced by the backend. An administrator role does not
 automatically bypass an explicit role list or private-record ownership check.
@@ -38,25 +45,18 @@ public room-type information, photos, and amenities and display the current
 nightly rate. Hooks handle loading, errors, missing optional content, and stale
 responses; complete interface-state and accessibility acceptance is still pending.
 
-The backend provides date/guest-capacity availability and calculated nightly and
-stay-total prices. Date/guest search controls, availability requests/results,
-and searched-stay quote display in the guest interface are still in progress.
-
-Optional registration, verification, and sign-in are supported by backend
-services; complete browser account screens, reservations, payment selection,
-and personal booking-management workflows remain intended capabilities.
+Date/guest-capacity availability and calculated nightly/stay totals are connected
+to the guest interface. Registration, verification, sign-in/out, protected
+checkout, payment return, and My Bookings list/detail pages are present.
+The latest account upgrade still awaits owner browser acceptance.
 
 ## 5. Administration Dashboard
 
-The administration application provides a shared layout, sidebar, dashboard
-starter, and placeholder operational pages. Room-management APIs support
-room types, physical rooms, amenities, photos, rates, capacity, permitted
-operational status changes, and maintenance/date blocks.
-
-Connected management forms, reservation and guest-record workflows, staff-account
-administration, payment/transaction screens, reports, and monitoring views remain
-intended interface capabilities. Navigation labels do not establish a working
-business workflow.
+The administration application provides the redesigned shared layout, sidebar,
+dashboard, reservation and guest details, rooms/types, payments, reports, users,
+settings, and audit views. NFC remains a postponed placeholder. Staff access and
+record permissions are enforced by the backend. The settings reference now
+exposes reservationHoldMinutes after removal of the obsolete booking-link field.
 
 ## 6. Room Inventory and Availability
 
@@ -73,27 +73,26 @@ A reusable backend eligibility service checks room activity, matching type,
 capacity, operational status, active blocks, and conflicting assignments.
 Immediate use requires a Ready room. Future eligibility uses the requested dates
 and relevant conflicts. The eligibility helper reserves nothing. A separate public availability API
-provides informational room-type results and backend-calculated stay prices;
-its guest-facing search/quote interface is still in progress. Neither operation
-creates a booking. Complete reservation allocation remains intended work.
+provides informational room-type results and backend-calculated stay prices.
+The guest interface uses these results. Booking acquisition separately rechecks
+inventory inside the existing transaction boundary.
 
 ## 7. Reservation and Guest Experience
 
-The intended journey is to explore rooms, select stay dates, provide guest
-details, review a trusted price, choose payment, and receive a confirmed booking.
-Reception would then coordinate room assignment, arrival, departure, and follow-up
-room preparation. These complete booking and reception workflows are not yet
-operational.
+Guests explore rooms, select dates, sign in, review a trusted price, and choose
+Pay at Property or PayMongo test checkout. The backend uses the authenticated
+profile and existing booking policy to create the reservation. My Bookings lists
+only that account's reservations. Staff coordinate confirmation, room assignment,
+arrival, departure, and room preparation through permitted operations.
 
-Guests must be able to book without registering when booking becomes available.
-Optional accounts are intended to provide convenient access to verified personal
-records. Booking references alone must never expose private stay information.
+Booking creation, recovery, private details, and guest payment actions require
+authenticated account ownership. Retired accountless endpoints return HTTP 410.
 
 ## 8. Security and Data Protection
 
 The backend uses password hashing, signed access tokens, rotating session
-credentials, explicit role permissions, and reusable ownership checks. Optional
-registration requires email verification before account activation. Guest data
+credentials, explicit role permissions, and reusable ownership checks.
+Registration requires email verification before account activation. Guest data
 is returned only through authorized access and appropriate response projections.
 
 Uploaded room images are decoded and validated, then re-encoded for controlled
@@ -101,9 +100,9 @@ public delivery. Backend secrets and private records belong outside public
 source and browser configuration. Production operation requires HTTPS, durable
 storage, monitoring, tested recovery, and deployment-specific verification.
 
-The intended online payment design uses hosted checkout and verified provider
-events. Payment processing is not implemented; a browser return page must never
-be treated as proof of payment.
+Online payment source uses PayMongo test checkout and verified signed provider
+events. Payment summaries are read from the backend. A browser return alone
+does not establish payment.
 
 ## 9. NFC Room Access
 
@@ -124,15 +123,15 @@ Guest Website                       Administration Dashboard
                               |
              +----------------+----------------+
              |                |                |
-       Central SQL      Planned hosted    Planned NFC adapter
+       Central SQL      PayMongo test     Planned NFC adapter
          Database       payment provider  and compatible doors
 ```
 
 The two web applications use React with JavaScript/JSX and Vite. The backend
 uses NestJS with TypeScript and Prisma database access. SQLite supports local
 development; PostgreSQL is the recommended production target and requires
-separate migration and deployment verification. Payment and hardware boundaries
-in the diagram describe intended integrations.
+separate migration and deployment verification. Test payment integration is
+installed. Hardware integration remains postponed.
 
 Technical references: [API contracts](API.md), [system design](SYSTEM_DESIGN.md),
 [database architecture](DATABASE_SCHEMA.md), and [security](SECURITY.md).
