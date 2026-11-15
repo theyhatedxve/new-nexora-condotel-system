@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PasswordService } from './password.service.js';
+import { RESET_LOGIN_FAILURES } from './login-lockout.policy.js';
 
 import type { Prisma } from '../generated/prisma/client.js';
 import type {
@@ -37,6 +38,11 @@ export class StaffPasswordService {
     now: Date,
     action: string,
   ): Promise<void> {
+    await tx.user.update({
+      where: { id: userId },
+      data: { ...RESET_LOGIN_FAILURES },
+    });
+
     await tx.staffSetupToken.updateMany({
       where: {
         userId,

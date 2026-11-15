@@ -138,12 +138,23 @@ export function signIn(email, password) {
         return { passwordChangeRequired: true };
       }
 
+      const lockSeconds = error.response?.data?.retryAfterSeconds;
+      const accountLocked =
+        status === 429 &&
+        error.response?.data?.code === "LOGIN_TEMPORARILY_LOCKED" &&
+        Number.isSafeInteger(lockSeconds) &&
+        lockSeconds > 0 &&
+        lockSeconds <= 1800;
+      const minutes = accountLocked ? Math.ceil(lockSeconds / 60) : 0;
+
       const message =
         status === 401
-          ? "Sign-in failed. Check your credentials and account access."
-          : status === 429
-            ? "Too many attempts. Please wait a minute before trying again."
-            : "Sign-in could not be completed. Please try again.";
+          ? "Sign-in failed. Check your credentials. If you made several attempts, wait before retrying."
+          : accountLocked
+            ? `Sign-in is temporarily locked. Try again in ${minutes} minute(s).`
+            : status === 429
+              ? "Too many attempts. Please wait before trying again."
+              : "Sign-in could not be completed. Please try again.";
 
       publish("anonymous", null, message);
     } finally {

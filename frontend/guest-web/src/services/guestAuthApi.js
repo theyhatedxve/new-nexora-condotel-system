@@ -38,14 +38,24 @@ export function subscribeGuestSession(listener) {
 
 export function guestAuthError(error) {
   const status = error.response?.status;
+  const lockSeconds = error.response?.data?.retryAfterSeconds;
+  if (
+    status === 429 &&
+    error.response?.data?.code === "LOGIN_TEMPORARILY_LOCKED" &&
+    Number.isSafeInteger(lockSeconds) &&
+    lockSeconds > 0 &&
+    lockSeconds <= 1800
+  ) {
+    return `Sign-in is temporarily locked. Try again in ${Math.ceil(lockSeconds / 60)} minute(s).`;
+  }
   if (status === 429) {
-    return "Too many attempts. Wait a minute before trying again.";
+    return "Too many attempts. Please wait before trying again.";
   }
   if (status === 400) {
     return "Check the information you entered and try again.";
   }
   if (status === 401) {
-    return "Check your credentials and make sure your email is verified.";
+    return "Check your credentials and email verification. If you made several attempts, wait before retrying.";
   }
   if (status === 403) {
     return "This account cannot complete this action.";
