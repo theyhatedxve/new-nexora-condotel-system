@@ -50,6 +50,7 @@ model RoomType {
   name             String
   description      String?
   capacity         Int
+  includedOccupancy Int?
   baseRateCentavos Int
   isActive         Boolean @default(true)
 
@@ -62,8 +63,30 @@ model RoomType {
   images       RoomImage[]
   amenities    RoomTypeAmenity[]
   reservations Reservation[]
+  rentalRates  RentalRate[]
 
   @@unique([propertyId, name])
+}
+
+enum RentalType {
+  HOURLY
+  NIGHTLY
+  WEEKLY
+  MONTHLY
+}
+
+model RentalRate {
+  id                      String     @id @default(cuid())
+  roomTypeId              String
+  rentalType              RentalType
+  rateCentavos            Int
+  extraPersonFeeCentavos  Int        @default(0)
+  isActive                Boolean    @default(true)
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+  roomType                RoomType   @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([roomTypeId, rentalType])
 }
 
 // ========================================

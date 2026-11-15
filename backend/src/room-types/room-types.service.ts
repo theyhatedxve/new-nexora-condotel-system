@@ -1,4 +1,5 @@
 import { publicFields, staffFields } from './room-type-projection.js';
+import { synchronizeNightlyRate } from './rental-rates.persistence.js';
 
 import {
   BadRequestException,
@@ -121,29 +122,28 @@ export class RoomTypesService {
   async create(dto: CreateRoomTypeDto) {
     const propertyId = await this.getPropertyId();
     const name = dto.name.trim();
-
     this.rateCapacity.validateRoomType({
-    baseRateCentavos: dto.baseRateCentavos,
-    capacity: dto.capacity,
+      baseRateCentavos: dto.baseRateCentavos,
+      capacity: dto.capacity,
     });
-
-    if (!name) {
-      throw new BadRequestException(
-        'Room type name is required.',
-      );
-    }
+    if (!name) throw new BadRequestException('Room type name is required.');
 
     try {
-      return await this.prisma.roomType.create({
-        data: {
-          propertyId,
-          name,
-          description: dto.description?.trim() || null,
-          capacity: dto.capacity,
-          baseRateCentavos: dto.baseRateCentavos,
-          isActive: true,
-        },
-        select: staffFields,
+      return await this.prisma.$transaction(async (tx) => {
+        const created = await tx.roomType.create({
+          data: {
+            propertyId,
+            name,
+            description: dto.description?.trim() || null,
+            capacity: dto.capacity,
+            includedOccupancy: dto.capacity,
+            baseRateCentavos: dto.baseRateCentavos,
+            isActive: true,
+          },
+          select: staffFields,
+        });
+        await synchronizeNightlyRate(tx, created.id, dto.baseRateCentavos);
+        return created;
       });
     } catch (error) {
       this.handleDatabaseError(error);
@@ -191,6 +191,8 @@ export class RoomTypesService {
           select: {
             id: true,
             capacity: true,
+            includedOccupancy: true,
+            updatedAt: true,
             isActive: true,
           },
         });
@@ -260,11 +262,19 @@ export class RoomTypesService {
                 ? undefined
                 : dto.description?.trim() || null,
             capacity: dto.capacity,
+            includedOccupancy: dto.capacity === undefined
+              ? undefined
+              : Math.min(existing.includedOccupancy ?? existing.capacity, dto.capacity),
+            updatedAt: new Date(Math.max(Date.now(), existing.updatedAt.getTime() + 1)),
             baseRateCentavos: dto.baseRateCentavos,
             isActive: dto.isActive,
           },
           select: staffFields,
         });
+
+        if (dto.baseRateCentavos !== undefined) {
+          await synchronizeNightlyRate(tx, id, dto.baseRateCentavos);
+        }
 
         if (isReducingCapacity || isDeactivating) {
           await assertInventoryCommitments(tx, [id]);
