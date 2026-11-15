@@ -38,7 +38,7 @@ import {
 } from './settings.service.js';
 
 @Controller('settings')
-@Roles('ADMIN')
+@Roles('SUPER_ADMIN')
 export class SettingsController {
   constructor(
     private readonly settings: SettingsService,

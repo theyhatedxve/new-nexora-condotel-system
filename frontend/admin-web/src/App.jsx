@@ -65,7 +65,7 @@ export default function App() {
                 </Route>
               ))}
 
-              <Route element={<StaffRoute roles={["ADMIN"]} />}>
+              <Route element={<StaffRoute roles={["SUPER_ADMIN", "ADMIN"]} />}>
                 <Route
                   path="/users/new"
                   element={<StaffUserEditor key="new" />}
@@ -83,14 +83,16 @@ export default function App() {
 
               <Route path="/rooms/:roomId" element={<RoomDetails />} />
 
-              <Route element={<StaffRoute roles={["ADMIN", "MANAGER"]} />}>
+              <Route element={<StaffRoute roles={["SUPER_ADMIN", "ADMIN", "MANAGER"]} />}>
                 <Route path="/rooms/types" element={<RoomTypes />} />
               </Route>
 
-              <Route
-                path="/payments/reconciliation"
-                element={<PaymentReconciliation />}
-              />
+              <Route element={<StaffRoute roles={["SUPER_ADMIN"]} />}>
+                <Route
+                  path="/payments/reconciliation"
+                  element={<PaymentReconciliation />}
+                />
+              </Route>
 
               <Route path="/payments/:paymentId" element={<PaymentDetails />} />
 

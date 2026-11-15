@@ -31,6 +31,7 @@ import {
 
 @Controller('reservations')
 @Roles(
+  'SUPER_ADMIN',
   'ADMIN',
   'MANAGER',
   'RECEPTIONIST',

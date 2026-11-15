@@ -71,6 +71,7 @@ export class RoomStatusService {
       }
 
       const isManager =
+        actorRole === 'SUPER_ADMIN' ||
         actorRole === 'ADMIN' || actorRole === 'MANAGER';
 
       const isHousekeepingTransition =

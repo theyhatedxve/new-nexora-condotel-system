@@ -62,14 +62,14 @@ function assertAdmin(actorId) {
 
   if (
     session.status !== "authenticated" ||
-    session.user?.role !== "ADMIN" ||
+    session.user?.role !== "SUPER_ADMIN" ||
     (
       actorId !== undefined &&
       session.user.id !== actorId
     )
   ) {
     throw new Error(
-      "Administrator access is required.",
+      "Super Admin access is required.",
     );
   }
 }

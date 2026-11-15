@@ -4,6 +4,7 @@ import { SetMetadata } from '@nestjs/common';
 export const ROLES_KEY = 'roles';
 
 export const USER_ROLES = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
   ADMIN: 'ADMIN',
   MANAGER: 'MANAGER',
   RECEPTIONIST: 'RECEPTIONIST',

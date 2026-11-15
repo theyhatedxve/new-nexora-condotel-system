@@ -29,7 +29,7 @@ import {
   type SummaryPayment,
 } from './payment-summary.js';
 
-const STAFF_ROLES = ['ADMIN', 'MANAGER', 'RECEPTIONIST'];
+const STAFF_ROLES = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST'];
 const ACTION = 'payment.pay_at_property.recorded';
 
 const digest = (value: string) =>

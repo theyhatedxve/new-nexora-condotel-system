@@ -42,6 +42,7 @@ export class PaymentSummaryService {
             actor,
             reservationId,
             [
+              'SUPER_ADMIN',
               'ADMIN',
               'MANAGER',
               'RECEPTIONIST',

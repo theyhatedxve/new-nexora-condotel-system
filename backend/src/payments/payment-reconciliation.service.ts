@@ -53,9 +53,9 @@ export class PaymentReconciliationService {
 
   private identity(actor: AuthenticatedUser | undefined) {
     if (!actor?.id) throw new UnauthorizedException('Authentication required.');
-    if (!['ADMIN', 'MANAGER'].includes(actor.role))
+    if (!['SUPER_ADMIN'].includes(actor.role))
       throw new ForbiddenException(
-        'Manager or Administrator permission is required.',
+        'Super Admin permission is required.',
       );
     return actor;
   }
@@ -74,10 +74,10 @@ export class PaymentReconciliationService {
       );
     if (
       user.role.name !== actor.role ||
-      !['ADMIN', 'MANAGER'].includes(user.role.name)
+      !['SUPER_ADMIN'].includes(user.role.name)
     ) {
       throw new ForbiddenException(
-        'Manager or Administrator permission is required.',
+        'Super Admin permission is required.',
       );
     }
     const properties = await tx.property.findMany({

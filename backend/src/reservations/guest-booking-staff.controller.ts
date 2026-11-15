@@ -39,7 +39,7 @@ type StaffRequest = Request & {
 };
 
 @Controller('reservations/:reservationId/guest-request')
-@Roles('ADMIN', 'MANAGER', 'RECEPTIONIST')
+@Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST')
 export class GuestBookingStaffController {
   constructor(
     private readonly staffBookings: GuestBookingStaffService,

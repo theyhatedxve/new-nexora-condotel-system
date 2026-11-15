@@ -33,7 +33,7 @@ export class AmenitiesController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Post()
   @HttpCode(201)
   async create(@Body() dto: CreateAmenityDto) {
@@ -42,7 +42,7 @@ export class AmenitiesController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Patch(':id')
   async update(
     @Param('id') id: string,

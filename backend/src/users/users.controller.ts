@@ -34,7 +34,7 @@ type StaffRequest = Request & {
 };
 
 @Controller('staff/users')
-@Roles('ADMIN')
+@Roles('SUPER_ADMIN', 'ADMIN')
 @Throttle({
   default: { limit: 30, ttl: 60_000 },
 })

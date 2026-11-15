@@ -47,7 +47,7 @@ export class RefundsService {
 
     if (!ROLES.includes(actor.role)) {
       throw new ForbiddenException(
-        'Manager or Administrator permission is required.',
+        'Super Admin permission is required.',
       );
     }
 
@@ -74,7 +74,7 @@ export class RefundsService {
 
     if (!ROLES.includes(user.role.name) || user.role.name !== actor.role) {
       throw new ForbiddenException(
-        'Manager or Administrator permission is required.',
+        'Super Admin permission is required.',
       );
     }
   }

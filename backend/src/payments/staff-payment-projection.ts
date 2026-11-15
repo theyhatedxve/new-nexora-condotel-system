@@ -5,6 +5,7 @@ import { calculatePaymentSummary } from './payment-summary.js';
 import { paymentEvidenceSelect } from './payment-evidence.js';
 
 export const roles = [
+  'SUPER_ADMIN',
   'ADMIN',
   'MANAGER',
   'RECEPTIONIST',

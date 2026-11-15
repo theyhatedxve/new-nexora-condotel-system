@@ -83,7 +83,7 @@ export function useRoomChange({
   function prepare(input, title, lines, button) {
     if (
       !actorId ||
-      !["ADMIN", "MANAGER"].includes(user?.role)
+      !["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(user?.role)
     ) {
       throw new Error("Room management permission is required.");
     }
@@ -126,7 +126,7 @@ export function useRoomChange({
       !confirmationCurrent ||
       session.status !== "authenticated" ||
       session.user?.id !== actorId ||
-      !["ADMIN", "MANAGER"].includes(session.user?.role)
+      !["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(session.user?.role)
     ) {
       return;
     }

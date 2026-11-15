@@ -26,7 +26,7 @@ import {
 } from './reservation-lifecycle.service.js';
 
 @Controller('reservations/lifecycle')
-@Roles('ADMIN', 'MANAGER', 'RECEPTIONIST')
+@Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST')
 export class ReservationLifecycleController {
   constructor(
     private readonly lifecycle: ReservationLifecycleService,

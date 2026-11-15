@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 
 export const STAFF_ROLES = [
+  "SUPER_ADMIN",
   "ADMIN",
   "MANAGER",
   "RECEPTIONIST",
 ];
 
 export const ROLE_LABELS = {
+  SUPER_ADMIN: "Super Administrator",
   ADMIN: "Administrator",
   MANAGER: "Manager",
   RECEPTIONIST: "Receptionist",
@@ -64,25 +66,25 @@ export const staffNavigation = [
     path: "/reports",
     label: "Reports",
     icon: ChartColumn,
-    roles: ["ADMIN", "MANAGER"],
+    roles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
   },
   {
     path: "/users",
     label: "User Management",
     icon: UserCog,
-    roles: ["ADMIN"],
+    roles: ["SUPER_ADMIN", "ADMIN"],
   },
   {
     path: "/settings",
     label: "Settings",
     icon: Settings,
-    roles: ["ADMIN"],
+    roles: ["SUPER_ADMIN"],
   },
   {
     path: "/audit-logs",
     label: "Audit Logs",
     icon: ScrollText,
-    roles: ["ADMIN"],
+    roles: ["SUPER_ADMIN"],
   },
 ];
 

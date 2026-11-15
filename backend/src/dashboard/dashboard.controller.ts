@@ -24,7 +24,7 @@ export class DashboardController {
   ) {}
 
   @Get('summary')
-  @Roles('ADMIN', 'MANAGER', 'RECEPTIONIST')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST')
   @Header('Cache-Control', 'no-store')
   @Header('Vary', 'Authorization, Origin')
   async summary() {
@@ -34,7 +34,7 @@ export class DashboardController {
   }
 
   @Get('financial-summary')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER')
   @Header('Cache-Control', 'no-store')
   @Header('Vary', 'Authorization, Origin')
   async financialSummary() {

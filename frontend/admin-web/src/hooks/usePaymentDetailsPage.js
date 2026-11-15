@@ -28,7 +28,7 @@ export default function usePaymentDetailsPage() {
 
   const { user } = useAuth();
 
-  const canManageRefunds = ["ADMIN", "MANAGER"].includes(user?.role);
+  const canManageRefunds = ["SUPER_ADMIN"].includes(user?.role);
 
   const payment = state.status === "ready" ? state.data : null;
 

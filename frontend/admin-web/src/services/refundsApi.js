@@ -30,7 +30,7 @@ function assertActor(actorId) {
   if (
     session.status !== "authenticated" ||
     session.user?.id !== actorId ||
-    !["ADMIN", "MANAGER"].includes(session.user?.role)
+    !["SUPER_ADMIN"].includes(session.user?.role)
   ) {
     throw new Error(
       "Sign in with the original authorized account.",

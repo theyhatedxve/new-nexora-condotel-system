@@ -7,7 +7,7 @@ import {
 
 export function useDashboardSummary(role) {
   const canViewFinancial =
-    ["ADMIN", "MANAGER"].includes(role);
+    ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(role);
 
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState(null);

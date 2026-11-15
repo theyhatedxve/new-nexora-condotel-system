@@ -10,6 +10,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
+import { canManageStaff } from './staff-access.policy.js';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PasswordService } from '../auth/password.service.js';
@@ -74,8 +75,8 @@ export class UsersService {
     }
 
     if (
-      identity.role !== 'ADMIN' ||
-      actor.role.name !== 'ADMIN'
+      !['SUPER_ADMIN', 'ADMIN'].includes(identity.role) ||
+      actor.role.name !== identity.role
     ) {
       throw new ForbiddenException(
         'Administrator permission is required.',
@@ -83,6 +84,16 @@ export class UsersService {
     }
 
     return identity.id;
+  }
+
+  private assertManage(
+    identity: AuthenticatedUser | undefined,
+    targetRole: string,
+    ownAccount = false,
+  ): void {
+    if (!canManageStaff(identity?.role, targetRole, ownAccount)) {
+      throw new ForbiddenException('You cannot manage this staff role.');
+    }
   }
 
   private async write<T>(
@@ -340,6 +351,8 @@ export class UsersService {
       await this.passwords.hashPassword(initialPassword);
 
     const user = await this.write(identity, async (tx, actorId) => {
+      this.assertManage(identity, input.role);
+
       const duplicate = await tx.user.findUnique({
         where: { email: input.email },
         select: { id: true },
@@ -406,12 +419,16 @@ export class UsersService {
   ) {
     return this.write(identity, async (tx, actorId) => {
       const current = await this.requireStaff(tx, id);
+      this.assertManage(identity, current.role.name, id === actorId);
+      if (input.role !== current.role.name) {
+        this.assertManage(identity, input.role);
+      }
 
       this.assertVersion(current, input.updatedAt);
 
       if (
         id === actorId &&
-        (input.role !== 'ADMIN' || input.status !== 'ACTIVE')
+        (input.role !== current.role.name || input.status !== 'ACTIVE')
       ) {
         throw new ConflictException(
           'You cannot disable or demote your own account.',
@@ -427,24 +444,24 @@ export class UsersService {
         );
       }
 
-      const removesUsableAdmin =
-        current.role.name === 'ADMIN' &&
+      const removesUsableSuperAdmin =
+        current.role.name === 'SUPER_ADMIN' &&
         current.status === 'ACTIVE' &&
         !current.mustChangePassword &&
-        (input.role !== 'ADMIN' || input.status !== 'ACTIVE');
+        (input.role !== 'SUPER_ADMIN' || input.status !== 'ACTIVE');
 
-      if (removesUsableAdmin) {
-        const administrators = await tx.user.count({
+      if (removesUsableSuperAdmin) {
+        const superAdministrators = await tx.user.count({
           where: {
-            role: { name: 'ADMIN' },
+            role: { name: 'SUPER_ADMIN' },
             status: 'ACTIVE',
             mustChangePassword: false,
           },
         });
 
-        if (administrators <= 1) {
+        if (superAdministrators <= 1) {
           throw new ConflictException(
-            'At least one active Administrator must remain.',
+            'At least one usable active Super Admin must remain.',
           );
         }
       }
@@ -528,6 +545,7 @@ export class UsersService {
 
     const user = await this.write(identity, async (tx, actorId) => {
       const current = await this.requireStaff(tx, id);
+      this.assertManage(identity, current.role.name, id === actorId);
 
       this.assertVersion(current, input.updatedAt);
 

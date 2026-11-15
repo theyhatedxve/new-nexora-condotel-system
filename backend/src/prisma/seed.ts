@@ -6,6 +6,7 @@ import { PrismaService } from './prisma.service.js';
 const PROPERTY_NAME = 'NEXORA Demo Condotel';
 
 const roles = [
+  { name: 'SUPER_ADMIN', description: 'System owner' },
   { name: 'ADMIN', description: 'System administrator' },
   { name: 'MANAGER', description: 'Property manager' },
   { name: 'RECEPTIONIST', description: 'Front desk staff' },

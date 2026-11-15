@@ -215,7 +215,7 @@ function reconciliationActor(actorId) {
   if (
     session.status !== "authenticated" ||
     session.user?.id !== actorId ||
-    !["ADMIN", "MANAGER"].includes(session.user?.role)
+    !["SUPER_ADMIN"].includes(session.user?.role)
   ) {
     throw new Error(
       "Use the original authorized staff account.",

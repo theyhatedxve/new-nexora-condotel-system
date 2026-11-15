@@ -20,7 +20,7 @@ import { RecordPropertyPaymentDto } from './dto/record-property-payment.dto.js';
 import { PayAtPropertyService } from './pay-at-property.service.js';
 
 @Controller('payments')
-@Roles('ADMIN', 'MANAGER', 'RECEPTIONIST')
+@Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST')
 export class PayAtPropertyController {
   constructor(private readonly collections: PayAtPropertyService) {}
 

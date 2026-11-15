@@ -31,6 +31,7 @@ export class RoomStatusController {
   ) {}
 
   @Roles(
+    USER_ROLES.SUPER_ADMIN,
     USER_ROLES.ADMIN,
     USER_ROLES.MANAGER,
     USER_ROLES.RECEPTIONIST,

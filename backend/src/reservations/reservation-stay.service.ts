@@ -143,6 +143,7 @@ export class ReservationStayService {
 
     if (
       ![
+        'SUPER_ADMIN',
         'ADMIN',
         'MANAGER',
         'RECEPTIONIST',

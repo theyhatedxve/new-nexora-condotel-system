@@ -25,7 +25,7 @@ type StaffRequest = Request & {
 };
 
 @Controller('staff/room-types')
-@Roles('ADMIN', 'MANAGER')
+@Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER')
 @Throttle({
   default: { limit: 30, ttl: 60_000 },
 })

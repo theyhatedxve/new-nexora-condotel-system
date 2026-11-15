@@ -1,4 +1,5 @@
 export const STAFF_ROLES = [
+  'SUPER_ADMIN',
   'ADMIN',
   'MANAGER',
   'RECEPTIONIST',

@@ -21,6 +21,7 @@ const states = new Map();
 const listeners = new Set();
 
 const staffRoles = [
+  "SUPER_ADMIN",
   "ADMIN",
   "MANAGER",
   "RECEPTIONIST",

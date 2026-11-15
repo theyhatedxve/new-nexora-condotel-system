@@ -25,6 +25,7 @@ export class RoomBlocksController {
   ) {}
 
   @Roles(
+    USER_ROLES.SUPER_ADMIN,
     USER_ROLES.ADMIN,
     USER_ROLES.MANAGER,
     USER_ROLES.RECEPTIONIST,
@@ -36,7 +37,7 @@ export class RoomBlocksController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Post()
   @HttpCode(201)
   async create(
@@ -48,7 +49,7 @@ export class RoomBlocksController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Patch(':blockId')
   async update(
     @Param('id') roomId: string,
@@ -64,7 +65,7 @@ export class RoomBlocksController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Post(':blockId/cancel')
   async cancel(
     @Param('id') roomId: string,

@@ -22,7 +22,7 @@ import {
 } from './reports.service.js';
 
 @Controller('reports')
-@Roles('ADMIN', 'MANAGER')
+@Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER')
 @Throttle({
   default: {
     limit: 30,

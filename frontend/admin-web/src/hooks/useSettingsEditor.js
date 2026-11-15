@@ -40,7 +40,7 @@ export default function useSettingsEditor({ initial, actorId }) {
       mounted.current &&
       session.status === "authenticated" &&
       session.user?.id === actorId &&
-      session.user.role === "ADMIN"
+      session.user.role === "SUPER_ADMIN"
     );
   }
 

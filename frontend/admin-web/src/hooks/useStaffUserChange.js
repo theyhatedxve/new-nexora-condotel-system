@@ -33,7 +33,7 @@ function isCurrentAdministrator(actorId) {
   return (
     session.status === "authenticated" &&
     session.user?.id === actorId &&
-    session.user.role === "ADMIN"
+    ["SUPER_ADMIN", "ADMIN"].includes(session.user.role)
   );
 }
 

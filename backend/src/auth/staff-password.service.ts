@@ -14,7 +14,7 @@ import type {
   SetupStaffPasswordDto,
 } from './dto/staff-password.dto.js';
 
-const STAFF_ROLES = ['ADMIN', 'MANAGER', 'RECEPTIONIST'];
+const STAFF_ROLES = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST'];
 
 const INVALID_SETUP = 'Invalid or expired password setup link.';
 const INVALID_TEMPORARY =

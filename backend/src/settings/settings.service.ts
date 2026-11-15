@@ -56,11 +56,11 @@ export class SettingsService {
     }
 
     if (
-      identity.role !== 'ADMIN' ||
-      actor.role.name !== 'ADMIN'
+      identity.role !== 'SUPER_ADMIN' ||
+      actor.role.name !== 'SUPER_ADMIN'
     ) {
       throw new ForbiddenException(
-        'Administrator permission is required.',
+        'Super Admin permission is required.',
       );
     }
 

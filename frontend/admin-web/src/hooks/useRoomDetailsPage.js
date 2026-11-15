@@ -31,7 +31,7 @@ export default function useRoomDetailsPage() {
 
   const { user } = useAuth();
 
-  const canManage = ["ADMIN", "MANAGER"].includes(user?.role);
+  const canManage = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(user?.role);
 
   function refresh() {
     room.reload();

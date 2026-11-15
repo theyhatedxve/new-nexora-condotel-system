@@ -45,7 +45,7 @@ async function identify(result, currentRevision) {
   if (
     typeof user?.id !== "string" ||
     typeof user.email !== "string" ||
-    !["ADMIN", "MANAGER", "RECEPTIONIST", "GUEST"].includes(user.role)
+    !["SUPER_ADMIN", "ADMIN", "MANAGER", "RECEPTIONIST", "GUEST"].includes(user.role)
   ) {
     throw new Error("Invalid identity response.");
   }

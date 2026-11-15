@@ -49,6 +49,7 @@ export class ReservationCancellationService {
 
     if (
       ![
+        'SUPER_ADMIN',
         'ADMIN',
         'MANAGER',
         'RECEPTIONIST',

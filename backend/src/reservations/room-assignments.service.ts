@@ -65,7 +65,7 @@ export class RoomAssignmentsService {
     }
 
     if (
-      !['ADMIN', 'MANAGER', 'RECEPTIONIST']
+      !['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST']
         .includes(actor.role)
     ) {
       throw new ForbiddenException(

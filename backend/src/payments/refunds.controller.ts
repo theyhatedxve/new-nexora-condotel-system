@@ -21,7 +21,7 @@ import { CreateRefundDto } from './dto/create-refund.dto.js';
 import { RefundsService } from './refunds.service.js';
 
 @Controller('payments')
-@Roles('ADMIN', 'MANAGER')
+@Roles('SUPER_ADMIN')
 export class RefundsController {
   constructor(private readonly refunds: RefundsService) {}
 

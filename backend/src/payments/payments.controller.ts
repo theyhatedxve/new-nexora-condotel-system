@@ -13,7 +13,7 @@ export class PaymentsController {
   constructor(private readonly summaries: PaymentSummaryService, private readonly checkout: CheckoutService) {}
 
   @Get('reservations/:reservationId/checkout')
-  @Roles('ADMIN', 'MANAGER', 'RECEPTIONIST', 'GUEST')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST', 'GUEST')
   @Header('Cache-Control', 'no-store')
   @Header('Vary', 'Authorization, Origin')
   async currentCheckout(@Param('reservationId') id: string, @Req() request: Request & { user?: AuthenticatedUser }) {
@@ -21,7 +21,7 @@ export class PaymentsController {
   }
 
   @Post('reservations/:reservationId/checkout')
-  @Roles('ADMIN', 'MANAGER', 'RECEPTIONIST', 'GUEST')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST', 'GUEST')
   @HttpCode(200)
   @Header('Cache-Control', 'no-store')
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
@@ -32,7 +32,7 @@ export class PaymentsController {
   }
 
   @Get('reservations/:reservationId/summary')
-  @Roles('ADMIN', 'MANAGER', 'RECEPTIONIST', 'GUEST')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST', 'GUEST')
   @Header('Cache-Control', 'no-store')
   @Header('Vary', 'Authorization, Origin')
   async summary(@Param('reservationId') id: string,

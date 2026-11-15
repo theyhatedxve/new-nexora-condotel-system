@@ -30,7 +30,7 @@ type StaffRequest = Request & {
 };
 
 @Controller('reservations/:reservationId/assignments')
-@Roles('ADMIN', 'MANAGER', 'RECEPTIONIST')
+@Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST')
 export class RoomAssignmentsController {
   constructor(
     private readonly assignments: RoomAssignmentsService,

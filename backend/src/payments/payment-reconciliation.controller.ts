@@ -27,7 +27,7 @@ import {
 import { PaymentReconciliationService } from './payment-reconciliation.service.js';
 
 @Controller('payments')
-@Roles('ADMIN', 'MANAGER')
+@Roles('SUPER_ADMIN')
 export class PaymentReconciliationController {
   constructor(private readonly reconciliation: PaymentReconciliationService) {}
 

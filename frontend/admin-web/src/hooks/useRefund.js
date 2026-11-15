@@ -42,7 +42,7 @@ function authorized(actorId) {
   return (
     session.status === "authenticated" &&
     session.user?.id === actorId &&
-    ["ADMIN", "MANAGER"].includes(session.user?.role)
+    ["SUPER_ADMIN"].includes(session.user?.role)
   );
 }
 

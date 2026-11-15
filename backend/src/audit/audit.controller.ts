@@ -22,7 +22,7 @@ import {
 } from './audit.service.js';
 
 @Controller('audit-logs')
-@Roles('ADMIN')
+@Roles('SUPER_ADMIN')
 @Throttle({
   default: {
     limit: 30,

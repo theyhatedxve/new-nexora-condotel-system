@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export const ROLES = ['ADMIN', 'MANAGER'];
+export const ROLES = ['SUPER_ADMIN'];
 
 export const CLAIM = 'payment.refund.requested';
 

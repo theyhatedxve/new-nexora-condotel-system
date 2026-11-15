@@ -24,6 +24,16 @@ function StaffUserForm({ record }) {
   const reviewButton = useRef(null);
   const creating = !record;
   const ownAccount = record?.id === user?.id;
+  const manageableRoles = user?.role === "SUPER_ADMIN"
+    ? STAFF_ROLES
+    : ["MANAGER", "RECEPTIONIST"];
+  const canEdit = creating ||
+    user?.role === "SUPER_ADMIN" ||
+    manageableRoles.includes(record.role) ||
+    (ownAccount && record.role === "ADMIN");
+  const roleOptions = ownAccount || !canEdit
+    ? [record.role]
+    : manageableRoles;
 
   useEffect(() => {
     if (review) reviewHeading.current?.focus();
@@ -38,7 +48,7 @@ function StaffUserForm({ record }) {
       return;
     }
 
-    if (change.blocked) return;
+    if (change.blocked || !canEdit) return;
 
     if (creating) {
       const input = {
@@ -96,8 +106,11 @@ function StaffUserForm({ record }) {
 
   return (
     <>
+      {!canEdit && (
+        <p role="status">Only a Super Admin can manage this account.</p>
+      )}
       <form className="staff-users__form" onSubmit={prepare}>
-        <fieldset disabled={change.blocked || Boolean(review)}>
+        <fieldset disabled={!canEdit || change.blocked || Boolean(review)}>
           <legend>{creating ? "New staff account" : "Account details"}</legend>
 
           <label>
@@ -131,7 +144,7 @@ function StaffUserForm({ record }) {
               disabled={ownAccount}
               onChange={(event) => setRole(event.target.value)}
             >
-              {STAFF_ROLES.map((value) => (
+              {roleOptions.map((value) => (
                 <option key={value} value={value}>{ROLE_LABELS[value]}</option>
               ))}
             </select>

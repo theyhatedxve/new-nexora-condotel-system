@@ -85,7 +85,7 @@ export class RoomsService {
     }
 
     if (
-      !['ADMIN', 'MANAGER', 'RECEPTIONIST'].includes(
+      !['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST'].includes(
         actor.role,
       )
     ) {

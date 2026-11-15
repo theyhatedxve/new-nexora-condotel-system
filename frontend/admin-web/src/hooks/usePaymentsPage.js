@@ -10,7 +10,7 @@ export default function usePaymentsPage() {
 
   const queryKey = searchParams.toString();
 
-  const canReviewReconciliation = ["ADMIN", "MANAGER"].includes(user?.role);
+  const canReviewReconciliation = ["SUPER_ADMIN"].includes(user?.role);
 
   const parsed = useMemo(() => {
     try {

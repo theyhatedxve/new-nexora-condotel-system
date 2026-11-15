@@ -40,7 +40,7 @@ export class RoomImagesController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Post()
   @HttpCode(201)
   @UseInterceptors(
@@ -98,7 +98,7 @@ export class RoomImagesController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Patch(':imageId')
   async update(
     @Param('id') roomTypeId: string,
@@ -110,7 +110,7 @@ export class RoomImagesController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Delete(':imageId')
   @HttpCode(204)
   async remove(

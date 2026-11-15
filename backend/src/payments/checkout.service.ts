@@ -69,7 +69,7 @@ export class CheckoutService {
     await this.ownership.assertReservationAccess(
       access.actor,
       id,
-      ['ADMIN', 'MANAGER', 'RECEPTIONIST'],
+      ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST'],
       tx,
     );
 

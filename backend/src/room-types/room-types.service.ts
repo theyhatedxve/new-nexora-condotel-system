@@ -57,6 +57,7 @@ export class RoomTypesService {
       }
 
       if (
+        actor.role !== 'SUPER_ADMIN' &&
         actor.role !== 'ADMIN' &&
         actor.role !== 'MANAGER'
       ) {

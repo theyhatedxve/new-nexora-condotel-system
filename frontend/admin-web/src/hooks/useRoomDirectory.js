@@ -16,7 +16,7 @@ export default function useRoomDirectory({ query, onPage }) {
 
   const focusAfterRefresh = useRef(false);
 
-  const canManage = ["ADMIN", "MANAGER"].includes(user?.role);
+  const canManage = ["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(user?.role);
 
   useEffect(() => {
     if (records.status === "ready" && records.data.page !== query.page) {

@@ -34,7 +34,7 @@ export class RoomTypeAmenitiesController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Post()
   @HttpCode(201)
   async attach(
@@ -49,7 +49,7 @@ export class RoomTypeAmenitiesController {
     };
   }
 
-  @Roles(USER_ROLES.ADMIN, USER_ROLES.MANAGER)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER)
   @Delete(':amenityId')
   @HttpCode(204)
   async detach(
