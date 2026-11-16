@@ -205,7 +205,7 @@ describe('reservation intervals and immutable rental prices', () => {
       .toMatchObject({ totalAmountCentavos: 110_000 });
   });
 
-  it('uses actual arrival plus purchased duration and records checkout', async () => {
+  it('preserves the original paid departure on late arrival and records checkout', async () => {
     clock();
     const { input, room } = await fixture();
     const booking = await acquisition.acquire({
@@ -216,7 +216,8 @@ describe('reservation intervals and immutable rental prices', () => {
     await stays.checkIn(booking.id, assignment.id, true, actor);
     const row = await prisma.reservation.findUniqueOrThrow({ where: { id: booking.id } });
     expect(row.scheduledDepartureAt?.toISOString()).toBe('2030-01-02T07:00:00.000Z');
-    expect(row.inventoryEndAt?.toISOString()).toBe('2030-01-02T08:00:00.000Z');
+    expect(row.inventoryEndAt?.toISOString()).toBe('2030-01-02T07:00:00.000Z');
+    expect(row.actualArrivalAt?.toISOString()).toBe('2030-01-01T08:00:00.000Z');
     expect(row.totalAmountCentavos).toBe(350_000);
     await stays.checkIn(booking.id, assignment.id, true, actor);
     await stays.checkOut(booking.id, assignment.id, actor);
@@ -224,7 +225,7 @@ describe('reservation intervals and immutable rental prices', () => {
       .toMatchObject({ status: 'CHECKED_OUT', actualDepartureAt: new Date('2030-01-01T08:00:00Z') });
   });
 
-  it('rolls back a shifted check-in that would overlap the next booking', async () => {
+  it('keeps a paid late arrival from extending into the next booking', async () => {
     clock();
     const { input, room } = await fixture();
     const request = { ...input, rentalType: 'NIGHTLY' as const, rentalUnits: 1, checkOut: '2030-01-02' };
@@ -232,11 +233,12 @@ describe('reservation intervals and immutable rental prices', () => {
     const assignment = await paidAssignment(booking, room.id);
     await acquisition.acquire({ ...request, checkIn: '2030-01-02', checkOut: '2030-01-03' }, 'CONFIRMED');
     vi.setSystemTime(new Date('2030-01-01T08:00:00Z'));
-    await expect(stays.checkIn(booking.id, assignment.id, true, actor)).rejects.toBeInstanceOf(ConflictException);
+    await stays.checkIn(booking.id, assignment.id, true, actor);
     expect(await prisma.reservation.findUnique({ where: { id: booking.id } })).toMatchObject({
-      status: 'CONFIRMED', actualArrivalAt: null, inventoryEndAt: new Date('2030-01-02T07:00:00Z'),
+      status: 'CHECKED_IN', actualArrivalAt: new Date('2030-01-01T08:00:00Z'),
+      inventoryEndAt: new Date('2030-01-02T07:00:00Z'),
     });
-    expect(await prisma.room.findUnique({ where: { id: room.id } })).toMatchObject({ status: 'READY' });
+    expect(await prisma.room.findUnique({ where: { id: room.id } })).toMatchObject({ status: 'OCCUPIED' });
   });
 
 
@@ -316,6 +318,21 @@ describe('reservation intervals and immutable rental prices', () => {
     expect(await prisma.reservation.findUnique({ where: { id: booking.id } }))
       .toMatchObject({ status: 'CONFIRMED', actualArrivalAt: null });
   });
+
+  it.each(['HOURLY', 'NIGHTLY', 'WEEKLY', 'MONTHLY'] as const)(
+    'keeps the booked %s departure for a paid late arrival', (rentalType) => {
+      const hours = { HOURLY: 2, NIGHTLY: 24, WEEKLY: 168, MONTHLY: 720 }[rentalType];
+      const arrival = new Date('2030-01-01T07:00:00Z');
+      const departure = new Date(arrival.getTime() + hours * 60 * 60 * 1000);
+      const booking = {
+        rentalType, rentalUnits: rentalType === 'HOURLY' ? 2 : 1,
+        scheduledArrivalAt: arrival, scheduledDepartureAt: departure,
+      };
+      expect(actualRentalWindow(booking, new Date(arrival.getTime() + 60 * 60 * 1000), true).end)
+        .toEqual(departure);
+      expect(() => actualRentalWindow(booking, departure, true)).toThrow(ConflictException);
+    },
+  );
 
   it('permits exactly 30 minutes early and rejects one millisecond earlier', () => {
     const booking = {

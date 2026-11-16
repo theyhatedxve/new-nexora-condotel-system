@@ -119,6 +119,18 @@ export default function GuestBookingStaffPanel({ record, payment, onReload }) {
         hours from the first confirmation. Reminder contacts do not restart it.
       </p>
 
+      {booking.arrivalPolicy && (
+        <div className="action-review">
+          {booking.arrivalPolicy.deadlineAt && (
+            <p>Unpaid no-show cutoff · Philippine time: {formatTimestamp(booking.arrivalPolicy.deadlineAt)}</p>
+          )}
+          <p>{booking.arrivalPolicy.text}</p>
+          {booking.arrivalPolicy.cancelledAsNoShow && (
+            <p role="status">Cancelled for unpaid non-arrival. A replacement requires a fresh availability check.</p>
+          )}
+        </div>
+      )}
+
       {outcome && (
         <p
           ref={message}

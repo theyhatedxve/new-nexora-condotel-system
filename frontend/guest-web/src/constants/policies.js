@@ -39,6 +39,8 @@ export const policies = [
       "Reminder calls and repeated confirmations do not restart the five-hour window. Paid bookings cannot use voluntary cancellation; uncertain payment records require property review.",
       "Cancellation and refund are separate outcomes. A cancelled booking does not prove that a refund has been completed.",
       "Late online payments do not automatically restore cancelled or expired bookings.",
+      "Confirmed unpaid Pay at Property bookings may be cancelled one hour after expected arrival. Payment records requiring review remain protected.",
+      "Paid late arrivals keep the original departure time. Cancelled no-shows require a new booking and availability check.",
     ],
     notice:
       "Paid bookings cannot use voluntary cancellation. Contact the property for financial corrections or arrival assistance.",

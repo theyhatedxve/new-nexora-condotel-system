@@ -1,3 +1,7 @@
+import { cancelUnpaidNoShowsInTx } from './reservation-no-show.js';
+import { withInventoryWrite } from './inventory-write.js';
+import { GUEST_BOOKING_POLICY_VERSION } from './guest-booking-policy.js';
+import { NO_SHOW_ACTION } from './reservation-no-show.js';
 import 'reflect-metadata';
 
 import { randomUUID } from 'node:crypto';
@@ -450,6 +454,68 @@ describe(
           force: true,
         });
       }
+    });
+
+    async function overduePropertyBooking() {
+      await prisma.reservation.update({
+        where: { id: bookingId },
+        data: {
+          bookingPolicyVersion: GUEST_BOOKING_POLICY_VERSION,
+          paymentPreference: 'PAY_AT_PROPERTY',
+          confirmedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          expectedArrivalAt: new Date(Date.now() - 60 * 60 * 1000 - 1),
+          checkInDate: date(-1),
+          checkOutDate: date(1),
+        },
+      });
+    }
+
+    it('commits unpaid no-show cancellation before returning a check-in conflict', async () => {
+      await overduePropertyBooking();
+      await post().expect(409);
+      await post().expect(409);
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } })).status).toBe('CANCELLED');
+      expect((await prisma.roomAssignment.findUniqueOrThrow({ where: { id: assignmentId } })).releasedAt).not.toBeNull();
+      expect((await prisma.room.findUniqueOrThrow({ where: { id: roomId } })).status).toBe('READY');
+      expect(await prisma.auditLog.count({ where: { entityId: bookingId, action: NO_SHOW_ACTION } })).toBe(1);
+    });
+
+    it('admits a verified paid late guest and preserves the booked legacy departure', async () => {
+      await overduePropertyBooking();
+      const before = await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } });
+      await paid();
+      await post().expect(200);
+      const after = await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } });
+      expect(after.status).toBe('CHECKED_IN');
+      expect(after.actualArrivalAt).toBeInstanceOf(Date);
+      expect(after.checkOutDate).toEqual(before.checkOutDate);
+      expect(await prisma.auditLog.count({ where: { entityId: bookingId, action: NO_SHOW_ACTION } })).toBe(0);
+    });
+
+    it.each([false, true])('serializes check-in against no-show processing (paid: %s)', async (isPaid) => {
+      await overduePropertyBooking();
+      if (isPaid) await paid();
+      const results = await Promise.allSettled([
+        stays.checkIn(bookingId, assignmentId, true, users.MANAGER),
+        withInventoryWrite(prisma, (tx) => cancelUnpaidNoShowsInTx(tx, {
+          propertyId, now: new Date(), reservationId: bookingId,
+        })),
+      ]);
+      expect(results[0].status).toBe(isPaid ? 'fulfilled' : 'rejected');
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } })).status)
+        .toBe(isPaid ? 'CHECKED_IN' : 'CANCELLED');
+      expect(await prisma.auditLog.count({ where: { entityId: bookingId, action: NO_SHOW_ACTION } }))
+        .toBe(isPaid ? 0 : 1);
+    });
+
+    it('keeps an uncertain late payment booking for review without releasing its assignment', async () => {
+      await overduePropertyBooking();
+      await prisma.payment.create({
+        data: { reservationId: bookingId, method: 'PAY_AT_PROPERTY', status: 'PENDING', amountCentavos: 750000 },
+      });
+      await post().expect(409);
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } })).status).toBe('CONFIRMED');
+      expect((await prisma.roomAssignment.findUniqueOrThrow({ where: { id: assignmentId } })).releasedAt).toBeNull();
     });
 
     it(

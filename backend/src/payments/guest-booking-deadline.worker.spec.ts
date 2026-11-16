@@ -49,6 +49,9 @@ const emptyResult: PassResult = {
   retrySessions: 0,
   reviewSessions: 0,
   unknownSessions: 0,
+  noShowCancelledCount: 0,
+  noShowReleasedAssignmentCount: 0,
+  hasMoreNoShows: false,
 };
 
 const runOnce = vi.fn<

@@ -1,3 +1,4 @@
+import { noShowPolicyInTx } from './reservation-no-show.js';
 import { roles, fields } from './staff-reservation-query.js';
 import {
   ForbiddenException,
@@ -231,7 +232,7 @@ export class StaffReservationsService {
         );
       }
 
-      return booking;
+      return { ...booking, arrivalPolicy: await noShowPolicyInTx(tx, booking) };
     });
   }
 }

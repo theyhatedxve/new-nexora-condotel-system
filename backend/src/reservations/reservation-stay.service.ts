@@ -1,3 +1,4 @@
+import { cancelUnpaidNoShowsInTx } from './reservation-no-show.js';
 import { RENTAL_RESERVATION_SELECT, actualRentalWindow } from './rental-reservation.js';
 import {
   BadRequestException,
@@ -130,7 +131,7 @@ export class ReservationStayService {
     }
   }
 
-  private transition(
+  private async transition(
     reservationId: string,
     assignmentId: string,
     target: 'CHECKED_IN' | 'CHECKED_OUT',
@@ -165,7 +166,7 @@ export class ReservationStayService {
       );
     }
 
-    return withInventoryWrite(
+    const outcome = await withInventoryWrite(
       this.prisma,
       async (tx) => {
         const properties =
@@ -256,9 +257,6 @@ export class ReservationStayService {
           );
         }
 
-        const actualWindow = target === 'CHECKED_IN' && booking.rentalType
-          ? actualRentalWindow(booking, now) : undefined;
-
         const active =
           await tx.roomAssignment.findMany({
             where: {
@@ -287,6 +285,19 @@ export class ReservationStayService {
         }
 
         const assigned = active[0];
+        if (target === 'CHECKED_IN') {
+          const noShows = await cancelUnpaidNoShowsInTx(tx, {
+            propertyId: properties[0].id,
+            reservationId: booking.id,
+            actorUserId: actor.id,
+            now,
+            limit: 1,
+          });
+          if (noShows.noShowCancelledCount === 1) {
+            // Return first so cancellation commits; throw the response afterward.
+            return { noShowCancelled: true as const };
+          }
+        }
 
         // A planned checkout date does not prove
         // that another checked-in guest has left.
@@ -347,6 +358,10 @@ export class ReservationStayService {
             now,
           );
 
+        // Every successful check-in has passed full-payment verification above.
+        const actualWindow = target === 'CHECKED_IN' && booking.rentalType
+          ? actualRentalWindow(booking, now, true) : undefined;
+
         if (target === 'CHECKED_IN') {
           await this.inventory.assertEligibleInTx(
             tx,
@@ -383,8 +398,8 @@ export class ReservationStayService {
             },
             data: {
               status: target,
+              ...(target === 'CHECKED_IN' ? { actualArrivalAt: now } : {}),
               ...(booking.rentalType ? (actualWindow ? {
-                actualArrivalAt: now,
                 inventoryStartAt: actualWindow.start,
                 inventoryEndAt: actualWindow.end,
               } : { actualDepartureAt: now }) : {}),
@@ -452,9 +467,9 @@ export class ReservationStayService {
             detailsJson: JSON.stringify({
               assignmentId,
               roomId: assigned.roomId,
-              ...(actualWindow ? {
+              ...(target === 'CHECKED_IN' ? {
                 actualArrivalAt: now.toISOString(),
-                inventoryEndAt: actualWindow.end.toISOString(),
+                ...(actualWindow ? { inventoryEndAt: actualWindow.end.toISOString() } : {}),
               } : booking.rentalType ? { actualDepartureAt: now.toISOString() } : {}),
               paymentPolicy:
                 'FULL_RECORDED_PAYMENT_V1',
@@ -471,5 +486,11 @@ export class ReservationStayService {
         return result(false);
       },
     );
+    if ('noShowCancelled' in outcome) {
+      throw new ConflictException(
+        'This unpaid reservation was cancelled as a no-show. Create a new booking after checking availability.',
+      );
+    }
+    return outcome;
   }
 }

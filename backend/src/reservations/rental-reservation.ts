@@ -89,7 +89,7 @@ type RentalTiming = Pick<Reservation,
   'rentalType' | 'rentalUnits' | 'scheduledArrivalAt' | 'scheduledDepartureAt'
 >;
 
-export function actualRentalWindow(booking: RentalTiming, now: Date) {
+export function actualRentalWindow(booking: RentalTiming, now: Date, preserveLateDeparture = false) {
   if (!booking.rentalType || booking.rentalUnits == null ||
       !booking.scheduledArrivalAt || !booking.scheduledDepartureAt) {
     throw new ConflictException('Rental timing is incomplete. Staff review is required.');
@@ -99,7 +99,9 @@ export function actualRentalWindow(booking: RentalTiming, now: Date) {
     now.getTime() < booking.scheduledArrivalAt.getTime() - 30 * 60_000 ||
     now >= booking.scheduledDepartureAt
   ) throw new ConflictException('Check-in is outside the permitted arrival window.');
-  const end = new Date(now.getTime() + rentalDurationMinutes(
+  const end = preserveLateDeparture && now > booking.scheduledArrivalAt
+    ? new Date(booking.scheduledDepartureAt.getTime())
+    : new Date(now.getTime() + rentalDurationMinutes(
     booking.rentalType, booking.rentalUnits,
   ) * 60_000);
   if (booking.rentalType === 'HOURLY') {

@@ -1,3 +1,4 @@
+import { noShowPolicyInTx } from './reservation-no-show.js';
 import { RENTAL_RESERVATION_SELECT } from './rental-reservation.js';
 import {
   Injectable,
@@ -161,7 +162,7 @@ export class GuestReservationsService {
         throw new NotFoundException('Record not found.');
       }
 
-      return booking;
+      return { ...booking, arrivalPolicy: await noShowPolicyInTx(tx, booking) };
     });
 
     const paymentSummary = await this.summaries.forUser(id, guestIdentity);

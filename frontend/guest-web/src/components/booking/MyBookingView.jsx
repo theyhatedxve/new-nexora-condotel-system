@@ -166,6 +166,23 @@ export function MyBookingView({ reservationId = null, expectedReference = null }
               </SummaryRow>
             </dl>
 
+            {booking.arrivalPolicy && (
+              <>
+                {booking.arrivalPolicy.deadlineAt && (
+                  <p className="my-booking__notice">
+                    Unpaid no-show cutoff: {displayTime(booking.arrivalPolicy.deadlineAt)}
+                  </p>
+                )}
+                <p className="my-booking__notice">{booking.arrivalPolicy.text}</p>
+                {booking.arrivalPolicy.cancelledAsNoShow && (
+                  <p className="my-booking__notice" role="status">
+                    This booking was cancelled for unpaid non-arrival. Choose a new stay
+                    and check availability before booking again.
+                  </p>
+                )}
+              </>
+            )}
+
             {propertyPending && (
               <p className="my-booking__notice">
                 Staff must contact you and record your agreement before confirmation. The

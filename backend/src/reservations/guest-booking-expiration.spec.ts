@@ -1,3 +1,6 @@
+import { cancelUnpaidNoShowsInTx, NO_SHOW_ACTION, NO_SHOW_GRACE_MS } from './reservation-no-show.js';
+import { GuestBookingDeadlineService } from '../payments/guest-booking-deadline.service.js';
+import { PaymongoCheckoutExpirationAdapter } from '../payments/paymongo-checkout-expiration.adapter.js';
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -508,5 +511,100 @@ describe('guest booking deadline processing', () => {
     expect(
       await prisma.auditLog.count(),
     ).toBe(1);
+  });
+});
+describe('confirmed unpaid no-shows', () => {
+  function processNoShows(now = NOW, client = prisma) {
+    return withInventoryWrite(client, (tx) =>
+      cancelUnpaidNoShowsInTx(tx, { propertyId: PROPERTY_ID, now }));
+  }
+
+  function confirmedHold(overrides: Partial<Prisma.ReservationUncheckedCreateInput> = {}) {
+    return makeHold({
+      status: 'CONFIRMED',
+      bookingPolicyVersion: GUEST_BOOKING_POLICY_VERSION,
+      paymentPreference: 'PAY_AT_PROPERTY',
+      confirmedAt: new Date(NOW.getTime() - 2 * NO_SHOW_GRACE_MS),
+      expectedArrivalAt: new Date(NOW.getTime() - NO_SHOW_GRACE_MS),
+      holdExpiresAt: null,
+      ...overrides,
+    });
+  }
+
+  it('cancels at the exact one-hour boundary, releases inventory, and audits once', async () => {
+    const booking = await confirmedHold();
+    const assignment = await prisma.roomAssignment.create({
+      data: { reservationId: booking.id, roomId: ROOM_ID },
+    });
+    expect((await processNoShows(new Date(NOW.getTime() - 1))).noShowCancelledCount).toBe(0);
+    expect((await processNoShows()).noShowCancelledCount).toBe(1);
+    expect((await processNoShows()).noShowCancelledCount).toBe(0);
+    expect((await prisma.reservation.findUniqueOrThrow({ where: { id: booking.id } })).status).toBe('CANCELLED');
+    expect((await prisma.roomAssignment.findUniqueOrThrow({ where: { id: assignment.id } })).releasedAt).toEqual(NOW);
+    expect((await prisma.room.findUniqueOrThrow({ where: { id: ROOM_ID } })).status).toBe('READY');
+    const audits = await prisma.auditLog.findMany({ where: { entityId: booking.id, action: NO_SHOW_ACTION } });
+    expect(audits).toHaveLength(1);
+    expect(JSON.parse(audits[0].detailsJson!)).toMatchObject({
+      reason: 'UNPAID_NO_SHOW', deadlineAt: NOW.toISOString(),
+      paymentEvidence: 'NO_PAYMENT_RECORDS',
+    });
+  });
+
+  it.each(['PAID', 'PENDING', 'FAILED', 'REFUNDED'] as const)(
+    'retains a confirmed booking with a %s payment record', async (status) => {
+      const booking = await confirmedHold();
+      await prisma.payment.create({
+        data: { reservationId: booking.id, method: 'PAY_AT_PROPERTY', status, amountCentavos: 100000 },
+      });
+      expect((await processNoShows()).noShowCancelledCount).toBe(0);
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: booking.id } })).status).toBe('CONFIRMED');
+    },
+  );
+
+  it('skips missing timing, arrived, checked-in, historical, and future reservations', async () => {
+    await confirmedHold({ expectedArrivalAt: null });
+    await confirmedHold({ actualArrivalAt: new Date(NOW.getTime() - 1000) });
+    await confirmedHold({ status: 'CHECKED_IN' });
+    await confirmedHold({ bookingPolicyVersion: null });
+    await confirmedHold({ expectedArrivalAt: new Date(NOW.getTime() + 1000) });
+    expect((await processNoShows()).noShowCancelledCount).toBe(0);
+  });
+
+  it('rolls back cancellation and assignment release when the audit cannot be saved', async () => {
+    const booking = await confirmedHold();
+    const assignment = await prisma.roomAssignment.create({
+      data: { reservationId: booking.id, roomId: ROOM_ID },
+    });
+    await prisma.$executeRawUnsafe(`
+      CREATE TRIGGER reject_no_show_audit BEFORE INSERT ON AuditLog
+      WHEN NEW.action = 'reservation.no_show_cancelled'
+      BEGIN SELECT RAISE(ABORT, 'synthetic no-show audit failure'); END
+    `);
+    await expect(processNoShows()).rejects.toThrow();
+    expect((await prisma.reservation.findUniqueOrThrow({ where: { id: booking.id } })).status).toBe('CONFIRMED');
+    expect((await prisma.roomAssignment.findUniqueOrThrow({ where: { id: assignment.id } })).releasedAt).toBeNull();
+  });
+
+  it('cancels once across competing workers', async () => {
+    const booking = await confirmedHold();
+    const other = await openClient();
+    const results = await Promise.all([processNoShows(), processNoShows(NOW, other)]);
+    expect(results.reduce((sum, result) => sum + result.noShowCancelledCount, 0)).toBe(1);
+    expect(await prisma.auditLog.count({ where: { entityId: booking.id, action: NO_SHOW_ACTION } })).toBe(1);
+  });
+
+  it('integrates no-show processing into the existing deadline pass without provider calls', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+    try {
+      await confirmedHold();
+      const provider = new PaymongoCheckoutExpirationAdapter();
+      const close = vi.spyOn(provider, 'close');
+      const result = await new GuestBookingDeadlineService(prisma, provider).runOnce();
+      expect(result.noShowCancelledCount).toBe(1);
+      expect(close).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

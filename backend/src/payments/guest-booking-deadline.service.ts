@@ -1,3 +1,4 @@
+import { cancelUnpaidNoShowsInTx } from '../reservations/reservation-no-show.js';
 import {
   BadRequestException,
   Injectable,
@@ -128,6 +129,7 @@ export class GuestBookingDeadlineService {
       const now = new Date();
       // Only holds with no payment ledger can expire without provider processing.
       const local = await expirePendingHoldsInTx(tx, { propertyId, now });
+      const noShows = await cancelUnpaidNoShowsInTx(tx, { propertyId, now });
       const candidates = await tx.$queryRaw<{ id: string }[]>`
         SELECT p."id"
         FROM "Payment" p
@@ -154,14 +156,15 @@ export class GuestBookingDeadlineService {
         ), 0), p."id"
         LIMIT ${sessionLimit}
       `;
-      return { propertyId, local, candidates };
+      return { propertyId, local, noShows, candidates };
     });
 
     let closedSessions = 0;
     let retrySessions = 0;
     let reviewSessions = 0;
     let expiredCount = prepared.local.expiredCount;
-    let releasedAssignmentCount = prepared.local.releasedAssignmentCount;
+    let releasedAssignmentCount = prepared.local.releasedAssignmentCount +
+      prepared.noShows.noShowReleasedAssignmentCount;
 
     for (const candidate of prepared.candidates) {
       const input = await withInventoryWrite(this.prisma, async (tx) => {
@@ -281,7 +284,7 @@ export class GuestBookingDeadlineService {
       },
     });
     return {
-      ...prepared.local, expiredCount, releasedAssignmentCount,
+      ...prepared.local, ...prepared.noShows, expiredCount, releasedAssignmentCount,
       closedSessions, retrySessions, reviewSessions, unknownSessions,
     };
   }
