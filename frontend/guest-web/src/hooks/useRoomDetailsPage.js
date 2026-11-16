@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useAvailability } from "./useAvailability.js";
+import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useRoomDetails } from "./useRoomDetails";
 import {
@@ -36,6 +37,11 @@ export default function useRoomDetailsPage() {
     }
   }, [search, today]);
 
+  const [revision, setRevision] = useState(0);
+  const availability = useAvailability(selection.query, revision);
+  const quote = availability.status === "success"
+    ? availability.results.find((item) => item.id === id) : null;
+
   const roomsHref = selection.serialized ? `/rooms?${selection.serialized}` : "/rooms";
 
   if (["loading", "notFound", "error"].includes(details.status))
@@ -47,7 +53,7 @@ export default function useRoomDetailsPage() {
 
   const capacityExceeded = selectedStay !== null && selectedStay.guests > room.capacity;
 
-  const canContinue = selectedStay !== null && !capacityExceeded;
+  const canContinue = selectedStay !== null && !capacityExceeded && quote?.available;
 
   const checkoutHref = canContinue
     ? `/checkout/${encodeURIComponent(room.id)}?${selection.serialized}`
@@ -66,5 +72,8 @@ export default function useRoomDetailsPage() {
     selectedStay,
     capacityExceeded,
     checkoutHref,
+    quote,
+    availability,
+    retryAvailability() { setRevision((value) => value + 1); },
   };
 }

@@ -12,10 +12,10 @@ function Rooms() {
       <h1>Our Rooms</h1>
 
       <p className="rooms-intro">
-        {status === "success"
-          ? `${rooms.length} room ${rooms.length === 1 ? "type" : "types"} listed. `
+        {metadata.status === "success"
+          ? `${metadata.rooms.length} room ${metadata.rooms.length === 1 ? "type" : "types"} listed. `
           : ""}
-        Rates shown are per night.
+        Choose a rental type to check availability and the full stay price.
       </p>
 
       {parsed.error ? (

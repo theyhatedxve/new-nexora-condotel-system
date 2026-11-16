@@ -1,3 +1,4 @@
+import { readRental } from "../utils/rentalStay.js";
 import { api } from "./api";
 
 export async function getGuestProfile(signal) {
@@ -34,5 +35,6 @@ export async function getAccountBooking(reference, signal) {
   ) {
     throw new Error("The booking response could not be verified.");
   }
+  readRental(booking);
   return booking;
 }

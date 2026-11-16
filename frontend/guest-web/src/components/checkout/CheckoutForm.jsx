@@ -1,3 +1,5 @@
+import RentalDetails from "../RentalDetails.jsx";
+import { rentalCaption } from "../../utils/rentalStay.js";
 import { Link } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { formatPesos } from "../../utils/formatMoney.js";
@@ -23,6 +25,7 @@ export function CheckoutForm({ selection, selectionError, profile }) {
     online,
     locked,
     backToRooms,
+    reviewing,
   } = useCheckoutForm({ selection, profile });
 
   if (flow.receipt) {
@@ -50,6 +53,9 @@ export function CheckoutForm({ selection, selectionError, profile }) {
           )}
 
           <dl className="checkout-summary">
+            {flow.attempt.selection.rentalType && <div>
+              <dt>Rental duration</dt><dd>{rentalCaption(flow.attempt.selection)}</dd>
+            </div>}
             <div>
               <dt>Check-in</dt>
               <dd>{flow.attempt.selection.checkIn}</dd>
@@ -179,6 +185,7 @@ export function CheckoutForm({ selection, selectionError, profile }) {
                   <input
                     id="booking-arrival"
                     type="time"
+                    readOnly={Boolean(selection?.rentalType)}
                     step={60}
                     required
                     aria-describedby="arrival-help"
@@ -255,7 +262,7 @@ export function CheckoutForm({ selection, selectionError, profile }) {
               </label>
 
               <button className="checkout-button" type="submit">
-                {online ? "Reserve and prepare test payment" : "Send booking request"}
+                {reviewing ? "Checking current price..." : online ? "Reserve and prepare test payment" : "Send booking request"}
               </button>
             </fieldset>
 
@@ -291,8 +298,11 @@ export function CheckoutForm({ selection, selectionError, profile }) {
               <dd>{selection?.guests || "Not selected"}</dd>
             </div>
 
+            {quote?.rentalType && <RentalDetails value={quote} />}
+
             {quote && (
               <>
+                {!quote.rentalType && <>
                 <div>
                   <dt>Nights</dt>
                   <dd>{quote.nights}</dd>
@@ -302,6 +312,7 @@ export function CheckoutForm({ selection, selectionError, profile }) {
                   <dt>Quoted nightly rate</dt>
                   <dd>{formatPesos(quote.nightlyRateCentavos)}</dd>
                 </div>
+                </>}
 
                 <div className="checkout-total">
                   <dt>Quoted stay total</dt>
@@ -332,8 +343,8 @@ export function CheckoutForm({ selection, selectionError, profile }) {
           )}
 
           <p className="checkout-note">
-            This quote does not reserve a room. Arrival time does not change the booked
-            number of nights or calculate a new price.
+            The backend checks inventory and prices again when booking.
+            Reception confirms the departure time at actual check-in.
           </p>
 
           <p className="checkout-note">

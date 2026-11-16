@@ -1,3 +1,4 @@
+import { readRental, rentalWindow } from "./rentalStay.js";
 import { stayNights } from "./staySearch.js";
 
 export function validateResults(results, query) {
@@ -19,12 +20,26 @@ export function validateResults(results, query) {
       result.nightlyRateCentavos < 0 ||
       !Number.isSafeInteger(result.totalAmountCentavos) ||
       result.totalAmountCentavos < 0 ||
-      result.nights !== expectedNights ||
+      (!query.rentalType && result.nights !== expectedNights) ||
       ids.has(result.id)
     ) {
       throw new Error("Invalid availability response.");
     }
 
+    if (query.rentalType) {
+      const rental = readRental(result);
+      const window = rentalWindow(query);
+      if (!rental || rental.rentalType !== query.rentalType ||
+          rental.rentalUnits !== query.rentalUnits || result.guests !== query.guests ||
+          rental.scheduledArrivalAt !== window.start || rental.scheduledDepartureAt !== window.end ||
+          rental.includedOccupancy > result.capacity || query.guests > result.capacity ||
+          result.extraPersonTotalCentavos !==
+            Math.max(0, query.guests - rental.includedOccupancy) *
+            rental.extraPersonFeeCentavos * rental.rentalUnits ||
+          result.inventoryChecked !== true) {
+        throw new Error("Invalid availability response.");
+      }
+    }
     ids.add(result.id);
   }
 

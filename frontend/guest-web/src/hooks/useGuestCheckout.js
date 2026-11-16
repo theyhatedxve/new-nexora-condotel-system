@@ -1,3 +1,4 @@
+import { rentalSelection } from "../utils/rentalStay.js";
 import {
   useEffect,
   useRef,
@@ -226,7 +227,13 @@ export default function useGuestCheckout(
 
     if (
       receipt.paymentPreference !==
-      attempt.paymentPreference
+      attempt.paymentPreference ||
+      (attempt.selection.rentalType && (
+        receipt.rentalType !== attempt.selection.rentalType ||
+        receipt.rentalUnits !== attempt.selection.rentalUnits ||
+        receipt.scheduledArrivalAt !==
+          new Date(attempt.selection.checkIn + "T" + attempt.arrivalTime + ":00+08:00").toISOString()
+      ))
     ) {
       throw new Error(
         "The recovered booking does not match the request.",
@@ -330,6 +337,7 @@ export default function useGuestCheckout(
           checkIn: selection.checkIn,
           checkOut: selection.checkOut,
           guests: selection.guests,
+          ...rentalSelection(selection),
           firstName:
             details.firstName.trim(),
           lastName:

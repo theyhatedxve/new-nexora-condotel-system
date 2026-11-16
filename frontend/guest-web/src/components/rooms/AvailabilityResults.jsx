@@ -1,3 +1,4 @@
+import RentalDetails from "../RentalDetails.jsx";
 import { availabilitySummary } from "../../utils/availabilitySummary.js";
 import { Link } from "react-router";
 import { toApiUrl } from "../../services/api.js";
@@ -21,7 +22,7 @@ export function AvailabilityResults({ query, results, rooms }) {
 
       {results.length === 0 && (
         <p className="rooms-message">
-          No room types match this search. Try changing the dates or guest count.
+          No room types offer this stay. Try a different rental type, date, or guest count.
         </p>
       )}
 
@@ -72,13 +73,11 @@ export function AvailabilityResults({ query, results, rooms }) {
                     Up to {result.capacity} {result.capacity === 1 ? "guest" : "guests"}
                   </p>
 
-                  <p>
-                    <strong>{formatPesos(result.nightlyRateCentavos)}</strong> per night
-                  </p>
-
-                  <p>
-                    {result.nights} {result.nights === 1 ? "night" : "nights"}
-                  </p>
+                  {result.rentalType ? (
+                    <dl className="rental-summary"><RentalDetails value={result} /></dl>
+                  ) : (
+                    <p>{result.nights} nights · {formatPesos(result.nightlyRateCentavos)} per night</p>
+                  )}
 
                   <div className="availability-total">
                     <span>Total stay price</span>
@@ -99,7 +98,7 @@ export function AvailabilityResults({ query, results, rooms }) {
                         className="outline-button"
                         to={`/checkout/${roomId}?${checkoutSearch}`}
                       >
-                        Book — Pay at Property
+                        Continue to booking
                       </Link>
                     </div>
                   ) : (

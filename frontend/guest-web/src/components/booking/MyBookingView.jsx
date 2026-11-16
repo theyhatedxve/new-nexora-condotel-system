@@ -1,3 +1,4 @@
+import RentalDetails from "../RentalDetails.jsx";
 import { Link } from "react-router";
 import { ArrowLeft, CalendarDays, LogOut, RefreshCw } from "lucide-react";
 import BookingPayment from "../BookingPayment.jsx";
@@ -90,6 +91,7 @@ export function MyBookingView({ reservationId = null, expectedReference = null }
               </p>
 
               <dl className="my-booking__summary">
+                {booking.rentalType ? <RentalDetails value={booking} /> : <>
                 <SummaryRow label="Check-in">
                   {booking.checkInDate.slice(0, 10)}
                 </SummaryRow>
@@ -97,6 +99,7 @@ export function MyBookingView({ reservationId = null, expectedReference = null }
                 <SummaryRow label="Check-out">
                   {booking.checkOutDate.slice(0, 10)}
                 </SummaryRow>
+                </>}
 
                 <SummaryRow label="Guests">{booking.guestCount}</SummaryRow>
 
@@ -104,15 +107,15 @@ export function MyBookingView({ reservationId = null, expectedReference = null }
                   {booking.guest.firstName} {booking.guest.lastName}
                 </SummaryRow>
 
-                <SummaryRow label="Expected arrival">
+                {!booking.rentalType && <SummaryRow label="Expected arrival">
                   {displayTime(booking.expectedArrivalAt)}
-                </SummaryRow>
+                </SummaryRow>}
 
                 <SummaryRow label="Payment preference">{method}</SummaryRow>
 
-                <SummaryRow label="Booked nightly rate">
+                {!booking.rentalType && <SummaryRow label="Booked nightly rate">
                   {formatPesos(booking.nightlyRateCentavos)}
-                </SummaryRow>
+                </SummaryRow>}
               </dl>
 
               <div className="my-booking__total">

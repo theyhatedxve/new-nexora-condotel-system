@@ -1,3 +1,4 @@
+import { readRental } from "../utils/rentalStay.js";
 import {
   api,
 } from "./api.js";
@@ -83,6 +84,7 @@ function readReceipt(response, requestId) {
   );
 
   return {
+    ...readRental(result),
     requestId: result.requestId,
     reservationNumber:
       result.reservationNumber,

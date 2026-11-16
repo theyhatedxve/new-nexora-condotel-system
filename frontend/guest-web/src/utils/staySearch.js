@@ -1,3 +1,5 @@
+import { rentalWindow, rentalSelection } from "./rentalStay.js";
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const MAX_GUESTS = 2147483647;
@@ -73,6 +75,7 @@ export function stayNights(checkIn, checkOut) {
 export function validateStaySearch(
   values,
   today = getPhilippineToday(),
+  now = null,
 ) {
   const errors = {};
 
@@ -80,6 +83,13 @@ export function validateStaySearch(
     typeof values?.checkIn === "string"
       ? values.checkIn
       : "";
+
+  const typed = values?.rentalType !== undefined || values?.rentalUnits !== undefined;
+  let window = null;
+  if (typed) {
+    try { window = rentalWindow(values); }
+    catch (error) { errors[error.field || "rentalType"] = error.message; }
+  }
 
   const checkOut =
     typeof values?.checkOut === "string"
@@ -99,10 +109,10 @@ export function validateStaySearch(
       "Check-in cannot be in the past.";
   }
 
-  if (!end) {
+  if (!typed && !end) {
     errors.checkOut =
       "Select a valid check-out date.";
-  } else if (start) {
+  } else if (!typed && start) {
     const nights = stayNights(
       checkIn,
       checkOut,
@@ -126,11 +136,20 @@ export function validateStaySearch(
       `Enter a whole guest count from 1 to ${MAX_GUESTS}.`;
   }
 
+  if (typed && window && checkOut && checkOut !== window.checkOut) {
+    errors.checkOut = "Departure date does not match the selected duration.";
+  }
+
+  if (typed && window && now && Date.parse(window.start) <= now.getTime()) {
+    errors.arrivalTime = "Choose a future arrival time in Philippine time.";
+  }
+
   return {
     errors,
     value:
       Object.keys(errors).length === 0
-        ? { checkIn, checkOut, guests }
+        ? { checkIn, checkOut: window?.checkOut ?? checkOut, guests,
+            ...(typed ? rentalSelection(values) : {}) }
         : null,
   };
 }
@@ -148,6 +167,7 @@ export function staySearchParams(values) {
     checkIn: checked.value.checkIn,
     checkOut: checked.value.checkOut,
     guests: String(checked.value.guests),
+    ...rentalSelection(checked.value),
   }).toString();
 }
 
@@ -173,7 +193,7 @@ export function parseStaySearch(
   const allowed = new Set([
     "checkIn",
     "checkOut",
-    "guests",
+    "guests", "rentalType", "rentalUnits", "arrivalTime",
   ]);
 
   for (const key of params.keys()) {
@@ -202,6 +222,10 @@ export function parseStaySearch(
       checkIn: params.get("checkIn"),
       checkOut: params.get("checkOut"),
       guests: params.get("guests"),
+      ...(params.has("rentalType") || params.has("rentalUnits") || params.has("arrivalTime") ? {
+        rentalType: params.get("rentalType"), rentalUnits: params.get("rentalUnits"),
+        arrivalTime: params.get("arrivalTime"),
+      } : {}),
     },
     today,
   );

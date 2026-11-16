@@ -1,3 +1,4 @@
+import RentalDetails from "../RentalDetails.jsx";
 import { Link } from "react-router";
 import { formatPesos } from "../../utils/formatMoney.js";
 import usePaymentReturnSummary from "../../hooks/usePaymentReturnSummary.js";
@@ -23,6 +24,8 @@ export function ReturnSummary({ booking, onRefresh }) {
       {summary && (
         <>
           <dl className="checkout-summary">
+            <RentalDetails value={booking} />
+            <div><dt>Booked stay total</dt><dd>{formatPesos(booking.totalAmountCentavos)}</dd></div>
             <div>
               <dt>Reservation status</dt>
               <dd>{summary.reservationStatus.replaceAll("_", " ")}</dd>

@@ -1,4 +1,4 @@
-import { getPhilippineToday, MAX_GUESTS } from "../../utils/staySearch.js";
+import RentalStayFields from "../RentalStayFields.jsx";
 import useRoomsSearch from "../../hooks/useRoomsSearch.js";
 import { RoomCatalog } from "./RoomCatalog.jsx";
 import { AvailabilityResults } from "./AvailabilityResults.jsx";
@@ -26,75 +26,7 @@ export function RoomsSearch({ query, search, metadata, onApply, onClear }) {
           </p>
 
           <form ref={formRef} className="availability-form" onSubmit={submit} noValidate>
-            <div className="availability-fields">
-              <div className="availability-field">
-                <label htmlFor="check-in">Check-in</label>
-
-                <input
-                  id="check-in"
-                  name="checkIn"
-                  type="date"
-                  required
-                  min={getPhilippineToday()}
-                  value={values.checkIn}
-                  aria-invalid={Boolean(errors.checkIn)}
-                  aria-describedby={errors.checkIn ? "rooms-check-in-error" : undefined}
-                  onChange={(event) => changeField("checkIn", event.target.value)}
-                />
-
-                {errors.checkIn && (
-                  <p id="rooms-check-in-error" className="availability-error">
-                    {errors.checkIn}
-                  </p>
-                )}
-              </div>
-
-              <div className="availability-field">
-                <label htmlFor="check-out">Check-out</label>
-
-                <input
-                  id="check-out"
-                  name="checkOut"
-                  type="date"
-                  required
-                  min={values.checkIn || getPhilippineToday()}
-                  value={values.checkOut}
-                  aria-invalid={Boolean(errors.checkOut)}
-                  aria-describedby={errors.checkOut ? "rooms-check-out-error" : undefined}
-                  onChange={(event) => changeField("checkOut", event.target.value)}
-                />
-
-                {errors.checkOut && (
-                  <p id="rooms-check-out-error" className="availability-error">
-                    {errors.checkOut}
-                  </p>
-                )}
-              </div>
-
-              <div className="availability-field">
-                <label htmlFor="guest-count">Guests</label>
-
-                <input
-                  id="guest-count"
-                  name="guests"
-                  type="number"
-                  required
-                  min={1}
-                  max={MAX_GUESTS}
-                  step={1}
-                  value={values.guests}
-                  aria-invalid={Boolean(errors.guests)}
-                  aria-describedby={errors.guests ? "rooms-guests-error" : undefined}
-                  onChange={(event) => changeField("guests", event.target.value)}
-                />
-
-                {errors.guests && (
-                  <p id="rooms-guests-error" className="availability-error">
-                    {errors.guests}
-                  </p>
-                )}
-              </div>
-            </div>
+            <RentalStayFields values={values} errors={errors} onChange={changeField} prefix="rooms" />
 
             <div className="rooms-directory__search-actions">
               <button
@@ -120,7 +52,7 @@ export function RoomsSearch({ query, search, metadata, onApply, onClear }) {
           )}
 
           <p className="rooms-directory__search-help">
-            Maximum stay: 30 nights. Searching does not reserve a room.
+            Maximum stay: 30 days. Hourly stays must finish by 11 PM.
           </p>
         </section>
       </aside>

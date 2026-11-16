@@ -9,7 +9,7 @@ export default function useHomeStaySearch() {
 
   const [values, setValues] = useState({
     checkIn: "",
-    checkOut: "",
+    rentalType: "NIGHTLY", rentalUnits: "1", arrivalTime: "15:00",
     guests: "2",
   });
 
@@ -19,6 +19,8 @@ export default function useHomeStaySearch() {
     setValues((previous) => ({
       ...previous,
       [field]: value,
+      checkOut: undefined,
+      ...(field === "rentalType" ? { rentalUnits: "1" } : {}),
     }));
 
     setErrors({});
@@ -27,7 +29,7 @@ export default function useHomeStaySearch() {
   function submit(event) {
     event.preventDefault();
 
-    const checked = validateStaySearch(values);
+    const checked = validateStaySearch(values, undefined, new Date());
 
     setErrors(checked.errors);
 

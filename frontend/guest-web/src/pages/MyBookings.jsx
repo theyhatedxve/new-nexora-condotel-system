@@ -1,3 +1,4 @@
+import { formatRentalTime, rentalCaption } from "../utils/rentalStay.js";
 import { Link } from "react-router";
 import { CalendarDays, RefreshCw } from "lucide-react";
 import useGuestBookings from "../hooks/useGuestBookings.js";
@@ -92,14 +93,17 @@ export default function MyBookings() {
                   </div>
 
                   <dl className="my-bookings__details">
+                    {item.rentalType && <div className="my-bookings__detail">
+                      <dt>Rental duration</dt><dd>{rentalCaption(item)}</dd>
+                    </div>}
                     <div className="my-bookings__detail">
                       <dt>Check-in</dt>
-                      <dd>{item.checkInDate.slice(0, 10)}</dd>
+                      <dd>{item.rentalType ? formatRentalTime(item.actualArrivalAt || item.scheduledArrivalAt) : item.checkInDate.slice(0, 10)}</dd>
                     </div>
 
                     <div className="my-bookings__detail">
                       <dt>Check-out</dt>
-                      <dd>{item.checkOutDate.slice(0, 10)}</dd>
+                      <dd>{item.rentalType ? formatRentalTime(item.actualDepartureAt || item.inventoryEndAt) : item.checkOutDate.slice(0, 10)}</dd>
                     </div>
 
                     <div className="my-bookings__detail">

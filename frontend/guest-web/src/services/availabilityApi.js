@@ -1,3 +1,5 @@
+import { rentalSelection } from "../utils/rentalStay.js";
+import { validateResults } from "../utils/validateAvailabilityResults.js";
 
 import { api } from "./api.js";
 
@@ -6,14 +8,15 @@ import { api } from "./api.js";
  * The backend determines availability and calculates prices.
  */
 export async function searchAvailability(
-  { checkIn, checkOut, guests },
+  selection,
   signal,
 ) {
   const response = await api.get("/availability", {
     params: {
-      checkIn,
-      checkOut,
-      guests,
+      checkIn: selection.checkIn,
+      checkOut: selection.checkOut,
+      guests: selection.guests,
+      ...rentalSelection(selection),
     },
     signal,
   });
@@ -24,5 +27,5 @@ export async function searchAvailability(
     throw new Error("Invalid availability response.");
   }
 
-  return results;
+  return validateResults(results, selection);
 }

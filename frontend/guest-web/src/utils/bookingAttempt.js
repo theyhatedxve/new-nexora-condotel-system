@@ -1,3 +1,4 @@
+import { rentalSelection, rentalWindow } from "./rentalStay.js";
 const STORAGE_KEY = "nexora.account-booking.v1";
 
 function storageKey(apiScope) {
@@ -51,6 +52,12 @@ function normalizedAttempt(value, apiScope) {
     );
   }
 
+  const rental = rentalSelection(selection);
+  if (rental.rentalType && (
+    rental.arrivalTime !== value.arrivalTime ||
+    rentalWindow(selection).checkOut !== selection.checkOut
+  )) throw new Error("Stored rental selection does not match this request.");
+
   return {
     version: 1,
     apiScope,
@@ -64,6 +71,7 @@ function normalizedAttempt(value, apiScope) {
       checkIn: selection.checkIn,
       checkOut: selection.checkOut,
       guests: selection.guests,
+      ...rental,
     },
     ...(value.reservationNumber
       ? {

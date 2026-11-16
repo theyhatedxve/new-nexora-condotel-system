@@ -9,6 +9,12 @@ export default function useRoomsSearch({ query, search, onApply }) {
     checkIn: query?.checkIn ?? "",
     checkOut: query?.checkOut ?? "",
     guests: String(query?.guests ?? 2),
+    ...(query?.rentalType ? {
+      rentalType: query.rentalType, rentalUnits: String(query.rentalUnits),
+      arrivalTime: query.arrivalTime,
+    } : query ? {} : {
+      rentalType: "NIGHTLY", rentalUnits: "1", arrivalTime: "15:00",
+    }),
   }));
 
   const [errors, setErrors] = useState({});
@@ -20,8 +26,11 @@ export default function useRoomsSearch({ query, search, onApply }) {
   const draftMatchesApplied =
     query !== null &&
     values.checkIn === query.checkIn &&
-    values.checkOut === query.checkOut &&
-    Number(values.guests) === query.guests;
+    (values.rentalType || values.checkOut === query.checkOut) &&
+    Number(values.guests) === query.guests &&
+    values.rentalType === query.rentalType &&
+    Number(values.rentalUnits ?? 0) === Number(query.rentalUnits ?? 0) &&
+    values.arrivalTime === query.arrivalTime;
 
   const searchingCurrentDraft = availability.status === "loading" && draftMatchesApplied;
 
@@ -29,6 +38,8 @@ export default function useRoomsSearch({ query, search, onApply }) {
     setValues((previous) => ({
       ...previous,
       [field]: value,
+      ...(previous.rentalType || field === "rentalType" ? { checkOut: undefined } : {}),
+      ...(field === "rentalType" ? { rentalUnits: "1", arrivalTime: previous.arrivalTime || "15:00" } : {}),
     }));
 
     setErrors({});
@@ -37,7 +48,7 @@ export default function useRoomsSearch({ query, search, onApply }) {
   function submit(event) {
     event.preventDefault();
 
-    const checked = validateStaySearch(values);
+    const checked = validateStaySearch(values, undefined, new Date());
     setErrors(checked.errors);
 
     if (!checked.value) {

@@ -1,3 +1,4 @@
+import { readRental } from "../utils/rentalStay.js";
 import { api } from "./api.js";
 
 const RESERVATION_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
@@ -59,6 +60,7 @@ export async function getMyBookings(page = 1, limit = 20, signal) {
     throw new Error("The reservations list could not be verified.");
   }
 
+  data.items.forEach(readRental);
   return data;
 }
 
@@ -87,5 +89,6 @@ export async function getMyBookingById(reservationId, signal) {
     throw new Error("The reservation response could not be verified.");
   }
 
+  readRental(data);
   return data;
 }

@@ -1,3 +1,4 @@
+import RentalDetails from "./RentalDetails.jsx";
 import { Link } from "react-router";
 import { formatPesos } from "../utils/formatMoney.js";
 import useGuestBookingReceipt from "../hooks/useGuestBookingReceipt.js";
@@ -62,6 +63,7 @@ export default function GuestBookingReceipt({ flow }) {
             <dd>{summary ? summary.status.replaceAll("_", " ") : "Not checked"}</dd>
           </div>
 
+          {receipt.rentalType ? <RentalDetails value={receipt} /> : <>
           <div>
             <dt>Check-in</dt>
             <dd>{attempt.selection.checkIn}</dd>
@@ -71,16 +73,17 @@ export default function GuestBookingReceipt({ flow }) {
             <dt>Check-out</dt>
             <dd>{attempt.selection.checkOut}</dd>
           </div>
+          </>}
 
           <div>
             <dt>Guests</dt>
             <dd>{attempt.selection.guests}</dd>
           </div>
 
-          <div>
+          {!receipt.rentalType && <div>
             <dt>Expected arrival · Philippine time</dt>
             <dd>{displayTime(receipt.expectedArrivalAt)}</dd>
-          </div>
+          </div>}
 
           {receipt.status === "PENDING" && (
             <div>
@@ -96,10 +99,10 @@ export default function GuestBookingReceipt({ flow }) {
             </div>
           )}
 
-          <div>
+          {!receipt.rentalType && <div>
             <dt>Booked nightly rate</dt>
             <dd>{formatPesos(receipt.nightlyRateCentavos)}</dd>
-          </div>
+          </div>}
 
           <div className="checkout-total">
             <dt>Booked stay total</dt>

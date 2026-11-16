@@ -1,3 +1,4 @@
+import RentalDetails from "../components/RentalDetails.jsx";
 import { Link } from "react-router";
 import { ArrowLeft, ArrowRight, Check, Users } from "lucide-react";
 import RoomGallery from "../components/RoomGallery";
@@ -28,6 +29,9 @@ function RoomDetails() {
     selectedStay,
     capacityExceeded,
     checkoutHref,
+    quote,
+    availability,
+    retryAvailability,
   } = useRoomDetailsPage();
 
   if (details.status === "loading") {
@@ -97,8 +101,8 @@ function RoomDetails() {
         </div>
 
         <p className="room-detail-view__rate">
-          <strong>{formatPesos(room.baseRateCentavos)}</strong>
-          <span>per night</span>
+          <strong>{formatPesos(quote?.totalAmountCentavos ?? room.baseRateCentavos)}</strong>
+          <span>{quote ? "selected stay total" : "nightly base rate"}</span>
         </p>
       </header>
 
@@ -161,6 +165,7 @@ function RoomDetails() {
 
           {selectedStay ? (
             <dl className="room-detail-view__stay-values">
+              {quote?.rentalType ? <RentalDetails value={quote} /> : <>
               <div>
                 <dt>Check-in</dt>
                 <dd>{selectedStay.checkIn}</dd>
@@ -170,16 +175,18 @@ function RoomDetails() {
                 <dt>Check-out</dt>
                 <dd>{selectedStay.checkOut}</dd>
               </div>
+              </>}
 
               <div>
                 <dt>Guests</dt>
                 <dd>{selectedStay.guests}</dd>
               </div>
 
-              <div>
+              {!selectedStay.rentalType && <div>
                 <dt>Nights</dt>
                 <dd>{stayNights(selectedStay.checkIn, selectedStay.checkOut)}</dd>
-              </div>
+              </div>}
+              {quote && <div><dt>Stay total</dt><dd>{formatPesos(quote.totalAmountCentavos)}</dd></div>}
             </dl>
           ) : (
             <p>
@@ -193,6 +200,14 @@ function RoomDetails() {
               {selection.error}
             </p>
           )}
+
+          {selectedStay && availability.status === "loading" && <p role="status">Checking your stay...</p>}
+          {selectedStay && availability.status === "error" && <div role="alert">
+            <p>Availability could not be checked.</p>
+            <button type="button" onClick={retryAvailability}>Try again</button>
+          </div>}
+          {selectedStay && availability.status === "success" && !quote?.available &&
+            <p role="status">This rental is unavailable. Adjust your stay search.</p>}
 
           {capacityExceeded && (
             <p role="alert" className="room-detail-view__error">
