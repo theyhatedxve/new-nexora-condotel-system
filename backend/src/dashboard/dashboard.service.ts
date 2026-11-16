@@ -1,3 +1,4 @@
+import { inventoryReservationWhere } from '../reservations/inventory-reservation.js';
 import {
   Injectable,
   InternalServerErrorException,
@@ -72,17 +73,7 @@ export class DashboardService {
         await tx.reservation.count({
           where: {
             roomType,
-            OR: [
-              {
-                status: {
-                  in: ['CONFIRMED', 'CHECKED_IN'],
-                },
-              },
-              {
-                status: 'PENDING',
-                holdExpiresAt: { gt: now },
-              },
-            ],
+            AND: [inventoryReservationWhere(now)],
           },
         });
 

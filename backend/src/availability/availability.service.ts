@@ -1,3 +1,4 @@
+import { inventoryReservationWhere } from '../reservations/inventory-reservation.js';
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -52,12 +53,7 @@ export class AvailabilityService {
               releasedAt: null, room: { roomTypeId: { in: ids } },
             } } },
           ],
-          AND: [{ OR: [
-            { status: { in: ['CONFIRMED', 'CHECKED_IN'] } },
-            { status: 'PENDING', OR: [
-              { holdExpiresAt: null }, { holdExpiresAt: { gt: now } },
-            ] },
-          ] }],
+          AND: [inventoryReservationWhere(now)],
         },
         include: { roomAssignments: { where: { releasedAt: null } } },
       });

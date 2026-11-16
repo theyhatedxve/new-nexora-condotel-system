@@ -1,3 +1,4 @@
+import { inventoryReservationWhere } from './inventory-reservation.js';
 import { blockWindow, calendarInstant, reservationWindow } from '../common/inventory/reservation-window.js';
 import { rentalReservationSnapshot, RENTAL_RESERVATION_SELECT } from './rental-reservation.js';
 import { HOLD_DURATION_MS, type AcquisitionPolicy } from './reservation-acquisition-policy.js';
@@ -197,33 +198,7 @@ export class ReservationAcquisitionService {
               },
             },
           ],
-          AND: [
-            {
-              OR: [
-                {
-                  status: {
-                    in: [
-                      'CONFIRMED',
-                      'CHECKED_IN',
-                    ],
-                  },
-                },
-                {
-                  status: 'PENDING',
-                  OR: [
-                    {
-                      holdExpiresAt: null,
-                    },
-                    {
-                      holdExpiresAt: {
-                        gt: now,
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
+          AND: [inventoryReservationWhere(now)],
         },
         include: {
           roomAssignments: {

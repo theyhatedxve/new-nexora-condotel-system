@@ -11,7 +11,7 @@ import {
   payAtPropertyDeadlines,
 } from './guest-booking-policy.js';
 
-const ONLINE_HOLD_MS = 15 * 60 * 1000;
+import { HOLD_DURATION_MS } from './reservation-acquisition-policy.js';
 
 describe('guest booking timing policy', () => {
   it('interprets arrival time in Philippine time', () => {
@@ -64,7 +64,7 @@ describe('guest booking timing policy', () => {
         paymentPreference: 'PAY_AT_PROPERTY',
       },
       new Date('2026-11-10T04:00:00.000Z'),
-      ONLINE_HOLD_MS,
+      HOLD_DURATION_MS,
     );
 
     expect(result.holdExpiresAt.toISOString()).toBe(
@@ -117,7 +117,8 @@ describe('guest booking timing policy', () => {
     );
   });
 
-  it('uses the online hold duration from creation time', () => {
+  it('uses a two-hour online hold from creation time', () => {
+    expect(HOLD_DURATION_MS).toBe(7_200_000);
     const result = initialGuestBookingTiming(
       {
         checkIn: '2026-11-12',
@@ -125,11 +126,11 @@ describe('guest booking timing policy', () => {
         paymentPreference: 'PAYMONGO',
       },
       new Date('2026-11-10T04:00:00.000Z'),
-      ONLINE_HOLD_MS,
+      HOLD_DURATION_MS,
     );
 
     expect(result.holdExpiresAt.toISOString()).toBe(
-      '2026-11-10T04:15:00.000Z',
+      '2026-11-10T06:00:00.000Z',
     );
   });
 

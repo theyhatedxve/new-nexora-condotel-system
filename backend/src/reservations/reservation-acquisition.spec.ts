@@ -265,7 +265,7 @@ describe(
     });
 
     it(
-      'creates a 15-minute hold and trusted price snapshots without payments or assignments',
+      'creates a two-hour hold and trusted price snapshots without payments or assignments',
       async () => {
         const start = Date.now();
 

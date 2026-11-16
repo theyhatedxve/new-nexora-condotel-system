@@ -111,8 +111,10 @@ export async function expirePendingHoldsInTx(
     );
   }
 
-    const where: Prisma.ReservationWhereInput = {
+  const where: Prisma.ReservationWhereInput = {
     status: 'PENDING',
+    // Payment-backed holds require provider/evidence processing first.
+    payments: { none: {} },
     holdExpiresAt: {
       lte: now,
     },
@@ -170,6 +172,7 @@ export async function expirePendingHoldsInTx(
         where: {
           id: hold.id,
           status: 'PENDING',
+          payments: { none: {} },
           bookingPolicyVersion:
             hold.bookingPolicyVersion,
           paymentPreference:

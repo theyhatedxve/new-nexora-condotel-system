@@ -212,7 +212,7 @@ export function CheckoutForm({ selection, selectionError, profile }) {
                     value: "PAYMONGO",
                     title: "Pay online · test mode",
                     description:
-                      "Continue to PayMongo after reserving. A verified full payment within the 15-minute hold confirms an eligible reservation.",
+                      "Continue to PayMongo after reserving. New bookings have a two-hour hold. Verified full payment before the recorded deadline confirms an eligible reservation. Retrying does not extend that deadline.",
                   },
                 ].map((method) => (
                   <label

@@ -56,11 +56,10 @@ export class GuestBookingDeadlineWorker
     if (
       !path ||
       !isAbsolute(path) ||
-      basename(path).toLowerCase() === 'dev.db' ||
-      !basename(path).endsWith('.test.db')
+      !basename(path).toLowerCase().endsWith('.db')
     ) {
       throw new Error(
-        'The deadline worker currently requires an explicit absolute .test.db runtime target.',
+        'The deadline worker requires an explicit absolute SQLite .db runtime target.',
       );
     }
 

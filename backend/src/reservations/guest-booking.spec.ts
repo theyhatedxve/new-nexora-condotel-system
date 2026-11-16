@@ -1,3 +1,4 @@
+import { AvailabilityService } from '../availability/availability.service.js';
 import {
   randomBytes,
   randomUUID,
@@ -1476,6 +1477,121 @@ describe('pending online booking payment confirmation', () => {
       return result;
     }
 
+    async function expectProtected(reservationId: string) {
+      expect(await prisma.reservation.findUniqueOrThrow({
+        where: { id: reservationId },
+      })).toMatchObject({ status: 'PENDING' });
+      const input = payload();
+      const availability = new AvailabilityService(prisma);
+      expect(await availability.search({
+        checkIn: input.checkIn, checkOut: input.checkOut, guests: input.guests,
+      })).toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: ROOM_TYPE_ID, available: false }),
+      ]));
+      // A fresh request must check inventory, rather than reuse an expired hold.
+      await expect(createGuestBooking(service, payload()))
+        .rejects.toBeInstanceOf(ConflictException);
+    }
+
+    it('keeps the original deadline when an active checkout is retried', async () => {
+      const result = await startOnline();
+      const before = await prisma.reservation.findUniqueOrThrow({
+        where: { id: result.booking.id },
+      });
+      await startGuestCheckout(checkoutService, result.booking.id, result.requestId);
+      const after = await prisma.reservation.findUniqueOrThrow({
+        where: { id: result.booking.id },
+      });
+      expect(after.holdExpiresAt).toEqual(before.holdExpiresAt);
+      expect(createCheckout).toHaveBeenCalledTimes(1);
+    });
+
+    it('protects inventory while the provider result is uncertain', async () => {
+      const result = await overdueOnline();
+      closeSession.mockRejectedValueOnce(new ServiceUnavailableException('Synthetic timeout.'));
+      expect((await deadlines.runOnce()).retrySessions).toBe(1);
+      await expectProtected(result.booking.id);
+      expect((await deadlines.runOnce()).expiredCount).toBe(1);
+      const replacement = await createGuestBooking(service, payload());
+      expect(replacement.reservationNumber).not.toBe(result.booking.reference);
+    });
+
+    it('protects inventory when the checkout session ID is unknown', async () => {
+      const result = await overdueOnline();
+      await prisma.payment.update({
+        where: { id: result.payment.id },
+        data: { providerCheckoutId: null, checkoutState: 'UNKNOWN', checkoutUrl: null },
+      });
+      expect((await deadlines.runOnce()).unknownSessions).toBe(1);
+      await expectProtected(result.booking.id);
+      expect(closeSession).not.toHaveBeenCalled();
+    });
+
+    it('protects late paid evidence from generic expiration', async () => {
+      const result = await overdueOnline();
+      await deliver(paidEvent(result.payment.id));
+      expect((await deadlines.runOnce()).expiredCount).toBe(0);
+      await expectProtected(result.booking.id);
+      expect(closeSession).not.toHaveBeenCalled();
+    });
+
+    it('retains ambiguous provider evidence in the review queue', async () => {
+      const result = await overdueOnline();
+      closeSession.mockResolvedValueOnce('REVIEW_REQUIRED');
+      await deadlines.runOnce();
+      await expectProtected(result.booking.id);
+      expect(await prisma.paymentEvent.count({
+        where: {
+          paymentId: result.payment.id,
+          eventType: 'nexora.reconciliation.review',
+          signatureVerified: false,
+          status: 'FAILED',
+        },
+      })).toBe(1);
+    });
+
+    it('retains a mismatched local ledger without calling the provider', async () => {
+      const result = await overdueOnline();
+      await prisma.payment.update({
+        where: { id: result.payment.id },
+        data: { amountCentavos: result.payment.amountCentavos + 1 },
+      });
+      expect((await deadlines.runOnce()).reviewSessions).toBe(1);
+      await expectProtected(result.booking.id);
+      expect(closeSession).not.toHaveBeenCalled();
+    });
+
+    it('preserves a paid webhook arriving during provider closure', async () => {
+      const result = await overdueOnline();
+      closeSession.mockImplementationOnce(async () => {
+        await deliver(paidEvent(result.payment.id));
+        return 'EXPIRED';
+      });
+      expect((await deadlines.runOnce()).expiredCount).toBe(0);
+      await expectProtected(result.booking.id);
+      expect((await prisma.payment.findUniqueOrThrow({
+        where: { id: result.payment.id },
+      })).status).toBe('PAID');
+    });
+
+    it('releases assignments only after the provider confirms closure', async () => {
+      const result = await overdueOnline();
+      const room = await prisma.room.findFirstOrThrow();
+      const assignment = await prisma.roomAssignment.create({
+        data: { reservationId: result.booking.id, roomId: room.id },
+      });
+      closeSession.mockRejectedValueOnce(new ServiceUnavailableException('Synthetic timeout.'));
+      await deadlines.runOnce();
+      expect((await prisma.roomAssignment.findUniqueOrThrow({
+        where: { id: assignment.id },
+      })).releasedAt).toBeNull();
+      const processed = await deadlines.runOnce();
+      expect(processed.releasedAssignmentCount).toBe(1);
+      expect((await prisma.roomAssignment.findUniqueOrThrow({
+        where: { id: assignment.id },
+      })).releasedAt).not.toBeNull();
+    });
+
     it('expires a local hold and closes its stored session', async () => {
       const result = await overdueOnline();
 
@@ -1762,6 +1878,10 @@ describe('pending online booking payment confirmation', () => {
           },
         }),
       ).toBe(0);
+
+      expect(await prisma.reservation.findFirstOrThrow({
+        where: { paymentPreference: 'PAYMONGO' },
+      })).toMatchObject({ status: 'PENDING' });
 
       await prisma.$executeRawUnsafe(
         'DROP TRIGGER "reject_expiration_ack"',

@@ -202,9 +202,7 @@ describe('guest booking deadline worker', () => {
   it.each([
     ['missing runtime target', ''],
     ['relative file URL', 'file:worker.test.db'],
-    ['development database', runtimeUrl('dev.db')],
-    ['uppercase development database', runtimeUrl('DEV.DB')],
-    ['ordinary database filename', runtimeUrl('worker.db')],
+    ['unsupported file extension', runtimeUrl('worker.txt')],
     ['unsupported URL scheme', 'https://example.invalid/worker.test.db'],
   ])('rejects %s before scheduling work', (_description, url) => {
     vi.stubEnv(
@@ -220,12 +218,23 @@ describe('guest booking deadline worker', () => {
     expect(() =>
       currentWorker().onModuleInit(),
     ).toThrow(
-      'The deadline worker currently requires an explicit absolute .test.db runtime target.',
+      'The deadline worker requires an explicit absolute SQLite .db runtime target.',
     );
 
     expect(runOnce).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  it.each(['dev.db', 'DEV.DB', 'worker.db'])(
+    'accepts an explicitly enabled absolute SQLite target: %s',
+    async (filename) => {
+      enableWorker();
+      vi.stubEnv('NEXORA_RUNTIME_DATABASE_URL', runtimeUrl(filename));
+      currentWorker().onModuleInit();
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(runOnce).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it('waits one second before its initial pass', async () => {
     enableWorker();

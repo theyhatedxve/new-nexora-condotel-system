@@ -1,3 +1,4 @@
+import { inventoryReservationWhere } from './inventory-reservation.js';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import {
@@ -118,28 +119,7 @@ export async function assertInventoryCommitments(
 
         AND: [
           remainingReservationWhere(now),
-          {
-            OR: [
-              {
-                status: {
-                  in: ['CONFIRMED', 'CHECKED_IN'],
-                },
-              },
-              {
-                status: 'PENDING',
-                OR: [
-                  {
-                    holdExpiresAt: null,
-                  },
-                  {
-                    holdExpiresAt: {
-                      gt: now,
-                    },
-                  },
-                ],
-              },
-            ],
-          },
+          inventoryReservationWhere(now),
         ],
       },
 

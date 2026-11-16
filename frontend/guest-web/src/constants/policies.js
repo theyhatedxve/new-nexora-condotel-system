@@ -21,7 +21,7 @@ export const policies = [
       "Pay at Property requests remain pending until staff contacts you and confirms your agreement.",
       "Reply within 24 hours of the first staff call or email. The earlier deadline applies: that response deadline or 30 minutes after your expected arrival.",
       "Later calls or emails do not restart the response window.",
-      "Online payment currently uses PayMongo test mode. The 15-minute reservation hold starts when your booking is saved.",
+      "Online payment currently uses PayMongo test mode. New online bookings have a two-hour hold from booking creation. Payment retries do not extend the recorded deadline.",
       "Verified full payment within the active hold confirms an eligible online reservation. A browser redirect or payment screenshot does not confirm payment.",
       "Reservation status and payment status are separate. A confirmed reservation does not by itself mean payment has been received.",
     ],
