@@ -209,6 +209,7 @@ export function calculatePaymentSummary(
     payments.some(hasPaymentReview) ||
     pendingRefund > 0 ||
     netPaid > bookedTotalCentavos ||
+    (reservationStatus === 'PENDING' && netPaid > 0) ||
     (
       cancelledOrExpired &&
       payments.length > 0

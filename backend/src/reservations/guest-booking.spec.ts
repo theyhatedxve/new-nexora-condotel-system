@@ -1,3 +1,8 @@
+import { PaymentReconciliationService } from '../payments/payment-reconciliation.service.js';
+import { PaymongoReconciliationAdapter } from '../payments/paymongo-reconciliation.adapter.js';
+import { RefundsService } from '../payments/refunds.service.js';
+import { PaymongoRefundAdapter } from '../payments/paymongo-refund.adapter.js';
+import { FINANCIAL_EXCEPTION_EVENT } from '../payments/financial-exceptions.js';
 import { requireFullRecordedPayment } from './stay-payment-policy.js';
 import { AvailabilityService } from '../availability/availability.service.js';
 import {
@@ -1442,7 +1447,7 @@ describe('pending online booking payment confirmation', () => {
 
     async function replace(result: Awaited<ReturnType<typeof startOnline>>, requestId = randomUUID()) {
       createCheckout.mockResolvedValueOnce({
-        id: 'cs_retry_' + randomUUID(),
+        id: 'cs_retry_' + randomBytes(12).toString('hex'),
         url: 'https://checkout.paymongo.com/replacement',
       });
       return checkoutService.retryForUser(result.booking.id, result.payment.id, requestId, guestIdentity);
@@ -1589,6 +1594,167 @@ describe('pending online booking payment confirmation', () => {
       await prisma.reservation.update({ where: { id: result.booking.id }, data: { holdExpiresAt: new Date(Date.now() - 1) } });
       await expect(replace(result)).rejects.toBeInstanceOf(ConflictException);
       expect(close).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Super Admin financial exceptions', () => {
+    let admin: AuthenticatedUser;
+    let reconciliation: PaymentReconciliationService;
+    let remote: MockInstance<PaymongoReconciliationAdapter['payment']>;
+
+    beforeEach(async () => {
+      const role = await prisma.role.upsert({
+        where: { name: 'SUPER_ADMIN' }, create: { name: 'SUPER_ADMIN' }, update: {},
+      });
+      const user = await prisma.user.create({
+        data: {
+          roleId: role.id, name: 'Synthetic financial reviewer',
+          email: randomUUID() + '@example.invalid',
+          passwordHash: 'unused-test-hash', status: 'ACTIVE',
+        },
+      });
+      admin = { id: user.id, email: user.email, role: 'SUPER_ADMIN' };
+      const adapter = new PaymongoReconciliationAdapter();
+      remote = vi.spyOn(adapter, 'payment').mockImplementation(async (id) => ({
+        id, amountCentavos: 100000, currency: 'PHP', status: 'paid', refunds: 0,
+      }));
+      reconciliation = new PaymentReconciliationService(prisma, adapter, webhookService);
+    });
+
+    async function retiredCapture(confirmReplacement = true) {
+      const result = await startOnline();
+      vi.spyOn(PaymongoCheckoutExpirationAdapter.prototype, 'close').mockResolvedValue('EXPIRED');
+      createCheckout.mockResolvedValueOnce({
+        id: 'cs_financial_replacement',
+        url: 'https://checkout.paymongo.com/financial-replacement',
+      });
+      await checkoutService.retryForUser(result.booking.id, result.payment.id, randomUUID(), guestIdentity);
+      const next = await prisma.payment.findFirstOrThrow({
+        where: { reservationId: result.booking.id, status: 'PENDING' },
+      });
+      if (confirmReplacement) {
+        const event = paidEvent(next.id);
+        event.data.attributes.data.id = next.providerCheckoutId!;
+        event.data.attributes.data.attributes.payments[0].id = 'pay_financial_replacement';
+        await deliver(event);
+      }
+      const event = paidEvent(result.payment.id);
+      expect((await deliver(event)).outcome).toBe('REVIEW_REQUIRED');
+      return { ...result, event, next };
+    }
+
+    function input(eventId: string) {
+      return { requestId: randomUUID(), eventId, acknowledgeLateCapture: true };
+    }
+
+    it('records distinct captures once, queues excess, and preserves booking state', async () => {
+      const result = await retiredCapture();
+      const eventId = result.event.data.id;
+      const evidence = await prisma.paymentEvent.findUniqueOrThrow({ where: { providerEventId: eventId } });
+      const command = input(eventId);
+      expect((await reconciliation.payment(result.payment.id, command, admin)).outcome).toBe('REVIEW_REQUIRED');
+      expect((await reconciliation.payment(result.payment.id, command, admin)).alreadyReconciled).toBe(true);
+      await reconciliation.payment(result.payment.id, input(eventId), admin);
+      expect(remote).toHaveBeenCalledTimes(2);
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).status).toBe('CONFIRMED');
+      expect((await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } })).status).toBe('PAID');
+      expect((await readGuestSummary(summaryService, result.booking.reference)).netPaidCentavos).toBe(200000);
+      expect((await prisma.paymentEvent.findUniqueOrThrow({ where: { providerEventId: eventId } })).payloadJson).toBe(evidence.payloadJson);
+      const queue = await reconciliation.list({ offset: 0, limit: 20 }, admin);
+      expect(queue.events.some((event) => event.eventType === FINANCIAL_EXCEPTION_EVENT &&
+        event.errorMessage === 'EXCESS_COLLECTION')).toBe(true);
+    });
+
+    it.each(['CANCELLED', 'EXPIRED'] as const)('records captured money without reviving %s', async (status) => {
+      const result = await retiredCapture(false);
+      await prisma.reservation.update({ where: { id: result.booking.id }, data: { status } });
+      await reconciliation.payment(result.payment.id, input(result.event.data.id), admin);
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).status).toBe(status);
+      expect((await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } })).status).toBe('PAID');
+      expect((await prisma.paymentEvent.findUniqueOrThrow({
+        where: { providerEventId: 'financial-exception:' + result.booking.id },
+      })).errorMessage).toBe('CLOSED_BOOKING_CAPTURE');
+      expect(await prisma.refund.count()).toBe(0);
+    });
+
+    it('keeps unfulfilled pending captures in review without automatic confirmation', async () => {
+      const result = await retiredCapture(false);
+      await reconciliation.payment(result.payment.id, input(result.event.data.id), admin);
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).status).toBe('PENDING');
+      expect((await readGuestSummary(summaryService, result.booking.reference)).requiresReview).toBe(true);
+      expect((await prisma.paymentEvent.findUniqueOrThrow({
+        where: { providerEventId: 'financial-exception:' + result.booking.id },
+      })).errorMessage).toBe('UNFULFILLED_CAPTURE');
+    });
+
+    it('rejects ordinary staff, disabled reviewers, and mismatched provider money', async () => {
+      const result = await retiredCapture();
+      const command = input(result.event.data.id);
+      await expect(reconciliation.payment(result.payment.id, command, { ...admin, role: 'MANAGER' }))
+        .rejects.toBeInstanceOf(ForbiddenException);
+      await prisma.user.update({ where: { id: admin.id }, data: { status: 'DISABLED' } });
+      await expect(reconciliation.payment(result.payment.id, command, admin)).rejects.toBeInstanceOf(UnauthorizedException);
+      await prisma.user.update({ where: { id: admin.id }, data: { status: 'ACTIVE' } });
+      remote.mockResolvedValueOnce({
+        id: 'pay_guest_online', amountCentavos: 100001, currency: 'PHP', status: 'paid', refunds: 0,
+      });
+      expect((await reconciliation.payment(result.payment.id, command, admin)).outcome).toBe('REVIEW_REQUIRED');
+      expect((await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } })).status).toBe('FAILED');
+    });
+
+    it('does not promote an ordinary failed attempt without closure evidence', async () => {
+      const result = await startOnline();
+      await prisma.payment.update({ where: { id: result.payment.id }, data: { status: 'FAILED' } });
+      const event = paidEvent(result.payment.id);
+      await deliver(event);
+      expect((await reconciliation.payment(result.payment.id, input(event.data.id), admin)).outcome).toBe('REVIEW_REQUIRED');
+      expect((await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } })).status).toBe('FAILED');
+    });
+
+    it('does not trust an unsigned capture record as provider evidence', async () => {
+      const result = await retiredCapture();
+      await prisma.paymentEvent.update({
+        where: { providerEventId: result.event.data.id }, data: { signatureVerified: false },
+      });
+      expect((await reconciliation.payment(result.payment.id, input(result.event.data.id), admin)).outcome).toBe('REVIEW_REQUIRED');
+      expect(remote).not.toHaveBeenCalled();
+      expect((await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } })).status).toBe('FAILED');
+    });
+
+    it('rolls back capture recording if the financial exception audit cannot be saved', async () => {
+      const result = await retiredCapture();
+      await prisma.$executeRawUnsafe(`
+        CREATE TRIGGER reject_financial_exception BEFORE INSERT ON AuditLog
+        WHEN NEW.action = 'payment.financial_exception.opened'
+        BEGIN SELECT RAISE(ABORT, 'synthetic financial audit failure'); END
+      `);
+      await expect(reconciliation.payment(result.payment.id, input(result.event.data.id), admin)).rejects.toThrow();
+      expect((await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } })).status).toBe('FAILED');
+      expect((await prisma.paymentEvent.findUniqueOrThrow({ where: { providerEventId: result.event.data.id } })).errorMessage)
+        .toBe('PAYMENT_STATE_REVIEW');
+    });
+
+    it('resolves excess only after an explicitly requested verified refund completes', async () => {
+      const result = await retiredCapture();
+      await reconciliation.payment(result.payment.id, input(result.event.data.id), admin);
+      const adapter = new PaymongoRefundAdapter();
+      vi.spyOn(adapter, 'secret').mockReturnValue('sk_test_synthetic_refund');
+      const createRefund = vi.spyOn(adapter, 'create').mockImplementation(async (input) => ({
+        id: 'ref_financial_correction', paymentId: input.paymentId, localRefundId: input.refundId,
+        amountCentavos: input.amountCentavos, currency: 'PHP', livemode: false, status: 'COMPLETED',
+      }));
+      const refunds = new RefundsService(prisma, adapter);
+      const command = { requestId: randomUUID(), amountCentavos: 100000, reason: 'duplicate' as const };
+      await refunds.create(result.payment.id, command, admin);
+      await refunds.create(result.payment.id, command, admin);
+      expect(createRefund).toHaveBeenCalledTimes(1);
+      expect(await prisma.refund.count()).toBe(1);
+      const marker = await prisma.paymentEvent.findUniqueOrThrow({
+        where: { providerEventId: 'financial-exception:' + result.booking.id },
+      });
+      expect(marker.status).toBe('PROCESSED');
+      expect(marker.errorMessage).toBeNull();
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).status).toBe('CONFIRMED');
     });
   });
 

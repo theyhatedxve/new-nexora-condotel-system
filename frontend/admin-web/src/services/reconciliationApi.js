@@ -66,6 +66,55 @@ function reviewLabel(value) {
   }
 }
 
+const financialReviews = {
+  EXCESS_COLLECTION: {
+    label: "Excess collection",
+    guidance:
+      "Net collection exceeds the booked total. Review all booking receipts and completed refunds before considering a correction.",
+  },
+  CLOSED_BOOKING_CAPTURE: {
+    label: "Payment on a closed booking",
+    guidance:
+      "Money remains recorded against a cancelled or expired booking. Keep the booking closed and review the financial correction separately.",
+  },
+  UNFULFILLED_CAPTURE: {
+    label: "Payment on an unfulfilled booking",
+    guidance:
+      "Money is recorded while the booking remains pending. Recording the receipt does not confirm the booking or assign a room.",
+  },
+  LEDGER_REVIEW_REQUIRED: {
+    label: "Ledger review required",
+    guidance:
+      "Financial evidence could not be summarized safely. Review payment, refund, and audit records before further action.",
+  },
+};
+
+function eventReview(item) {
+  if (item.eventType === "nexora.financial.exception") {
+    const review = Object.hasOwn(financialReviews, item.errorMessage)
+      ? financialReviews[item.errorMessage]
+      : null;
+
+    return {
+      eventSource: "Internal financial notice",
+      reviewReason: review?.label ?? "Financial exception notice",
+      reviewGuidance:
+        review?.guidance ??
+        "Check current booking and payment details. This notice is not proof of a provider payment.",
+    };
+  }
+
+  const internal = item.eventType.startsWith("nexora.");
+
+  return {
+    eventSource: internal ? "Internal notice" : "Provider event record",
+    reviewReason: reviewLabel(item.errorMessage),
+    reviewGuidance: internal
+      ? "Internal notices cannot be used as provider paid-event references."
+      : "The backend must verify authenticity, payment ownership, and provider details before reconciliation.",
+  };
+}
+
 function projectReconciliationQueues(data, maximumLength) {
   if (
     !data ||
@@ -145,7 +194,7 @@ function projectReconciliationQueues(data, maximumLength) {
       paymentId: item.paymentId,
       eventType: item.eventType,
       status: item.status,
-      reviewReason: reviewLabel(item.errorMessage),
+      ...eventReview(item),
       createdAt: item.createdAt,
     })),
   };
@@ -182,7 +231,7 @@ export async function listReconciliation(signal) {
 
 export const RECONCILIATION_OUTCOMES = Object.freeze({
   PROCESSED:
-    "Reconciliation was processed. Check the current financial records below.",
+    "Reconciliation was processed. Check current records: this result does not by itself confirm the booking or complete a refund.",
 
   DUPLICATE:
     "The reconciliation returned a duplicate outcome. Check the current records.",
@@ -191,7 +240,7 @@ export const RECONCILIATION_OUTCOMES = Object.freeze({
     "The record was ignored under the reconciliation rules.",
 
   REVIEW_REQUIRED:
-    "Financial review is still required.",
+    "Financial review is still required. A receipt may be recorded while the booking remains pending or closed. Check current payment and booking details.",
 
   PROVIDER_REFERENCE_REQUIRED:
     "An existing provider refund reference is required. Review this result before preparing a new request.",

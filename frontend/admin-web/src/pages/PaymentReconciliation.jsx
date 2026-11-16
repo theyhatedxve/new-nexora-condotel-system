@@ -17,6 +17,13 @@ export default function PaymentReconciliation() {
         membership does not establish payment or refund completion.
       </p>
 
+      <p>
+        Internal financial notices describe booking-level issues; they are not
+        provider paid-event evidence. Open the related payment, then its reservation,
+        to review current records. Pending refunds do not reduce net collection
+        until completion is verified.
+      </p>
+
       {parsed.error ? (
         <div className="feedback">
           <p role="alert">{parsed.error}</p>

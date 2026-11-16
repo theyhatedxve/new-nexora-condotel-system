@@ -14,6 +14,14 @@ export function isRetiredAttempt(payment: Attempt, total: number): boolean {
       payment.amountCentavos !== total || !payment.providerCheckoutId ||
       payment.paidAt || payment.providerPaymentId || payment.refunds.length ||
       hasPaymentReview(payment) || payment.events.some((event) => event.signatureVerified)) return false;
+  return hasClosedUnpaidEvidence(payment, total);
+}
+
+export function hasClosedUnpaidEvidence(payment: Attempt, total: number): boolean {
+  if (!Number.isSafeInteger(total) || total <= 0 ||
+      payment.method !== 'PAYMONGO' || payment.provider !== 'PAYMONGO' ||
+      payment.currency !== 'PHP' || payment.amountCentavos !== total ||
+      !payment.providerCheckoutId) return false;
   return payment.events.some((event) => {
     if (event.paymentId !== payment.id || event.eventType !== CLOSED_UNPAID_EVENT ||
         event.signatureVerified || event.status !== 'PROCESSED' ||

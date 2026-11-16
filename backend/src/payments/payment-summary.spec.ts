@@ -44,6 +44,11 @@ function summarize(
 describe(
   'Step 7.1 — shared payment calculations',
   () => {
+    it('keeps captured money on an unfulfilled pending booking in review', () => {
+      expect(calculatePaymentSummary(750_000, 'PENDING', [receipt()], now))
+        .toMatchObject({ requiresReview: true, status: 'REVIEW_REQUIRED', netPaidCentavos: 750_000 });
+    });
+
     it(
       'shows an unpaid active booking without inventing a payment',
       () => {

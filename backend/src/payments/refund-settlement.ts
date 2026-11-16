@@ -1,3 +1,4 @@
+import { refreshFinancialExceptionInTx } from './financial-exceptions.js';
 import { ConflictException } from '@nestjs/common';
 
 import type { Prisma, Refund } from '../generated/prisma/client.js';
@@ -48,7 +49,7 @@ export async function assertRefundClaim(
   }
 }
 
-export async function updateRefundedPayment(tx: Prisma.TransactionClient, id: string) {
+export async function updateRefundedPayment(tx: Prisma.TransactionClient, id: string, actorId: string | null = null) {
   const payment = await tx.payment.findUniqueOrThrow({
     where: { id },
     include: { refunds: true },
@@ -77,6 +78,7 @@ export async function updateRefundedPayment(tx: Prisma.TransactionClient, id: st
             : 'PARTIALLY_REFUNDED',
     },
   });
+  await refreshFinancialExceptionInTx(tx, payment.reservationId, actorId);
 }
 
 export async function settlePaymongoRefund(
@@ -195,7 +197,7 @@ export async function settlePaymongoRefund(
     },
   });
 
-  await updateRefundedPayment(tx, payment.id);
+  await updateRefundedPayment(tx, payment.id, refund.processedByUserId);
 
   await tx.auditLog.create({
     data: {

@@ -92,6 +92,7 @@ export default function ReconciliationActions({ queue }) {
               <label htmlFor="reconciliation-event">Existing paid-event reference</label>
               <input
                 id="reconciliation-event"
+                aria-describedby="reconciliation-event-help"
                 list="reconciliation-linked-events"
                 required
                 maxLength={100}
@@ -106,9 +107,10 @@ export default function ReconciliationActions({ queue }) {
                 ))}
               </datalist>
 
-              <p>
-                Use the event reference belonging to this payment. The backend checks its
-                authenticity and financial details.
+              <p id="reconciliation-event-help">
+                Use an existing provider paid-event reference belonging to this payment.
+                The backend verifies its authenticity and financial details. Internal
+                financial notices cannot be submitted as paid-event evidence.
               </p>
 
               <label className="action-checkbox">
@@ -118,8 +120,9 @@ export default function ReconciliationActions({ queue }) {
                   onChange={changeLateAcknowledged}
                 />
                 <span>
-                  I explicitly acknowledge late-payment handling for this request.
-                  Cancelled and expired bookings must remain closed.
+                  I acknowledge handling a delayed payment, including a retired checkout
+                  attempt. This does not confirm a booking, reopen a cancelled or expired
+                  booking, or authorize a refund.
                 </span>
               </label>
             </>
@@ -313,6 +316,17 @@ export default function ReconciliationActions({ queue }) {
 
               {details && (
                 <>
+                  <p>
+                    <Link
+                      to={
+                        "/reservations/" +
+                        encodeURIComponent(details.payment.reservation.id)
+                      }
+                    >
+                      Open related reservation
+                    </Link>
+                  </p>
+
                   <dl className="record-fields">
                     <div>
                       <dt>Current payment status</dt>
@@ -332,16 +346,78 @@ export default function ReconciliationActions({ queue }) {
                     )}
 
                     {details.payment.collection && (
-                      <div>
-                        <dt>Receipt net collection</dt>
-                        <dd>{formatPesos(details.payment.collection.netPaidCentavos)}</dd>
-                      </div>
+                      <>
+                        <div>
+                          <dt>Receipt net collection</dt>
+                          <dd>{formatPesos(details.payment.collection.netPaidCentavos)}</dd>
+                        </div>
+
+                        <div>
+                          <dt>Receipt refunds awaiting completion</dt>
+                          <dd>
+                            {formatPesos(details.payment.collection.pendingRefundCentavos)}
+                          </dd>
+                        </div>
+                      </>
+                    )}
+
+                    {details.payment.bookingSummary && (
+                      <>
+                        <div>
+                          <dt>Booked total</dt>
+                          <dd>
+                            {formatPesos(details.payment.bookingSummary.bookedTotalCentavos)}
+                          </dd>
+                        </div>
+
+                        <div>
+                          <dt>Booking net collection across all receipts</dt>
+                          <dd>
+                            {formatPesos(details.payment.bookingSummary.netPaidCentavos)}
+                          </dd>
+                        </div>
+
+                        <div>
+                          <dt>Booking refunds awaiting completion</dt>
+                          <dd>
+                            {formatPesos(details.payment.bookingSummary.pendingRefundCentavos)}
+                          </dd>
+                        </div>
+
+                        {details.payment.bookingSummary.overpaidCentavos !== null && (
+                          <div>
+                            <dt>Booking excess collection</dt>
+                            <dd>
+                              {formatPesos(details.payment.bookingSummary.overpaidCentavos)}
+                            </dd>
+                          </div>
+                        )}
+                      </>
                     )}
                   </dl>
 
+                  <p>
+                    Pending refunds have not reduced the net collection shown above.
+                    Reconciliation does not create a refund. Any financial correction
+                    requires the separate authorized refund workflow and its eligibility
+                    checks.
+                  </p>
+
+                  {["PENDING", "CANCELLED", "EXPIRED"].includes(
+                    details.payment.reservation.status,
+                  ) && (
+                    <p>
+                      Recording money does not change this reservation status or
+                      provide room access.
+                    </p>
+                  )}
+
                   {(details.payment.requiresReview ||
                     details.payment.bookingRequiresReview) && (
-                    <p role="alert">Financial review remains required.</p>
+                    <p role="alert">
+                      Financial review remains required. A recorded receipt or pending
+                      refund does not resolve the booking-level issue.
+                    </p>
                   )}
                 </>
               )}

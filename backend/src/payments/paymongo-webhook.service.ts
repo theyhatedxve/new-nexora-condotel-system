@@ -1,3 +1,5 @@
+import { hasClosedUnpaidEvidence } from './online-payment-attempts.js';
+import { refreshFinancialExceptionInTx } from './financial-exceptions.js';
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import type { Payment, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -12,7 +14,7 @@ import {
   type PaidCheckout,
 } from './paymongo-webhook.payload.js';
 import { settlePaymongoRefund } from './refund-settlement.js';
-import { hasVerifiedPaymongoEvidence, paymentEvidenceSelect } from './payment-evidence.js';
+import { hasVerifiedPaymongoEvidence, hasPaymentReview, paymentEvidenceSelect } from './payment-evidence.js';
 import { verifyPaymongoWebhook } from './paymongo-webhook.signature.js';
 
 import {
@@ -262,10 +264,12 @@ export class PaymongoWebhookService {
       bookingReview ? 'BOOKING_REVIEW_REQUIRED' : null,
     );
 
+    const financialReview = await refreshFinancialExceptionInTx(tx, matched.reservationId);
+
     if (newlyPaid) {
       await tx.auditLog.create({
         data: {
-          action: bookingReview
+          action: bookingReview || financialReview
             ? 'payment.paid_review_required'
             : 'payment.paid',
           entityType: 'Payment',
@@ -275,7 +279,7 @@ export class PaymongoWebhookService {
       });
     }
 
-    return bookingReview
+    return bookingReview || financialReview
       ? 'REVIEW_REQUIRED'
       : newlyPaid
         ? 'PROCESSED'
@@ -387,9 +391,10 @@ export class PaymongoWebhookService {
       !saved.providerCreatedAt ||
       proof?.version !== 1 ||
       proof.livemode !== false ||
-      !['STALE_DELIVERY', 'BOOKING_REVIEW_REQUIRED'].includes(
-        saved.errorMessage ?? '',
-      )
+      (!(saved.status === 'PROCESSED' && saved.errorMessage === null) &&
+        !['STALE_DELIVERY', 'BOOKING_REVIEW_REQUIRED', 'PAYMENT_STATE_REVIEW'].includes(
+          saved.errorMessage ?? '',
+        ))
     )
       return 'REVIEW_REQUIRED';
 
@@ -436,13 +441,18 @@ export class PaymongoWebhookService {
 
     const payment = await tx.payment.findUnique({
       where: { id: paymentId },
-      include: { reservation: true },
+      include: {
+        reservation: true, refunds: true, events: { select: paymentEvidenceSelect },
+      },
     });
+    const retiredCapture = Boolean(payment && payment.status === 'FAILED' &&
+      hasClosedUnpaidEvidence(payment, payment.reservation.totalAmountCentavos) &&
+      !payment.paidAt && !payment.providerPaymentId && payment.refunds.length === 0);
 
     if (
       payment?.method !== 'PAYMONGO' ||
       payment.provider !== 'PAYMONGO' ||
-      this.mismatch(payment, parsed.paid)
+      this.mismatch(payment, parsed.paid, retiredCapture)
     )
       return 'REVIEW_REQUIRED';
 
@@ -460,9 +470,11 @@ export class PaymongoWebhookService {
     )
       return 'REVIEW_REQUIRED';
 
-    const newlyPaid = payment.status === 'PENDING';
+    const alreadyProcessed = saved.status === 'PROCESSED' && saved.errorMessage === null;
+    const newlyPaid = payment.status === 'PENDING' || retiredCapture;
 
     const late =
+      retiredCapture ||
       saved.errorMessage === 'BOOKING_REVIEW_REQUIRED' ||
       (newlyPaid &&
         (payment.reservation.status !== 'CONFIRMED' ||
@@ -488,7 +500,8 @@ export class PaymongoWebhookService {
           action: reason ? 'payment.paid_review_required' : 'payment.paid',
           entityType: 'Payment',
           entityId: paymentId,
-          detailsJson: JSON.stringify({ eventId }),
+          actorUserId: actorId,
+          detailsJson: JSON.stringify({ eventId, retiredCapture }),
         },
       });
     }
@@ -518,10 +531,45 @@ export class PaymongoWebhookService {
       },
     });
 
-    return reason ? 'REVIEW_REQUIRED' : 'PROCESSED';
+    if (!reason && acknowledgeLateCapture) {
+      const notices = await tx.paymentEvent.findMany({
+        where: {
+          paymentId, eventType: 'nexora.reconciliation.review',
+          signatureVerified: false, status: 'FAILED',
+          errorMessage: { in: ['CHECKOUT_RETRY_REVIEW_REQUIRED', 'HOLD_EXPIRATION_REVIEW_REQUIRED'] },
+        },
+      });
+      for (const notice of notices) {
+        let internal = false;
+        try {
+          const value = object(JSON.parse(notice.payloadJson ?? 'null'));
+          internal = value?.version === 1 && value.source === 'backend_reconciliation';
+        } catch { internal = false; }
+        if (!internal) continue;
+        await tx.paymentEvent.update({
+          where: { id: notice.id },
+          data: { status: 'PROCESSED', errorMessage: null, processedAt: new Date() },
+        });
+        await tx.auditLog.create({
+          data: {
+            actorUserId: actorId, action: 'payment.review.reconciled',
+            entityType: 'PaymentEvent', entityId: notice.id,
+            detailsJson: JSON.stringify({
+              previousReason: notice.errorMessage, verifiedCaptureEventId: eventId,
+            }),
+          },
+        });
+      }
+    }
+    const financialReview = await refreshFinancialExceptionInTx(tx, payment.reservationId, actorId);
+    const evidence = await tx.payment.findUniqueOrThrow({
+      where: { id: paymentId }, select: { events: { select: paymentEvidenceSelect } },
+    });
+    if (reason || financialReview || hasPaymentReview(evidence)) return 'REVIEW_REQUIRED';
+    return alreadyProcessed && !newlyPaid ? 'DUPLICATE' : 'PROCESSED';
   }
 
-  private mismatch(payment: Payment | null, paid: PaidCheckout): string | null {
+  private mismatch(payment: Payment | null, paid: PaidCheckout, allowRetiredCapture = false): string | null {
     if (!payment) return 'PAYMENT_NOT_FOUND';
 
     if (
@@ -558,15 +606,11 @@ export class PaymongoWebhookService {
       return 'PAYMENT_ID_MISMATCH';
     }
 
-    if (
-      !['PENDING', 'PAID', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(
-        payment.status,
-      ) ||
-      (payment.status !== 'PENDING' &&
-        (!payment.paidAt || !payment.providerPaymentId))
-    ) {
-      return 'PAYMENT_STATE_REVIEW';
-    }
+    const validState = payment.status === 'PENDING' ||
+      (allowRetiredCapture && payment.status === 'FAILED') ||
+      (['PAID', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(payment.status) &&
+        Boolean(payment.paidAt && payment.providerPaymentId));
+    if (!validState) return 'PAYMENT_STATE_REVIEW';
 
     return null;
   }

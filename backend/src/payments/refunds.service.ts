@@ -337,7 +337,7 @@ export class RefundsService {
       });
 
       if (cash) {
-        await updateRefundedPayment(tx, payment.id);
+        await updateRefundedPayment(tx, payment.id, actor.id);
 
         await tx.auditLog.create({
           data: {

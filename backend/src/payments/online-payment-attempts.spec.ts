@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isRetiredAttempt, canReplaceAttempt, CLOSED_UNPAID_EVENT } from './online-payment-attempts.js';
+import { isRetiredAttempt, hasClosedUnpaidEvidence, canReplaceAttempt, CLOSED_UNPAID_EVENT } from './online-payment-attempts.js';
 
 function retired() {
   return {
@@ -27,6 +27,19 @@ describe('retired checkout evidence', () => {
     expect(isRetiredAttempt({ ...payment, providerCheckoutId: 'another-session' }, 100000)).toBe(false);
     expect(isRetiredAttempt({ ...payment, events: [{ ...payment.events[0], signatureVerified: true }] }, 100000)).toBe(false);
   });
+  it('preserves closure history without treating a signed late capture as safely retired', () => {
+    const payment = retired();
+    const late = {
+      ...payment,
+      events: [...payment.events, {
+        ...payment.events[0], eventType: 'checkout_session.payment.paid',
+        signatureVerified: true, status: 'FAILED' as const, errorMessage: 'PAYMENT_STATE_REVIEW',
+      }],
+    };
+    expect(hasClosedUnpaidEvidence(late, 100000)).toBe(true);
+    expect(isRetiredAttempt(late, 100000)).toBe(false);
+  });
+
   it('blocks replacement when financial evidence or session identity is uncertain', () => {
     const pending = { ...retired(), status: 'PENDING' as const, events: [] };
     expect(canReplaceAttempt(pending, 100000)).toBe(true);

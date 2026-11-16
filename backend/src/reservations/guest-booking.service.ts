@@ -285,6 +285,7 @@ export class GuestBookingService {
       if (error instanceof HttpException) throw error;
       throw new ServiceUnavailableException(
         'The booking outcome could not be confirmed. Recover the original request before submitting another.',
+        { cause: error },
       );
     }
   }

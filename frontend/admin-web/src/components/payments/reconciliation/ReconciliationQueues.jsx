@@ -103,7 +103,7 @@ export function ReconciliationQueues({ query, onPage, onNormalize, onLimit }) {
           >
             <QueueTable
               label="Pending refund review table"
-              caption="Pending refunds awaiting review"
+              caption="Pending refunds awaiting review; pending amounts are not completed refunds"
               headings={[
                 "Refund record",
                 "Related payment",
@@ -148,7 +148,7 @@ export function ReconciliationQueues({ query, onPage, onNormalize, onLimit }) {
               headings={[
                 "Event reference",
                 "Related payment",
-                "Event type",
+                "Record source and type",
                 "Stored status",
                 "Review note",
                 "Created",
@@ -168,9 +168,15 @@ export function ReconciliationQueues({ query, onPage, onNormalize, onLimit }) {
                     )}
                   </td>
 
-                  <td>{item.eventType}</td>
+                  <td>
+                    <strong>{item.eventSource}</strong>
+                    <div>{item.eventType}</div>
+                  </td>
                   <td>{formatStatus(item.status)}</td>
-                  <td>{item.reviewReason}</td>
+                  <td>
+                    <strong>{item.reviewReason}</strong>
+                    <p>{item.reviewGuidance}</p>
+                  </td>
                   <td>{formatTimestamp(item.createdAt)}</td>
                 </tr>
               ))}
