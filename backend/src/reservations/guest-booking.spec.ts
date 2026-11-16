@@ -1,3 +1,4 @@
+import { ReservationContactsService } from './reservation-contacts.service.js';
 import { PaymentReconciliationService } from '../payments/payment-reconciliation.service.js';
 import { PaymongoReconciliationAdapter } from '../payments/paymongo-reconciliation.adapter.js';
 import { RefundsService } from '../payments/refunds.service.js';
@@ -2863,5 +2864,96 @@ describe('staff confirmation of property requests', () => {
       status: 'PENDING',
       confirmedAt: null,
     });
+  });
+});
+
+describe('guest contact follow-up history', () => {
+  let contacts: ReservationContactsService;
+  let actor: AuthenticatedUser;
+
+  beforeEach(async () => {
+    const role = await prisma.role.upsert({
+      where: { name: 'RECEPTIONIST' }, update: {}, create: { name: 'RECEPTIONIST' },
+    });
+    const user = await prisma.user.create({
+      data: {
+        roleId: role.id, name: 'Synthetic reception',
+        email: 'contact-history@example.invalid',
+        passwordHash: 'synthetic-unused-password-hash', status: 'ACTIVE',
+      },
+    });
+    actor = { id: user.id, email: user.email, role: 'RECEPTIONIST' };
+    contacts = new ReservationContactsService(prisma);
+  });
+
+  async function booking() {
+    const created = await createGuestBooking(service, payload());
+    return reservationIdFor(created);
+  }
+
+  function command() {
+    return {
+      requestId: randomUUID(), channel: 'PHONE', purpose: 'ARRIVAL_FOLLOW_UP',
+      result: 'NO_ANSWER', notes: 'Synthetic unanswered call.',
+    };
+  }
+
+  it('records follow-ups without changing reservation timing or state', async () => {
+    const id = await booking();
+    const before = await prisma.reservation.findUniqueOrThrow({ where: { id } });
+    const saved = await contacts.record(id, {
+      ...command(), expectedArrivalAt: before.expectedArrivalAt!.toISOString(),
+    }, actor);
+    expect(saved.contact).toMatchObject({
+      staffUserId: actor.id, result: 'NO_ANSWER',
+      expectedArrivalAt: before.expectedArrivalAt!.toISOString(),
+    });
+    expect(await prisma.reservation.findUniqueOrThrow({ where: { id } })).toEqual(before);
+  });
+
+  it('replays repeated requests once and rejects changed content', async () => {
+    const id = await booking();
+    const input = command();
+    const first = await contacts.record(id, input, actor);
+    const repeat = await contacts.record(id, input, actor);
+    expect(repeat.replayed).toBe(true);
+    expect(repeat.contact.id).toBe(first.contact.id);
+    expect((await contacts.list(id, 1, actor)).total).toBe(1);
+    await expect(contacts.record(id, { ...input, notes: 'Different content.' }, actor))
+      .rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('includes historical contacts without inventing missing outcomes', async () => {
+    const id = await booking();
+    await new GuestBookingStaffService(prisma).contact(actor, id, 'PHONE');
+    const result = await contacts.list(id, 1, actor);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toMatchObject({
+      historical: true, channel: 'PHONE', result: 'NOT_RECORDED',
+      notes: null, expectedArrivalAt: null,
+    });
+  });
+
+  it('rejects guests and disabled staff without writing history', async () => {
+    const id = await booking();
+    await expect(contacts.record(id, command(), guestIdentity))
+      .rejects.toBeInstanceOf(ForbiddenException);
+    await prisma.user.update({ where: { id: actor.id }, data: { status: 'DISABLED' } });
+    await expect(contacts.record(id, command(), actor))
+      .rejects.toBeInstanceOf(ForbiddenException);
+    expect(await prisma.auditLog.count({
+      where: { action: 'reservation.contact_follow_up_recorded', entityId: id },
+    })).toBe(0);
+  });
+
+  it('rejects new follow-ups after closure while retaining history', async () => {
+    const id = await booking();
+    const input = command();
+    await contacts.record(id, input, actor);
+    await prisma.reservation.update({ where: { id }, data: { status: 'CANCELLED' } });
+    expect((await contacts.record(id, input, actor)).replayed).toBe(true);
+    await expect(contacts.record(id, command(), actor))
+      .rejects.toBeInstanceOf(ConflictException);
+    expect((await contacts.list(id, 1, actor)).total).toBe(1);
   });
 });

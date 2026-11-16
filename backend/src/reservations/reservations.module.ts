@@ -1,3 +1,5 @@
+import { ReservationContactsController } from './reservation-contacts.controller.js';
+import { ReservationContactsService } from './reservation-contacts.service.js';
 import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '../prisma/prisma.module.js';
@@ -115,6 +117,7 @@ import {
     OwnershipModule,
   ],
   controllers: [
+    ReservationContactsController,
     ReservationsController,
     BookingAccessController,
     RoomAssignmentsController,
@@ -127,6 +130,7 @@ import {
     GuestReservationsController,
   ],
   providers: [
+    ReservationContactsService,
     RoomRateCapacityService,
     ReservationValidationService,
     ReservationAcquisitionService,

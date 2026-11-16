@@ -1,3 +1,4 @@
+import ReservationContacts from "../components/reservations/ReservationContacts.jsx";
 import { Link } from "react-router";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import StaffDataState from "../components/StaffDataState";
@@ -82,6 +83,7 @@ export default function ReservationDetails() {
 
           <ReservationOverview booking={booking} payment={payment} summary={summary} />
           <ReservationHistory booking={booking} assignments={assignments} />
+          <ReservationContacts reservationId={reservationId} bookingStatus={booking.status} />
         </>
       )}
 
