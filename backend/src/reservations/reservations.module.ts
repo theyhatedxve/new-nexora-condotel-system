@@ -1,3 +1,5 @@
+import { StayOperationsController } from './stay-operations.controller.js';
+import { StayOperationsService } from './stay-operations.service.js';
 import { ReservationContactsController } from './reservation-contacts.controller.js';
 import { ReservationContactsService } from './reservation-contacts.service.js';
 import { Module } from '@nestjs/common';
@@ -117,6 +119,7 @@ import {
     OwnershipModule,
   ],
   controllers: [
+    StayOperationsController,
     ReservationContactsController,
     ReservationsController,
     BookingAccessController,
@@ -130,6 +133,7 @@ import {
     GuestReservationsController,
   ],
   providers: [
+    StayOperationsService,
     ReservationContactsService,
     RoomRateCapacityService,
     ReservationValidationService,

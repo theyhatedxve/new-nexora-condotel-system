@@ -1,3 +1,4 @@
+import { StayOperationsService } from './stay-operations.service.js';
 import { cancelUnpaidNoShowsInTx } from './reservation-no-show.js';
 import { withInventoryWrite } from './inventory-write.js';
 import { GUEST_BOOKING_POLICY_VERSION } from './guest-booking-policy.js';
@@ -1777,5 +1778,100 @@ describe(
         );
       },
     );
+    describe('stay operations guidance', () => {
+      async function rentedStay() {
+        await checkedIn();
+        const current = await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } });
+        const arrival = current.actualArrivalAt!;
+        const departure = new Date(arrival.getTime() + 3 * 86_400_000);
+        await prisma.reservation.update({
+          where: { id: bookingId },
+          data: {
+            rentalType: 'NIGHTLY', rentalUnits: 3, rentalRateCentavos: 250_000,
+            includedOccupancy: 2, extraPersonFeeCentavos: 0,
+            accommodationCentavos: 750_000, extraPersonTotalCentavos: 0,
+            scheduledArrivalAt: arrival, scheduledDepartureAt: departure,
+            inventoryStartAt: arrival, inventoryEndAt: departure,
+          },
+        });
+        return departure;
+      }
+
+      it('records legacy checkout time once and keeps room cleanup and release atomic', async () => {
+        await checkedIn();
+        await stays.checkOut(bookingId, assignmentId, users.MANAGER);
+        const original = await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } });
+        expect(original.actualDepartureAt).toBeInstanceOf(Date);
+        await stays.checkOut(bookingId, assignmentId, users.MANAGER);
+        expect((await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } })).actualDepartureAt)
+          .toEqual(original.actualDepartureAt);
+        await assertState('CHECKED_OUT', 'CLEANING', true);
+        const audit = await prisma.auditLog.findFirstOrThrow({
+          where: { entityId: bookingId, action: 'reservation.checked_out' },
+        });
+        expect(JSON.parse(audit.detailsJson!)).toMatchObject({
+          actualDepartureAt: original.actualDepartureAt!.toISOString(),
+        });
+      });
+
+      it('returns a read-only inventory result without changing timing, rooms or audit history', async () => {
+        const end = await rentedStay();
+        const before = await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } });
+        const auditCount = await prisma.auditLog.count();
+        const result = await app.get(StayOperationsService).read(
+          bookingId, new Date(end.getTime() + 60 * 60_000).toISOString(), users.MANAGER,
+        );
+        expect(result).toMatchObject({
+          availability: 'AVAILABLE_FOR_REVIEW', approvalGranted: false, readOnly: true,
+        });
+        expect(await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } })).toEqual(before);
+        expect(await prisma.auditLog.count()).toBe(auditCount);
+        await assertState('CHECKED_IN', 'OCCUPIED', false);
+      });
+
+      it.each([false, true])('protects future assigned and unassigned inventory (assigned: %s)', async (assigned) => {
+        const end = await rentedStay();
+        const current = await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } });
+        for (let index = 0; index < (assigned ? 1 : 2); index += 1) {
+          await prisma.reservation.create({
+            data: {
+              reservationNumber: 'NX-' + randomUUID(),
+              guestId: current.guestId, roomTypeId, status: 'CONFIRMED',
+              checkInDate: date(3), checkOutDate: date(4),
+              inventoryStartAt: end, inventoryEndAt: new Date(end.getTime() + 86_400_000),
+              guestCount: 1, nightlyRateCentavos: 250_000, totalAmountCentavos: 250_000,
+              ...(assigned ? { roomAssignments: { create: { roomId } } } : {}),
+            },
+          });
+        }
+        expect((await app.get(StayOperationsService).read(
+          bookingId, new Date(end.getTime() + 60 * 60_000).toISOString(), users.MANAGER,
+        )).availability).toBe('INVENTORY_REVIEW_REQUIRED');
+      });
+
+      it('requires historical timing review and rejects guests and disabled staff', async () => {
+        await checkedIn();
+        const operations = app.get(StayOperationsService);
+        expect((await operations.read(bookingId, undefined, users.MANAGER)).phase).toBe('TIMING_REVIEW');
+        await expect(operations.read(bookingId, undefined, users.GUEST)).rejects.toThrow('Staff permission');
+        await prisma.user.update({ where: { id: users.MANAGER.id }, data: { status: 'DISABLED' } });
+        await expect(operations.read(bookingId, undefined, users.MANAGER)).rejects.toThrow('Current staff permission');
+      });
+
+      it('protects room blocks and validates the read endpoint query', async () => {
+        const end = await rentedStay();
+        await prisma.roomBlock.create({
+          data: { roomId, startDate: date(3), endDate: date(4), reason: 'Synthetic block' },
+        });
+        expect((await app.get(StayOperationsService).read(
+          bookingId, new Date(end.getTime() + 60 * 60_000).toISOString(), users.MANAGER,
+        )).availability).toBe('INVENTORY_REVIEW_REQUIRED');
+        const response = await request(app.getHttpServer())
+          .get('/api/staff/reservations/' + bookingId + '/stay-operations')
+          .query({ requestedDepartureAt: 'invalid' }).set('Authorization', bearer());
+        expect(response.status).toBe(400);
+      });
+    });
+
   },
 );

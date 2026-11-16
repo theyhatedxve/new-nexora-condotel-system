@@ -398,11 +398,11 @@ export class ReservationStayService {
             },
             data: {
               status: target,
-              ...(target === 'CHECKED_IN' ? { actualArrivalAt: now } : {}),
-              ...(booking.rentalType ? (actualWindow ? {
+              ...(target === 'CHECKED_IN' ? { actualArrivalAt: now } : { actualDepartureAt: now }),
+              ...(actualWindow ? {
                 inventoryStartAt: actualWindow.start,
                 inventoryEndAt: actualWindow.end,
-              } : { actualDepartureAt: now }) : {}),
+              } : {}),
             },
           });
 
@@ -470,7 +470,7 @@ export class ReservationStayService {
               ...(target === 'CHECKED_IN' ? {
                 actualArrivalAt: now.toISOString(),
                 ...(actualWindow ? { inventoryEndAt: actualWindow.end.toISOString() } : {}),
-              } : booking.rentalType ? { actualDepartureAt: now.toISOString() } : {}),
+              } : { actualDepartureAt: now.toISOString() }),
               paymentPolicy:
                 'FULL_RECORDED_PAYMENT_V1',
               recordedPaidCentavos: paid,
