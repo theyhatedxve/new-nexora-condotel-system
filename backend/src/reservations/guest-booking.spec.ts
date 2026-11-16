@@ -1,3 +1,4 @@
+import { requireFullRecordedPayment } from './stay-payment-policy.js';
 import { AvailabilityService } from '../availability/availability.service.js';
 import {
   randomBytes,
@@ -1431,6 +1432,164 @@ describe('pending online booking payment confirmation', () => {
     expect(
       await prisma.paymentEvent.count(),
     ).toBe(0);
+  });
+
+  describe('verified unpaid checkout replacement', () => {
+    let close: MockInstance<PaymongoCheckoutExpirationAdapter['close']>;
+    beforeEach(() => {
+      close = vi.spyOn(PaymongoCheckoutExpirationAdapter.prototype, 'close').mockResolvedValue('EXPIRED');
+    });
+
+    async function replace(result: Awaited<ReturnType<typeof startOnline>>, requestId = randomUUID()) {
+      createCheckout.mockResolvedValueOnce({
+        id: 'cs_retry_' + randomUUID(),
+        url: 'https://checkout.paymongo.com/replacement',
+      });
+      return checkoutService.retryForUser(result.booking.id, result.payment.id, requestId, guestIdentity);
+    }
+
+    it('keeps the original hold, preserves history, confirms the replacement, and permits recorded-payment verification', async () => {
+      const result = await startOnline();
+      const before = await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } });
+      expect((await replace(result)).state).toBe('READY');
+      const previous = await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } });
+      expect(previous.status).toBe('FAILED');
+      expect(previous.providerCheckoutId).toBe('cs_guest_online');
+      const next = await prisma.payment.findFirstOrThrow({ where: { reservationId: result.booking.id, status: 'PENDING' } });
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).holdExpiresAt).toEqual(before.holdExpiresAt);
+      const event = paidEvent(next.id);
+      event.data.attributes.data.id = next.providerCheckoutId!;
+      expect((await deliver(event)).outcome).toBe('PROCESSED');
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).status).toBe('CONFIRMED');
+      expect(await prisma.$transaction((tx) => requireFullRecordedPayment(tx, result.booking.id, 100000, new Date()))).toBe(100000);
+      expect(close).toHaveBeenCalledTimes(1);
+    });
+
+    it('reuses the replacement on repeated and concurrent stale retry requests', async () => {
+      const result = await startOnline();
+      await Promise.all([replace(result), replace(result)]);
+      await checkoutService.retryForUser(result.booking.id, result.payment.id, randomUUID(), guestIdentity);
+      expect(createCheckout).toHaveBeenCalledTimes(2);
+      expect(await prisma.payment.count({ where: { reservationId: result.booking.id, status: 'PENDING' } })).toBe(1);
+      expect(await prisma.paymentEvent.count({ where: { paymentId: result.payment.id, eventType: 'nexora.checkout.closed_unpaid' } })).toBe(1);
+    });
+
+    it('supports more than one retired attempt while retaining the same deadline', async () => {
+      const result = await startOnline();
+      const before = await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } });
+      await replace(result);
+      const middle = await prisma.payment.findFirstOrThrow({ where: { reservationId: result.booking.id, status: 'PENDING' } });
+      createCheckout.mockResolvedValueOnce({
+        id: 'cs_third_attempt', url: 'https://checkout.paymongo.com/third-attempt',
+      });
+      await checkoutService.retryForUser(result.booking.id, middle.id, randomUUID(), guestIdentity);
+      expect(await prisma.payment.count({ where: { reservationId: result.booking.id, status: 'FAILED' } })).toBe(2);
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).holdExpiresAt).toEqual(before.holdExpiresAt);
+      const current = await prisma.payment.findFirstOrThrow({ where: { reservationId: result.booking.id, status: 'PENDING' } });
+      const event = paidEvent(current.id);
+      event.data.attributes.data.id = current.providerCheckoutId!;
+      expect((await deliver(event)).outcome).toBe('PROCESSED');
+    });
+
+    it('does not reserve a replacement if the hold expires during provider closure', async () => {
+      const result = await startOnline();
+      close.mockImplementationOnce(async () => {
+        await prisma.reservation.update({
+          where: { id: result.booking.id }, data: { holdExpiresAt: new Date(Date.now() - 1) },
+        });
+        return 'EXPIRED';
+      });
+      await expect(replace(result)).rejects.toBeInstanceOf(ConflictException);
+      expect(await prisma.payment.count()).toBe(1);
+      expect((await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } })).status).toBe('PENDING');
+    });
+
+    it('never creates a replacement for unknown closure or missing session identity', async () => {
+      const result = await startOnline();
+      close.mockRejectedValueOnce(new ServiceUnavailableException('Synthetic timeout.'));
+      await expect(replace(result)).rejects.toBeInstanceOf(ConflictException);
+      expect(await prisma.payment.count()).toBe(1);
+      await prisma.payment.update({
+        where: { id: result.payment.id }, data: { providerCheckoutId: null, checkoutState: 'UNKNOWN' },
+      });
+      await expect(replace(result)).rejects.toBeInstanceOf(ConflictException);
+      expect(close).toHaveBeenCalledTimes(1);
+      expect(createCheckout).toHaveBeenCalledTimes(1);
+    });
+
+    it('retains conflicting provider evidence even if a concurrent retry already retired the old attempt', async () => {
+      const result = await startOnline();
+      close.mockImplementationOnce(async () => {
+        close.mockResolvedValue('EXPIRED');
+        await checkoutService.retryForUser(result.booking.id, result.payment.id, randomUUID(), guestIdentity);
+        return 'REVIEW_REQUIRED';
+      });
+      await expect(replace(result)).rejects.toBeInstanceOf(ConflictException);
+      expect(await prisma.payment.count()).toBe(2);
+      expect((await readGuestSummary(summaryService, result.booking.reference)).requiresReview).toBe(true);
+    });
+
+    it('retains ambiguous provider evidence for review instead of replacing', async () => {
+      const result = await startOnline();
+      close.mockResolvedValueOnce('REVIEW_REQUIRED');
+      await expect(replace(result)).rejects.toBeInstanceOf(ConflictException);
+      expect(await prisma.payment.count()).toBe(1);
+      expect((await readGuestSummary(summaryService, result.booking.reference)).requiresReview).toBe(true);
+    });
+
+    it('does not replace when verified payment arrives during closure', async () => {
+      const result = await startOnline();
+      close.mockImplementationOnce(async () => {
+        await deliver(paidEvent(result.payment.id));
+        return 'EXPIRED';
+      });
+      expect((await replace(result)).state).toBe('PAID');
+      expect(createCheckout).toHaveBeenCalledTimes(1);
+      expect(await prisma.payment.count()).toBe(1);
+    });
+
+    it('retains a late retired-attempt payment for review and prevents replacement confirmation', async () => {
+      const result = await startOnline();
+      await replace(result);
+      expect((await deliver(paidEvent(result.payment.id))).outcome).toBe('REVIEW_REQUIRED');
+      const next = await prisma.payment.findFirstOrThrow({ where: { reservationId: result.booking.id, status: 'PENDING' } });
+      const event = paidEvent(next.id);
+      event.data.attributes.data.id = next.providerCheckoutId!;
+      expect((await deliver(event)).outcome).toBe('REVIEW_REQUIRED');
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).status).toBe('PENDING');
+    });
+
+    it('rolls back retirement if reserving the replacement fails', async () => {
+      const result = await startOnline();
+      await prisma.$executeRawUnsafe(`
+        CREATE TRIGGER reject_retry_claim BEFORE INSERT ON AuditLog
+        WHEN NEW.action = 'payment.checkout.requested'
+        BEGIN SELECT RAISE(ABORT, 'synthetic retry claim failure'); END
+      `);
+      await expect(replace(result)).rejects.toThrow();
+      expect((await prisma.payment.findUniqueOrThrow({ where: { id: result.payment.id } })).status).toBe('PENDING');
+      expect(await prisma.payment.count()).toBe(1);
+      expect(await prisma.paymentEvent.count({ where: { eventType: 'nexora.checkout.closed_unpaid' } })).toBe(0);
+    });
+
+    it('expires a replacement hold using the original deadline and retired evidence', async () => {
+      const result = await startOnline();
+      await replace(result);
+      await prisma.reservation.update({ where: { id: result.booking.id }, data: { holdExpiresAt: new Date(Date.now() - 1) } });
+      const deadline = new GuestBookingDeadlineService(prisma, new PaymongoCheckoutExpirationAdapter());
+      expect((await deadline.runOnce()).expiredCount).toBe(1);
+      expect((await prisma.reservation.findUniqueOrThrow({ where: { id: result.booking.id } })).status).toBe('EXPIRED');
+    });
+
+    it('does not replace after hold expiry or for another guest', async () => {
+      const result = await startOnline();
+      await expect(checkoutService.retryForUser(result.booking.id, result.payment.id, randomUUID(), {
+        ...guestIdentity, id: 'unrelated-guest',
+      })).rejects.toBeInstanceOf(NotFoundException);
+      await prisma.reservation.update({ where: { id: result.booking.id }, data: { holdExpiresAt: new Date(Date.now() - 1) } });
+      await expect(replace(result)).rejects.toBeInstanceOf(ConflictException);
+      expect(close).not.toHaveBeenCalled();
+    });
   });
 
     describe('deadline processing', () => {

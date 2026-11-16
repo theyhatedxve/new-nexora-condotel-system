@@ -1,3 +1,4 @@
+import { activeOnlineAttempts } from './online-payment-attempts.js';
 import {
   ConflictException,
   ServiceUnavailableException,
@@ -106,6 +107,7 @@ export async function confirmPendingOnlineBookingInTx(
   }
 
   const booking = payment.reservation;
+  const attempts = activeOnlineAttempts(booking);
   const now = new Date();
 
   if (
@@ -128,8 +130,8 @@ export async function confirmPendingOnlineBookingInTx(
       booking.totalAmountCentavos,
     ) ||
     booking.totalAmountCentavos <= 0 ||
-    booking.payments.length !== 1 ||
-    booking.payments[0].id !== payment.id ||
+    attempts.length !== 1 ||
+    attempts[0].id !== payment.id ||
     booking.payments.some(
       (row) =>
         row.refunds.length > 0 ||

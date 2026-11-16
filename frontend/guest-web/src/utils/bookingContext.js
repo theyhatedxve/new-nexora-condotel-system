@@ -112,3 +112,22 @@ export function checkoutRequestIdFor(
 
   return requestId;
 }
+
+export function checkoutRetryRequestIdFor(reference, paymentId) {
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(reference) || !/^[A-Za-z0-9_-]{1,64}$/.test(paymentId)) {
+    throw new Error("The retry context is invalid.");
+  }
+  const key = "nexora.checkout-retry.v1:" + encodeURIComponent(getBookingApiScope()) +
+    ":" + reference + ":" + paymentId;
+  const existing = window.sessionStorage.getItem(key);
+  if (existing !== null) {
+    if (!UUID.test(existing)) throw new Error("The original retry request requires review.");
+    return existing;
+  }
+  const requestId = crypto.randomUUID();
+  window.sessionStorage.setItem(key, requestId);
+  if (window.sessionStorage.getItem(key) !== requestId) {
+    throw new Error("The retry request could not be retained.");
+  }
+  return requestId;
+}

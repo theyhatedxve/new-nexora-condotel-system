@@ -1,3 +1,4 @@
+import { activeOnlineAttempts } from '../payments/online-payment-attempts.js';
 import {
   ConflictException,
 } from '@nestjs/common';
@@ -22,7 +23,7 @@ export async function requireFullRecordedPayment(
   totalAmountCentavos: number,
   now: Date,
 ): Promise<number> {
-  const payments = await tx.payment.findMany({
+  const ledger = await tx.payment.findMany({
     where: {
       reservationId,
     },
@@ -31,6 +32,8 @@ export async function requireFullRecordedPayment(
       events: { select: paymentEvidenceSelect },
     },
   });
+
+  const payments = activeOnlineAttempts({ payments: ledger, totalAmountCentavos });
 
   const needsFinancialReview =
     payments.some(

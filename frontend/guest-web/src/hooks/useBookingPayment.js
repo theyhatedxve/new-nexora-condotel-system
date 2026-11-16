@@ -5,11 +5,13 @@ import {
   startGuestBookingCheckout,
 } from "../services/guestBookingApi.js";
 import {
+  getCheckoutRetryTarget,
+  retryReservationCheckout,
   getReservationCheckout,
   getReservationPaymentSummary,
   startReservationCheckout,
 } from "../services/bookingPaymentsApi.js";
-import { checkoutRequestIdFor } from "../utils/bookingContext.js";
+import { checkoutRequestIdFor, checkoutRetryRequestIdFor } from "../utils/bookingContext.js";
 
 export default function useBookingPayment({ booking }) {
   const reservationId = booking.id;
@@ -64,10 +66,11 @@ export default function useBookingPayment({ booking }) {
           : await getGuestBookingCheckout(reference, signal)
         : null;
 
-      return {
-        summary,
-        checkout,
-      };
+      const retryTarget = eligible && reservationId && pendingOnline &&
+        ["READY", "UNKNOWN"].includes(checkout?.state)
+        ? await getCheckoutRetryTarget(reservationId, signal) : null;
+
+      return { summary, checkout, retryTarget };
     },
     [reservationId, reference, pendingOnline, holdExpiresAt],
   );
@@ -165,6 +168,29 @@ export default function useBookingPayment({ booking }) {
     }
   }
 
+  async function retryCheckout() {
+    const target = state.record?.retryTarget;
+    if (pending.current || state.busy || !canRetry || !target?.paymentId) return;
+    pending.current = true;
+    setState({ busy: true, record: null, error: "" });
+    try {
+      await retryReservationCheckout({
+        reservationId,
+        previousPaymentId: target.paymentId,
+        requestId: checkoutRetryRequestIdFor(reference, target.paymentId),
+      });
+      const record = await inspect();
+      if (alive.current) setState({ busy: false, record, error: "" });
+    } catch {
+      if (alive.current) setState({
+        busy: false, record: null,
+        error: "The retry result could not be confirmed. Check payment records before trying again. The original deadline and retry request are retained.",
+      });
+    } finally {
+      pending.current = false;
+    }
+  }
+
   function refresh() {
     if (pending.current) return;
 
@@ -188,5 +214,9 @@ export default function useBookingPayment({ booking }) {
 
   const paid = summary?.status === "PAID" && !summary.requiresReview;
 
-  return { state, createCheckout, refresh, summary, checkout, deadlineReached, paid };
+  const canRetry = !state.busy && !deadlineReached && pendingOnline &&
+    summary?.reservationStatus === "PENDING" && !summary.requiresReview &&
+    Boolean(state.record?.retryTarget?.available);
+
+  return { state, createCheckout, retryCheckout, canRetry, refresh, summary, checkout, deadlineReached, paid };
 }

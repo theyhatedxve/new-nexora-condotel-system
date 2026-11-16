@@ -1,3 +1,4 @@
+import { activeOnlineAttempts } from './online-payment-attempts.js';
 import { cancelUnpaidNoShowsInTx } from '../reservations/reservation-no-show.js';
 import {
   BadRequestException,
@@ -85,8 +86,9 @@ function safeUnpaidLedger(
   sessionId: string,
   total: number,
 ): boolean {
-  if (payments.length !== 1 || !Number.isSafeInteger(total) || total <= 0) return false;
-  const payment = payments[0];
+  const attempts = activeOnlineAttempts({ payments, totalAmountCentavos: total });
+  if (attempts.length !== 1 || !Number.isSafeInteger(total) || total <= 0) return false;
+  const payment = attempts[0];
   return payment.id === paymentId &&
     payment.providerCheckoutId === sessionId &&
     payment.method === 'PAYMONGO' && payment.provider === 'PAYMONGO' &&

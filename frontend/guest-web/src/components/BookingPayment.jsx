@@ -2,7 +2,7 @@ import { formatPesos } from "../utils/formatMoney.js";
 import useBookingPayment from "../hooks/useBookingPayment.js";
 
 export default function BookingPayment({ booking }) {
-  const { state, createCheckout, refresh, summary, checkout, deadlineReached, paid } =
+  const { state, createCheckout, retryCheckout, canRetry, refresh, summary, checkout, deadlineReached, paid } =
     useBookingPayment({ booking });
 
   return (
@@ -96,8 +96,18 @@ export default function BookingPayment({ booking }) {
       {["CREATING", "UNKNOWN"].includes(checkout?.state) && (
         <p role="status" className="checkout-note">
           The existing payment attempt is unresolved. Check it again or contact the
-          property. Do not create a replacement payment.
+          property. Replacement is allowed only after the existing checkout is confirmed
+          unpaid and closed.
         </p>
+      )}
+
+      {canRetry && (
+        <div className="checkout-note">
+          <p>This checks and closes the current unpaid checkout before preparing a replacement. Your original hold deadline stays unchanged.</p>
+          <button className="checkout-button" type="button" onClick={retryCheckout}>
+            Check and replace unpaid checkout
+          </button>
+        </div>
       )}
 
       <p>

@@ -1,3 +1,5 @@
+import { PaymongoCheckoutExpirationAdapter } from './paymongo-checkout-expiration.adapter.js';
+import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/guest-booking-policy.js';
 import 'reflect-metadata';
 import { CheckoutService } from './checkout.service.js';
 import { PaymongoAdapter } from './paymongo.adapter.js';
@@ -133,6 +135,42 @@ describe('Step 7.2 — duplicate-safe test checkout', () => {
       expect(await prisma.auditLog.count()).toBe(2);
     });
   }
+  it('enforces guest ownership, origin, and DTO validation on checkout replacement', async () => {
+    await prisma.reservation.update({
+      where: { id: bookingId },
+      data: {
+        status: 'PENDING', bookingPolicyVersion: GUEST_BOOKING_POLICY_VERSION,
+        paymentPreference: 'PAYMONGO',
+        expectedArrivalAt: new Date(Date.now() + 86400000),
+        holdExpiresAt: new Date(Date.now() + 7200000),
+      },
+    });
+    await start(randomUUID(), 'GUEST').expect(200);
+    const previous = await prisma.payment.findFirstOrThrow({ where: { reservationId: bookingId } });
+    const url = path() + '/retry';
+    const input = { previousPaymentId: previous.id, requestId: randomUUID() };
+    const target = await request(app.getHttpServer()).get(url)
+      .set('Authorization', bearer('GUEST')).expect(200);
+    expect(target.body.data).toEqual({ available: true, paymentId: previous.id });
+    await request(app.getHttpServer()).get(url).expect(401);
+    await request(app.getHttpServer()).get(url).set('Authorization', bearer('OTHER_GUEST')).expect(404);
+    await request(app.getHttpServer()).get(url).set('Authorization', bearer('MANAGER')).expect(403);
+    await request(app.getHttpServer()).post(url).set('Authorization', bearer('GUEST'))
+      .set('Origin', 'https://evil.example').send(input).expect(403);
+    await request(app.getHttpServer()).post(url).set('Authorization', bearer('GUEST'))
+      .set('Origin', 'http://localhost:5173').send({ ...input, amountCentavos: 1 }).expect(400);
+    const close = vi.spyOn(PaymongoCheckoutExpirationAdapter.prototype, 'close').mockResolvedValue('EXPIRED');
+    try {
+      provider.create.mockResolvedValueOnce({
+        id: 'cs_test_replacement', url: 'https://checkout.paymongo.com/test-replacement',
+      });
+      await request(app.getHttpServer()).post(url).set('Authorization', bearer('GUEST'))
+        .set('Origin', 'http://localhost:5173').send(input).expect(200);
+      expect(provider.create).toHaveBeenCalledTimes(2);
+      expect(close).toHaveBeenCalledTimes(1);
+    } finally { close.mockRestore(); }
+  });
+
   it('calculates the remaining balance from stored completed receipts', async () => {
     await prisma.payment.create({ data: { reservationId: bookingId, method: 'PAY_AT_PROPERTY', status: 'PAID',
       amountCentavos: 250_000, paidAt: new Date(Date.now() - 1000) } });

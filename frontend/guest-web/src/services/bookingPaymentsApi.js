@@ -127,3 +127,28 @@ export async function startReservationCheckout({ reservationId, requestId }) {
   );
   return readCheckout(response);
 }
+
+export async function getCheckoutRetryTarget(reservationId, signal) {
+  requireReservationId(reservationId);
+  const response = await api.get(
+    `/payments/reservations/${encodeURIComponent(reservationId)}/checkout/retry`,
+    { withCredentials: true, signal },
+  );
+  const target = response.data?.data;
+  if (typeof target?.available !== "boolean" ||
+      !(target.paymentId === null || (typeof target.paymentId === "string" && RESERVATION_ID_PATTERN.test(target.paymentId)))) {
+    throw new Error("The retry target could not be verified.");
+  }
+  return target;
+}
+
+export async function retryReservationCheckout({ reservationId, previousPaymentId, requestId }) {
+  requireReservationId(reservationId);
+  requireReservationId(previousPaymentId);
+  const response = await api.post(
+    `/payments/reservations/${encodeURIComponent(reservationId)}/checkout/retry`,
+    { previousPaymentId, requestId },
+    { withCredentials: true, timeout: 60_000 },
+  );
+  return readCheckout(response);
+}
