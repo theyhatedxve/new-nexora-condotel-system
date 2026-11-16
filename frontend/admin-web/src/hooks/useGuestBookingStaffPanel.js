@@ -167,6 +167,9 @@ export default function useGuestBookingStaffPanel({ record, payment, onReload })
     !busy &&
     !awaitingRefresh;
 
+  const canContact = canAct || (booking.status === "CONFIRMED" &&
+    Number.isFinite(Date.parse(booking.confirmedAt)) && !busy && !awaitingRefresh);
+
   const canConfirm =
     canAct && Boolean(booking.firstContactedAt) && Boolean(booking.responseDeadlineAt);
 
@@ -174,7 +177,7 @@ export default function useGuestBookingStaffPanel({ record, payment, onReload })
 
   function beginReview(kind, event) {
     setFormError("");
-    if (!canAct) return;
+    if (kind === "contact" ? !canContact : !canAct) return;
 
     if (kind === "contact" && !channel) {
       setFormError("Choose phone or email contact.");
@@ -210,7 +213,7 @@ export default function useGuestBookingStaffPanel({ record, payment, onReload })
       submitting.current ||
       !review ||
       reviewChanged ||
-      !canAct ||
+      (review.kind === "contact" ? !canContact : !canAct) ||
       (review.kind === "confirm" && !canConfirm)
     ) {
       return;
@@ -301,6 +304,7 @@ export default function useGuestBookingStaffPanel({ record, payment, onReload })
     overdue,
     pending,
     canAct,
+    canContact,
     canConfirm,
     reviewChanged,
     backToForm,

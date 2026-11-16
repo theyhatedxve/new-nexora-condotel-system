@@ -1,5 +1,10 @@
+import { CancelReservationDto } from './dto/cancel-reservation.dto.js';
+import { ReservationCancellationService } from './reservation-cancellation.service.js';
 import {
+  Body,
   Controller,
+  HttpCode,
+  Post,
   Get,
   Header,
   Param,
@@ -33,6 +38,7 @@ type GuestRequest = Request & {
 export class GuestReservationsController {
   constructor(
     private readonly reservations: GuestReservationsService,
+    private readonly cancellations: ReservationCancellationService,
   ) {}
 
   @Get()
@@ -44,6 +50,20 @@ export class GuestReservationsController {
   ) {
     return {
       data: await this.reservations.listForGuest(request.user, query),
+    };
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  async cancel(
+    @Param() params: RecordIdDto,
+    @Body() input: CancelReservationDto,
+    @Req() request: GuestRequest,
+  ) {
+    return {
+      data: await this.cancellations.cancelForGuest(params.id, input.reason, request.user),
     };
   }
 

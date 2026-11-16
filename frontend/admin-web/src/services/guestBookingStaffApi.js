@@ -53,17 +53,17 @@ export function isPropertyBookingRequest(booking) {
   );
 }
 
-function actionInput(booking) {
+function actionInput(booking, action) {
   if (
     !isPropertyBookingRequest(booking) ||
     !validId(booking.id) ||
     typeof booking.reservationNumber !== "string" ||
     !booking.reservationNumber ||
     booking.reservationNumber.length > 100 ||
-    booking.status !== "PENDING"
+    !(booking.status === "PENDING" || (action === "contact" && booking.status === "CONFIRMED"))
   ) {
     throw new Error(
-      "Refresh the pending Pay at Property request before choosing an action.",
+      "Refresh the Pay at Property booking before choosing an action.",
     );
   }
 
@@ -79,7 +79,7 @@ async function performAction(
   body,
   expectedStatus,
 ) {
-  const identity = actionInput(booking);
+  const identity = actionInput(booking, action);
 
   const response = await api.post(
     "/reservations/" +
@@ -123,7 +123,7 @@ export function recordGuestContact(booking, channel) {
     booking,
     "contact",
     { channel },
-    "PENDING",
+    booking.status,
   );
 }
 

@@ -1970,6 +1970,22 @@ describe('staff confirmation of property requests', () => {
     });
   }
 
+  it('keeps first confirmation fixed through reminder contacts and repeated confirmation', async () => {
+    const booking = await request();
+    await staffService.contact(actor, booking.id, 'PHONE');
+    const first = await staffService.confirm(actor, booking.id, true);
+    const reminder = await staffService.contact(actor, booking.id, 'EMAIL');
+    const repeated = await staffService.confirm(actor, booking.id, true);
+    expect(reminder.confirmedAt).toEqual(first.confirmedAt);
+    expect(repeated.confirmedAt).toEqual(first.confirmedAt);
+    expect(reminder.holdExpiresAt).toBeNull();
+    expect(reminder.firstContactedAt).toEqual(first.firstContactedAt);
+    expect(reminder.responseDeadlineAt).toEqual(first.responseDeadlineAt);
+    expect(await prisma.auditLog.count({
+      where: { entityId: booking.id, action: 'reservation.guest_request_confirmed' },
+    })).toBe(1);
+  });
+
   it('starts the response window when contact is first recorded', async () => {
     const booking = await request();
     const before = Date.now();

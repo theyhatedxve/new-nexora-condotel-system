@@ -1,3 +1,4 @@
+import { GUEST_BOOKING_POLICY_VERSION } from './guest-booking-policy.js';
 import 'reflect-metadata';
 
 import { randomUUID } from 'node:crypto';
@@ -434,6 +435,109 @@ describe(
           force: true,
         });
       }
+    });
+
+    async function ownedPropertyBooking() {
+      await prisma.guest.update({
+        where: { id: guestId }, data: { userId: users.GUEST.id },
+      });
+      await prisma.reservation.update({
+        where: { id: bookingId },
+        data: {
+          bookingPolicyVersion: GUEST_BOOKING_POLICY_VERSION,
+          paymentPreference: 'PAY_AT_PROPERTY',
+          confirmedAt: new Date(),
+        },
+      });
+    }
+
+    function guestCancel() {
+      return request(app.getHttpServer())
+        .post('/api/guest/reservations/' + bookingId + '/cancel')
+        .set('Authorization', bearer('GUEST'))
+        .send({ reason: 'Guest changed travel plans' });
+    }
+
+    it('allows owned guest cancellation, releases inventory, and audits once', async () => {
+      await ownedPropertyBooking();
+      const assignment = await activeAssignment();
+      const detail = await request(app.getHttpServer())
+        .get('/api/guest/reservations/' + bookingId)
+        .set('Authorization', bearer('GUEST')).expect(200);
+      expect(detail.body.data.cancellationPolicy.unpaidEligible).toBe(true);
+      await guestCancel().expect(200);
+      await guestCancel().expect(200);
+      expect((await prisma.reservation.findUniqueOrThrow({
+        where: { id: bookingId },
+      })).status).toBe('CANCELLED');
+      expect((await prisma.roomAssignment.findUniqueOrThrow({
+        where: { id: assignment.id },
+      })).releasedAt).not.toBeNull();
+      expect(await prisma.auditLog.count({
+        where: { entityId: bookingId, action: 'reservation.cancelled' },
+      })).toBe(1);
+    });
+
+    it('does not reveal another guest booking or allow staff through the guest route', async () => {
+      await ownedPropertyBooking();
+      await prisma.guest.update({ where: { id: guestId }, data: { userId: null } });
+      await guestCancel().expect(404);
+      await request(app.getHttpServer())
+        .post('/api/guest/reservations/' + bookingId + '/cancel')
+        .set('Authorization', bearer('MANAGER'))
+        .send({ reason: 'Wrong endpoint' }).expect(403);
+    });
+
+    it('rejects anonymous and invalid guest cancellation requests', async () => {
+      await ownedPropertyBooking();
+      const url = '/api/guest/reservations/' + bookingId + '/cancel';
+      await request(app.getHttpServer()).post(url).send({ reason: 'Valid reason' }).expect(401);
+      await request(app.getHttpServer()).post(url)
+        .set('Authorization', bearer('GUEST')).send({ reason: 'x' }).expect(400);
+    });
+
+    it('closes guest cancellation after five hours without cancelling the reservation', async () => {
+      await ownedPropertyBooking();
+      await prisma.reservation.update({
+        where: { id: bookingId }, data: { confirmedAt: new Date(Date.now() - 5 * 60 * 60 * 1000) },
+      });
+      await guestCancel().expect(409);
+      expect((await prisma.reservation.findUniqueOrThrow({
+        where: { id: bookingId },
+      })).status).toBe('CONFIRMED');
+    });
+
+    it.each(['PENDING', 'CHECKED_IN'] as const)('blocks guest cancellation for %s', async (status) => {
+      await ownedPropertyBooking();
+      await prisma.reservation.update({ where: { id: bookingId }, data: { status } });
+      await guestCancel().expect(409);
+    });
+
+    it.each(['PENDING', 'PAID', 'REFUNDED'] as const)(
+      'protects a booking with a %s payment record', async (status) => {
+        await ownedPropertyBooking();
+        await prisma.payment.create({
+          data: { reservationId: bookingId, method: 'PAY_AT_PROPERTY', status, amountCentavos: 750_000 },
+        });
+        await guestCancel().expect(409);
+      },
+    );
+
+    it('rolls back guest cancellation and assignment release when the audit fails', async () => {
+      await ownedPropertyBooking();
+      const assignment = await activeAssignment();
+      await prisma.$executeRawUnsafe(`
+        CREATE TRIGGER reject_guest_cancel_audit BEFORE INSERT ON AuditLog
+        WHEN NEW.action = 'reservation.cancelled'
+        BEGIN SELECT RAISE(ABORT, 'synthetic audit failure'); END
+      `);
+      await expect(cancellation.cancelForGuest(bookingId, 'Valid reason', users.GUEST)).rejects.toThrow();
+      expect((await prisma.reservation.findUniqueOrThrow({
+        where: { id: bookingId },
+      })).status).toBe('CONFIRMED');
+      expect((await prisma.roomAssignment.findUniqueOrThrow({
+        where: { id: assignment.id },
+      })).releasedAt).toBeNull();
     });
 
     it(

@@ -92,3 +92,23 @@ export async function getMyBookingById(reservationId, signal) {
   readRental(data);
   return data;
 }
+
+export async function cancelMyBooking(reservationId, reason) {
+  if (typeof reservationId !== "string" || !RESERVATION_ID_PATTERN.test(reservationId)) {
+    throw new Error("A valid reservation ID is required.");
+  }
+  const cleaned = typeof reason === "string" ? reason.trim() : "";
+  if (cleaned.length < 3 || cleaned.length > 500) {
+    throw new Error("Enter a cancellation reason of 3–500 characters.");
+  }
+  const response = await api.post(
+    "/guest/reservations/" + encodeURIComponent(reservationId) + "/cancel",
+    { reason: cleaned },
+    { withCredentials: true },
+  );
+  const result = response.data?.data;
+  if (result?.status !== "CANCELLED" || typeof result.reservationNumber !== "string") {
+    throw new Error("The cancellation response is uncertain. Refresh the booking before retrying.");
+  }
+  return result;
+}

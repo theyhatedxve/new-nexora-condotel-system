@@ -417,3 +417,21 @@
     width: 100%;
   }
 }
+
+.my-booking__cancellation {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.my-booking__cancellation textarea {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border, #d8e0eb);
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.my-booking__cancellation button {
+  justify-self: start;
+}

@@ -32,16 +32,16 @@ export const policies = [
     id: "cancellation",
     title: "Cancellation Policy",
     introduction:
-      "Cancellation requests require staff review of your booking and payment history.",
+      "Cancellation eligibility depends on first confirmation, check-in status, and payment history.",
     points: [
-      "Request cancellation through the property. Private booking access does not provide self-service cancellation.",
-      "Eligible unpaid bookings can be cancelled before check-in without a cancellation fee when no payment or payment-attempt records exist.",
-      "Bookings with payment or payment-attempt history require financial review.",
+      "Sign in and open your booking details to cancel an eligible confirmed Pay at Property reservation.",
+      "The cancellation window closes five hours after first staff confirmation, or at check-in if earlier. There is no cancellation fee for eligible unpaid bookings without payment records.",
+      "Reminder calls and repeated confirmations do not restart the five-hour window. Paid bookings cannot use voluntary cancellation; uncertain payment records require property review.",
       "Cancellation and refund are separate outcomes. A cancelled booking does not prove that a refund has been completed.",
       "Late online payments do not automatically restore cancelled or expired bookings.",
     ],
     notice:
-      "Prepaid cancellation fees, refund eligibility, refund processing times, and confirmed no-show terms are awaiting approval.",
+      "Paid bookings cannot use voluntary cancellation. Contact the property for financial corrections or arrival assistance.",
   },
   {
     id: "privacy",

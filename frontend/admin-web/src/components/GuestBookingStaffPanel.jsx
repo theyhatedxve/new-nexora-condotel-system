@@ -26,6 +26,7 @@ export default function GuestBookingStaffPanel({ record, payment, onReload }) {
     overdue,
     pending,
     canAct,
+    canContact,
     canConfirm,
     reviewChanged,
     backToForm,
@@ -114,7 +115,8 @@ export default function GuestBookingStaffPanel({ record, payment, onReload }) {
       <p>
         First contact starts a 24-hour response window. Repeated contact does not extend
         it. The earlier deadline applies: the response deadline or 30 minutes after
-        expected arrival.
+        expected arrival. After confirmation, the guest cancellation window lasts five
+        hours from the first confirmation. Reminder contacts do not restart it.
       </p>
 
       {outcome && (
@@ -150,10 +152,10 @@ export default function GuestBookingStaffPanel({ record, payment, onReload }) {
       )}
       {formError && <p role="alert">{formError}</p>}
 
-      {pending && !review && (
+      {(pending || booking.status === "CONFIRMED") && !review && (
         <>
-          <fieldset className="action-fields" disabled={!canAct}>
-            <legend>Record completed contact</legend>
+          <fieldset className="action-fields" disabled={!canContact}>
+            <legend>Record completed contact or reminder</legend>
             <label htmlFor={`${prefix}-channel`}>Contact channel</label>
             <select id={`${prefix}-channel`} value={channel} onChange={changeChannel}>
               <option value="">Choose a channel</option>
@@ -166,7 +168,7 @@ export default function GuestBookingStaffPanel({ record, payment, onReload }) {
             </button>
           </fieldset>
 
-          <fieldset className="action-fields" disabled={!canConfirm}>
+          {pending && <fieldset className="action-fields" disabled={!canConfirm}>
             <legend>Confirm guest agreement</legend>
             <label className="action-checkbox">
               <input type="checkbox" checked={guestAgreed} onChange={changeGuestAgreed} />
@@ -177,9 +179,9 @@ export default function GuestBookingStaffPanel({ record, payment, onReload }) {
             <button type="button" onClick={reviewConfirm}>
               Review confirmation
             </button>
-          </fieldset>
+          </fieldset>}
 
-          <fieldset className="action-fields" disabled={!canAct}>
+          {pending && <fieldset className="action-fields" disabled={!canAct}>
             <legend>Reject request</legend>
             <label htmlFor={`${prefix}-reason`}>Rejection reason</label>
             <textarea
@@ -193,7 +195,7 @@ export default function GuestBookingStaffPanel({ record, payment, onReload }) {
             <button type="button" className="danger-button" onClick={reviewReject}>
               Review rejection
             </button>
-          </fieldset>
+          </fieldset>}
         </>
       )}
 
@@ -241,7 +243,7 @@ export default function GuestBookingStaffPanel({ record, payment, onReload }) {
             className={review.kind === "reject" ? "danger-button" : undefined}
             disabled={
               busy ||
-              !canAct ||
+              (review.kind === "contact" ? !canContact : !canAct) ||
               Boolean(reviewChanged) ||
               (review.kind === "confirm" && !canConfirm)
             }

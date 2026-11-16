@@ -14,7 +14,7 @@ import {
 
 import { PaymentSummaryService } from '../payments/payment-summary.service.js';
 
-import { UNPAID_CANCELLATION_POLICY } from './cancellation-policy.js';
+import { guestCancellationPolicy } from './guest-cancellation-policy.js';
 
 import { GuestReservationListDto } from './dto/guest-reservation-list.dto.js';
 
@@ -166,9 +166,6 @@ export class GuestReservationsService {
 
     const paymentSummary = await this.summaries.forUser(id, guestIdentity);
     const { payments, ...projection } = reservation;
-    const unpaidEligible =
-      ['PENDING', 'CONFIRMED'].includes(reservation.status) &&
-      payments.length === 0;
 
     return {
       ...projection,
@@ -178,13 +175,11 @@ export class GuestReservationsService {
         Date.now(),
       ),
       paymentSummary,
-      cancellationPolicy: {
-        version: UNPAID_CANCELLATION_POLICY.version,
-        cancellationFeeCentavos:
-          UNPAID_CANCELLATION_POLICY.cancellationFeeCentavos,
-        text: UNPAID_CANCELLATION_POLICY.text,
-        unpaidEligible,
-      },
+      cancellationPolicy: guestCancellationPolicy(
+        reservation,
+        payments.length > 0 || paymentSummary.status !== 'UNPAID' ||
+          paymentSummary.requiresReview || paymentSummary.hasPendingPayment,
+      ),
     };
   }
 }

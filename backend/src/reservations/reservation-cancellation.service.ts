@@ -1,3 +1,4 @@
+import { guestCancellationPolicy } from './guest-cancellation-policy.js';
 import {
   BadRequestException,
   ConflictException,
@@ -34,10 +35,19 @@ export class ReservationCancellationService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async cancel(
+  cancel(reservationId: string, reason: string, actor: AuthenticatedUser | undefined) {
+    return this.cancelReservation(reservationId, reason, actor, false);
+  }
+
+  cancelForGuest(reservationId: string, reason: string, actor: AuthenticatedUser | undefined) {
+    return this.cancelReservation(reservationId, reason, actor, true);
+  }
+
+  private async cancelReservation(
     reservationId: string,
     reason: string,
     actor: AuthenticatedUser | undefined,
+    guestRequested: boolean,
   ) {
     if (!actor?.id || !actor.role) {
       throw new UnauthorizedException(
@@ -46,7 +56,7 @@ export class ReservationCancellationService {
     }
 
     if (
-      ![
+      guestRequested ? actor.role !== 'GUEST' : ![
         'SUPER_ADMIN',
         'ADMIN',
         'MANAGER',
@@ -54,7 +64,7 @@ export class ReservationCancellationService {
       ].includes(actor.role)
     ) {
       throw new ForbiddenException(
-        'Staff permission is required.',
+        guestRequested ? 'Sign in with a guest account.' : 'Staff permission is required.',
       );
     }
 
@@ -93,6 +103,7 @@ export class ReservationCancellationService {
           await tx.reservation.findFirst({
             where: {
               id: reservationId,
+              ...(guestRequested ? { guest: { userId: actor.id } } : {}),
               roomType: {
                 propertyId: properties[0].id,
               },
@@ -104,6 +115,9 @@ export class ReservationCancellationService {
               inventoryEndAt: true,
               checkOutDate: true,
               holdExpiresAt: true,
+              confirmedAt: true,
+              bookingPolicyVersion: true,
+              paymentPreference: true,
             },
           });
 
@@ -167,11 +181,20 @@ export class ReservationCancellationService {
           );
         }
 
+        const guestPolicy = guestRequested
+          ? guestCancellationPolicy(booking, Boolean(payment), now)
+          : null;
+        if (guestPolicy && !guestPolicy.unpaidEligible) {
+          throw new ConflictException(guestPolicy.reason);
+        }
+
         const changed =
           await tx.reservation.updateMany({
             where: {
               id: booking.id,
               status: booking.status,
+              payments: { none: {} },
+              ...(guestRequested ? { confirmedAt: booking.confirmedAt } : {}),
               AND: [remainingReservationWhere(now)],
               ...(booking.status === 'PENDING'
                 ? {
@@ -218,11 +241,12 @@ export class ReservationCancellationService {
             entityId: booking.id,
             detailsJson: JSON.stringify({
               reason: cleanedReason,
+              ...(guestRequested ? { source: 'GUEST_SELF_SERVICE' } : {}),
               previousStatus: booking.status,
               releasedAssignmentCount:
                 released.count,
               policy:
-                UNPAID_CANCELLATION_POLICY,
+                guestPolicy ?? UNPAID_CANCELLATION_POLICY,
             }),
           },
         });

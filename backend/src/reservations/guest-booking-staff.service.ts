@@ -262,6 +262,19 @@ export class GuestBookingStaffService {
           }
         }
 
+        if (action.kind === 'CONTACT' && booking.status === 'CONFIRMED') {
+          if (!booking.confirmedAt || booking.confirmedAt > now) {
+            throw new ConflictException('The first confirmation time requires review.');
+          }
+          await this.audit(tx, actorId, booking.id, CONTACT_ACTION, {
+            channel: action.channel,
+            contactedAt: now.toISOString(),
+            reminder: true,
+            firstConfirmedAt: booking.confirmedAt.toISOString(),
+          });
+          return { booking: receipt(booking) };
+        }
+
         if (booking.status !== 'PENDING') {
           throw new ConflictException(
             'Only pending requests can use this action.',
@@ -406,7 +419,7 @@ export class GuestBookingStaffService {
               },
               data: {
                 status: 'CONFIRMED',
-                confirmedAt: now,
+                confirmedAt: booking.confirmedAt ?? now,
                 holdExpiresAt: null,
               },
             });
@@ -429,7 +442,7 @@ export class GuestBookingStaffService {
             CONFIRM_ACTION,
             {
               guestAgreed: true,
-              confirmedAt: now.toISOString(),
+              confirmedAt: (booking.confirmedAt ?? now).toISOString(),
             },
           );
 

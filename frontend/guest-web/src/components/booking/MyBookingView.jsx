@@ -1,3 +1,4 @@
+import GuestCancellation from "./GuestCancellation.jsx";
 import RentalDetails from "../RentalDetails.jsx";
 import { Link } from "react-router";
 import { ArrowLeft, CalendarDays, LogOut, RefreshCw } from "lucide-react";
@@ -160,7 +161,7 @@ export function MyBookingView({ reservationId = null, expectedReference = null }
                 </>
               )}
 
-              <SummaryRow label="Confirmed at">
+              <SummaryRow label="First confirmed at">
                 {displayTime(booking.confirmedAt)}
               </SummaryRow>
             </dl>
@@ -186,16 +187,9 @@ export function MyBookingView({ reservationId = null, expectedReference = null }
                 redirect.
               </p>
             )}
-
-            {booking.cancellationPolicy && (
-              <p className="my-booking__notice">
-                <strong>Cancellation policy:</strong>{" "}
-                {booking.cancellationPolicy.unpaidEligible
-                  ? booking.cancellationPolicy.text
-                  : "This reservation cannot use unpaid pre-check-in cancellation. Contact the property for assistance."}
-              </p>
-            )}
           </section>
+
+          <GuestCancellation key={booking.id} booking={booking} onRefresh={view.refresh} />
 
           <footer className="my-booking__actions">
             <Link className="my-booking__back" to="/my-bookings">
