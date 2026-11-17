@@ -61,6 +61,10 @@ describe('dashboard rental timing', () => {
 
   beforeEach(async () => {
     vi.useRealTimers();
+    await prisma.reservationChargeReceipt.deleteMany();
+    await prisma.depositMovement.deleteMany();
+    await prisma.depositReturnAuthorization.deleteMany();
+    await prisma.reservationCharge.deleteMany();
     await prisma.reservation.deleteMany();
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2030-01-02T04:00:00.000Z'));
@@ -268,5 +272,128 @@ describe('dashboard rental timing', () => {
     await expect(dashboard.contactQueue({ ...actor, role: 'MANAGER' })).rejects.toThrow('Current staff permission');
     await prisma.user.update({ where: { id: actor.id }, data: { status: 'DISABLED' } });
     await expect(dashboard.contactQueue(actor)).rejects.toThrow('Current staff permission');
+  });
+
+  async function attentionStaff(roleName = 'MANAGER') {
+    const actor = await queueStaff();
+    const role = await prisma.role.upsert({
+      where: { name: roleName }, create: { name: roleName }, update: {},
+    });
+    await prisma.user.update({ where: { id: actor.id }, data: { roleId: role.id } });
+    return { ...actor, role: roleName };
+  }
+
+  async function attentionFixture() {
+    const actor = await attentionStaff('SUPER_ADMIN');
+    const booking = await createBooking('CHECKED_OUT');
+    const pending = await prisma.reservationCharge.create({
+      data: {
+        id: `attention-pending-${booking.id}`, reservationId: booking.id,
+        kind: 'DAMAGE', status: 'PENDING', description: 'Synthetic damage proposal',
+        amountCentavos: 10000, proposedByUserId: actor.id,
+      },
+    });
+    const correction = await prisma.reservationCharge.create({
+      data: {
+        id: `attention-correction-${booking.id}`, reservationId: booking.id,
+        kind: 'LATE_CHECKOUT', status: 'APPROVED', description: 'Synthetic unfulfilled extension',
+        amountCentavos: 5000, proposedByUserId: actor.id,
+        reviewedByUserId: actor.id, reviewedAt: new Date(),
+      },
+    });
+    await prisma.reservationChargeReceipt.create({
+      data: {
+        id: `attention-receipt-${booking.id}`, chargeId: correction.id,
+        amountCentavos: 5000, collectedByUserId: actor.id, source: 'CASH', correctionRequired: true,
+      },
+    });
+    await prisma.depositMovement.create({
+      data: {
+        id: `attention-collection-${booking.id}`, reservationId: booking.id,
+        kind: 'COLLECT', amountCentavos: 20000, reason: 'Synthetic deposit collection', recordedByUserId: actor.id,
+      },
+    });
+    const authorization = await prisma.depositReturnAuthorization.create({
+      data: {
+        id: `attention-return-${booking.id}`, reservationId: booking.id, amountCentavos: 20000,
+        reason: 'Synthetic authorized return', approvedByUserId: actor.id,
+      },
+    });
+    return { actor, booking, pending, correction, authorization };
+  }
+
+  it('returns role-specific attention queues without recording financial actions', async () => {
+    const fixture = await attentionFixture();
+    const receptionist = await queueStaff();
+    const manager = await attentionStaff('MANAGER');
+    const before = {
+      receipts: await prisma.reservationChargeReceipt.count(),
+      movements: await prisma.depositMovement.count(), audit: await prisma.auditLog.count(),
+    };
+    const reception = await dashboard.attentionQueues(receptionist);
+    expect(reception.chargeApprovals).toBeNull();
+    expect(reception.extensionCorrections).toBeNull();
+    expect(reception.depositReturns.total).toBe(1);
+    expect(reception.canReviewReconciliation).toBe(false);
+    const management = await dashboard.attentionQueues(manager);
+    expect(management.chargeApprovals?.total).toBe(1);
+    expect(management.extensionCorrections).toBeNull();
+    expect(management.depositReturns.total).toBe(1);
+    const superAdmin = await dashboard.attentionQueues(fixture.actor);
+    expect(superAdmin.chargeApprovals?.items[0].id).toBe(fixture.pending.id);
+    expect(superAdmin.extensionCorrections?.items[0].id).toBe(fixture.correction.id);
+    expect(superAdmin.extensionCorrections?.items[0].label).toBe('Cash correction review');
+    expect(superAdmin.canReviewReconciliation).toBe(true);
+    expect(await prisma.reservationChargeReceipt.count()).toBe(before.receipts);
+    expect(await prisma.depositMovement.count()).toBe(before.movements);
+    expect(await prisma.auditLog.count()).toBe(before.audit);
+  });
+
+  it('removes reviewed, corrected and returned records from their queues', async () => {
+    const fixture = await attentionFixture();
+    await prisma.reservationCharge.update({ where: { id: fixture.pending.id }, data: { status: 'APPROVED' } });
+    await prisma.reservationChargeReceipt.update({
+      where: { chargeId: fixture.correction.id },
+      data: { refundedAt: new Date(), refundedByUserId: fixture.actor.id, refundReason: 'Synthetic correction' },
+    });
+    await prisma.depositMovement.create({
+      data: {
+        id: `attention-returned-${fixture.booking.id}`, reservationId: fixture.booking.id,
+        kind: 'RETURN', amountCentavos: 20000, reason: 'Synthetic actual cash return',
+        recordedByUserId: fixture.actor.id, returnAuthorizationId: fixture.authorization.id,
+      },
+    });
+    const result = await dashboard.attentionQueues(fixture.actor);
+    expect(result.chargeApprovals?.total).toBe(0);
+    expect(result.extensionCorrections?.total).toBe(0);
+    expect(result.depositReturns.total).toBe(0);
+  });
+
+  it('bounds approval queues to twenty oldest records', async () => {
+    const actor = await attentionStaff();
+    const booking = await createBooking('CHECKED_IN');
+    for (let index = 0; index < 21; index += 1) {
+      await prisma.reservationCharge.create({
+        data: {
+          id: `attention-limit-${index}`, reservationId: booking.id, kind: 'DAMAGE', status: 'PENDING',
+          description: 'Synthetic proposal', amountCentavos: 1000, proposedByUserId: actor.id,
+          createdAt: new Date(Date.parse('2030-01-01T00:00:00.000Z') + index * 1000),
+        },
+      });
+    }
+    const result = await dashboard.attentionQueues(actor);
+    expect(result.chargeApprovals?.total).toBe(21);
+    expect(result.chargeApprovals?.items).toHaveLength(20);
+    expect(result.chargeApprovals?.items[0].id).toBe('attention-limit-0');
+    expect(result.chargeApprovals?.items[19].id).toBe('attention-limit-19');
+  });
+
+  it('rejects anonymous, guest, stale-role and disabled attention access', async () => {
+    const actor = await attentionStaff();
+    await expect(dashboard.attentionQueues(undefined)).rejects.toThrow('Sign in');
+    await expect(dashboard.attentionQueues({ ...actor, role: 'GUEST' })).rejects.toThrow('Staff permission');
+    await expect(dashboard.attentionQueues({ ...actor, role: 'SUPER_ADMIN' })).rejects.toThrow('Current staff permission');
+    await prisma.user.update({ where: { id: actor.id }, data: { status: 'DISABLED' } });
+    await expect(dashboard.attentionQueues(actor)).rejects.toThrow('Current staff permission');
   });
 });

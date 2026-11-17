@@ -5,6 +5,7 @@ import { useStaffData } from "./useStaffData";
 import { cards, quickLinkDescriptions } from "../constants/dashboard.js";
 import { loadRecentReservations } from "../utils/dashboardHelpers.js";
 import { loadDashboardContacts } from "../services/dashboardContactsApi.js";
+import { loadDashboardAttention } from "../services/dashboardAttentionApi.js";
 
 export default function useDashboardPage() {
   const { user } = useAuth();
@@ -13,12 +14,13 @@ export default function useDashboardPage() {
 
   const recent = useStaffData(loadRecentReservations, `${user.id}:${user.role}`);
   const contacts = useStaffData(loadDashboardContacts, `${user.id}:${user.role}`);
+  const attention = useStaffData(loadDashboardAttention, `${user.id}:${user.role}`);
 
   const finance = financial.data;
 
   const recentItems = recent.status === "ready" ? recent.data.items.slice(0, 5) : [];
 
-  const refreshing = loading || recent.loading || contacts.loading;
+  const refreshing = loading || recent.loading || contacts.loading || attention.loading;
 
   const quickLinks = staffNavigation.filter(
     (item) =>
@@ -42,6 +44,7 @@ export default function useDashboardPage() {
     refresh();
     recent.reload();
     contacts.reload();
+    attention.reload();
   }
 
   return {
@@ -49,6 +52,7 @@ export default function useDashboardPage() {
     financial,
     recent,
     contacts,
+    attention,
     finance,
     recentItems,
     refreshing,

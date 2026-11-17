@@ -44,6 +44,14 @@ export class DashboardController {
     return { data: await this.dashboard.contactQueue(request.user) };
   }
 
+  @Get('attention-queues')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST')
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  async attentionQueues(@Req() request: Request & { user?: AuthenticatedUser }) {
+    return { data: await this.dashboard.attentionQueues(request.user) };
+  }
+
   @Get('financial-summary')
   @Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER')
   @Header('Cache-Control', 'no-store')

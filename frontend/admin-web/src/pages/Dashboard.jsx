@@ -11,6 +11,7 @@ import {
 import { cards, quickLinkDescriptions } from "../constants/dashboard.js";
 import useDashboardPage from "../hooks/useDashboardPage.js";
 import DashboardContacts from "../components/DashboardContacts.jsx";
+import DashboardAttention from "../components/DashboardAttention.jsx";
 import "../styles/dashboard.css";
 
 export default function Dashboard() {
@@ -19,6 +20,7 @@ export default function Dashboard() {
     financial,
     recent,
     contacts,
+    attention,
     finance,
     recentItems,
     refreshing,
@@ -111,7 +113,7 @@ export default function Dashboard() {
           {financial.status !== "hidden" && (
             <div aria-busy={financial.status === "loading"}>
               <SummaryCard
-                title="Net collections today"
+                title="Net accommodation collections today"
                 value={
                   financial.status === "loading"
                     ? "Loading…"
@@ -121,7 +123,7 @@ export default function Dashboard() {
                         ? "Review required"
                         : formatPesos(finance?.netCollectionsCentavos)
                 }
-                description="Verified receipts minus completed refunds today, before provider fees."
+                description="Verified accommodation receipts minus completed accommodation refunds today, before provider fees. Excludes deposits and additional-charge receipts."
               >
                 {financial.status === "loading" && (
                   <p role="status">Loading financial summary…</p>
@@ -187,6 +189,7 @@ export default function Dashboard() {
       </div>
 
       <DashboardContacts contacts={contacts} />
+      <DashboardAttention attention={attention} />
 
       <section
         className="dashboard-screen__panel"

@@ -174,6 +174,83 @@ export class DashboardService {
     });
   }
 
+  async attentionQueues(actor: AuthenticatedUser | undefined) {
+    if (!actor?.id) {
+      throw new UnauthorizedException('Sign in with a staff account.');
+    }
+    if (!STAFF_ROLES.includes(actor.role)) {
+      throw new ForbiddenException('Staff permission is required.');
+    }
+    return this.prisma.$transaction(async (tx) => {
+      const staff = await tx.user.findUnique({
+        where: { id: actor.id },
+        select: { status: true, role: { select: { name: true } } },
+      });
+      if (!staff || staff.status !== 'ACTIVE' || staff.role.name !== actor.role ||
+          !STAFF_ROLES.includes(staff.role.name)) {
+        throw new ForbiddenException('Current staff permission is required.');
+      }
+      const propertyId = await this.propertyId(tx);
+      const reservation = { roomType: { propertyId } };
+      const canApprove = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(staff.role.name);
+      const superAdmin = staff.role.name === 'SUPER_ADMIN';
+
+      async function loadCharges(where: Prisma.ReservationChargeWhereInput, correction = false) {
+        const total = await tx.reservationCharge.count({ where });
+        const rows = await tx.reservationCharge.findMany({
+          where, take: 20, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+          select: {
+            id: true, kind: true, amountCentavos: true, createdAt: true,
+            reservation: { select: { id: true, reservationNumber: true } },
+            receipt: { select: { source: true } },
+          },
+        });
+        return {
+          total,
+          items: rows.map((row) => ({
+            id: row.id, reservationId: row.reservation.id,
+            reservationNumber: row.reservation.reservationNumber,
+            label: correction
+              ? row.receipt?.source === 'DEPOSIT' ? 'Deposit restoration review' : 'Cash correction review'
+              : row.kind === 'DAMAGE' ? 'Damage charge' : 'Late-checkout charge',
+            amountCentavos: row.amountCentavos, createdAt: row.createdAt,
+          })),
+        };
+      }
+
+      const chargeApprovals = canApprove
+        ? await loadCharges({ reservation, status: 'PENDING' }) : null;
+      const returnWhere = {
+        reservation, returnMovement: { is: null },
+      } satisfies Prisma.DepositReturnAuthorizationWhereInput;
+      const returnTotal = await tx.depositReturnAuthorization.count({ where: returnWhere });
+      const returnRows = await tx.depositReturnAuthorization.findMany({
+        where: returnWhere, take: 20, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        select: {
+          id: true, amountCentavos: true, createdAt: true,
+          reservation: { select: { id: true, reservationNumber: true } },
+        },
+      });
+      const depositReturns = {
+        total: returnTotal,
+        items: returnRows.map((row) => ({
+          id: row.id, reservationId: row.reservation.id,
+          reservationNumber: row.reservation.reservationNumber,
+          label: 'Authorized deposit return', amountCentavos: row.amountCentavos, createdAt: row.createdAt,
+        })),
+      };
+      const extensionCorrections = superAdmin ? await loadCharges({
+        reservation, kind: 'LATE_CHECKOUT', status: 'APPROVED', appliedAt: null,
+        receipt: { is: { correctionRequired: true, refundedAt: null } },
+      }, true) : null;
+      return {
+        asOf: new Date().toISOString(), timezone: 'Asia/Manila' as const,
+        currency: 'PHP' as const, limit: 20, canReviewReconciliation: superAdmin,
+        chargeApprovals, depositReturns, extensionCorrections,
+      };
+    });
+  }
+
   financialSummary() {
     return this.prisma.$transaction(async (tx) => {
       const propertyId = await this.propertyId(tx);
