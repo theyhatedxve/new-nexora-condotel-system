@@ -6,6 +6,7 @@ import {
   type StaffAction,
 } from './guest-booking-staff-policy.js';
 import { receipt } from './guest-booking-staff-receipt.js';
+import { enqueueBookingConfirmationInTx } from '../notifications/booking-confirmation.queue.js';
 import {
   BadRequestException,
   ConflictException,
@@ -445,6 +446,8 @@ export class GuestBookingStaffService {
               confirmedAt: (booking.confirmedAt ?? now).toISOString(),
             },
           );
+
+          await enqueueBookingConfirmationInTx(tx, booking.id);
 
           const updated =
             await tx.reservation.findUniqueOrThrow({

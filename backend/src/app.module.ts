@@ -46,6 +46,7 @@ import {
   SettingsModule,
 } from './settings/settings.module.js';
 import { UsersModule } from './users/users.module.js';
+import { BookingNotificationsModule } from './notifications/booking-notifications.module.js';
 
 @Module({
   imports: [PrismaModule, ThrottlerModule.forRoot([
@@ -68,6 +69,7 @@ import { UsersModule } from './users/users.module.js';
   AuditModule,
   SettingsModule,
   UsersModule,
+  BookingNotificationsModule,
 ],
   controllers: [AppController],
   providers: [AppService, {

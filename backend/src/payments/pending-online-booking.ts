@@ -1,4 +1,5 @@
 import { activeOnlineAttempts } from './online-payment-attempts.js';
+import { enqueueBookingConfirmationInTx } from '../notifications/booking-confirmation.queue.js';
 import {
   ConflictException,
   ServiceUnavailableException,
@@ -222,6 +223,8 @@ export async function confirmPendingOnlineBookingInTx(
       }),
     },
   });
+
+  await enqueueBookingConfirmationInTx(tx, booking.id);
 
   return true;
 }

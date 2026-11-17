@@ -1077,6 +1077,10 @@ describe('pending online booking payment confirmation', () => {
 
     expect(outcome.outcome).toBe('PROCESSED');
 
+    expect(await prisma.bookingNotification.count({
+      where: { reservationId: result.booking.id, templateKey: 'RESERVATION_CONFIRMED' },
+    })).toBe(1);
+
     expect(
       await prisma.reservation.findUniqueOrThrow({
         where: {
@@ -2302,6 +2306,10 @@ describe('staff confirmation of property requests', () => {
     const first = await staffService.confirm(actor, booking.id, true);
     const reminder = await staffService.contact(actor, booking.id, 'EMAIL');
     const repeated = await staffService.confirm(actor, booking.id, true);
+
+    expect(await prisma.bookingNotification.count({
+      where: { reservationId: booking.id, templateKey: 'RESERVATION_CONFIRMED' },
+    })).toBe(1);
     expect(reminder.confirmedAt).toEqual(first.confirmedAt);
     expect(repeated.confirmedAt).toEqual(first.confirmedAt);
     expect(reminder.holdExpiresAt).toBeNull();

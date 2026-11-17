@@ -344,6 +344,7 @@ model Reservation {
   accessSessions ReservationAccessSession[]
 
   bookingAttempt GuestBookingAttempt?
+  bookingNotifications BookingNotification[]
 
   @@index([bookingPolicyVersion, status, holdExpiresAt])
   @@index([guestId])
@@ -355,6 +356,31 @@ model Reservation {
 // ========================================
 // RESERVATION GUEST
 // ========================================
+
+enum BookingNotificationStatus {
+  PENDING
+  SENDING
+  SMTP_ACCEPTED
+  REVIEW_REQUIRED
+  SKIPPED
+}
+
+model BookingNotification {
+  id             String @id
+  reservationId  String
+  templateKey    String @default("RESERVATION_CONFIRMED")
+  status         BookingNotificationStatus @default(PENDING)
+  failureCode    String?
+  claimedAt      DateTime?
+  smtpAcceptedAt DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+
+  @@unique([reservationId, templateKey])
+  @@index([status, createdAt])
+}
 
 model ReservationAccessToken {
   id            String    @id @default(cuid())
