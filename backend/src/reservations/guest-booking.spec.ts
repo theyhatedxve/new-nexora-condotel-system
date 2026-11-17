@@ -1754,6 +1754,15 @@ describe('pending online booking payment confirmation', () => {
       await refunds.create(result.payment.id, command, admin);
       expect(createRefund).toHaveBeenCalledTimes(1);
       expect(await prisma.refund.count()).toBe(1);
+      const completedRefund = await prisma.refund.findFirstOrThrow({
+        where: { paymentId: result.payment.id, status: 'COMPLETED' },
+      });
+      expect(await prisma.bookingNotification.count({
+        where: {
+          reservationId: result.booking.id,
+          templateKey: 'REFUND_COMPLETED:' + completedRefund.id,
+        },
+      })).toBe(1);
       const marker = await prisma.paymentEvent.findUniqueOrThrow({
         where: { providerEventId: 'financial-exception:' + result.booking.id },
       });

@@ -1,4 +1,5 @@
 import { ROLES, CLAIM, hash, fingerprint } from './refund-policy.js';
+import { enqueueRefundCompletionInTx } from '../notifications/booking-updates.queue.js';
 import {
   assertRefundClaim,
   updateRefundedPayment,
@@ -351,6 +352,8 @@ export class RefundsService {
             }),
           },
         });
+
+        await enqueueRefundCompletionInTx(tx, payment.reservationId, refund.id);
 
         return {
           kind: 'stored' as const,

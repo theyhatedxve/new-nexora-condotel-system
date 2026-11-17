@@ -1,4 +1,5 @@
 import { refreshFinancialExceptionInTx } from './financial-exceptions.js';
+import { enqueueRefundCompletionInTx } from '../notifications/booking-updates.queue.js';
 import { ConflictException } from '@nestjs/common';
 
 import type { Prisma, Refund } from '../generated/prisma/client.js';
@@ -208,6 +209,10 @@ export async function settlePaymongoRefund(
       detailsJson: JSON.stringify({ version: 1, source: 'paymongo_test' }),
     },
   });
+
+  if (outcome.status === 'COMPLETED') {
+    await enqueueRefundCompletionInTx(tx, payment.reservationId, refund.id);
+  }
 
   return 'PROCESSED';
 }

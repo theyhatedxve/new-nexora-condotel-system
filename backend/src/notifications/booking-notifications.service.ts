@@ -7,11 +7,13 @@ import { paymentEvidenceSelect } from '../payments/payment-evidence.js';
 import {
   CANCELLATION_TEMPLATE,
   PAYMENT_UPDATE_PREFIX,
+  REFUND_COMPLETION_PREFIX,
 } from './booking-updates.queue.js';
 import {
   buildCancellationEmail,
   buildPaymentUpdateEmail,
 } from './booking-updates.template.js';
+import { buildRefundCompletionEmail } from './refund-completion.template.js';
 
 @Injectable()
 export class BookingNotificationsService {
@@ -83,8 +85,11 @@ export class BookingNotificationsService {
       const paymentId = row.templateKey.startsWith(PAYMENT_UPDATE_PREFIX)
         ? row.templateKey.slice(PAYMENT_UPDATE_PREFIX.length)
         : null;
+      const refundId = row.templateKey.startsWith(REFUND_COMPLETION_PREFIX)
+        ? row.templateKey.slice(REFUND_COMPLETION_PREFIX.length)
+        : null;
 
-      if (!confirmation && !cancellation && !paymentId) {
+      if (!confirmation && !cancellation && !paymentId && !refundId) {
         return skip('UNKNOWN_TEMPLATE');
       }
       if (
@@ -101,11 +106,11 @@ export class BookingNotificationsService {
         return skip('RECIPIENT_UNAVAILABLE');
       }
 
-      const payments = paymentId
+      const payments = paymentId || refundId
         ? await tx.payment.findMany({
             where: { reservationId: booking.id },
             include: {
-              refunds: { select: { amountCentavos: true, status: true } },
+              refunds: true,
               events: { select: paymentEvidenceSelect },
             },
           })
@@ -116,7 +121,9 @@ export class BookingNotificationsService {
           ? buildConfirmationEmail(booking, baseUrl)
           : cancellation
             ? buildCancellationEmail(booking, baseUrl)
-            : buildPaymentUpdateEmail(booking, payments, paymentId!, baseUrl, now);
+            : refundId
+              ? buildRefundCompletionEmail(booking, payments, refundId, baseUrl, now)
+              : buildPaymentUpdateEmail(booking, payments, paymentId!, baseUrl, now);
         return {
           id: row.id,
           to: recipient.email,

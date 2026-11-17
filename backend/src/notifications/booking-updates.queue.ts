@@ -3,6 +3,7 @@ import type { Prisma } from '../generated/prisma/client.js';
 
 export const PAYMENT_UPDATE_PREFIX = 'PAYMENT_RECORDED:';
 export const CANCELLATION_TEMPLATE = 'RESERVATION_CANCELLED';
+export const REFUND_COMPLETION_PREFIX = 'REFUND_COMPLETED:';
 
 async function enqueueInTx(
   tx: Prisma.TransactionClient,
@@ -33,4 +34,12 @@ export async function enqueueBookingCancellationInTx(
   reservationId: string,
 ): Promise<void> {
   await enqueueInTx(tx, reservationId, CANCELLATION_TEMPLATE);
+}
+
+export async function enqueueRefundCompletionInTx(
+  tx: Prisma.TransactionClient,
+  reservationId: string,
+  refundId: string,
+): Promise<void> {
+  await enqueueInTx(tx, reservationId, REFUND_COMPLETION_PREFIX + refundId);
 }
