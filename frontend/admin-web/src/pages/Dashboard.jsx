@@ -10,6 +10,7 @@ import {
 } from "../utils/formatters";
 import { cards, quickLinkDescriptions } from "../constants/dashboard.js";
 import useDashboardPage from "../hooks/useDashboardPage.js";
+import DashboardContacts from "../components/DashboardContacts.jsx";
 import "../styles/dashboard.css";
 
 export default function Dashboard() {
@@ -17,6 +18,7 @@ export default function Dashboard() {
     operations,
     financial,
     recent,
+    contacts,
     finance,
     recentItems,
     refreshing,
@@ -183,6 +185,8 @@ export default function Dashboard() {
           </ul>
         </section>
       </div>
+
+      <DashboardContacts contacts={contacts} />
 
       <section
         className="dashboard-screen__panel"

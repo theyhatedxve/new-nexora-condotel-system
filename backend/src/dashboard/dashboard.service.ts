@@ -1,6 +1,8 @@
 import { inventoryReservationWhere } from '../reservations/inventory-reservation.js';
 import {
   Injectable,
+  ForbiddenException,
+  UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
 
@@ -20,6 +22,9 @@ import {
   dashboardPeriod,
   financialMetrics,
 } from './dashboard-metrics.js';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
+import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/guest-booking-policy.js';
+import { STAFF_ROLES } from '../reservations/guest-booking-staff-policy.js';
 
 @Injectable()
 export class DashboardService {
@@ -116,6 +121,55 @@ export class DashboardService {
         activeReservations,
         expectedArrivals,
         expectedDepartures,
+      };
+    });
+  }
+
+  contactQueue(actor: AuthenticatedUser | undefined) {
+    if (!actor?.id) {
+      throw new UnauthorizedException('Sign in with a staff account.');
+    }
+    if (!STAFF_ROLES.includes(actor.role)) {
+      throw new ForbiddenException('Staff permission is required.');
+    }
+    return this.prisma.$transaction(async (tx) => {
+      const staff = await tx.user.findUnique({
+        where: { id: actor.id },
+        select: { status: true, role: { select: { name: true } } },
+      });
+      if (!staff || staff.status !== 'ACTIVE' || staff.role.name !== actor.role ||
+          !STAFF_ROLES.includes(staff.role.name)) {
+        throw new ForbiddenException('Current staff permission is required.');
+      }
+      const propertyId = await this.propertyId(tx);
+      const now = new Date();
+      const where = {
+        roomType: { propertyId },
+        status: 'PENDING',
+        paymentPreference: 'PAY_AT_PROPERTY',
+        bookingPolicyVersion: GUEST_BOOKING_POLICY_VERSION,
+      } satisfies Prisma.ReservationWhereInput;
+      const total = await tx.reservation.count({ where });
+      const rows = await tx.reservation.findMany({
+        where, take: 20,
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        select: {
+          id: true, reservationNumber: true, expectedArrivalAt: true,
+          holdExpiresAt: true, firstContactedAt: true,
+          guest: { select: { firstName: true, lastName: true } },
+        },
+      });
+      return {
+        asOf: now.toISOString(), timezone: 'Asia/Manila' as const, total, limit: 20,
+        items: rows.map((row) => ({
+          id: row.id, reservationNumber: row.reservationNumber, guest: row.guest,
+          expectedArrivalAt: row.expectedArrivalAt, deadlineAt: row.holdExpiresAt,
+          firstContactedAt: row.firstContactedAt,
+          attention: row.firstContactedAt
+            ? 'AWAITING_CONFIRMATION' as const : 'INITIAL_CONTACT_NEEDED' as const,
+          deadlineReached: row.holdExpiresAt !== null &&
+            row.holdExpiresAt.getTime() <= now.getTime(),
+        })),
       };
     });
   }

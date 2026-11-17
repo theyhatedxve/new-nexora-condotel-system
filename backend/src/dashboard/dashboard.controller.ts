@@ -2,7 +2,10 @@ import {
   Controller,
   Get,
   Header,
+  Req,
 } from '@nestjs/common';
+import type { Request } from 'express';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 
 import { Throttle } from '@nestjs/throttler';
 
@@ -31,6 +34,14 @@ export class DashboardController {
     return {
       data: await this.dashboard.summary(),
     };
+  }
+
+  @Get('contact-queue')
+  @Roles('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST')
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  async contactQueue(@Req() request: Request & { user?: AuthenticatedUser }) {
+    return { data: await this.dashboard.contactQueue(request.user) };
   }
 
   @Get('financial-summary')

@@ -4,6 +4,7 @@ import { useDashboardSummary } from "./useDashboardSummary";
 import { useStaffData } from "./useStaffData";
 import { cards, quickLinkDescriptions } from "../constants/dashboard.js";
 import { loadRecentReservations } from "../utils/dashboardHelpers.js";
+import { loadDashboardContacts } from "../services/dashboardContactsApi.js";
 
 export default function useDashboardPage() {
   const { user } = useAuth();
@@ -11,12 +12,13 @@ export default function useDashboardPage() {
   const { operations, financial, loading, refresh } = useDashboardSummary(user.role);
 
   const recent = useStaffData(loadRecentReservations, `${user.id}:${user.role}`);
+  const contacts = useStaffData(loadDashboardContacts, `${user.id}:${user.role}`);
 
   const finance = financial.data;
 
   const recentItems = recent.status === "ready" ? recent.data.items.slice(0, 5) : [];
 
-  const refreshing = loading || recent.loading;
+  const refreshing = loading || recent.loading || contacts.loading;
 
   const quickLinks = staffNavigation.filter(
     (item) =>
@@ -39,12 +41,14 @@ export default function useDashboardPage() {
   function refreshDashboard() {
     refresh();
     recent.reload();
+    contacts.reload();
   }
 
   return {
     operations,
     financial,
     recent,
+    contacts,
     finance,
     recentItems,
     refreshing,

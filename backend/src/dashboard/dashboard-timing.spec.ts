@@ -9,6 +9,7 @@ import {
 } from '../generated/prisma/client.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 import { DashboardService } from './dashboard.service.js';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 
 describe('dashboard rental timing', () => {
   let directory: string;
@@ -184,5 +185,88 @@ describe('dashboard rental timing', () => {
     const summary = await dashboard.summary();
     expect(summary.expectedArrivals).toBe(0);
     expect(summary.expectedDepartures).toBe(0);
+  });
+
+  async function queueStaff(): Promise<AuthenticatedUser> {
+    sequence += 1;
+    const role = await prisma.role.upsert({
+      where: { name: 'RECEPTIONIST' }, create: { name: 'RECEPTIONIST' }, update: {},
+    });
+    const staff = await prisma.user.create({
+      data: {
+        roleId: role.id, name: 'Synthetic receptionist',
+        email: `queue-staff-${sequence}@example.test`,
+        passwordHash: 'synthetic-unused-password-hash', status: 'ACTIVE',
+      },
+    });
+    return { id: staff.id, email: staff.email, role: 'RECEPTIONIST' };
+  }
+
+  it('lists initial contact and awaiting-confirmation requests without changing them', async () => {
+    const actor = await queueStaff();
+    const initial = await createBooking('PENDING', {
+      bookingPolicyVersion: 'guest-booking-v2', paymentPreference: 'PAY_AT_PROPERTY',
+      expectedArrivalAt: new Date('2030-01-02T07:00:00.000Z'),
+      holdExpiresAt: new Date('2030-01-02T07:30:00.000Z'),
+      createdAt: new Date('2030-01-01T01:00:00.000Z'),
+    });
+    const contacted = await createBooking('PENDING', {
+      bookingPolicyVersion: 'guest-booking-v2', paymentPreference: 'PAY_AT_PROPERTY',
+      firstContactedAt: new Date('2030-01-01T03:00:00.000Z'),
+      responseDeadlineAt: new Date('2030-01-02T03:00:00.000Z'),
+      expectedArrivalAt: new Date('2030-01-02T07:00:00.000Z'),
+      holdExpiresAt: new Date('2030-01-02T03:00:00.000Z'),
+      createdAt: new Date('2030-01-01T02:00:00.000Z'),
+    });
+    const auditCount = await prisma.auditLog.count();
+    const result = await dashboard.contactQueue(actor);
+    expect(result.total).toBe(2);
+    expect(result.items.map((item) => item.id)).toEqual([initial.id, contacted.id]);
+    expect(result.items[0].attention).toBe('INITIAL_CONTACT_NEEDED');
+    expect(result.items[0].deadlineReached).toBe(false);
+    expect(result.items[1].attention).toBe('AWAITING_CONFIRMATION');
+    expect(result.items[1].deadlineReached).toBe(true);
+    expect(await prisma.reservation.findUniqueOrThrow({ where: { id: initial.id } })).toEqual(initial);
+    expect(await prisma.reservation.findUniqueOrThrow({ where: { id: contacted.id } })).toEqual(contacted);
+    expect(await prisma.auditLog.count()).toBe(auditCount);
+  });
+
+  it('excludes unsupported requests and closed bookings', async () => {
+    const actor = await queueStaff();
+    for (const status of ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'EXPIRED'] as const) {
+      await createBooking(status, {
+        bookingPolicyVersion: 'guest-booking-v2', paymentPreference: 'PAY_AT_PROPERTY',
+      });
+    }
+    await createBooking('PENDING', { bookingPolicyVersion: 'guest-booking-v2', paymentPreference: 'PAYMONGO' });
+    await createBooking('PENDING', { bookingPolicyVersion: null, paymentPreference: 'PAY_AT_PROPERTY' });
+    const result = await dashboard.contactQueue(actor);
+    expect(result.total).toBe(0);
+    expect(result.items).toEqual([]);
+  });
+
+  it('bounds the queue and preserves missing deadlines for staff review', async () => {
+    const actor = await queueStaff();
+    for (let index = 0; index < 21; index += 1) {
+      await createBooking('PENDING', {
+        bookingPolicyVersion: 'guest-booking-v2', paymentPreference: 'PAY_AT_PROPERTY',
+        holdExpiresAt: null,
+        createdAt: new Date(Date.parse('2030-01-01T00:00:00.000Z') + index * 1000),
+      });
+    }
+    const result = await dashboard.contactQueue(actor);
+    expect(result.total).toBe(21);
+    expect(result.limit).toBe(20);
+    expect(result.items).toHaveLength(20);
+    expect(result.items.every((item) => item.deadlineAt === null && !item.deadlineReached)).toBe(true);
+  });
+
+  it('rejects anonymous, guest, stale-role and disabled identities', async () => {
+    const actor = await queueStaff();
+    expect(() => dashboard.contactQueue(undefined)).toThrow('Sign in');
+    expect(() => dashboard.contactQueue({ ...actor, role: 'GUEST' })).toThrow('Staff permission');
+    await expect(dashboard.contactQueue({ ...actor, role: 'MANAGER' })).rejects.toThrow('Current staff permission');
+    await prisma.user.update({ where: { id: actor.id }, data: { status: 'DISABLED' } });
+    await expect(dashboard.contactQueue(actor)).rejects.toThrow('Current staff permission');
   });
 });
