@@ -7,7 +7,10 @@ type StayClock = Pick<Reservation,
 >;
 export const CHECKOUT_GRACE_MS = 30 * 60_000;
 
-export function checkoutGuidance(booking: StayClock, now = new Date()) {
+export function checkoutGuidance(
+  booking: StayClock, now = new Date(),
+  billing?: { baseDepartureAt: Date; paidHours: number },
+) {
   const valid = (date: Date | null): date is Date =>
     date instanceof Date && Number.isFinite(date.getTime());
   const precise = Boolean(
@@ -18,7 +21,12 @@ export function checkoutGuidance(booking: StayClock, now = new Date()) {
     (booking.status !== 'CHECKED_IN' || valid(booking.actualArrivalAt)),
   );
   const departure = precise ? booking.inventoryEndAt : null;
-  const grace = departure ? new Date(departure.getTime() + CHECKOUT_GRACE_MS) : null;
+  const base = departure && (!billing ||
+    (valid(billing.baseDepartureAt) && Number.isSafeInteger(billing.paidHours) && billing.paidHours >= 0))
+    ? billing?.baseDepartureAt ?? departure : null;
+  const grace = base ? new Date(base.getTime() + CHECKOUT_GRACE_MS) : null;
+  const coverage = grace && billing
+    ? new Date(grace.getTime() + billing.paidHours * 3_600_000) : null;
   const phase = booking.status === 'CHECKED_OUT' ? 'CHECKED_OUT'
     : booking.status !== 'CHECKED_IN' ? 'NOT_CHECKED_IN'
     : !departure || !grace || !valid(grace) ? 'TIMING_REVIEW'
@@ -27,6 +35,7 @@ export function checkoutGuidance(booking: StayClock, now = new Date()) {
   return {
     effectiveDepartureAt: departure,
     graceEndsAt: grace && valid(grace) ? grace : null,
+    paidBillingThroughAt: coverage && valid(coverage) ? coverage : null,
     actualArrivalAt: booking.actualArrivalAt,
     actualDepartureAt: booking.actualDepartureAt,
     phase,

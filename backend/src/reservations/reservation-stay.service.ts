@@ -358,6 +358,23 @@ export class ReservationStayService {
             now,
           );
 
+        if (target === 'CHECKED_OUT') {
+          const unresolved = await tx.reservationCharge.findFirst({
+            where: {
+              reservationId: booking.id,
+              OR: [
+                { status: 'PENDING' },
+                { status: 'APPROVED', OR: [
+                  { kind: 'LATE_CHECKOUT', appliedAt: null },
+                  { amountCentavos: { gt: 0 }, receipt: { is: null } },
+                ] },
+              ],
+            },
+            select: { id: true },
+          });
+          if (unresolved) throw new ConflictException('Resolve additional charges before checkout.');
+        }
+
         // Every successful check-in has passed full-payment verification above.
         const actualWindow = target === 'CHECKED_IN' && booking.rentalType
           ? actualRentalWindow(booking, now, true) : undefined;

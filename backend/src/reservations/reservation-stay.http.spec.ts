@@ -1,3 +1,4 @@
+import { ReservationChargesService } from './reservation-charges.service.js';
 import { StayOperationsService } from './stay-operations.service.js';
 import { cancelUnpaidNoShowsInTx } from './reservation-no-show.js';
 import { withInventoryWrite } from './inventory-write.js';
@@ -1870,6 +1871,105 @@ describe(
           .get('/api/staff/reservations/' + bookingId + '/stay-operations')
           .query({ requestedDepartureAt: 'invalid' }).set('Authorization', bearer());
         expect(response.status).toBe(400);
+      });
+    });
+
+    describe('additional charges and paid extensions', () => {
+      function send(action: string, fields: Record<string, unknown> = {}, role = 'MANAGER') {
+        return app.get(ReservationChargesService).mutate(
+          bookingId, { requestId: randomUUID(), action, ...fields }, users[role],
+        );
+      }
+      async function rentalStay() {
+        await checkedIn();
+        const row = await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } });
+        const arrival = row.actualArrivalAt!;
+        const end = new Date(arrival.getTime() + 3 * 86_400_000);
+        await prisma.reservation.update({
+          where: { id: bookingId },
+          data: {
+            rentalType: 'NIGHTLY', rentalUnits: 3, rentalRateCentavos: 250000,
+            includedOccupancy: 2, extraPersonFeeCentavos: 0,
+            accommodationCentavos: 750000, extraPersonTotalCentavos: 0,
+            scheduledArrivalAt: arrival, scheduledDepartureAt: end,
+            inventoryStartAt: arrival, inventoryEndAt: end,
+          },
+        });
+        await prisma.rentalRate.create({ data: {
+          roomTypeId, rentalType: 'HOURLY', rateCentavos: 10000,
+        } });
+        return end;
+      }
+      it('enforces approval, idempotency, separate cash receipts and checkout settlement', async () => {
+        await checkedIn();
+        const body = { action: 'PROPOSE_DAMAGE', requestId: randomUUID(),
+          description: 'Synthetic damage', evidenceNotes: 'Synthetic evidence', amountCentavos: 50000 };
+        const service = app.get(ReservationChargesService);
+        const created = await service.mutate(bookingId, body, users.RECEPTIONIST);
+        expect((await service.mutate(bookingId, body, users.RECEPTIONIST)).replayed).toBe(true);
+        await expect(service.mutate(bookingId, { ...body, amountCentavos: 60000 }, users.RECEPTIONIST))
+          .rejects.toThrow('original unchanged');
+        const chargeId = created.charge.id;
+        await expect(send('APPROVE', { chargeId }, 'RECEPTIONIST')).rejects.toThrow('Manager');
+        await expect(stays.checkOut(bookingId, assignmentId, users.MANAGER)).rejects.toThrow('additional charges');
+        await send('APPROVE', { chargeId });
+        const receiptRequest = { action: 'COLLECT', requestId: randomUUID(), chargeId, moneyReceived: true };
+        await service.mutate(bookingId, receiptRequest, users.RECEPTIONIST);
+        await service.mutate(bookingId, receiptRequest, users.RECEPTIONIST);
+        expect(await prisma.reservationChargeReceipt.count()).toBe(1);
+        expect(await prisma.payment.count()).toBe(1);
+        expect((await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } })).totalAmountCentavos).toBe(750000);
+        await stays.checkOut(bookingId, assignmentId, users.MANAGER);
+        await assertState('CHECKED_OUT', 'CLEANING', true);
+      });
+      it('requires payment and fresh inventory, then avoids repeated grace and duplicate billing', async () => {
+        const end = await rentalStay();
+        const to = (minutes: number) => new Date(end.getTime() + minutes * 60000).toISOString();
+        const first = (await send('PROPOSE_EXTENSION', { requestedDepartureAt: to(70) })).charge;
+        expect(first.amountCentavos).toBe(10000);
+        await send('APPROVE', { chargeId: first.id });
+        await expect(send('APPLY_EXTENSION', { chargeId: first.id })).rejects.toThrow('fully recorded');
+        await send('COLLECT', { chargeId: first.id, moneyReceived: true });
+        await send('APPLY_EXTENSION', { chargeId: first.id });
+        const second = (await send('PROPOSE_EXTENSION', { requestedDepartureAt: to(80) })).charge;
+        expect(second.amountCentavos).toBe(0);
+        await send('APPROVE', { chargeId: second.id });
+        await send('APPLY_EXTENSION', { chargeId: second.id });
+        const row = await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } });
+        expect(row.inventoryEndAt!.toISOString()).toBe(to(80));
+        expect(row.scheduledDepartureAt).toEqual(end);
+        expect(row.totalAmountCentavos).toBe(750000);
+        const guidance = await app.get(StayOperationsService).read(bookingId, undefined, users.MANAGER);
+        expect(guidance.graceEndsAt).toEqual(new Date(end.getTime() + 30 * 60000));
+        expect(guidance.paidBillingThroughAt).toEqual(new Date(end.getTime() + 90 * 60000));
+        expect(await prisma.reservationChargeReceipt.count()).toBe(1);
+      });
+      it('retains collected cash when inventory changes and allows only Super Admin correction', async () => {
+        const end = await rentalStay();
+        const proposal = (await send('PROPOSE_EXTENSION', {
+          requestedDepartureAt: new Date(end.getTime() + 70 * 60000).toISOString(),
+        })).charge;
+        await send('APPROVE', { chargeId: proposal.id });
+        await send('COLLECT', { chargeId: proposal.id, moneyReceived: true });
+        await prisma.roomBlock.create({ data: {
+          roomId, startDate: date(3), endDate: date(4), reason: 'Synthetic conflict',
+        } });
+        const result = await send('APPLY_EXTENSION', { chargeId: proposal.id });
+        expect(result.outcome).toBe('REVIEW_REQUIRED');
+        expect(result.charge.receipt?.correctionRequired).toBe(true);
+        expect((await prisma.reservation.findUniqueOrThrow({ where: { id: bookingId } })).inventoryEndAt).toEqual(end);
+        const refund = { chargeId: proposal.id, moneyReturned: true, reason: 'Unfulfillable extension cash returned.' };
+        await expect(send('REFUND_UNFULFILLED_EXTENSION', refund)).rejects.toThrow('Super Admin');
+        const role = await prisma.role.create({ data: { name: 'SUPER_ADMIN' } });
+        const admin = await prisma.user.create({ data: {
+          roleId: role.id, name: 'Synthetic owner', email: 'charge-owner@example.invalid',
+          passwordHash: 'synthetic-unused', status: 'ACTIVE',
+        } });
+        users.SUPER_ADMIN = { id: admin.id, email: admin.email, role: 'SUPER_ADMIN' };
+        expect((await send('REFUND_UNFULFILLED_EXTENSION', refund, 'SUPER_ADMIN')).charge.status).toBe('VOIDED');
+        expect((await prisma.reservationChargeReceipt.findUniqueOrThrow({
+          where: { chargeId: proposal.id },
+        })).refundedAt).toBeInstanceOf(Date);
       });
     });
 

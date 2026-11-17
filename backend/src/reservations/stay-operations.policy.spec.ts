@@ -35,4 +35,17 @@ describe('checkout guidance boundaries', () => {
     expect(checkoutGuidance({ ...booking, inventoryStartAt: null }).phase).toBe('TIMING_REVIEW');
     expect(checkoutGuidance({ ...booking, status: 'CHECKED_OUT' }).phase).toBe('CHECKED_OUT');
   });
+
+  it('keeps original grace separate from purchased hours and approved departure', () => {
+    const extended = { ...booking, inventoryEndAt: new Date('2026-11-20T08:10:00Z') };
+    const billing = { baseDepartureAt: departure, paidHours: 1 };
+    expect(checkoutGuidance(extended, new Date('2026-11-20T08:00:00Z'), billing)).toMatchObject({
+      effectiveDepartureAt: new Date('2026-11-20T08:10:00Z'),
+      graceEndsAt: new Date('2026-11-20T07:30:00Z'),
+      paidBillingThroughAt: new Date('2026-11-20T08:30:00Z'),
+      phase: 'BEFORE_DEPARTURE',
+    });
+    expect(checkoutGuidance(extended, new Date('2026-11-20T08:10:00.001Z'), billing).phase)
+      .toBe('PAST_GRACE');
+  });
 });

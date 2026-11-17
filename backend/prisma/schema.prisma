@@ -207,6 +207,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  proposedCharges ReservationCharge[] @relation("ChargeProposer")
+  reviewedCharges ReservationCharge[] @relation("ChargeReviewer")
+  collectedChargeReceipts ReservationChargeReceipt[] @relation("ChargeCollector")
+  refundedChargeReceipts ReservationChargeReceipt[] @relation("ChargeRefundRecorder")
+
   auditLogs       AuditLog[]      @relation("AuditLogActor")
   updatedSettings SystemSetting[] @relation("SystemSettingUpdater")
 
@@ -325,6 +330,7 @@ model Reservation {
   guest    Guest    @relation(fields: [guestId], references: [id], onDelete: Restrict)
   roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
 
+  charges ReservationCharge[]
   additionalGuests ReservationGuest[]
   roomAssignments  RoomAssignment[]
   payments         Payment[]
@@ -802,4 +808,64 @@ model GuestBookingAttempt {
 
   @@index([recoveryExpiresAt])
   @@index([state, updatedAt])
+}
+
+enum ReservationChargeKind {
+  DAMAGE
+  LATE_CHECKOUT
+}
+
+enum ReservationChargeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  VOIDED
+}
+
+model ReservationCharge {
+  id                     String @id
+  reservationId          String
+  kind                   ReservationChargeKind
+  status                 ReservationChargeStatus @default(PENDING)
+  description            String
+  evidenceNotes          String?
+  amountCentavos         Int
+  proposedByUserId       String
+  reviewedByUserId       String?
+  reviewedAt             DateTime?
+  billingBaseDepartureAt DateTime?
+  fromDepartureAt        DateTime?
+  requestedDepartureAt   DateTime?
+  hourlyRateCentavos     Int?
+  billableHours          Int?
+  appliedAt              DateTime?
+  createdAt              DateTime @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+  proposedBy User @relation("ChargeProposer", fields: [proposedByUserId], references: [id], onDelete: Restrict)
+  reviewedBy User? @relation("ChargeReviewer", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+  receipt ReservationChargeReceipt?
+
+  @@index([reservationId, createdAt])
+  @@index([proposedByUserId])
+  @@index([reviewedByUserId])
+}
+
+model ReservationChargeReceipt {
+  id                 String @id
+  chargeId           String @unique
+  amountCentavos     Int
+  collectedByUserId  String
+  collectedAt        DateTime @default(now())
+  correctionRequired Boolean @default(false)
+  refundedAt         DateTime?
+  refundedByUserId   String?
+  refundReason       String?
+
+  charge ReservationCharge @relation(fields: [chargeId], references: [id], onDelete: Restrict)
+  collectedBy User @relation("ChargeCollector", fields: [collectedByUserId], references: [id], onDelete: Restrict)
+  refundedBy User? @relation("ChargeRefundRecorder", fields: [refundedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([collectedByUserId])
+  @@index([refundedByUserId])
 }

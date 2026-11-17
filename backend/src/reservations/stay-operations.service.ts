@@ -81,6 +81,29 @@ export class StayOperationsService {
     );
   }
 
+  async assertExtensionInTx(
+    tx: Prisma.TransactionClient, booking: Reservation, to: Date, now: Date,
+  ) {
+    const guidance = checkoutGuidance(booking, now);
+    if (booking.status !== 'CHECKED_IN' || !guidance.effectiveDepartureAt ||
+        !(to instanceof Date) || !Number.isFinite(to.getTime()) ||
+        to <= now || to <= guidance.effectiveDepartureAt) {
+      throw new ConflictException('A future extension of a precisely timed checked-in stay is required.');
+    }
+    if (booking.rentalType === 'HOURLY' &&
+        to > new Date(calendarMarker(booking.scheduledArrivalAt!).getTime() + 15 * 60 * 60000)) {
+      throw new ConflictException('Hourly stays must finish by 11 PM Philippine time.');
+    }
+    const active = await tx.roomAssignment.findMany({
+      where: { reservationId: booking.id, releasedAt: null }, take: 2,
+      include: { room: { select: { status: true } } },
+    });
+    if (active.length !== 1 || active[0].room.status !== 'OCCUPIED') {
+      throw new ConflictException('Exactly one occupied assignment is required.');
+    }
+    await this.allocation(tx, booking, active[0].roomId, to, now);
+  }
+
   async read(
     id: string, requestedDepartureAt: string | undefined,
     actor: AuthenticatedUser | undefined,
@@ -115,7 +138,21 @@ export class StayOperationsService {
       });
       if (!booking) throw new NotFoundException('Reservation not found.');
       const now = new Date();
-      const guidance = checkoutGuidance(booking, now);
+      const appliedCharges = await tx.reservationCharge.findMany({
+        where: { reservationId: id, kind: 'LATE_CHECKOUT', appliedAt: { not: null } },
+        orderBy: [{ appliedAt: 'asc' }, { id: 'asc' }],
+        select: { billingBaseDepartureAt: true, billableHours: true, hourlyRateCentavos: true },
+      });
+      const base = appliedCharges[0]?.billingBaseDepartureAt;
+      const rate = appliedCharges[0]?.hourlyRateCentavos;
+      const paidHours = appliedCharges.reduce((sum, row) => sum + (row.billableHours ?? 0), 0);
+      if (appliedCharges.length && (!base || !rate || !Number.isSafeInteger(paidHours) ||
+          appliedCharges.some((row) => row.billingBaseDepartureAt?.getTime() !== base.getTime() ||
+            row.hourlyRateCentavos !== rate || row.billableHours === null || row.billableHours < 0))) {
+        throw new ConflictException('Extension billing history requires review.');
+      }
+      const guidance = checkoutGuidance(booking, now,
+        base ? { baseDepartureAt: base, paidHours } : undefined);
       const assignments = await tx.roomAssignment.findMany({
         where: { reservationId: id, releasedAt: null }, take: 2,
         include: { room: { select: { status: true } } },

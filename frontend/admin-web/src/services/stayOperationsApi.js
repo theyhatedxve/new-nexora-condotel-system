@@ -42,7 +42,7 @@ export async function getStayOperations(key, signal) {
       data.readOnly !== true || data.approvalGranted !== false ||
       typeof data.checkedAt !== "string" || !Number.isFinite(Date.parse(data.checkedAt)) ||
       ![data.effectiveDepartureAt, data.graceEndsAt, data.actualArrivalAt,
-        data.actualDepartureAt, data.requestedDepartureAt].every(optionalTime) ||
+        data.actualDepartureAt, data.requestedDepartureAt, data.paidBillingThroughAt].every(optionalTime) ||
       !(data.assignmentId === null || typeof data.assignmentId === "string") ||
       !(data.roomStatus === null ||
         ["READY", "OCCUPIED", "CLEANING", "MAINTENANCE", "OUT_OF_SERVICE"].includes(data.roomStatus)) ||

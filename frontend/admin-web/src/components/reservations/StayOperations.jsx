@@ -55,7 +55,10 @@ function Workspace({ actorId, reservationId }) {
             <div><dt>Actual arrival</dt><dd>{formatTimestamp(data.actualArrivalAt)}</dd></div>
             <div><dt>Actual departure</dt><dd>{formatTimestamp(data.actualDepartureAt)}</dd></div>
             <div><dt>Applicable departure</dt><dd>{data.effectiveDepartureAt ? formatTimestamp(data.effectiveDepartureAt) : "No precise checkout clock recorded"}</dd></div>
-            <div><dt>Grace deadline</dt><dd>{data.graceEndsAt ? formatTimestamp(data.graceEndsAt) : "Timing review required"}</dd></div>
+            <div><dt>Original grace deadline</dt><dd>{data.graceEndsAt ? formatTimestamp(data.graceEndsAt) : "Timing review required"}</dd></div>
+            {data.paidBillingThroughAt && (
+              <div><dt>Billing coverage through</dt><dd>{formatTimestamp(data.paidBillingThroughAt)} (pricing only; does not extend room rights)</dd></div>
+            )}
             <div><dt>Checkout phase</dt><dd>{formatStatus(data.phase)}</dd></div>
             <div><dt>Checked at</dt><dd>{formatTimestamp(data.checkedAt)}</dd></div>
           </dl>

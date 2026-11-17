@@ -1,3 +1,4 @@
+import ReservationCharges from "../components/reservations/ReservationCharges.jsx";
 import StayOperations from "../components/reservations/StayOperations.jsx";
 import ReservationContacts from "../components/reservations/ReservationContacts.jsx";
 import { Link } from "react-router";
@@ -85,6 +86,7 @@ export default function ReservationDetails() {
           <ReservationOverview booking={booking} payment={payment} summary={summary} />
           <ReservationHistory booking={booking} assignments={assignments} />
           <StayOperations reservationId={reservationId} bookingStatus={booking.status} />
+          <ReservationCharges reservationId={reservationId} bookingStatus={booking.status} onReload={refresh} />
           <ReservationContacts reservationId={reservationId} bookingStatus={booking.status} />
         </>
       )}
