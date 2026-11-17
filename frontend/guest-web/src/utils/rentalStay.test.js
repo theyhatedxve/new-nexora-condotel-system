@@ -94,3 +94,98 @@ test("recovery keeps rental fields even after the scheduled arrival has passed",
     else globalThis.window = previousWindow;
   }
 });
+
+function bookedRentalTiming(overrides = {}) {
+  return {
+    rentalType: "NIGHTLY",
+    rentalUnits: 1,
+    rentalRateCentavos: 450000,
+    includedOccupancy: 2,
+    extraPersonFeeCentavos: 0,
+    accommodationCentavos: 450000,
+    extraPersonTotalCentavos: 0,
+    totalAmountCentavos: 450000,
+    scheduledArrivalAt: "2099-01-01T07:00:00.000Z",
+    scheduledDepartureAt: "2099-01-02T07:00:00.000Z",
+    inventoryStartAt: "2099-01-01T07:00:00.000Z",
+    inventoryEndAt: "2099-01-02T07:00:00.000Z",
+    actualArrivalAt: null,
+    actualDepartureAt: null,
+    ...overrides,
+  };
+}
+
+test("pre-arrival bookings retain the original scheduled interval", () => {
+  const booking = bookedRentalTiming();
+  assert.equal(readRental(booking).inventoryEndAt, booking.scheduledDepartureAt);
+  assert.throws(() => readRental(bookedRentalTiming({
+    inventoryEndAt: "2099-01-02T08:00:00.000Z",
+  })));
+});
+
+test("actual check-in may shift the full rental interval", () => {
+  const booking = bookedRentalTiming({
+    actualArrivalAt: "2099-01-01T06:45:00.000Z",
+    inventoryStartAt: "2099-01-01T06:45:00.000Z",
+    inventoryEndAt: "2099-01-02T06:45:00.000Z",
+  });
+  const rental = readRental(booking);
+  assert.equal(rental.inventoryStartAt, booking.actualArrivalAt);
+  assert.equal(rental.inventoryEndAt, booking.inventoryEndAt);
+  assert.equal(rental.scheduledDepartureAt, "2099-01-02T07:00:00.000Z");
+});
+
+test("late check-in may preserve the scheduled departure", () => {
+  const booking = bookedRentalTiming({
+    actualArrivalAt: "2099-01-01T08:00:00.000Z",
+    inventoryStartAt: "2099-01-01T08:00:00.000Z",
+  });
+  assert.equal(readRental(booking).inventoryEndAt, booking.scheduledDepartureAt);
+});
+
+test("an extended stay preserves original duration and pricing", () => {
+  const booking = bookedRentalTiming({
+    actualArrivalAt: "2099-01-01T07:00:00.000Z",
+    inventoryEndAt: "2099-01-02T09:10:00.000Z",
+  });
+  const rental = readRental(booking);
+  assert.equal(rental.inventoryEndAt, booking.inventoryEndAt);
+  assert.equal(rental.scheduledDepartureAt, "2099-01-02T07:00:00.000Z");
+  assert.equal(rental.rentalUnits, 1);
+  assert.equal(rental.accommodationCentavos, 450000);
+});
+
+test("actual checkout may occur before or after recorded departure", () => {
+  for (const actualDepartureAt of [
+    "2099-01-02T06:00:00.000Z",
+    "2099-01-02T09:30:00.000Z",
+  ]) {
+    const booking = bookedRentalTiming({
+      actualArrivalAt: "2099-01-01T07:00:00.000Z",
+      actualDepartureAt,
+    });
+    assert.equal(readRental(booking).actualDepartureAt, actualDepartureAt);
+  }
+});
+
+test("invalid booking intervals and original prices remain rejected", () => {
+  const checkedIn = bookedRentalTiming({
+    actualArrivalAt: "2099-01-01T07:00:00.000Z",
+  });
+  for (const patch of [
+    { inventoryStartAt: null },
+    { inventoryEndAt: null },
+    { inventoryEndAt: "invalid" },
+    { inventoryEndAt: checkedIn.inventoryStartAt },
+    { inventoryEndAt: "2099-01-01T06:00:00.000Z" },
+    { inventoryStartAt: "2099-01-01T08:00:00.000Z" },
+    { actualDepartureAt: "2099-01-01T06:00:00.000Z" },
+    { scheduledDepartureAt: "2099-01-02T08:00:00.000Z" },
+    { accommodationCentavos: 450001 },
+  ]) {
+    assert.throws(() => readRental({ ...checkedIn, ...patch }));
+  }
+  assert.throws(() => readRental(bookedRentalTiming({
+    actualDepartureAt: "2099-01-02T07:00:00.000Z",
+  })));
+});

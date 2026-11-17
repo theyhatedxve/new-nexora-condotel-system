@@ -220,7 +220,10 @@ export function createRoomChangeRequest(command) {
 
     method = "patch";
     path = "/rooms/" + roomPathId(command.roomId) + "/status";
-    body = { status: command.status };
+    body = {
+      status: command.status,
+      ...(command.expectedStatus !== undefined ? { expectedStatus: command.expectedStatus } : {}),
+    };
   } else if (
     kind === "create-block" ||
     kind === "edit-block"

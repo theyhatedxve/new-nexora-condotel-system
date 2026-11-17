@@ -476,6 +476,18 @@ export class ReservationStayService {
 
         await tx.auditLog.create({
           data: {
+            actorUserId: actor.id, action: 'room.status_changed',
+            entityType: 'Room', entityId: assigned.roomId, createdAt: now,
+            detailsJson: JSON.stringify({
+              from: target === 'CHECKED_IN' ? 'READY' : 'OCCUPIED',
+              to: target === 'CHECKED_IN' ? 'OCCUPIED' : 'CLEANING',
+              source: target === 'CHECKED_IN' ? 'CHECK_IN' : 'CHECK_OUT',
+            }),
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
             actorUserId: actor.id,
             action,
             entityType: 'Reservation',

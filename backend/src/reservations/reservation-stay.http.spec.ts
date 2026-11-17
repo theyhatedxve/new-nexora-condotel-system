@@ -1,3 +1,5 @@
+import { ReservationDepositsService } from './reservation-deposits.service.js';
+import { RoomStatusService } from '../rooms/room-status.service.js';
 import { ReservationChargesService } from './reservation-charges.service.js';
 import { StayOperationsService } from './stay-operations.service.js';
 import { cancelUnpaidNoShowsInTx } from './reservation-no-show.js';
@@ -672,6 +674,7 @@ describe(
 
           const events =
             await prisma.auditLog.findMany({
+              where: { entityType: 'Reservation', entityId: bookingId },
               orderBy: {
                 createdAt: 'asc',
               },
@@ -1416,7 +1419,13 @@ describe(
 
         expect(
           await prisma.auditLog.count(),
-        ).toBe(2);
+        ).toBe(4);
+        expect(await prisma.auditLog.count({
+          where: { entityType: 'Room', entityId: roomId, action: 'room.status_changed' },
+        })).toBe(2);
+        expect(await prisma.auditLog.count({
+          where: { entityType: 'Reservation', entityId: bookingId },
+        })).toBe(2);
 
         expect(
           (
@@ -1970,6 +1979,94 @@ describe(
         expect((await prisma.reservationChargeReceipt.findUniqueOrThrow({
           where: { chargeId: proposal.id },
         })).refundedAt).toBeInstanceOf(Date);
+      });
+    });
+
+    describe('deposits and housekeeping', () => {
+      function deposit(action: string, fields: Record<string, unknown>, role = 'MANAGER') {
+        return app.get(ReservationDepositsService).mutate(
+          bookingId, { action, requestId: randomUUID(), reason: 'Synthetic deposit operation.', ...fields }, users[role],
+        );
+      }
+
+      it('deducts a full approved charge once and prevents cash double settlement', async () => {
+        await checkedIn();
+        const deposits = app.get(ReservationDepositsService);
+        const charges = app.get(ReservationChargesService);
+        const collection = {
+          action: 'COLLECT', requestId: randomUUID(), reason: 'Synthetic cash deposit.',
+          amountCentavos: 100000, moneyReceived: true,
+        };
+        await deposits.mutate(bookingId, collection, users.RECEPTIONIST);
+        await deposits.mutate(bookingId, collection, users.RECEPTIONIST);
+        expect(await prisma.depositMovement.count()).toBe(1);
+        const charge = (await charges.mutate(bookingId, {
+          requestId: randomUUID(), action: 'PROPOSE_DAMAGE',
+          description: 'Synthetic damage', amountCentavos: 40000,
+        }, users.RECEPTIONIST)).charge;
+        await charges.mutate(bookingId, {
+          requestId: randomUUID(), action: 'APPROVE', chargeId: charge.id,
+        }, users.MANAGER);
+        await expect(deposit('DEDUCT', { chargeId: charge.id }, 'RECEPTIONIST')).rejects.toThrow('Manager');
+        await deposit('DEDUCT', { chargeId: charge.id });
+        const receipt = await prisma.reservationChargeReceipt.findUniqueOrThrow({ where: { chargeId: charge.id } });
+        expect(receipt.source).toBe('DEPOSIT');
+        expect(receipt.depositMovementId).not.toBeNull();
+        await expect(charges.mutate(bookingId, {
+          requestId: randomUUID(), action: 'COLLECT', chargeId: charge.id, moneyReceived: true,
+        }, users.RECEPTIONIST)).rejects.toThrow('cash receipt');
+        expect(await prisma.payment.count()).toBe(1);
+        await stays.checkOut(bookingId, assignmentId, users.MANAGER);
+        const authorization = await deposit('AUTHORIZE_RETURN', { amountCentavos: 60000 });
+        const reserved = await deposits.read(bookingId, 1, users.MANAGER);
+        expect(reserved.summary).toMatchObject({
+          balanceCentavos: 60000, reservedReturnCentavos: 60000, availableCentavos: 0,
+        });
+        const returned = {
+          action: 'RETURN_CASH', requestId: randomUUID(),
+          authorizationId: authorization.recordId, moneyReturned: true,
+          reason: 'Synthetic actual cash handover.',
+        };
+        await deposits.mutate(bookingId, returned, users.RECEPTIONIST);
+        await deposits.mutate(bookingId, returned, users.RECEPTIONIST);
+        expect((await deposits.read(bookingId, 1, users.MANAGER)).summary.balanceCentavos).toBe(0);
+        expect(await prisma.depositMovement.count({ where: { kind: 'RETURN' } })).toBe(1);
+      });
+
+      it('rejects insufficient full deductions without moving funds', async () => {
+        await checkedIn();
+        await deposit('COLLECT', { amountCentavos: 10000, moneyReceived: true });
+        const charges = app.get(ReservationChargesService);
+        const charge = (await charges.mutate(bookingId, {
+          requestId: randomUUID(), action: 'PROPOSE_DAMAGE',
+          description: 'Synthetic damage', amountCentavos: 20000,
+        }, users.RECEPTIONIST)).charge;
+        await charges.mutate(bookingId, {
+          requestId: randomUUID(), action: 'APPROVE', chargeId: charge.id,
+        }, users.MANAGER);
+        await expect(deposit('DEDUCT', { chargeId: charge.id })).rejects.toThrow('full charge');
+        expect(await prisma.depositMovement.count()).toBe(1);
+        expect(await prisma.reservationChargeReceipt.count()).toBe(0);
+      });
+
+      it('records cleaning completion and prevents duplicate or occupied-room changes', async () => {
+        await checkedIn();
+        const statusService = new RoomStatusService(prisma as never);
+        await expect(statusService.update(
+          roomId, 'READY', 'RECEPTIONIST', users.RECEPTIONIST, 'OCCUPIED',
+        )).rejects.toThrow();
+        await stays.checkOut(bookingId, assignmentId, users.MANAGER);
+        await statusService.update(roomId, 'READY', 'RECEPTIONIST', users.RECEPTIONIST, 'CLEANING');
+        await expect(statusService.update(
+          roomId, 'READY', 'RECEPTIONIST', users.RECEPTIONIST, 'CLEANING',
+        )).rejects.toThrow('status changed');
+        const history = await statusService.history(roomId, 1, users.RECEPTIONIST);
+        expect(history.total).toBe(3);
+        expect(history.items[0]).toMatchObject({ from: 'CLEANING', to: 'READY', source: 'MANUAL' });
+        await prisma.user.update({ where: { id: users.RECEPTIONIST.id }, data: { status: 'DISABLED' } });
+        await expect(statusService.update(
+          roomId, 'CLEANING', 'RECEPTIONIST', users.RECEPTIONIST, 'READY',
+        )).rejects.toThrow('Current staff permission');
       });
     });
 

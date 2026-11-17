@@ -1,3 +1,4 @@
+import ReservationDeposits from "../components/reservations/ReservationDeposits.jsx";
 import ReservationCharges from "../components/reservations/ReservationCharges.jsx";
 import StayOperations from "../components/reservations/StayOperations.jsx";
 import ReservationContacts from "../components/reservations/ReservationContacts.jsx";
@@ -87,6 +88,7 @@ export default function ReservationDetails() {
           <ReservationHistory booking={booking} assignments={assignments} />
           <StayOperations reservationId={reservationId} bookingStatus={booking.status} />
           <ReservationCharges reservationId={reservationId} bookingStatus={booking.status} onReload={refresh} />
+          <ReservationDeposits reservationId={reservationId} bookingStatus={booking.status} onReload={refresh} />
           <ReservationContacts reservationId={reservationId} bookingStatus={booking.status} />
         </>
       )}

@@ -63,9 +63,9 @@ function Workspace({ user, reservationId, bookingStatus, onReload }) {
               {item.kind === "LATE_CHECKOUT" && <p>{item.appliedAt ? "Extension applied: " + formatTimestamp(item.appliedAt) : "Extension has not been applied."}</p>}
               {item.receipt ? (
                 <>
-                  <p>Cash receipt: {formatPesos(item.receipt.amountCentavos)} · {item.receipt.collectedBy.name} · {formatTimestamp(item.receipt.collectedAt)}</p>
+                  <p>{item.receipt.source === "DEPOSIT" ? "Deposit settlement: " : "Cash receipt: "}{formatPesos(item.receipt.amountCentavos)} · {item.receipt.collectedBy.name} · {formatTimestamp(item.receipt.collectedAt)}</p>
                   {item.receipt.correctionRequired && !item.receipt.refundedAt && <p role="alert">Payment recorded; extension requires review. Do not collect again.</p>}
-                  {item.receipt.refundedAt && <p>Full cash correction recorded: {formatTimestamp(item.receipt.refundedAt)} · {item.receipt.refundReason}</p>}
+                  {item.receipt.refundedAt && <p>{item.receipt.source === "DEPOSIT" ? "Deposit restored: " : "Full cash correction recorded: "}{formatTimestamp(item.receipt.refundedAt)} · {item.receipt.refundReason}</p>}
                 </>
               ) : <p>{item.amountCentavos === 0 ? "No cash payment required." : "No additional-charge cash receipt recorded."}</p>}
               <div className="actions">
@@ -73,7 +73,7 @@ function Workspace({ user, reservationId, bookingStatus, onReload }) {
                 {manager && ["PENDING", "APPROVED"].includes(item.status) && !item.receipt && !item.appliedAt && <button type="button" disabled={Boolean(draft) || blocked} onClick={() => action("REJECT", item)}>Review rejection</button>}
                 {item.status === "APPROVED" && item.amountCentavos > 0 && !item.receipt && <button type="button" disabled={Boolean(draft) || blocked} onClick={() => action("COLLECT", item)}>Record full cash receipt</button>}
                 {manager && item.kind === "LATE_CHECKOUT" && item.status === "APPROVED" && !item.appliedAt && (item.amountCentavos === 0 || (item.receipt && !item.receipt.refundedAt)) && <button type="button" disabled={Boolean(draft) || blocked} onClick={() => action("APPLY_EXTENSION", item)}>Review extension application</button>}
-                {user.role === "SUPER_ADMIN" && item.status === "APPROVED" && !item.appliedAt && item.receipt?.correctionRequired && !item.receipt.refundedAt && <button type="button" disabled={Boolean(draft) || blocked} onClick={() => action("REFUND_UNFULFILLED_EXTENSION", item)}>Record actual cash correction</button>}
+                {user.role === "SUPER_ADMIN" && item.receipt?.source === "CASH" && item.status === "APPROVED" && !item.appliedAt && item.receipt?.correctionRequired && !item.receipt.refundedAt && <button type="button" disabled={Boolean(draft) || blocked} onClick={() => action("REFUND_UNFULFILLED_EXTENSION", item)}>Record actual cash correction</button>}
               </div>
             </li>
           ))}</ol>

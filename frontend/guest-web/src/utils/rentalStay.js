@@ -100,13 +100,31 @@ export function readRental(value) {
       Date.parse(result.scheduledDepartureAt) - Date.parse(result.scheduledArrivalAt) !== duration) {
     throw new Error("Invalid scheduled rental interval.");
   }
-  if ("rentalRateCentavos" in value && (!result.inventoryStartAt || !result.inventoryEndAt)) {
+  const hasInventory =
+    result.inventoryStartAt !== null || result.inventoryEndAt !== null;
+  if ("rentalRateCentavos" in value && !hasInventory) {
     throw new Error("Missing booked rental interval.");
   }
-  if ((result.inventoryStartAt !== null || result.inventoryEndAt !== null) &&
+  if (hasInventory &&
       (!result.inventoryStartAt || !result.inventoryEndAt ||
-       Date.parse(result.inventoryEndAt) - Date.parse(result.inventoryStartAt) !== duration)) {
+       Date.parse(result.inventoryEndAt) <= Date.parse(result.inventoryStartAt))) {
     throw new Error("Invalid booked rental interval.");
+  }
+  if (result.actualArrivalAt !== null) {
+    if (!hasInventory || Date.parse(result.inventoryStartAt) !== Date.parse(result.actualArrivalAt)) {
+      throw new Error("Invalid actual check-in interval.");
+    }
+  } else if (hasInventory && (
+    Date.parse(result.inventoryStartAt) !== Date.parse(result.scheduledArrivalAt) ||
+    Date.parse(result.inventoryEndAt) !== Date.parse(result.scheduledDepartureAt)
+  )) {
+    throw new Error("Invalid pre-arrival rental interval.");
+  }
+  if (result.actualDepartureAt !== null && (
+    !result.actualArrivalAt ||
+    Date.parse(result.actualDepartureAt) < Date.parse(result.actualArrivalAt)
+  )) {
+    throw new Error("Invalid actual check-out timing.");
   }
   return result;
 }

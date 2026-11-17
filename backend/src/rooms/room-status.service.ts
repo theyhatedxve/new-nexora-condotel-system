@@ -7,6 +7,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import type { Prisma } from '../generated/prisma/client.js';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
+
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { ManualRoomStatus } from './dto/update-room-status.dto.js';
 
@@ -31,6 +35,8 @@ export class RoomStatusService {
     roomId: string,
     nextStatus: ManualRoomStatus,
     actorRole: string,
+    actor?: AuthenticatedUser,
+    expectedStatus?: string,
   ) {
     const properties = await this.prisma.property.findMany({
       select: { id: true },
@@ -46,6 +52,12 @@ export class RoomStatusService {
     const propertyId = properties[0].id;
 
     return withInventoryWrite(this.prisma, async (tx) => {
+      if (actor) {
+        await this.requireActor(tx, actor);
+        if (actor.role !== actorRole) {
+          throw new ForbiddenException('Current staff permission is required.');
+        }
+      }
       const room = await tx.room.findFirst({
         where: {
           id: roomId,
@@ -61,6 +73,10 @@ export class RoomStatusService {
 
       if (!room) {
         throw new NotFoundException('Room not found.');
+      }
+
+      if (expectedStatus !== undefined && room.status !== expectedStatus) {
+        throw new ConflictException('The room status changed. Reload before confirming.');
       }
 
       if (!transitions[room.status]?.includes(nextStatus)) {
@@ -140,7 +156,68 @@ export class RoomStatusService {
         await assertRoomInventoryCommitments(tx, roomId);
       }
 
+      if (actor) {
+        await tx.auditLog.create({ data: {
+          actorUserId: actor.id, action: 'room.status_changed',
+          entityType: 'Room', entityId: room.id,
+          createdAt: new Date(),
+          detailsJson: JSON.stringify({ from: room.status, to: nextStatus, source: 'MANUAL' }),
+        } });
+      }
       return result;
     });
   }
+
+  private async requireActor(tx: Prisma.TransactionClient, actor: AuthenticatedUser | undefined) {
+    if (!actor?.id) throw new UnauthorizedException('Staff sign-in required.');
+    const allowed = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'RECEPTIONIST'];
+    const current = await tx.user.findUnique({
+      where: { id: actor.id }, select: { status: true, role: { select: { name: true } } },
+    });
+    if (!current || current.status !== 'ACTIVE' || current.role.name !== actor.role ||
+        !allowed.includes(current.role.name)) {
+      throw new ForbiddenException('Current staff permission is required.');
+    }
+  }
+
+  async history(roomId: string, page: number, actor: AuthenticatedUser | undefined) {
+    if (typeof roomId !== 'string' || !roomId.trim() || roomId.length > 100 ||
+        !Number.isInteger(page) || page < 1 || page > 10000) {
+      throw new BadRequestException('Invalid room history request.');
+    }
+    return this.prisma.$transaction(async (tx) => {
+      await this.requireActor(tx, actor);
+      const properties = await tx.property.findMany({ select: { id: true }, take: 2 });
+      if (properties.length !== 1) throw new InternalServerErrorException('Exactly one property must be configured.');
+      const room = await tx.room.findFirst({
+        where: { id: roomId, roomType: { propertyId: properties[0].id } }, select: { id: true },
+      });
+      if (!room) throw new NotFoundException('Room not found.');
+      const where = { entityType: 'Room', entityId: roomId, action: 'room.status_changed' };
+      const total = await tx.auditLog.count({ where });
+      const rows = await tx.auditLog.findMany({
+        where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * 20, take: 20,
+        select: { id: true, createdAt: true, detailsJson: true, actorUser: { select: { name: true } } },
+      });
+      const statuses = ['READY', 'CLEANING', 'OCCUPIED', 'MAINTENANCE', 'OUT_OF_SERVICE'];
+      const items = rows.map((row) => {
+        let details: Record<string, unknown> = {};
+        try {
+          const value: unknown = JSON.parse(row.detailsJson ?? '{}');
+          if (value && typeof value === 'object' && !Array.isArray(value)) details = value as Record<string, unknown>;
+        } catch {
+          // Preserve the event without inventing missing details.
+        }
+        return {
+          id: row.id, changedAt: row.createdAt, staffName: row.actorUser?.name ?? 'Historical staff',
+          from: statuses.includes(String(details.from)) ? String(details.from) : 'NOT_RECORDED',
+          to: statuses.includes(String(details.to)) ? String(details.to) : 'NOT_RECORDED',
+          source: ['MANUAL', 'CHECK_IN', 'CHECK_OUT'].includes(String(details.source))
+            ? String(details.source) : 'NOT_RECORDED',
+        };
+      });
+      return { items, total, page, limit: 20 };
+    });
+  }
+
 }

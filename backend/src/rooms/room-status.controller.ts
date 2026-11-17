@@ -2,6 +2,9 @@
 import {
   Body,
   Controller,
+  Get,
+  Header,
+  Query,
   Patch,
   Param,
   Req,
@@ -16,12 +19,12 @@ import {
 } from '../common/decorators/roles.decorator.js';
 
 import { UpdateRoomStatusDto } from './dto/update-room-status.dto.js';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
+import { RoomStatusHistoryQueryDto } from './dto/update-room-status.dto.js';
 import { RoomStatusService } from './room-status.service.js';
 
 type AuthenticatedRequest = Request & {
-  user?: {
-    role?: string;
-  };
+  user?: AuthenticatedUser;
 };
 
 @Controller('rooms/:id/status')
@@ -44,9 +47,9 @@ export class RoomStatusController {
   ) {
     const role = request.user?.role;
 
-    if (!role) {
+    if (!role || !request.user?.id) {
       throw new UnauthorizedException(
-        'Authenticated user role is required.',
+        'Authenticated staff identity is required.',
       );
     }
 
@@ -55,7 +58,21 @@ export class RoomStatusController {
         roomId,
         dto.status,
         role,
+        request.user,
+        dto.expectedStatus,
       ),
     };
   }
+  @Get('history')
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.RECEPTIONIST)
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  async history(
+    @Param('id') roomId: string,
+    @Query() query: RoomStatusHistoryQueryDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return { data: await this.roomStatusService.history(roomId, query.page, request.user) };
+  }
+
 }

@@ -25,6 +25,7 @@ const select = {
   hourlyRateCentavos: true, billableHours: true,
   proposedBy: { select: { name: true } }, reviewedBy: { select: { name: true } },
   receipt: { select: {
+    source: true, depositMovementId: true,
     id: true, amountCentavos: true, collectedAt: true, correctionRequired: true,
     refundedAt: true, refundReason: true, collectedBy: { select: { name: true } },
     refundedBy: { select: { name: true } },
@@ -244,7 +245,8 @@ export class ReservationChargesService {
           }
         } else {
           if (charge.kind !== 'LATE_CHECKOUT' || charge.status !== 'APPROVED' || charge.appliedAt ||
-              !charge.receipt || charge.receipt.refundedAt || !charge.receipt.correctionRequired) {
+              !charge.receipt || charge.receipt.source !== 'CASH' ||
+              charge.receipt.refundedAt || !charge.receipt.correctionRequired) {
             throw new ConflictException('Only a recorded unfulfilled-extension exception can be corrected.');
           }
           await tx.reservationChargeReceipt.update({ where: { chargeId: charge.id }, data: {

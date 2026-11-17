@@ -207,6 +207,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  depositMovements DepositMovement[] @relation("DepositMovementActor")
+  depositReturnApprovals DepositReturnAuthorization[] @relation("DepositReturnApprover")
   proposedCharges ReservationCharge[] @relation("ChargeProposer")
   reviewedCharges ReservationCharge[] @relation("ChargeReviewer")
   collectedChargeReceipts ReservationChargeReceipt[] @relation("ChargeCollector")
@@ -330,6 +332,8 @@ model Reservation {
   guest    Guest    @relation(fields: [guestId], references: [id], onDelete: Restrict)
   roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
 
+  depositMovements DepositMovement[]
+  depositReturnAuthorizations DepositReturnAuthorization[]
   charges ReservationCharge[]
   additionalGuests ReservationGuest[]
   roomAssignments  RoomAssignment[]
@@ -861,6 +865,9 @@ model ReservationChargeReceipt {
   refundedAt         DateTime?
   refundedByUserId   String?
   refundReason       String?
+  source ChargeReceiptSource @default(CASH)
+  depositMovementId String? @unique
+  depositMovement DepositMovement? @relation("ChargeDepositSettlement", fields: [depositMovementId], references: [id], onDelete: Restrict)
 
   charge ReservationCharge @relation(fields: [chargeId], references: [id], onDelete: Restrict)
   collectedBy User @relation("ChargeCollector", fields: [collectedByUserId], references: [id], onDelete: Restrict)
@@ -868,4 +875,54 @@ model ReservationChargeReceipt {
 
   @@index([collectedByUserId])
   @@index([refundedByUserId])
+}
+
+enum ChargeReceiptSource {
+  CASH
+  DEPOSIT
+}
+
+enum DepositMovementKind {
+  COLLECT
+  DEDUCT
+  RETURN
+  RESTORE
+}
+
+model DepositReturnAuthorization {
+  id               String @id
+  reservationId    String
+  amountCentavos   Int
+  reason           String
+  approvedByUserId String
+  createdAt        DateTime @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+  approvedBy User @relation("DepositReturnApprover", fields: [approvedByUserId], references: [id], onDelete: Restrict)
+  returnMovement DepositMovement? @relation("DepositAuthorizedReturn")
+
+  @@index([reservationId, createdAt])
+  @@index([approvedByUserId])
+}
+
+model DepositMovement {
+  id                    String @id
+  reservationId         String
+  kind                  DepositMovementKind
+  amountCentavos        Int
+  reason                String
+  recordedByUserId      String
+  returnAuthorizationId String? @unique
+  reversesMovementId    String? @unique
+  createdAt             DateTime @default(now())
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+  recordedBy User @relation("DepositMovementActor", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+  returnAuthorization DepositReturnAuthorization? @relation("DepositAuthorizedReturn", fields: [returnAuthorizationId], references: [id], onDelete: Restrict)
+  reverses DepositMovement? @relation("DepositMovementReversal", fields: [reversesMovementId], references: [id], onDelete: Restrict)
+  restoredBy DepositMovement? @relation("DepositMovementReversal")
+  chargeReceipt ReservationChargeReceipt? @relation("ChargeDepositSettlement")
+
+  @@index([reservationId, createdAt])
+  @@index([recordedByUserId])
 }

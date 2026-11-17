@@ -109,6 +109,7 @@ export default function useRoomManagement({ room, blocks }) {
       change.prepare(
         {
           kind: "room-status",
+          expectedStatus: room.data.status,
           roomId: room.data.id,
           status: nextStatus,
         },

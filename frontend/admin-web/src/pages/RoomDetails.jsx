@@ -1,3 +1,4 @@
+import HousekeepingPanel from "../components/HousekeepingPanel.jsx";
 import { Link } from "react-router";
 import StaffDataState from "../components/StaffDataState";
 import { formatStatus, formatStayDate, formatTimestamp } from "../utils/formatters";
@@ -66,6 +67,8 @@ export default function RoomDetails() {
               <dd>{room.data.roomType.isActive ? "Yes" : "No"}</dd>
             </div>
           </dl>
+
+          <HousekeepingPanel room={room.data} onReload={refresh} />
 
           <section className="record-section" aria-labelledby="blocks-title">
             <h2 id="blocks-title">Dated block history</h2>

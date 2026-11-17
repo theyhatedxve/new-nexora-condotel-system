@@ -33,6 +33,7 @@ function valid(item) {
     (item.billableHours === null || money(item.billableHours)) &&
     (item.hourlyRateCentavos === null || money(item.hourlyRateCentavos)) &&
     (receipt === null || (typeof receipt.id === "string" && money(receipt.amountCentavos) &&
+      ["CASH", "DEPOSIT"].includes(receipt.source) &&
       receipt.amountCentavos === item.amountCentavos && time(receipt.collectedAt) &&
       nullableTime(receipt.refundedAt) && typeof receipt.correctionRequired === "boolean" &&
       typeof receipt.collectedBy?.name === "string" &&

@@ -1,3 +1,5 @@
+import { ReservationDepositsController } from './reservation-deposits.controller.js';
+import { ReservationDepositsService } from './reservation-deposits.service.js';
 import { ReservationChargesController } from './reservation-charges.controller.js';
 import { ReservationChargesService } from './reservation-charges.service.js';
 import { StayOperationsController } from './stay-operations.controller.js';
@@ -121,6 +123,7 @@ import {
     OwnershipModule,
   ],
   controllers: [
+    ReservationDepositsController,
     ReservationChargesController,
     StayOperationsController,
     ReservationContactsController,
@@ -136,6 +139,7 @@ import {
     GuestReservationsController,
   ],
   providers: [
+    ReservationDepositsService,
     ReservationChargesService,
     StayOperationsService,
     ReservationContactsService,
