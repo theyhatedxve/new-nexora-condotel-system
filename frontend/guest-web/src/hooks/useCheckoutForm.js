@@ -110,6 +110,11 @@ export default function useCheckoutForm({ selection, profile }) {
   }
 
   function refreshQuote() {
+    if (flow.busy || reviewing || flow.attempt || submitRequest.current) {
+      return;
+    }
+
+    setAcknowledgmentAccepted(false);
     setRevision((value) => value + 1);
     setFormError("");
   }

@@ -53,17 +53,28 @@ export function CheckoutForm({ selection, selectionError, profile }) {
           )}
 
           <dl className="checkout-summary">
-            {flow.attempt.selection.rentalType && <div>
-              <dt>Rental duration</dt><dd>{rentalCaption(flow.attempt.selection)}</dd>
-            </div>}
+            {flow.attempt.selection.rentalType && (
+              <div>
+                <dt>Rental duration</dt>
+                <dd>{rentalCaption(flow.attempt.selection)}</dd>
+              </div>
+            )}
+
             <div>
-              <dt>Check-in</dt>
+              <dt>Arrival date</dt>
               <dd>{flow.attempt.selection.checkIn}</dd>
             </div>
+
             <div>
-              <dt>Check-out</dt>
+              <dt>Expected arrival time (Philippines)</dt>
+              <dd>{flow.attempt.arrivalTime}</dd>
+            </div>
+
+            <div>
+              <dt>Scheduled departure date</dt>
               <dd>{flow.attempt.selection.checkOut}</dd>
             </div>
+
             <div>
               <dt>Guests</dt>
               <dd>{flow.attempt.selection.guests}</dd>

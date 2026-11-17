@@ -189,3 +189,107 @@ test("invalid booking intervals and original prices remain rejected", () => {
     actualDepartureAt: "2099-01-02T07:00:00.000Z",
   })));
 });
+
+test("all rental types retain their selection across stay URLs", () => {
+  const cases = [
+    ["HOURLY", 2, "2099-01-01"],
+    ["NIGHTLY", 3, "2099-01-04"],
+    ["WEEKLY", 2, "2099-01-15"],
+    ["MONTHLY", 1, "2099-01-31"],
+  ];
+
+  for (const [rentalType, rentalUnits, checkOut] of cases) {
+    const selection = {
+      checkIn: "2099-01-01",
+      checkOut,
+      guests: 3,
+      rentalType,
+      rentalUnits,
+      arrivalTime: "16:30",
+    };
+
+    const search = staySearchParams(selection);
+    const detailsSelection = parseStaySearch(search, "2099-01-01");
+    const checkoutSelection = parseStaySearch(
+      staySearchParams(detailsSelection),
+      "2099-01-01",
+    );
+
+    assert.deepEqual(detailsSelection, selection);
+    assert.deepEqual(checkoutSelection, selection);
+    assert.deepEqual(rentalSelection(checkoutSelection), {
+      rentalType,
+      rentalUnits,
+      arrivalTime: "16:30",
+    });
+  }
+});
+
+test("all rental types recover original selections and request IDs", () => {
+  const previousWindow = globalThis.window;
+  const records = new Map();
+
+  globalThis.window = {
+    sessionStorage: {
+      getItem(key) {
+        return records.get(key) ?? null;
+      },
+      setItem(key, value) {
+        records.set(key, value);
+      },
+    },
+  };
+
+  try {
+    for (const rentalType of ["HOURLY", "NIGHTLY", "WEEKLY", "MONTHLY"]) {
+      const scope = "https://example.invalid/api|guest:synthetic-" + rentalType;
+      const draft = {
+        roomTypeId: "category",
+        checkIn: "2001-01-01",
+        guests: 3,
+        rentalType,
+        rentalUnits: 1,
+        arrivalTime: "16:30",
+      };
+      const selection = {
+        ...draft,
+        checkOut: rentalWindow(draft).checkOut,
+      };
+      const attempt = {
+        version: 1,
+        apiScope: scope,
+        requestId: "00000000-0000-4000-8000-000000000001",
+        checkoutRequestId: "00000000-0000-4000-8000-000000000002",
+        recoveryToken: "a".repeat(64),
+        paymentPreference: "PAY_AT_PROPERTY",
+        arrivalTime: selection.arrivalTime,
+        selection,
+      };
+
+      saveBookingAttempt(attempt, scope);
+      assert.deepEqual(loadBookingAttempt(scope), attempt);
+      assert.deepEqual(loadBookingAttempt(scope), attempt);
+
+      assert.throws(() => saveBookingAttempt({
+        ...attempt,
+        arrivalTime: "17:30",
+      }, scope));
+      assert.throws(() => saveBookingAttempt({
+        ...attempt,
+        selection: { ...selection, checkOut: "2001-02-01" },
+      }, scope));
+      assert.throws(() => saveBookingAttempt({
+        ...attempt,
+        requestId: "00000000-0000-4000-8000-000000000003",
+      }, scope));
+
+      assert.deepEqual(loadBookingAttempt(scope), attempt);
+    }
+  } finally {
+    if (previousWindow === undefined) {
+      delete globalThis.window;
+    } else {
+      globalThis.window = previousWindow;
+    }
+  }
+});
