@@ -265,3 +265,37 @@
     grid-column: auto;
   }
 }
+
+.deposit-report {
+  margin-top: var(--space-1-5rem);
+}
+
+.deposit-report__scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: 1rem;
+}
+
+.deposit-report table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.deposit-report th,
+.deposit-report td {
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.deposit-report caption {
+  padding-block: 0.75rem;
+  text-align: left;
+}
+
+.deposit-report__pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}

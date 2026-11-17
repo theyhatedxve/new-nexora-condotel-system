@@ -3,7 +3,12 @@ import {
   Get,
   Header,
   Query,
+  Req,
 } from '@nestjs/common';
+import type { Request } from 'express';
+import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
+import { DepositReportsService } from './deposit-reports.service.js';
+import { DepositReportQueryDto } from './dto/deposit-report-query.dto.js';
 
 import {
   Throttle,
@@ -32,7 +37,18 @@ import {
 export class ReportsController {
   constructor(
     private readonly reports: ReportsService,
+    private readonly deposits: DepositReportsService,
   ) {}
+
+  @Get('deposits')
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  async depositMovements(
+    @Query() query: DepositReportQueryDto,
+    @Req() request: Request & { user?: AuthenticatedUser },
+  ) {
+    return { data: await this.deposits.read(query, request.user) };
+  }
 
   @Get('collections')
   @Header('Cache-Control', 'no-store')

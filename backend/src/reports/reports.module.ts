@@ -13,6 +13,7 @@ import {
 import {
   ReportsService,
 } from './reports.service.js';
+import { DepositReportsService } from './deposit-reports.service.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import {
   ],
   providers: [
     ReportsService,
+    DepositReportsService,
   ],
 })
 export class ReportsModule {}

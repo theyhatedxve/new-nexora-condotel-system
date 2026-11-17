@@ -1,6 +1,7 @@
 import useReportsPage from "../hooks/useReportsPage.js";
 import { CurrentOccupancy } from "../components/reports/CurrentOccupancy.jsx";
 import { CollectionsReport } from "../components/reports/CollectionsReport.jsx";
+import DepositReport from "../components/reports/DepositReport.jsx";
 import "../styles/reports.css";
 
 export default function Reports() {
@@ -15,8 +16,9 @@ export default function Reports() {
 
       <p className="reports-page__notice">
         All calendar dates and displayed timestamps use Philippine time
-        (Asia/Manila). The financial date range applies only to collections and
-        refunds.
+        (Asia/Manila). The selected date range applies to accommodation
+        collections, refunds, and deposit movements. Current occupancy
+        remains a current snapshot.
       </p>
 
       <CurrentOccupancy />
@@ -47,6 +49,9 @@ export default function Reports() {
           </div>
         )}
       </section>
+      {parsed.query && (
+        <DepositReport key={`${parsed.query.from}:${parsed.query.to}`} query={parsed.query} />
+      )}
     </section>
   );
 }
