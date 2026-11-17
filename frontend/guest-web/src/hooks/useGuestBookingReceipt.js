@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { guestBookingFeedback } from "../utils/guestBookingFeedback.js";
 
 export default function useGuestBookingReceipt({ flow }) {
   const navigate = useNavigate();
@@ -26,31 +27,18 @@ export default function useGuestBookingReceipt({ flow }) {
 
   const online = receipt.paymentPreference === "PAYMONGO";
 
-  const closed = ["CANCELLED", "EXPIRED", "CHECKED_OUT"].includes(receipt.status);
-
-  const paid =
-    summary?.status === "PAID" &&
-    !summary.requiresReview &&
-    summary.balanceDueCentavos === 0 &&
-    receipt.status === "CONFIRMED";
-
-  const deadlineReached =
-    receipt.status === "PENDING" &&
+  const status = summary?.reservationStatus ?? receipt.status;
+  const deadlineReached = Boolean(
+    status === "PENDING" &&
     receipt.holdExpiresAt &&
-    now >= Date.parse(receipt.holdExpiresAt);
-
-  const title = closed
-    ? "Booking request closed"
-    : receipt.status === "CONFIRMED"
-      ? "Your reservation is confirmed"
-      : online
-        ? "Complete your test payment"
-        : "Your booking request was received";
-
-  const canStartAnother = !online || paid || closed;
+    now >= Date.parse(receipt.holdExpiresAt),
+  );
+  const feedback = guestBookingFeedback({
+    booking: receipt, summary, paymentState: payment?.state, deadlineReached,
+  });
 
   function startAnother() {
-    if (flow.finishKnownBooking()) {
+    if (!busy && feedback.canStartAnother && flow.finishKnownBooking()) {
       navigate("/rooms");
     }
   }
@@ -64,11 +52,8 @@ export default function useGuestBookingReceipt({ flow }) {
     busy,
     error,
     online,
-    closed,
-    paid,
     deadlineReached,
-    title,
-    canStartAnother,
+    ...feedback,
     startAnother,
   };
 }

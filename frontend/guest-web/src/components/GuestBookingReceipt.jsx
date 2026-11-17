@@ -14,7 +14,8 @@ export default function GuestBookingReceipt({ flow }) {
     busy,
     error,
     online,
-    closed,
+    message,
+    canContinuePayment,
     paid,
     deadlineReached,
     title,
@@ -38,13 +39,7 @@ export default function GuestBookingReceipt({ flow }) {
         </h1>
 
         <p className="checkout-view__receipt-intro">
-          {closed
-            ? "This request is no longer an active reservation. Payment history and review requirements remain separate."
-            : receipt.status === "CONFIRMED"
-              ? "The backend has confirmed this reservation. Reception still completes check-in."
-              : online
-                ? "Your room is temporarily held. Only a verified payment received while the hold is valid can confirm the reservation."
-                : "Staff must contact you and record your agreement before confirming this reservation."}
+          {message}
         </p>
 
         <div className="checkout-view__reference">
@@ -142,11 +137,9 @@ export default function GuestBookingReceipt({ flow }) {
           </p>
         )}
 
-        {online &&
+        {canContinuePayment &&
           payment?.state === "READY" &&
-          !busy &&
-          !deadlineReached &&
-          !closed && (
+          !busy && (
             <a
               className="checkout-view__primary-link"
               href={payment.checkoutUrl}

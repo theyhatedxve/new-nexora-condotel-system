@@ -119,7 +119,7 @@ export default function useGuestCheckout(
     }
 
     if (
-      ["CANCELLED", "EXPIRED", "CHECKED_OUT"].includes(
+      ["CANCELLED", "EXPIRED", "CHECKED_IN", "CHECKED_OUT"].includes(
         summary.reservationStatus,
       )
     ) {
@@ -194,9 +194,15 @@ export default function useGuestCheckout(
           status: summary.reservationStatus,
         },
         payment: {
-          state: fullyPaid(summary)
-            ? "PAID"
-            : "REVIEW_REQUIRED",
+          state: summary.requiresReview || summary.status === "REVIEW_REQUIRED"
+            ? "REVIEW_REQUIRED"
+            : ["CANCELLED", "EXPIRED", "CHECKED_IN", "CHECKED_OUT"].includes(
+                summary.reservationStatus,
+              )
+              ? "CLOSED"
+              : fullyPaid(summary)
+                ? "PAID"
+                : "REVIEW_REQUIRED",
         },
       });
 

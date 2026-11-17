@@ -82,7 +82,13 @@ export class DashboardService {
           where: {
             roomType,
             status: 'CONFIRMED',
-            checkInDate: period.stayDate,
+            OR: [
+              {
+                rentalType: { not: null },
+                scheduledArrivalAt: { gte: period.start, lt: period.end },
+              },
+              { rentalType: null, checkInDate: period.stayDate },
+            ],
           },
         });
 
@@ -91,7 +97,13 @@ export class DashboardService {
           where: {
             roomType,
             status: 'CHECKED_IN',
-            checkOutDate: period.stayDate,
+            OR: [
+              {
+                rentalType: { not: null },
+                inventoryEndAt: { gte: period.start, lt: period.end },
+              },
+              { rentalType: null, checkOutDate: period.stayDate },
+            ],
           },
         });
 

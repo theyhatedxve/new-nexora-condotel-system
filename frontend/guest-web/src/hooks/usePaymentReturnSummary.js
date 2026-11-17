@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { getGuestBookingPaymentSummary } from "../services/guestBookingApi.js";
+import { guestBookingFeedback } from "../utils/guestBookingFeedback.js";
 
 export default function usePaymentReturnSummary({ booking }) {
   const [state, setState] = useState({
     status: "loading",
     summary: null,
+    checkedAt: null,
   });
 
   useEffect(() => {
@@ -16,6 +18,7 @@ export default function usePaymentReturnSummary({ booking }) {
           setState({
             status: "ready",
             summary,
+            checkedAt: Date.now(),
           });
         }
       })
@@ -24,6 +27,7 @@ export default function usePaymentReturnSummary({ booking }) {
           setState({
             status: "error",
             summary: null,
+            checkedAt: null,
           });
         }
       });
@@ -33,24 +37,20 @@ export default function usePaymentReturnSummary({ booking }) {
 
   const summary = state.summary;
 
-  const paid = summary?.status === "PAID" && !summary.requiresReview;
-
-  const closed =
-    summary &&
-    ["CANCELLED", "EXPIRED", "CHECKED_OUT"].includes(summary.reservationStatus);
+  const deadlineReached = Boolean(
+    summary?.reservationStatus === "PENDING" &&
+    booking.holdExpiresAt &&
+    state.checkedAt !== null &&
+    Date.parse(booking.holdExpiresAt) <= state.checkedAt,
+  );
+  const feedback = guestBookingFeedback({ booking, summary, deadlineReached });
 
   const title =
     state.status === "loading"
       ? "Checking payment"
       : state.status === "error"
         ? "Payment status unavailable"
-        : summary.requiresReview
-          ? "Payment needs review"
-          : paid
-            ? "Full payment recorded"
-            : closed
-              ? "Booking is closed"
-              : "Payment verification pending";
+        : feedback.title;
 
-  return { state, summary, paid, closed, title };
+  return { state, summary, message: feedback.message, title };
 }

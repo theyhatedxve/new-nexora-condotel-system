@@ -4,7 +4,7 @@ import { formatPesos } from "../../utils/formatMoney.js";
 import usePaymentReturnSummary from "../../hooks/usePaymentReturnSummary.js";
 
 export function ReturnSummary({ booking, onRefresh }) {
-  const { state, summary, paid, closed, title } = usePaymentReturnSummary({ booking });
+  const { state, summary, message, title } = usePaymentReturnSummary({ booking });
 
   return (
     <>
@@ -42,14 +42,8 @@ export function ReturnSummary({ booking, onRefresh }) {
             </div>
           </dl>
 
-          <p className="checkout-note">
-            {summary.requiresReview
-              ? "Contact the property before making another payment."
-              : paid
-                ? "Full payment is recorded by the backend. Reception still completes check-in."
-                : closed
-                  ? "This booking is closed. A payment or redirect cannot revive it."
-                  : "Full payment has not been verified. Check again before attempting another payment."}
+          <p className="checkout-note" role="status">
+            {message}
           </p>
         </>
       )}
