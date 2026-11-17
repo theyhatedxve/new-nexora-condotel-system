@@ -1,4 +1,5 @@
 import { guestCancellationPolicy } from './guest-cancellation-policy.js';
+import { enqueueBookingCancellationInTx } from '../notifications/booking-updates.queue.js';
 import {
   BadRequestException,
   ConflictException,
@@ -250,6 +251,8 @@ export class ReservationCancellationService {
             }),
           },
         });
+
+        await enqueueBookingCancellationInTx(tx, booking.id);
 
         return {
           reservationNumber:

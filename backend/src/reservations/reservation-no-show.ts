@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { enqueueBookingCancellationInTx } from '../notifications/booking-updates.queue.js';
 import type { Prisma, Reservation } from '../generated/prisma/client.js';
 import { GUEST_BOOKING_POLICY_VERSION } from './guest-booking-policy.js';
 import { assertReservationTransition } from './reservation-lifecycle.js';
@@ -99,6 +100,7 @@ export async function cancelUnpaidNoShowsInTx(
         }),
       },
     });
+    await enqueueBookingCancellationInTx(tx, row.id);
     noShowCancelledCount += 1;
     noShowReleasedAssignmentCount += released.count;
   }

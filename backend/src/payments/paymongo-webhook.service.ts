@@ -1,4 +1,5 @@
 import { hasClosedUnpaidEvidence } from './online-payment-attempts.js';
+import { enqueuePaymentUpdateInTx } from '../notifications/booking-updates.queue.js';
 import { refreshFinancialExceptionInTx } from './financial-exceptions.js';
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import type { Payment, Prisma } from '../generated/prisma/client.js';
@@ -277,6 +278,7 @@ export class PaymongoWebhookService {
           detailsJson: JSON.stringify({ eventId: event.id }),
         },
       });
+      await enqueuePaymentUpdateInTx(tx, matched.reservationId, matched.id);
     }
 
     return bookingReview || financialReview
@@ -562,6 +564,9 @@ export class PaymongoWebhookService {
       }
     }
     const financialReview = await refreshFinancialExceptionInTx(tx, payment.reservationId, actorId);
+    if (newlyPaid) {
+      await enqueuePaymentUpdateInTx(tx, payment.reservationId, payment.id);
+    }
     const evidence = await tx.payment.findUniqueOrThrow({
       where: { id: paymentId }, select: { events: { select: paymentEvidenceSelect } },
     });

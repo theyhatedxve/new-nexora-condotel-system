@@ -9,8 +9,15 @@ import type { PrismaService } from '../prisma/prisma.service.js';
 import type { EmailService } from '../auth/email.service.js';
 import { enqueueBookingConfirmationInTx } from './booking-confirmation.queue.js';
 import { BookingNotificationsService } from './booking-notifications.service.js';
+import {
+  CANCELLATION_TEMPLATE,
+  PAYMENT_UPDATE_PREFIX,
+  enqueueBookingCancellationInTx,
+  enqueuePaymentUpdateInTx,
+} from './booking-updates.queue.js';
+import { CHECKOUT_PAID_EVENT } from '../payments/paymongo-webhook.payload.js';
 
-describe('booking confirmation notifications', () => {
+describe('booking notifications', () => {
   let directory: string;
   let prisma: PrismaClient;
   let service: BookingNotificationsService;
@@ -75,6 +82,8 @@ describe('booking confirmation notifications', () => {
     vi.stubEnv('NEXORA_GUEST_WEB_URL', 'http://localhost:5175');
     email.sendBookingConfirmation.mockResolvedValue('SMTP_ACCEPTED');
     await prisma.bookingNotification.deleteMany();
+    await prisma.paymentEvent.deleteMany();
+    await prisma.payment.deleteMany();
     await prisma.reservation.deleteMany();
     await prisma.user.update({ where: { id: guestUserId }, data: { status: 'ACTIVE' } });
   });
@@ -201,5 +210,242 @@ describe('booking confirmation notifications', () => {
     await service.runOnce();
     expect(email.sendBookingConfirmation).not.toHaveBeenCalled();
     expect((await prisma.bookingNotification.findFirstOrThrow()).status).toBe('SENDING');
+  });
+
+  async function propertyPayment(reservationId: string, amountCentavos = 100000) {
+    return prisma.payment.create({
+      data: {
+        reservationId,
+        method: 'PAY_AT_PROPERTY',
+        status: 'PAID',
+        amountCentavos,
+        currency: 'PHP',
+        paidAt: new Date(),
+      },
+    });
+  }
+
+  async function queuePayment(reservationId: string, paymentId: string) {
+    await prisma.$transaction((tx) =>
+      enqueuePaymentUpdateInTx(tx, reservationId, paymentId),
+    );
+  }
+
+  async function queueCancellation(reservationId: string) {
+    await prisma.$transaction((tx) =>
+      enqueueBookingCancellationInTx(tx, reservationId),
+    );
+  }
+
+  it('deduplicates each payment while allowing multiple payments per booking', async () => {
+    const record = await booking();
+    const first = await propertyPayment(record.id);
+    const second = await propertyPayment(record.id);
+    await queuePayment(record.id, first.id);
+    await queuePayment(record.id, first.id);
+    await queuePayment(record.id, second.id);
+    expect(await prisma.bookingNotification.count()).toBe(2);
+    expect(await prisma.bookingNotification.findMany({
+      select: { templateKey: true },
+    })).toEqual(expect.arrayContaining([
+      { templateKey: PAYMENT_UPDATE_PREFIX + first.id },
+      { templateKey: PAYMENT_UPDATE_PREFIX + second.id },
+    ]));
+  });
+
+  it('rolls back a payment and its notification together', async () => {
+    const record = await booking();
+    await expect(prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.create({
+        data: {
+          reservationId: record.id,
+          method: 'PAY_AT_PROPERTY',
+          status: 'PAID',
+          amountCentavos: 100000,
+          currency: 'PHP',
+          paidAt: new Date(),
+        },
+      });
+      await enqueuePaymentUpdateInTx(tx, record.id, payment.id);
+      throw new Error('Synthetic payment rollback');
+    })).rejects.toThrow('Synthetic payment rollback');
+    expect(await prisma.payment.count()).toBe(0);
+    expect(await prisma.bookingNotification.count()).toBe(0);
+  });
+
+  it('sends one property-payment update with the current booking balance', async () => {
+    const record = await booking();
+    const payment = await propertyPayment(record.id);
+    await queuePayment(record.id, payment.id);
+    await service.runOnce();
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).toHaveBeenCalledTimes(1);
+    const message = email.sendBookingConfirmation.mock.calls[0][0];
+    expect(message.subject).toBe('Your NEXORA payment update');
+    expect(message.text).toContain('Current reservation status: CONFIRMED');
+    expect(message.text).toContain('Payment method: Pay at Property');
+    expect(message.text).toContain('Current booking payment status: PARTIALLY_PAID');
+    expect(message.text).toContain('1,000.00');
+    expect(message.text).toContain('3,500.00');
+    expect(message.text).toContain('/my-bookings/' + record.id);
+  });
+
+  it('uses verified PayMongo evidence when preparing a payment update', async () => {
+    const record = await booking();
+    const suffix = record.id;
+    const payment = await prisma.payment.create({
+      data: {
+        reservationId: record.id,
+        method: 'PAYMONGO',
+        status: 'PAID',
+        amountCentavos: 450000,
+        currency: 'PHP',
+        paidAt: new Date(),
+        provider: 'PAYMONGO',
+        providerCheckoutId: 'checkout-' + suffix,
+        providerPaymentId: 'provider-payment-' + suffix,
+      },
+    });
+    await prisma.paymentEvent.create({
+      data: {
+        paymentId: payment.id,
+        providerEventId: 'event-' + suffix,
+        eventType: CHECKOUT_PAID_EVENT,
+        status: 'PROCESSED',
+        signatureVerified: true,
+        processedAt: new Date(),
+        payloadJson: JSON.stringify({
+          version: 1,
+          livemode: false,
+          reference: payment.id,
+          checkoutSessionId: payment.providerCheckoutId,
+          providerPaymentId: payment.providerPaymentId,
+          amountCentavos: payment.amountCentavos,
+          currency: 'PHP',
+        }),
+      },
+    });
+    await queuePayment(record.id, payment.id);
+    await service.runOnce();
+    const message = email.sendBookingConfirmation.mock.calls[0][0];
+    expect(message.text).toContain('Payment method: PayMongo test checkout');
+    expect(message.text).toContain('Current booking payment status: PAID');
+    expect(message.text).not.toContain('Payment status: REVIEW_REQUIRED');
+  });
+
+  it('warns instead of treating an unsupported paid status as verified', async () => {
+    const record = await booking();
+    const payment = await prisma.payment.create({
+      data: {
+        reservationId: record.id,
+        method: 'PAYMONGO',
+        status: 'PAID',
+        amountCentavos: 450000,
+        currency: 'PHP',
+        paidAt: new Date(),
+        provider: 'PAYMONGO',
+      },
+    });
+    await queuePayment(record.id, payment.id);
+    await service.runOnce();
+    const message = email.sendBookingConfirmation.mock.calls[0][0];
+    expect(message.text).toContain('Payment status: REVIEW_REQUIRED');
+    expect(message.text).not.toContain('Recorded payment amount:');
+    expect(message.text).not.toContain('Current booked-stay balance:');
+  });
+
+  it('preserves cancellation and review warnings for a late payment update', async () => {
+    const record = await booking();
+    const payment = await propertyPayment(record.id);
+    await queuePayment(record.id, payment.id);
+    await prisma.reservation.update({
+      where: { id: record.id }, data: { status: 'CANCELLED' },
+    });
+    await service.runOnce();
+    const message = email.sendBookingConfirmation.mock.calls[0][0];
+    expect(message.text).toContain('Current reservation status: CANCELLED');
+    expect(message.text).toContain('Payment status: REVIEW_REQUIRED');
+    expect(message.text).not.toContain('Current booked-stay balance:');
+  });
+
+  it('deduplicates cancellation notices and sends the authenticated booking link', async () => {
+    const record = await booking();
+    await prisma.reservation.update({
+      where: { id: record.id }, data: { status: 'CANCELLED' },
+    });
+    await queueCancellation(record.id);
+    await queueCancellation(record.id);
+    await service.runOnce();
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).toHaveBeenCalledTimes(1);
+    const message = email.sendBookingConfirmation.mock.calls[0][0];
+    expect(message.subject).toBe('Your NEXORA reservation cancellation');
+    expect(message.text).toContain('Current reservation status: CANCELLED');
+    expect(message.text).toContain('does not promise or confirm a refund');
+    expect(message.text).toContain('/my-bookings/' + record.id);
+    expect(await prisma.bookingNotification.findFirstOrThrow()).toMatchObject({
+      templateKey: CANCELLATION_TEMPLATE, status: 'SMTP_ACCEPTED',
+    });
+  });
+
+  it('rolls back cancellation and its queue entry together', async () => {
+    const record = await booking();
+    await expect(prisma.$transaction(async (tx) => {
+      await tx.reservation.update({
+        where: { id: record.id }, data: { status: 'CANCELLED' },
+      });
+      await enqueueBookingCancellationInTx(tx, record.id);
+      throw new Error('Synthetic cancellation rollback');
+    })).rejects.toThrow('Synthetic cancellation rollback');
+    expect(await prisma.bookingNotification.count()).toBe(0);
+    expect((await prisma.reservation.findUniqueOrThrow({
+      where: { id: record.id },
+    })).status).toBe('CONFIRMED');
+  });
+
+  it('skips a cancellation notice when the current reservation is not cancelled', async () => {
+    const record = await booking();
+    await queueCancellation(record.id);
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).not.toHaveBeenCalled();
+    expect(await prisma.bookingNotification.findFirstOrThrow()).toMatchObject({
+      status: 'SKIPPED', failureCode: 'RESERVATION_CHANGED',
+    });
+  });
+
+  it('does not retry an uncertain payment email or undo the payment', async () => {
+    const record = await booking();
+    const payment = await propertyPayment(record.id);
+    await queuePayment(record.id, payment.id);
+    email.sendBookingConfirmation.mockResolvedValueOnce('UNKNOWN');
+    await service.runOnce();
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).toHaveBeenCalledTimes(1);
+    expect(await prisma.bookingNotification.findFirstOrThrow()).toMatchObject({
+      status: 'REVIEW_REQUIRED', failureCode: 'SMTP_OUTCOME_UNKNOWN',
+    });
+    expect((await prisma.payment.findUniqueOrThrow({
+      where: { id: payment.id },
+    })).status).toBe('PAID');
+  });
+
+  it('retains cancellation when SMTP delivery fails', async () => {
+    const record = await booking();
+    await prisma.reservation.update({
+      where: { id: record.id }, data: { status: 'CANCELLED' },
+    });
+    await queueCancellation(record.id);
+    email.sendBookingConfirmation.mockRejectedValueOnce(
+      new Error('Synthetic cancellation email failure'),
+    );
+    await service.runOnce();
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).toHaveBeenCalledTimes(1);
+    expect(await prisma.bookingNotification.findFirstOrThrow()).toMatchObject({
+      status: 'REVIEW_REQUIRED', failureCode: 'SMTP_OUTCOME_UNKNOWN',
+    });
+    expect((await prisma.reservation.findUniqueOrThrow({
+      where: { id: record.id },
+    })).status).toBe('CANCELLED');
   });
 });

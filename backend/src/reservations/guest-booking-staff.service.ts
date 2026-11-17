@@ -1,3 +1,4 @@
+import { enqueueBookingCancellationInTx } from '../notifications/booking-updates.queue.js';
 import {
   STAFF_ROLES,
   CONTACT_ACTION,
@@ -509,6 +510,8 @@ export class GuestBookingStaffService {
               released.count,
           },
         );
+
+        await enqueueBookingCancellationInTx(tx, booking.id);
 
         const updated =
           await tx.reservation.findUniqueOrThrow({

@@ -1,6 +1,7 @@
 // CREATE: backend/src/payments/pay-at-property.service.ts
 
 import { createHash } from 'node:crypto';
+import { enqueuePaymentUpdateInTx } from '../notifications/booking-updates.queue.js';
 import {
   BadRequestException,
   ConflictException,
@@ -309,6 +310,8 @@ export class PayAtPropertyService {
             }),
           },
         });
+
+        await enqueuePaymentUpdateInTx(tx, booking.id, payment.id);
 
         return respond(payment, [...booking.payments, payment], false);
       });

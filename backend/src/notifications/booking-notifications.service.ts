@@ -3,6 +3,15 @@ import { isEmail } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { EmailService } from '../auth/email.service.js';
 import { buildConfirmationEmail, guestWebBaseUrl } from './booking-confirmation.template.js';
+import { paymentEvidenceSelect } from '../payments/payment-evidence.js';
+import {
+  CANCELLATION_TEMPLATE,
+  PAYMENT_UPDATE_PREFIX,
+} from './booking-updates.queue.js';
+import {
+  buildCancellationEmail,
+  buildPaymentUpdateEmail,
+} from './booking-updates.template.js';
 
 @Injectable()
 export class BookingNotificationsService {
@@ -69,7 +78,19 @@ export class BookingNotificationsService {
       }
 
       const booking = row.reservation;
-      if (row.templateKey !== 'RESERVATION_CONFIRMED' || booking.status !== 'CONFIRMED') {
+      const confirmation = row.templateKey === 'RESERVATION_CONFIRMED';
+      const cancellation = row.templateKey === CANCELLATION_TEMPLATE;
+      const paymentId = row.templateKey.startsWith(PAYMENT_UPDATE_PREFIX)
+        ? row.templateKey.slice(PAYMENT_UPDATE_PREFIX.length)
+        : null;
+
+      if (!confirmation && !cancellation && !paymentId) {
+        return skip('UNKNOWN_TEMPLATE');
+      }
+      if (
+        (confirmation && booking.status !== 'CONFIRMED') ||
+        (cancellation && booking.status !== 'CANCELLED')
+      ) {
         return skip('RESERVATION_CHANGED');
       }
       const recipient = booking.guest.user;
@@ -80,8 +101,22 @@ export class BookingNotificationsService {
         return skip('RECIPIENT_UNAVAILABLE');
       }
 
+      const payments = paymentId
+        ? await tx.payment.findMany({
+            where: { reservationId: booking.id },
+            include: {
+              refunds: { select: { amountCentavos: true, status: true } },
+              events: { select: paymentEvidenceSelect },
+            },
+          })
+        : [];
+
       try {
-        const message = buildConfirmationEmail(booking, baseUrl);
+        const message = confirmation
+          ? buildConfirmationEmail(booking, baseUrl)
+          : cancellation
+            ? buildCancellationEmail(booking, baseUrl)
+            : buildPaymentUpdateEmail(booking, payments, paymentId!, baseUrl, now);
         return {
           id: row.id,
           to: recipient.email,
