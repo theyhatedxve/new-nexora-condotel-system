@@ -2,9 +2,12 @@ import useReportsPage from "../hooks/useReportsPage.js";
 import { CurrentOccupancy } from "../components/reports/CurrentOccupancy.jsx";
 import { CollectionsReport } from "../components/reports/CollectionsReport.jsx";
 import DepositReport from "../components/reports/DepositReport.jsx";
+import { useAuth } from "../auth/useAuth";
+import FinancialExceptionReport from "../components/reports/FinancialExceptionReport.jsx";
 import "../styles/reports.css";
 
 export default function Reports() {
+  const { user } = useAuth();
   const { parsed, applyRange, resetRange } = useReportsPage();
 
   return (
@@ -51,6 +54,9 @@ export default function Reports() {
       </section>
       {parsed.query && (
         <DepositReport key={`${parsed.query.from}:${parsed.query.to}`} query={parsed.query} />
+      )}
+      {parsed.query && user.role === "SUPER_ADMIN" && (
+        <FinancialExceptionReport key={`${user.id}:${parsed.query.from}:${parsed.query.to}`} query={parsed.query} />
       )}
     </section>
   );

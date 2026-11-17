@@ -14,6 +14,7 @@ import {
   ReportsService,
 } from './reports.service.js';
 import { DepositReportsService } from './deposit-reports.service.js';
+import { FinancialExceptionReportsService } from './financial-exception-reports.service.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { DepositReportsService } from './deposit-reports.service.js';
   providers: [
     ReportsService,
     DepositReportsService,
+    FinancialExceptionReportsService,
   ],
 })
 export class ReportsModule {}

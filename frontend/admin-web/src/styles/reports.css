@@ -299,3 +299,37 @@
   align-items: center;
   gap: 0.75rem;
 }
+
+.exception-report {
+  margin-top: var(--space-1-5rem);
+}
+
+.exception-report__scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: 1rem;
+}
+
+.exception-report table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.exception-report th,
+.exception-report td {
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.exception-report caption {
+  padding-block: 0.75rem;
+  text-align: left;
+}
+
+.exception-report__pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}

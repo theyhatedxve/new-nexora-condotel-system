@@ -9,6 +9,8 @@ import type { Request } from 'express';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { DepositReportsService } from './deposit-reports.service.js';
 import { DepositReportQueryDto } from './dto/deposit-report-query.dto.js';
+import { FinancialExceptionReportsService } from './financial-exception-reports.service.js';
+import { FinancialExceptionReportQueryDto } from './dto/financial-exception-report-query.dto.js';
 
 import {
   Throttle,
@@ -38,6 +40,7 @@ export class ReportsController {
   constructor(
     private readonly reports: ReportsService,
     private readonly deposits: DepositReportsService,
+    private readonly exceptions: FinancialExceptionReportsService,
   ) {}
 
   @Get('deposits')
@@ -48,6 +51,17 @@ export class ReportsController {
     @Req() request: Request & { user?: AuthenticatedUser },
   ) {
     return { data: await this.deposits.read(query, request.user) };
+  }
+
+  @Get('financial-exceptions')
+  @Roles('SUPER_ADMIN')
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  async financialExceptions(
+    @Query() query: FinancialExceptionReportQueryDto,
+    @Req() request: Request & { user?: AuthenticatedUser },
+  ) {
+    return { data: await this.exceptions.read(query, request.user) };
   }
 
   @Get('collections')
