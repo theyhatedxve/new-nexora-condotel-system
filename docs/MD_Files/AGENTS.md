@@ -8,7 +8,47 @@
 
 > This proposed file is a condensed replacement guide. The existing 2026-11-11 `AGENTS.md` contains detailed historical implementation records, dependency inventories, test evidence, and screen-level checkpoints. Preserve or archive those records before adopting a replacement. This draft does not verify live repository or database state.
 
-## Latest owner-confirmed checkpoint — 2026-11-18
+## Admin UI redesign closure — 2026-11-19
+
+**Status:** Completed and accepted, owner-confirmed.
+
+The owner confirmed completion of the Admin UI redesign and the final
+visual consistency and accessibility review.
+
+### Accepted screen groups
+
+- Shared navigation, page header, and Dashboard.
+- Reservations and reservation details.
+- Rooms, room details, and room types.
+- Guests, guest details, and Guest Accounts.
+- Payments, payment details, and reconciliation.
+- Reports.
+- Users & Roles and staff account forms.
+- Settings.
+- Audit Logs.
+
+The redesign follows the owner's Daily Operations Dashboard reference:
+navy navigation, gold accents, rounded cards, consistent controls,
+responsive tables, and visible keyboard focus.
+
+### Evidence
+
+Completion and final acceptance are owner-reported.
+The assistant confirmed the latest management stylesheet is connected
+to Reports, Users, Staff User Editor, Settings, and Audit Logs.
+
+No fresh test, lint, build, or browser output was supplied with the
+final acceptance message. Do not invent execution results or test counts.
+
+### Continuation
+
+The Admin UI redesign is closed. Do not restart accepted screen batches.
+The owner selects the next maintenance or enhancement task.
+
+NFC functionality remains postponed.
+Production deployment remains deferred.
+
+## Previous owner-confirmed checkpoint — 2026-11-18
 
 This checkpoint records the owner's completion confirmations in the current
 development conversation.

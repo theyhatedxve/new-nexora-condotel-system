@@ -1,13 +1,27 @@
 # NEXORA Admin UI/UX Implementation Plan
 
-## Latest admin integration checkpoint — 2026-11-15
+## Latest admin redesign checkpoint — 2026-11-19
 
-Admin UI redesign is owner-confirmed complete, recorded on 2026-11-12 in AGENTS.md.
-Users & Roles and staff account setup are present in the current source. The
-settings API projection and view removed bookingLinkMinutes together. Earlier
-owner output reported clean admin lint and a successful build with a bundle-size
-warning. Current browser acceptance remains pending. NFC is postponed.
-See [current checkpoint](AGENTS.md).
+**Status:** Completed and accepted, owner-confirmed.
+
+The owner confirmed completion of the redesign based on the
+NEXORA Daily Operations Dashboard reference, including the final
+visual consistency and accessibility review.
+
+Accepted scope includes the shared layout, Dashboard, Reservations,
+Rooms and Room Types, Guests and Guest Accounts, Payments and
+Reconciliation, Reports, Users & Roles, Settings, and Audit Logs.
+
+The earlier browser-acceptance-pending statement is superseded
+by this owner confirmation.
+
+No fresh lint, build, test, or browser output accompanied the final
+acceptance. This checkpoint does not claim independent runtime verification.
+
+NFC functionality remains postponed.
+Production deployment remains deferred.
+
+See [the current project checkpoint](MD_Files/AGENTS.md).
 
 **Recorded:** 2026-11-11  
 **Purpose:** Preserve the admin redesign roadmap proposed in the owner-assistant discussion.  
@@ -16,7 +30,9 @@ See [current checkpoint](AGENTS.md).
 
 ## 1. Current Status and How to Use This Plan
 
-The current [AGENTS.md](AGENTS.md) records **Admin Dashboard redesign COMPLETED, owner-confirmed on 2026-11-12**. That completion record does not establish new test results or change other project work.
+The current [project checkpoint](MD_Files/AGENTS.md) records final
+owner acceptance of the Admin UI redesign on November 19, 2026.
+The roadmap below is historical guidance, not an unfinished-work checklist.
 
 The roadmap below preserves the earlier screen-by-screen planning. It is not a current checklist of unfinished work, permission to restart completed work, or proof that every feature illustrated in the reference has been implemented. Before taking another step, reconcile its scope with current source and owner-confirmed acceptance.
 

@@ -1,5 +1,40 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
+## Admin UI handoff update — 2026-11-19
+
+**Status:** Admin UI redesign closed, owner-confirmed.
+
+The owner confirmed completion of all approved redesign batches
+and the final visual consistency and accessibility review.
+
+The latest batch covers Reports, Users & Roles, staff account forms,
+Settings, and Audit Logs. These screens use the shared
+frontend/admin-web/src/styles/admin-management.css stylesheet.
+
+The approved redesign preserves existing API contracts,
+role restrictions, financial warnings, filters, pagination,
+and account/settings review workflows.
+
+### Verification boundary
+
+Final acceptance is owner-reported.
+The assistant confirmed the latest stylesheet connections through
+source inspection. No fresh runtime verification output accompanied
+the owner's final acceptance.
+
+### Next action
+
+There is no remaining screen batch in this approved redesign.
+The owner selects the next maintenance or enhancement task.
+
+Consult [the current project checkpoint](MD_Files/AGENTS.md)
+before starting further work.
+
+NFC functionality remains postponed.
+Production deployment remains deferred.
+
+The November 18 checkpoint below remains historical context.
+
 ## Current handoff checkpoint — 2026-11-18
 
 The owner confirmed completion of Phase 11 verification and acceptance of
