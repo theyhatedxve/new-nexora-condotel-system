@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import {
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
@@ -17,6 +18,7 @@ import {
 
 import "../styles/staff-users.css";
 import "../styles/guest-accounts.css";
+import "../styles/guest-workspace.css";
 
 const registrationDate = new Intl.DateTimeFormat("en-PH", {
   dateStyle: "medium",
@@ -119,24 +121,39 @@ export default function GuestAccounts() {
 
   return (
     <section
-      className="staff-users guest-accounts"
+      className="staff-users guest-accounts guest-ui"
       aria-labelledby="guest-accounts-title"
     >
-      <header className="staff-users__heading">
+            <header className="guest-ui__toolbar">
         <div>
-          <h1 id="guest-accounts-title">Guest Accounts</h1>
-          <p>View registered guest accounts.</p>
+          <h1
+            id="guest-accounts-title"
+            className="guest-ui__sr-only"
+          >
+            Guest Accounts
+          </h1>
+
+          <p className="guest-ui__intro">
+            All registered guest accounts, including accounts without bookings.
+          </p>
         </div>
 
-        <button
-          type="button"
-          className="staff-users__secondary"
-          disabled={directory.loading}
-          onClick={refreshResults}
-        >
-          <RefreshCw size={16} aria-hidden="true" />
-          Refresh
-        </button>
+        <div className="guest-ui__actions">
+          <Link className="guest-ui__outline-link" to="/guests">
+            <ArrowLeft size={17} aria-hidden="true" />
+            Guest Directory
+          </Link>
+
+          <button
+            type="button"
+            className="staff-users__secondary"
+            disabled={directory.loading}
+            onClick={refreshResults}
+          >
+            <RefreshCw size={16} aria-hidden="true" />
+            {directory.loading ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
       </header>
 
       <form
