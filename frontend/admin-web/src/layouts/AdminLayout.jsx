@@ -1,8 +1,11 @@
 import { Outlet } from "react-router";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X } from "lucide-react";
+
 import Sidebar from "../components/Sidebar";
-import { ROLE_LABELS } from "../auth/staffNavigation";
+import AdminHeader from "../components/AdminHeader";
 import useAdminLayout from "../hooks/useAdminLayout.js";
+
+import "../styles/admin-shell.css";
 
 export default function AdminLayout() {
   const {
@@ -18,7 +21,10 @@ export default function AdminLayout() {
   } = useAdminLayout();
 
   return (
-    <div className="admin-layout" onKeyDown={handleKeyDown}>
+    <div
+      className="admin-layout admin-layout--operations"
+      onKeyDown={handleKeyDown}
+    >
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -40,31 +46,32 @@ export default function AdminLayout() {
         {open ? "Close navigation" : "Open navigation"}
       </button>
 
-      <Sidebar role={user.role} open={open} onNavigate={closeMenu} />
+      <Sidebar
+        user={user}
+        open={open}
+        onNavigate={closeMenu}
+        onSignOut={signOutStaff}
+      />
 
       <div className="admin-main">
-        <header className="admin-header">
-          <div>
-            <p className="eyebrow">NEXORA Management System</p>
+        <AdminHeader
+          title={title}
+          user={user}
+          onSignOut={signOutStaff}
+        />
 
-            <p className="header-title">{title}</p>
-          </div>
-
-          <div className="staff-account">
-            <span>{ROLE_LABELS[user.role]}</span>
-
-            <button type="button" className="secondary-button" onClick={signOutStaff}>
-              <LogOut size={18} aria-hidden="true" />
-              Sign out
-            </button>
-          </div>
-        </header>
-
-        <main id="main-content" ref={main} tabIndex={-1} className="admin-content">
+        <main
+          id="main-content"
+          ref={main}
+          tabIndex={-1}
+          className="admin-content"
+        >
           <Outlet />
         </main>
 
-        <footer className="admin-footer">NEXORA · Staff workspace</footer>
+        <footer className="admin-footer">
+          NEXORA · Staff workspace
+        </footer>
       </div>
     </div>
   );

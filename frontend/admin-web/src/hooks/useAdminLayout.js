@@ -1,7 +1,24 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
+
 import { useAuth } from "../auth/useAuth";
 import { staffNavigation } from "../auth/staffNavigation";
+
+const additionalTitles = [
+  {
+    path: "/rooms/types",
+    label: "Room Types",
+  },
+  {
+    path: "/payments/reconciliation",
+    label: "Payment Reconciliation",
+  },
+];
+
+const titleEntries = [
+  ...staffNavigation,
+  ...additionalTitles,
+].sort((a, b) => b.path.length - a.path.length);
 
 export default function useAdminLayout() {
   const { user, signOut } = useAuth();
@@ -14,7 +31,7 @@ export default function useAdminLayout() {
   const main = useRef(null);
 
   const title =
-    staffNavigation.find(
+    titleEntries.find(
       (item) =>
         item.path === location.pathname ||
         (item.path !== "/" &&
@@ -23,7 +40,6 @@ export default function useAdminLayout() {
 
   useLayoutEffect(() => {
     document.title = title + " | NEXORA";
-
     main.current?.focus({ preventScroll: true });
 
     window.scrollTo({
@@ -33,13 +49,36 @@ export default function useAdminLayout() {
     });
   }, [location.pathname, title]);
 
-  function closeMenu() {
+  function closeMenu(event) {
+    if (
+      event?.ctrlKey ||
+      event?.metaKey ||
+      event?.shiftKey ||
+      event?.altKey
+    ) {
+      return;
+    }
+
     setOpenedAt(null);
     main.current?.focus({ preventScroll: true });
   }
 
   function handleKeyDown(event) {
-    if (event.key === "Escape" && open) {
+    if (event.key !== "Escape") return;
+
+    const accountMenu = event.target.closest(
+      "details[data-account-menu]",
+    );
+
+    if (accountMenu?.open) {
+      accountMenu.open = false;
+      accountMenu
+        .querySelector("summary")
+        ?.focus({ preventScroll: true });
+      return;
+    }
+
+    if (open) {
       setOpenedAt(null);
       menuButton.current?.focus({ preventScroll: true });
     }
