@@ -1,22 +1,43 @@
+import { Info } from "lucide-react";
+
 import useRoomsPage from "../hooks/useRoomsPage.js";
 import { RoomDirectory } from "../components/rooms/RoomDirectory.jsx";
+
 import "../styles/rooms.css";
+import "../styles/room-workspace.css";
 
 export default function Rooms() {
-  const { queryKey, parsed, changePage, clearFilters, changeSearchParams } =
-    useRoomsPage();
+  const {
+    queryKey,
+    parsed,
+    changePage,
+    clearFilters,
+    changeSearchParams,
+  } = useRoomsPage();
 
   return (
-    <section className="rooms-screen" aria-labelledby="rooms-title">
-      <header className="rooms-screen__heading">
-        <h1 id="rooms-title">Rooms</h1>
-        <p>Manage physical room inventory and operational status.</p>
+    <section
+      className="rooms-screen room-ui"
+      aria-labelledby="rooms-title"
+    >
+      <header className="room-ui__toolbar">
+        <div>
+          <h1 id="rooms-title" className="room-ui__sr-only">
+            Rooms
+          </h1>
+
+          <p className="room-ui__intro">
+            Manage physical rooms, operational status, and inventory.
+          </p>
+        </div>
       </header>
 
-      <p className="rooms-screen__notice">
-        Operational status describes a room’s current condition. Availability
-        for a stay also depends on dates, reservations, assignments, and dated
-        blocks.
+      <p className="rooms-screen__notice room-ui__notice">
+        <Info size={19} aria-hidden="true" />
+        <span>
+          Room status records the current physical condition. Stay availability
+          also depends on dates, reservations, assignments, and dated blocks.
+        </span>
       </p>
 
       {parsed.error ? (
