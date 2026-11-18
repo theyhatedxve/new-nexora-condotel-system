@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import StaffUserEditor from "./pages/StaffUserEditor";
 import StaffPassword from "./pages/StaffPassword";
+import GuestAccounts from "./pages/GuestAccounts";
 import "./styles/tokens.css";
 import "./styles/global.css";
 
@@ -35,6 +36,7 @@ const pages = {
   "/audit-logs": <AuditLogs />,
   "/settings": <Settings />,
   "/users": <Users />,
+  "/guest-accounts": <GuestAccounts />,
 };
 
 export default function App() {

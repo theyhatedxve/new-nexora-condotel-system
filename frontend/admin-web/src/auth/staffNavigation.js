@@ -51,6 +51,12 @@ export const staffNavigation = [
     roles: STAFF_ROLES,
   },
   {
+    path: "/guest-accounts",
+    label: "Guest Accounts",
+    icon: Users,
+    roles: ["SUPER_ADMIN", "ADMIN"],
+  },
+  {
     path: "/payments",
     label: "Payments",
     icon: Wallet,
