@@ -1,6 +1,26 @@
 # NEXORA — Implementation Guide
 
-## Current continuation gate — 2026-11-15
+## Current continuation checkpoint — 2026-11-18
+
+The owner confirmed completion of Phase 11 verification, database recovery,
+synthetic demo initialization, and the Phase 12 local demonstration.
+
+The guest account upgrade, Guest Accounts page, guest-phone encryption,
+and admin navigation scrolling correction are owner-accepted.
+
+Verification statements in this checkpoint are owner-reported.
+Older failed-test totals and pending recovery tasks remain historical records.
+
+The current deliverable is the accepted local prototype.
+
+Use [LOCAL_PROTOTYPE_SETUP.md](LOCAL_PROTOTYPE_SETUP.md) for configuration,
+startup, demonstration accounts, database selection, and shutdown.
+
+See [MD_Files/AGENTS.md](MD_Files/AGENTS.md) for current project status.
+
+The owner selects subsequent maintenance or enhancement work.
+
+## Historical verification checkpoint — 2026-11-15
 
 Guest Account Booking Step 5 has source cleanup and test corrections applied.
 The owner runs all database operations, tests, lint, builds, apps, and browser
@@ -31,20 +51,26 @@ Documentation approval does not authorize all application phases.
 
 ## 2. Preflight Review
 
-Current owner-confirmed roadmap, synchronized 2026-11-15.
+Current owner-confirmed roadmap, synchronized 2026-11-18.
 
 | Phase | Owner-confirmed status |
 |---|---|
-| Phases 1-8 | COMPLETED |
-| Phase 9 - NFC | POSTPONED |
-| Phase 10 - Reports and Settings | COMPLETED |
-| Phase 11 - Testing and Security | PAUSED and incomplete |
-| Phase 12 - Deployment | DEFERRED |
+| Phases 1–8 | Completed |
+| Phase 9 — NFC | Postponed |
+| Phase 10 — Reports and Settings | Completed |
+| Phase 11 — Integrated Testing and Security | Completed |
+| Phase 12 — Local Prototype Packaging | Accepted |
+| Production deployment | Deferred |
 
-The current work is the Guest Account Booking upgrade. Steps 1-4 and Step 5
-source cleanup are applied. Step 5 remains in progress during isolated database
-recovery, owner regression checks, and browser acceptance. These checks apply to
-the current upgrade and do not resume the paused Phase 11 program.
+The owner accepted the local prototype after verification of configuration,
+startup, synthetic demo data, account access, booking workflows, recovery,
+and the admin navigation scrolling correction.
+
+Before future changes, inspect the current source and relevant documentation,
+define the requested scope, and follow the owner's authorization workflow.
+
+The owner runs tests, builds, database operations, and browser acceptance
+under the current working agreement.
 
 The implementation and acceptance records below retain their original dated evidence.
 

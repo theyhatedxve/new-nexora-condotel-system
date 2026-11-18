@@ -1,12 +1,28 @@
 # 1. NEXORA
 
-## Current project checkpoint — 2026-11-15
+## Current project checkpoint — 2026-11-18
 
-The guest account upgrade, My Bookings, authenticated payments, and legacy source
-cleanup are present. Admin redesign is owner-confirmed complete. Step 5 awaits
-isolated test database recovery, backend rechecks, and browser acceptance.
-See [current source changes and owner results](AGENTS.md) and
-[continuation instructions](AI_HANDOFF.md).
+The owner confirmed completion of Phase 11 verification and acceptance of
+the Phase 12 local prototype demonstration.
+
+The accepted prototype includes the guest account booking upgrade,
+My Bookings, the admin UI redesign, Guest Accounts, guest-phone encryption,
+database recovery verification, and synthetic demo data.
+
+The admin navigation scrolling correction is also owner-accepted.
+
+NFC functionality remains postponed.
+Production deployment remains deferred.
+
+Use these documents to run or continue the project:
+
+- [Local prototype setup](LOCAL_PROTOTYPE_SETUP.md)
+- [Current project checkpoint](MD_Files/AGENTS.md)
+- [AI continuation handoff](AI_HANDOFF.md)
+- [Implementation guide](IMPLEMENTATION_GUIDE.md)
+- [Technical plan](MD_Files/TECHNICAL_PLAN.md)
+
+Completion statements reflect owner-reported verification and acceptance.
 
 NEXORA is an integrated, web-based Condotel Management System for one property.
 It connects accommodation information, guest services, and staff operations

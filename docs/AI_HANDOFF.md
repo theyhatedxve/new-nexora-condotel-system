@@ -1,6 +1,62 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
-## Latest continuation and database recovery — 2026-11-15
+## Current handoff checkpoint — 2026-11-18
+
+The owner confirmed completion of Phase 11 verification and acceptance of
+the Phase 12 local prototype demonstration.
+
+The accepted local prototype includes:
+
+- Guest account registration, login, and authenticated booking access.
+- My Bookings and reservation details.
+- The completed admin UI redesign.
+- Guest Accounts for Super Admin and Admin, including unbooked accounts.
+- AES-256-GCM encryption of guest phone numbers.
+- Owner-verified phone conversion and database restoration.
+- Local configuration templates and startup instructions.
+- A separate synthetic demo database.
+- Synthetic staff and guest accounts, rooms, rental rates, and bookings.
+- The admin navigation scrolling correction.
+
+### Evidence and scope
+
+These completion statements reflect owner-reported checks and acceptance.
+The assistant inspected relevant source and documentation during the work.
+Record exact test counts or independently observed runtime results only
+when supporting output is available.
+
+NFC functionality remains postponed.
+Production deployment remains deferred.
+
+### Running the accepted prototype
+
+Follow [LOCAL_PROTOTYPE_SETUP.md](LOCAL_PROTOTYPE_SETUP.md).
+
+| Component | Address |
+|---|---|
+| Backend API | http://localhost:3000/api |
+| Guest website | http://localhost:5175 |
+| Admin website | http://localhost:5176 |
+
+Use backend/nexora.demo.db for the synthetic demonstration and
+backend/dev.db for the existing development environment.
+
+Both Prisma and the running application must target the intended database.
+Preserve the encryption keys required by each database and its backups.
+
+### Current continuation
+
+The owner selects the next maintenance or enhancement task.
+
+Consult [the current project checkpoint](MD_Files/AGENTS.md) before changes.
+Follow the current authorization workflow and owner-run verification rules.
+
+### Historical records
+
+The dated records below preserve earlier implementation and verification
+states. Their pending tasks are superseded by the current checkpoint.
+
+## Historical continuation and database recovery — 2026-11-15
 
 Continue with Guest Account Booking Step 5 verification. Steps 1-4, source
 cleanup, seven authenticated/retirement test migrations, and eight regression
@@ -16,7 +72,7 @@ is pending. The owner runs migrations, tests, lint, builds, and browser checks.
 Next, recover the five Phase 4 test databases, rerun backend checks, and obtain
 browser acceptance. Use [AGENTS.md](AGENTS.md) for exact names and status.
 
-## Current continuation checkpoint — 2026-11-14
+## Historical continuation checkpoint — 2026-11-14
 
 Continue from the Guest Account Booking upgrade.
 

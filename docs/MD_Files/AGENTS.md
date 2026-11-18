@@ -8,6 +8,67 @@
 
 > This proposed file is a condensed replacement guide. The existing 2026-11-11 `AGENTS.md` contains detailed historical implementation records, dependency inventories, test evidence, and screen-level checkpoints. Preserve or archive those records before adopting a replacement. This draft does not verify live repository or database state.
 
+## Latest owner-confirmed checkpoint — 2026-11-18
+
+This checkpoint records the owner's completion confirmations in the current
+development conversation.
+
+| Milestone | Current status |
+|---|---|
+| Admin UI redesign | Completed, owner-confirmed |
+| Guest account booking upgrade | Completed, owner-confirmed |
+| Phase 10 — Reports and Settings | Completed, owner-confirmed |
+| Phase 11 — Integrated Testing and Security | Completed, owner-confirmed |
+| Phase 12 — Local Prototype Packaging | Accepted, owner-confirmed |
+| NFC functionality | Postponed |
+| Production deployment | Deferred |
+
+### Accepted additions and corrections
+
+- Guest account registration, login, and authenticated My Bookings.
+- Guest-phone encryption using AES-256-GCM.
+- Conversion of existing guest phone values and owner verification.
+- Guest Accounts for Super Admin and Admin, including accounts without bookings.
+- Database backup, restoration, integrity, and phone-decryption checks.
+- Local environment templates and startup instructions.
+- A separate synthetic demo database with accounts, rooms, rental rates,
+  and sample reservations.
+- Owner acceptance of the local demonstration.
+- Admin navigation scrolling correction with keyboard-focus preservation.
+
+### Verification evidence
+
+Completion is based on owner-reported execution and acceptance.
+Exact test totals and additional runtime observations must be recorded only
+when their output is available.
+
+### Current environment
+
+| Component | Local setting |
+|---|---|
+| Backend API | http://localhost:3000/api |
+| Guest website | http://localhost:5175 |
+| Admin website | http://localhost:5176 |
+| Development database | backend/dev.db |
+| Synthetic demo database | backend/nexora.demo.db |
+
+Use the same intended database for DATABASE_URL and
+NEXORA_RUNTIME_DATABASE_URL when running Prisma commands and the application.
+
+### Continuation
+
+The accepted local prototype is ready for demonstration.
+
+The owner selects any subsequent maintenance or enhancement task.
+Apply the current step-specific authorization workflow to future work.
+
+Use this dated checkpoint for project progress. Earlier pending statuses,
+continuation tasks, and phase gates describe their historical checkpoints.
+The original instruction-draft metadata remains retained below.
+
+See [local setup](../LOCAL_PROTOTYPE_SETUP.md) and
+[handoff instructions](../AI_HANDOFF.md).
+
 ## 1. Role and responsibilities
 
 Act as a precise development assistant for the existing NEXORA system. Help with architecture, backend, frontend, APIs, data modeling, security, UI/UX, documentation, testing plans, and controlled debugging. Preserve approved design, existing workflows, and historical records.
@@ -44,9 +105,9 @@ Documents may disagree because some capture older phases or policies. Report con
 
 **Source-verification caveat:** The uploaded documents are not the live repository. `AI_HANDOFF.md` records a 28-model migration snapshot while `DATABASE_SCHEMA.md` and portions of `AGENTS.md` describe 27-model inventory at earlier checkpoints. Confirm the actual `backend/prisma/schema.prisma` before stating the exact present model count, field definitions, or indexes.
 
-## 3. Current confirmed development checkpoint
+## 3. Historical development checkpoints
 
-**Latest owner-confirmed project status (November 11, 2026):**
+**Historical owner-confirmed project status (November 11, 2026):**
 
 | Original phase | Status |
 |---|---|
