@@ -8,6 +8,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 
+import { decryptGuestPhone } from '../common/security/guest-phone.crypto.js';
+
 import { PrismaService } from '../prisma/prisma.service.js';
 
 import {
@@ -255,6 +257,7 @@ export class StaffGuestsService {
 
       return {
         ...record,
+        phone: decryptGuestPhone(record.phone, record.id),
         reservationCount: _count.reservations,
         historyLimit,
       };

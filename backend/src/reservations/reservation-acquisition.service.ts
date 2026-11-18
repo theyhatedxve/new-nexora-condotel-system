@@ -4,6 +4,8 @@ import { rentalReservationSnapshot, RENTAL_RESERVATION_SELECT } from './rental-r
 import { HOLD_DURATION_MS, type AcquisitionPolicy } from './reservation-acquisition-policy.js';
 import { randomUUID } from 'node:crypto';
 
+import { encryptGuestPhone } from '../common/security/guest-phone.crypto.js';
+
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { plainToInstance } from 'class-transformer';
@@ -236,6 +238,8 @@ export class ReservationAcquisitionService {
       connectedStays(requested, existing),
     );
 
+    const guestId = trustedGuestId || randomUUID();
+
     const result =
       await tx.reservation.create({
         data: {
@@ -253,7 +257,9 @@ export class ReservationAcquisitionService {
               email: dto.email
                 .trim()
                 .toLowerCase(),
-              phone: dto.phone?.trim(),
+              phone: encryptGuestPhone(dto.phone?.trim(), guestId),
+
+              id: guestId,
             },
           },
 

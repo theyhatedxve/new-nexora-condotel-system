@@ -9,6 +9,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 
+import { decryptGuestPhone } from '../common/security/guest-phone.crypto.js';
+
 import { PrismaService } from '../prisma/prisma.service.js';
 
 import {
@@ -232,7 +234,17 @@ export class StaffReservationsService {
         );
       }
 
-      return { ...booking, arrivalPolicy: await noShowPolicyInTx(tx, booking) };
+      return {
+        ...booking,
+        guest: {
+          ...booking.guest,
+          phone: decryptGuestPhone(
+            booking.guest.phone,
+            booking.guest.id,
+          ),
+        },
+        arrivalPolicy: await noShowPolicyInTx(tx, booking),
+      };
     });
   }
 }

@@ -6,6 +6,10 @@
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
+import {
+  decryptGuestPhone,
+  encryptGuestPhone,
+} from '../common/security/guest-phone.crypto.js';
 import { RENTAL_RESERVATION_SELECT } from './rental-reservation.js';
 import type { GuestBookingAttempt, Prisma } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
@@ -81,7 +85,7 @@ export class GuestBookingService {
         firstName: guest.firstName,
         lastName: guest.lastName,
         email: guest.email,
-        phone: guest.phone,
+        phone: decryptGuestPhone(guest.phone, guest.id),
       };
     });
   }
@@ -257,7 +261,12 @@ export class GuestBookingService {
         }, 'HOLD', now, guest.id);
 
         if (dto.phone) {
-          await tx.guest.update({ where: { id: guest.id }, data: { phone: dto.phone } });
+          await tx.guest.update({
+            where: { id: guest.id },
+            data: {
+              phone: encryptGuestPhone(dto.phone, guest.id),
+            },
+          });
         }
         await tx.reservation.update({
           where: { id: reservation.id },
