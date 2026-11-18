@@ -1,9 +1,16 @@
 import { Link } from "react-router";
-import { ArrowRight, ClipboardCheck } from "lucide-react";
+import {
+  ArrowRight,
+  ClipboardCheck,
+  Info,
+} from "lucide-react";
+
 import usePaymentsPage from "../hooks/usePaymentsPage.js";
 import { PaymentFilters } from "../components/payments/PaymentFilters.jsx";
 import { PaymentResults } from "../components/payments/PaymentResults.jsx";
+
 import "../styles/payments.css";
+import "../styles/payment-workspace.css";
 
 export default function Payments() {
   const {
@@ -16,11 +23,19 @@ export default function Payments() {
   } = usePaymentsPage();
 
   return (
-    <section className="payments-screen" aria-labelledby="payments-title">
-      <header className="payments-screen__heading">
+    <section
+      className="payments-screen payment-ui"
+      aria-labelledby="payments-title"
+    >
+      <header className="payment-ui__toolbar">
         <div>
-          <h1 id="payments-title">Payments</h1>
-          <p>Browse payment records and review collection verification.</p>
+          <h1 id="payments-title" className="payment-ui__sr-only">
+            Payments
+          </h1>
+
+          <p className="payment-ui__intro">
+            Browse payment records and review collection verification.
+          </p>
         </div>
 
         {canReviewReconciliation && (
@@ -29,16 +44,19 @@ export default function Payments() {
             to="/payments/reconciliation"
           >
             <ClipboardCheck size={18} aria-hidden="true" />
-            Reconciliation review
+            Reconciliation Review
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         )}
       </header>
 
-      <p className="payments-screen__notice">
-        Stored status and amount describe the payment record. Check collection
-        verification before treating an amount as received. Stored amounts are
-        not net collections after refunds.
+      <p className="payments-screen__notice payment-ui__notice">
+        <Info size={19} aria-hidden="true" />
+        <span>
+          Stored status and amount describe the payment record. Check
+          collection verification before treating an amount as received.
+          Stored amounts are not net collections after refunds.
+        </span>
       </p>
 
       {parsed.error ? (
@@ -62,7 +80,10 @@ export default function Payments() {
             onClear={clearFilters}
           />
 
-          <PaymentResults query={parsed.query} onPage={changePage} />
+          <PaymentResults
+            query={parsed.query}
+            onPage={changePage}
+          />
         </>
       )}
     </section>
