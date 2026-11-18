@@ -6,6 +6,7 @@ import AdminHeader from "../components/AdminHeader";
 import useAdminLayout from "../hooks/useAdminLayout.js";
 
 import "../styles/admin-shell.css";
+import "../styles/admin-overlays.css";
 
 export default function AdminLayout() {
   const {

@@ -15,6 +15,8 @@ import {
   staffNavigation,
 } from "../auth/staffNavigation";
 
+import AdminDisclosure from "./AdminDisclosure.jsx";
+
 const additionalLinks = [
   {
     path: "/rooms/types",
@@ -104,7 +106,7 @@ export default function Sidebar({
   onNavigate,
   onSignOut,
 }) {
-  const { pathname } = useLocation();
+  const { pathname, key: locationKey } = useLocation();
 
   return (
     <aside
@@ -182,26 +184,36 @@ export default function Sidebar({
         })}
       </nav>
 
-      <details
+      <AdminDisclosure
+        key={`${user.id}:${user.role}:${locationKey}`}
         className="sidebar-account"
-        data-account-menu
-      >
-        <summary>
-          <span className="sidebar-account__avatar">
-            <UserRound size={25} aria-hidden="true" />
-          </span>
-          <span className="sidebar-account__identity">
-            <strong>{ROLE_LABELS[user.role]}</strong>
-            <span>{user.email}</span>
-          </span>
-          <ChevronDown size={16} aria-hidden="true" />
-        </summary>
+        label="Open staff account menu"
+        summary={
+          <>
+            <span className="sidebar-account__avatar">
+              <UserRound size={25} aria-hidden="true" />
+            </span>
 
-        <button type="button" onClick={onSignOut}>
-          <LogOut size={18} aria-hidden="true" />
-          Sign out
-        </button>
-      </details>
+            <span className="sidebar-account__identity">
+              <strong>{ROLE_LABELS[user.role]}</strong>
+              <span>{user.email}</span>
+            </span>
+
+            <ChevronDown
+              size={16}
+              className="sidebar-account__chevron"
+              aria-hidden="true"
+            />
+          </>
+        }
+      >
+        <div className="sidebar-account__panel">
+          <button type="button" onClick={onSignOut}>
+            <LogOut size={18} aria-hidden="true" />
+            Sign out
+          </button>
+        </div>
+      </AdminDisclosure>
     </aside>
   );
 }

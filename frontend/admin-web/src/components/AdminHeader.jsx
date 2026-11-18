@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { useLocation } from "react-router";
 import {
-  Bell,
   CalendarDays,
   ChevronDown,
   LogOut,
@@ -9,6 +8,8 @@ import {
 } from "lucide-react";
 
 import { ROLE_LABELS } from "../auth/staffNavigation";
+import AdminDisclosure from "./AdminDisclosure.jsx";
+import AdminNotifications from "./AdminNotifications.jsx";
 
 const dateFormatter = new Intl.DateTimeFormat("en-PH", {
   timeZone: "Asia/Manila",
@@ -42,20 +43,15 @@ function PhilippineClock() {
 
       <time dateTime={now.toISOString()}>
         <strong>{dateFormatter.format(now)}</strong>
-        <span>
-          Philippine time · {timeFormatter.format(now)}
-        </span>
+        <span>Philippine time · {timeFormatter.format(now)}</span>
       </time>
     </div>
   );
 }
 
-export default function AdminHeader({
-  title,
-  user,
-  onSignOut,
-}) {
-  const { pathname } = useLocation();
+export default function AdminHeader({ title, user, onSignOut }) {
+  const location = useLocation();
+  const menuKey = `${user.id}:${user.role}:${location.key}`;
 
   return (
     <header className="admin-header">
@@ -63,7 +59,7 @@ export default function AdminHeader({
         <p className="eyebrow">NEXORA Management System</p>
         <p className="header-title">{title}</p>
 
-        {pathname === "/" && (
+        {location.pathname === "/" && (
           <p className="admin-header__description">
             Hotel operations at a glance
           </p>
@@ -73,24 +69,19 @@ export default function AdminHeader({
       <div className="admin-header__tools">
         <PhilippineClock />
 
-        <Link
-          to="/#guest-reminders"
-          className="admin-icon-button"
-          aria-label="Open guest reminders"
-          title="Guest reminders"
-        >
-          <Bell size={25} aria-hidden="true" />
-        </Link>
+        <AdminNotifications key={`notifications:${menuKey}`} user={user} />
 
-        <details
+        <AdminDisclosure
+          key={`account:${menuKey}`}
           className="admin-account-menu"
-          data-account-menu
+          label="Open account menu"
+          summary={
+            <>
+              <UserRound size={26} aria-hidden="true" />
+              <ChevronDown size={14} aria-hidden="true" />
+            </>
+          }
         >
-          <summary aria-label="Open account menu">
-            <UserRound size={26} aria-hidden="true" />
-            <ChevronDown size={14} aria-hidden="true" />
-          </summary>
-
           <div className="admin-account-menu__panel">
             <strong>{ROLE_LABELS[user.role]}</strong>
             <span>{user.email}</span>
@@ -100,7 +91,7 @@ export default function AdminHeader({
               Sign out
             </button>
           </div>
-        </details>
+        </AdminDisclosure>
       </div>
     </header>
   );
