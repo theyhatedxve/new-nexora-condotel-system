@@ -1,0 +1,332 @@
+.management-ui {
+  min-width: 0;
+  color: #10213c;
+}
+
+.management-ui,
+.management-ui * {
+  box-sizing: border-box;
+}
+
+.management-ui .management-ui__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.management-ui :is(
+  .reports-page__heading,
+  .settings-page__heading,
+  .audit-page__heading,
+  .staff-users__heading
+) {
+  margin: 0 0 1.25rem;
+}
+
+.management-ui :is(
+  .reports-page__heading,
+  .settings-page__heading,
+  .audit-page__heading,
+  .staff-users__heading
+) p {
+  margin: 0;
+  color: #405574;
+  line-height: 1.65;
+}
+
+.management-ui :is(
+  .reports-page__notice,
+  .settings-page__notice,
+  .audit-page__notice
+) {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid #e5d3ac;
+  border-left: 4px solid #b58a36;
+  border-radius: 12px;
+  background: #fff8e9;
+  color: #704c15;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.management-ui :is(
+  .reports-section,
+  .settings-panel,
+  .audit-filters,
+  .audit-page__results,
+  .staff-users__filters,
+  .staff-users__table,
+  .staff-users__form,
+  .staff-users__notice
+) {
+  min-width: 0;
+  border: 1px solid #d5e0f2;
+  border-radius: 16px;
+  background: linear-gradient(140deg, #ffffff, #fcfdff);
+  box-shadow: 0 3px 7px #10294b08;
+}
+
+.management-ui :is(
+  .reports-section,
+  .settings-panel,
+  .audit-filters,
+  .audit-page__results,
+  .staff-users__filters,
+  .staff-users__form,
+  .staff-users__notice
+) {
+  padding: 1.25rem;
+}
+
+.management-ui :is(.reports-section, .settings-panel) {
+  margin-top: 1.25rem;
+}
+
+.management-ui :is(
+  .reports-section,
+  .settings-panel,
+  .audit-page__results
+) h2 {
+  color: #10213c;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+.management-ui :is(
+  .reports-page__metric,
+  .settings-review-list > div
+) {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #dce6f4;
+  border-radius: 12px;
+  background: #f8faff;
+}
+
+.management-ui .reports-page__value {
+  color: #10213c;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.management-ui :is(
+  .reports-page__description,
+  .reports-page__timestamp,
+  .settings-page__muted,
+  .settings-page__version
+) {
+  color: #405574;
+}
+
+.management-ui :is(input, select, textarea) {
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid #b8c8df;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #10213c;
+  font: inherit;
+}
+
+.management-ui textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.management-ui :is(input[readonly], textarea[readonly]) {
+  background: #f1f5fb;
+}
+
+.management-ui :is(
+  button,
+  .staff-users__primary,
+  .staff-users__secondary
+) {
+  min-height: 44px;
+  max-width: 100%;
+  border-radius: 9px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.management-ui :is(
+  .reports-page__primary,
+  .settings-page__primary,
+  .audit-page__primary,
+  .staff-users__primary,
+  .staff-users__filters > button,
+  .staff-users__form button:not(.staff-users__secondary),
+  .staff-users__notice button:not(.staff-users__secondary)
+) {
+  border: 1px solid #b68b3e;
+  background: linear-gradient(110deg, #f3d795, #d4af67);
+  color: #10213c;
+}
+
+.management-ui :is(
+  .reports-page__secondary,
+  .settings-page__secondary,
+  .audit-page__secondary,
+  .staff-users__secondary
+) {
+  border: 1px solid #c6a05c;
+  background: #ffffff;
+  color: #704b12;
+}
+
+.management-ui :is(
+  .reports-page__secondary,
+  .settings-page__secondary,
+  .audit-page__secondary,
+  .staff-users__secondary
+):hover:not(:disabled) {
+  background: #fff8e9;
+}
+
+.management-ui :is(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.management-ui :is(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [tabindex="0"]
+):focus-visible {
+  outline: 3px solid #285cb0;
+  outline-offset: 3px;
+}
+
+.management-ui :is(
+  .records-scroll,
+  .audit-table-scroll,
+  .staff-users__table
+) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.management-ui table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.management-ui table th {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #d5e0f2;
+  background: #edf1f8;
+  color: #10213c;
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.management-ui table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #e6edf7;
+  vertical-align: top;
+}
+
+.management-ui table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.management-ui table tbody tr:hover {
+  background: #f8faff;
+}
+
+.management-ui table a {
+  color: #183d75;
+  text-underline-offset: 3px;
+}
+
+.management-ui .staff-users__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.management-ui .staff-users__form {
+  width: 100%;
+  max-width: 58rem;
+}
+
+.management-ui .staff-users__notice {
+  border-left: 4px solid #b58a36;
+}
+
+.management-ui :is(
+  .audit-toolbar,
+  .audit-pagination,
+  .staff-users__pagination,
+  .settings-actions
+) {
+  gap: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .management-ui .staff-users__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .management-ui .staff-users__filters > label:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .management-ui :is(
+    .reports-section,
+    .settings-panel,
+    .audit-filters,
+    .audit-page__results,
+    .staff-users__filters,
+    .staff-users__form,
+    .staff-users__notice
+  ) {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .management-ui .staff-users__filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .management-ui .staff-users__heading {
+    align-items: stretch;
+  }
+
+  .management-ui .staff-users__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .management-ui .staff-users__actions > * {
+    flex: 1 1 9rem;
+  }
+
+  .management-ui .staff-users__notice dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .management-ui .staff-users__notice dd {
+    margin-bottom: 0.75rem;
+  }
+}

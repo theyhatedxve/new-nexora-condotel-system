@@ -4,15 +4,18 @@ import { useStaffData } from "../hooks/useStaffData";
 import { getPropertySettings } from "../services/settingsApi";
 import { SettingsEditor } from "../components/settings/SettingsEditor.jsx";
 import "../styles/settings.css";
+import "../styles/admin-management.css";
 
 export default function Settings() {
   const { user } = useAuth();
   const state = useStaffData(getPropertySettings);
 
   return (
-    <section className="settings-page" aria-labelledby="settings-title">
+    <section className="settings-page management-ui" aria-labelledby="settings-title">
       <header className="settings-page__heading">
-        <h1 id="settings-title">Settings</h1>
+        <h1 id="settings-title" className="management-ui__title">
+          Settings
+        </h1>
         <p>Manage property information and review operational reference values.</p>
       </header>
 

@@ -5,15 +5,18 @@ import DepositReport from "../components/reports/DepositReport.jsx";
 import { useAuth } from "../auth/useAuth";
 import FinancialExceptionReport from "../components/reports/FinancialExceptionReport.jsx";
 import "../styles/reports.css";
+import "../styles/admin-management.css";
 
 export default function Reports() {
   const { user } = useAuth();
   const { parsed, applyRange, resetRange } = useReportsPage();
 
   return (
-    <section className="reports-page" aria-labelledby="reports-title">
+    <section className="reports-page management-ui" aria-labelledby="reports-title">
       <header className="reports-page__heading">
-        <h1 id="reports-title">Reports</h1>
+        <h1 id="reports-title" className="management-ui__title">
+          Reports
+        </h1>
         <p>Review current operations and collections from authorized records.</p>
       </header>
 

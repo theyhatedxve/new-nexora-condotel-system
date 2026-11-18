@@ -12,6 +12,7 @@ import {
   STATUS_LABELS,
 } from "../services/staffUsersApi";
 import "../styles/staff-users.css";
+import "../styles/admin-management.css";
 
 function readFilters(search) {
   const params = new URLSearchParams(search);
@@ -76,10 +77,12 @@ export default function Users() {
   }
 
   return (
-    <section className="staff-users">
+    <section className="staff-users management-ui" aria-labelledby="staff-users-title">
       <header className="staff-users__heading">
         <div>
-          <h1>Users &amp; Roles</h1>
+          <h1 id="staff-users-title" className="management-ui__title">
+            Users &amp; Roles
+          </h1>
           <p>Manage staff accounts and access roles.</p>
         </div>
 

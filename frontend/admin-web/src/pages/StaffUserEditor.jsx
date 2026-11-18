@@ -8,6 +8,7 @@ import { useStaffData } from "../hooks/useStaffData";
 import useStaffUserChange from "../hooks/useStaffUserChange";
 import { getStaffUser, STATUS_LABELS } from "../services/staffUsersApi";
 import "../styles/staff-users.css";
+import "../styles/admin-management.css";
 
 function StaffUserForm({ record }) {
   const { user } = useAuth();
@@ -309,7 +310,7 @@ export default function StaffUserEditor() {
   const [revision, setRevision] = useState(0);
 
   return (
-    <section className="staff-users">
+    <section className="staff-users management-ui">
       <Link to="/users">Back to Users &amp; Roles</Link>
       <header className="staff-users__heading">
         <h1>{userId ? "Manage staff account" : "Add User"}</h1>
