@@ -1,6 +1,5 @@
 import { Outlet } from "react-router";
 import Navbar from "../components/Navbar";
-import BackendStatus from "../components/BackendStatus";
 import Footer from "../components/Footer";
 import useGuestLayout from "../hooks/useGuestLayout.js";
 
@@ -14,7 +13,6 @@ function GuestLayout() {
       </a>
 
       <Navbar />
-      <BackendStatus />
 
       <div id="main-content" ref={mainContentRef} className="site-content" tabIndex={-1}>
         <Outlet />

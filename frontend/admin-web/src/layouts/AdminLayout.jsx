@@ -1,7 +1,6 @@
 import { Outlet } from "react-router";
 import { Menu, X, LogOut } from "lucide-react";
 import Sidebar from "../components/Sidebar";
-import BackendStatus from "../components/BackendStatus";
 import { ROLE_LABELS } from "../auth/staffNavigation";
 import useAdminLayout from "../hooks/useAdminLayout.js";
 
@@ -60,8 +59,6 @@ export default function AdminLayout() {
             </button>
           </div>
         </header>
-
-        <BackendStatus />
 
         <main id="main-content" ref={main} tabIndex={-1} className="admin-content">
           <Outlet />
