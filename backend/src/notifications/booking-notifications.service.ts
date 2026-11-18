@@ -14,9 +14,16 @@ import {
   buildPaymentUpdateEmail,
 } from './booking-updates.template.js';
 import { buildRefundCompletionEmail } from './refund-completion.template.js';
+import {
+  ARRIVAL_REMINDER_PREFIX, arrivalReminderDue, arrivalReminderKey,
+} from '../reservations/booking-reminder.policy.js';
+import { enqueueDueArrivalReminders } from './arrival-reminders.queue.js';
+import { buildArrivalReminderEmail } from './arrival-reminder.template.js';
 
 @Injectable()
 export class BookingNotificationsService {
+  private arrivalCursor: string | undefined;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
@@ -47,6 +54,12 @@ export class BookingNotificationsService {
               status: true,
               reservationNumber: true,
               confirmedAt: true,
+              createdAt: true,
+              firstContactedAt: true,
+              expectedArrivalAt: true,
+              inventoryEndAt: true,
+              actualArrivalAt: true,
+              actualDepartureAt: true,
               rentalType: true,
               scheduledArrivalAt: true,
               scheduledDepartureAt: true,
@@ -89,7 +102,8 @@ export class BookingNotificationsService {
         ? row.templateKey.slice(REFUND_COMPLETION_PREFIX.length)
         : null;
 
-      if (!confirmation && !cancellation && !paymentId && !refundId) {
+      const arrivalReminder = row.templateKey.startsWith(ARRIVAL_REMINDER_PREFIX);
+      if (!confirmation && !cancellation && !paymentId && !refundId && !arrivalReminder) {
         return skip('UNKNOWN_TEMPLATE');
       }
       if (
@@ -97,6 +111,12 @@ export class BookingNotificationsService {
         (cancellation && booking.status !== 'CANCELLED')
       ) {
         return skip('RESERVATION_CHANGED');
+      }
+      if (arrivalReminder) {
+        const arrival = arrivalReminderDue(booking, now);
+        if (!arrival || arrivalReminderKey(arrival) !== row.templateKey) {
+          return skip('RESERVATION_CHANGED');
+        }
       }
       const recipient = booking.guest.user;
       if (
@@ -121,9 +141,11 @@ export class BookingNotificationsService {
           ? buildConfirmationEmail(booking, baseUrl)
           : cancellation
             ? buildCancellationEmail(booking, baseUrl)
-            : refundId
-              ? buildRefundCompletionEmail(booking, payments, refundId, baseUrl, now)
-              : buildPaymentUpdateEmail(booking, payments, paymentId!, baseUrl, now);
+            : arrivalReminder
+              ? buildArrivalReminderEmail(booking, row.templateKey, baseUrl, now)
+              : refundId
+                ? buildRefundCompletionEmail(booking, payments, refundId, baseUrl, now)
+                : buildPaymentUpdateEmail(booking, payments, paymentId!, baseUrl, now);
         return {
           id: row.id,
           to: recipient.email,
@@ -139,6 +161,9 @@ export class BookingNotificationsService {
   async runOnce(): Promise<void> {
     this.assertConfigured();
     const baseUrl = guestWebBaseUrl();
+    this.arrivalCursor = await enqueueDueArrivalReminders(
+      this.prisma, new Date(), this.arrivalCursor,
+    );
     const pending = await this.prisma.bookingNotification.findMany({
       where: { status: 'PENDING' },
       select: { id: true },

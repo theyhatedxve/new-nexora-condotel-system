@@ -16,8 +16,10 @@ import {
   enqueueBookingCancellationInTx,
   enqueuePaymentUpdateInTx,
   enqueueRefundCompletionInTx,
+  enqueueArrivalReminderInTx,
 } from './booking-updates.queue.js';
 import { CHECKOUT_PAID_EVENT } from '../payments/paymongo-webhook.payload.js';
+import { enqueueDueArrivalReminders } from './arrival-reminders.queue.js';
 
 describe('booking notifications', () => {
   let directory: string;
@@ -697,5 +699,98 @@ describe('booking notifications', () => {
     expect(await prisma.bookingNotification.findFirstOrThrow()).toMatchObject({
       status: 'SKIPPED', failureCode: 'RECIPIENT_UNAVAILABLE',
     });
+  });
+
+  async function upcomingBooking(hours = 12) {
+    const record = await booking();
+    const now = new Date();
+    const arrival = new Date(now.getTime() + hours * 3600000);
+    const departure = new Date(arrival.getTime() + 24 * 3600000);
+    return prisma.reservation.update({
+      where: { id: record.id },
+      data: {
+        createdAt: new Date(now.getTime() - 8 * 24 * 3600000),
+        confirmedAt: new Date(now.getTime() - 3600000),
+        expectedArrivalAt: arrival,
+        scheduledArrivalAt: arrival,
+        scheduledDepartureAt: departure,
+        inventoryEndAt: departure,
+        checkInDate: arrival,
+        checkOutDate: departure,
+      },
+    });
+  }
+
+  it('automatically queues and sends one arrival reminder per arrival time', async () => {
+    const record = await upcomingBooking();
+    await service.runOnce();
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).toHaveBeenCalledTimes(1);
+    const message = email.sendBookingConfirmation.mock.calls[0][0];
+    expect(message.subject).toBe('Your upcoming NEXORA arrival');
+    expect(message.text).toContain(record.reservationNumber);
+    expect(message.text).toContain('Philippine time');
+    expect(message.text).toContain('/my-bookings/' + record.id);
+    expect(message.text).toContain('does not change your booking or payment deadlines');
+    expect(await prisma.reservation.findUniqueOrThrow({
+      where: { id: record.id },
+    })).toEqual(record);
+  });
+
+  it('does not queue an arrival email more than twenty-four hours ahead', async () => {
+    await upcomingBooking(25);
+    await service.runOnce();
+    expect(await prisma.bookingNotification.count()).toBe(0);
+    expect(email.sendBookingConfirmation).not.toHaveBeenCalled();
+  });
+
+  it('skips an old queued reminder and sends the revised arrival reminder', async () => {
+    const record = await upcomingBooking();
+    await enqueueDueArrivalReminders(prisma as unknown as PrismaService, new Date());
+    await prisma.reservation.update({
+      where: { id: record.id },
+      data: {
+        expectedArrivalAt: new Date(record.expectedArrivalAt!.getTime() + 3600000),
+      },
+    });
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).toHaveBeenCalledTimes(1);
+    const rows = await prisma.bookingNotification.findMany();
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.status).sort()).toEqual(['SKIPPED', 'SMTP_ACCEPTED']);
+  });
+
+  it('skips queued arrival reminders after check-in', async () => {
+    const record = await upcomingBooking();
+    await enqueueDueArrivalReminders(prisma as unknown as PrismaService, new Date());
+    await prisma.reservation.update({
+      where: { id: record.id },
+      data: { status: 'CHECKED_IN', actualArrivalAt: new Date() },
+    });
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).not.toHaveBeenCalled();
+    expect(await prisma.bookingNotification.findFirstOrThrow()).toMatchObject({
+      status: 'SKIPPED', failureCode: 'RESERVATION_CHANGED',
+    });
+  });
+
+  it('keeps uncertain arrival delivery for review without sending again', async () => {
+    await upcomingBooking();
+    email.sendBookingConfirmation.mockResolvedValueOnce('UNKNOWN');
+    await service.runOnce();
+    await service.runOnce();
+    expect(email.sendBookingConfirmation).toHaveBeenCalledTimes(1);
+    expect(await prisma.bookingNotification.findFirstOrThrow()).toMatchObject({
+      status: 'REVIEW_REQUIRED', failureCode: 'SMTP_OUTCOME_UNKNOWN',
+    });
+  });
+
+  it('rolls back an arrival queue entry with its transaction', async () => {
+    const record = await upcomingBooking();
+    await expect(prisma.$transaction(async (tx) => {
+      await enqueueArrivalReminderInTx(tx, record.id, record.expectedArrivalAt!);
+      throw new Error('Synthetic reminder rollback');
+    })).rejects.toThrow('Synthetic reminder rollback');
+    expect(await prisma.bookingNotification.count()).toBe(0);
   });
 });

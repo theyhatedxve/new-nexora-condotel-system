@@ -1,9 +1,16 @@
 import { Link } from "react-router";
 import { formatTimestamp, guestName } from "../utils/formatters";
 
+const reminderLabels = {
+  SHORT_NOTICE: "Short-notice contact",
+  ONE_WEEK_REMINDER: "One-week reminder",
+  ONE_DAY_REMINDER: "One-day reminder",
+};
+
 export default function DashboardContacts({ contacts }) {
   const ready = contacts.status === "ready";
   const items = ready ? contacts.data.items : [];
+  const followUps = ready ? contacts.data.followUps.items : [];
   return (
     <section className="dashboard-screen__panel" aria-labelledby="dashboard-contacts-title" aria-busy={contacts.loading}>
       <header className="dashboard-screen__section-heading">
@@ -46,6 +53,59 @@ export default function DashboardContacts({ contacts }) {
             ))}</tbody>
           </table>
         </div>
+      )}
+      {ready && (
+        <>
+          <h3>Arrival contact reminders</h3>
+          <p className="dashboard-screen__muted">
+            Open the reservation and record the matching contact purpose.
+            A Reached result clears that reminder.
+          </p>
+          {followUps.length === 0 ? (
+            <p role="status" className="dashboard-screen__message">
+              No arrival contact reminders are currently due.
+            </p>
+          ) : (
+            <div
+              className="dashboard-screen__table-scroll"
+              role="region"
+              aria-label="Arrival contact reminders"
+              tabIndex={0}
+            >
+              <table className="dashboard-screen__table">
+                <caption>Reception follow-ups for confirmed bookings</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Reference</th>
+                    <th scope="col">Guest</th>
+                    <th scope="col">Contact purpose</th>
+                    <th scope="col">Due since</th>
+                    <th scope="col">Expected arrival</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {followUps.map((item) => (
+                    <tr key={item.id}>
+                      <th scope="row">
+                        <Link to={`/reservations/${encodeURIComponent(item.id)}`}>
+                          {item.reservationNumber}
+                        </Link>
+                      </th>
+                      <td>{guestName(item.guest)}</td>
+                      <td>{reminderLabels[item.purpose]}</td>
+                      <td>{formatTimestamp(item.dueAt)}</td>
+                      <td>{formatTimestamp(item.expectedArrivalAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="dashboard-screen__updated">
+            Showing {followUps.length} of {contacts.data.followUps.total} reminders.
+            {" "}Times are shown in Philippine time.
+          </p>
+        </>
       )}
       {ready && (
         <p className="dashboard-screen__updated">

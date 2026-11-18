@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { arrivalReminderKey } from '../reservations/booking-reminder.policy.js';
 import type { Prisma } from '../generated/prisma/client.js';
 
 export const PAYMENT_UPDATE_PREFIX = 'PAYMENT_RECORDED:';
@@ -42,4 +43,10 @@ export async function enqueueRefundCompletionInTx(
   refundId: string,
 ): Promise<void> {
   await enqueueInTx(tx, reservationId, REFUND_COMPLETION_PREFIX + refundId);
+}
+
+export async function enqueueArrivalReminderInTx(
+  tx: Prisma.TransactionClient, reservationId: string, arrival: Date,
+): Promise<void> {
+  await enqueueInTx(tx, reservationId, arrivalReminderKey(arrival));
 }

@@ -396,4 +396,79 @@ describe('dashboard rental timing', () => {
     await prisma.user.update({ where: { id: actor.id }, data: { status: 'DISABLED' } });
     await expect(dashboard.attentionQueues(actor)).rejects.toThrow('Current staff permission');
   });
+
+  async function reminderBooking(
+    arrivalText: string,
+    createdText = '2029-12-20T00:00:00Z',
+  ) {
+    const arrival = new Date(arrivalText);
+    const created = new Date(createdText);
+    const departure = new Date(arrival.getTime() + 24 * 3600000);
+    return createBooking('CONFIRMED', {
+      createdAt: created,
+      confirmedAt: new Date(created.getTime() + 3600000),
+      expectedArrivalAt: arrival,
+      scheduledArrivalAt: arrival,
+      scheduledDepartureAt: departure,
+      inventoryEndAt: departure,
+      checkInDate: arrival,
+      checkOutDate: departure,
+      firstContactedAt: null,
+    });
+  }
+
+  it('adds weekly, daily and short-notice follow-ups without changing bookings', async () => {
+    const actor = await queueStaff();
+    const weekly = await reminderBooking('2030-01-08T04:00:00Z');
+    const daily = await reminderBooking('2030-01-03T03:00:00Z');
+    const short = await reminderBooking('2030-01-02T12:00:00Z', '2030-01-02T01:00:00Z');
+    const auditCount = await prisma.auditLog.count();
+    const result = await dashboard.contactQueue(actor);
+    expect(result.followUps.total).toBe(3);
+    expect(result.followUps.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: weekly.id, purpose: 'ONE_WEEK_REMINDER' }),
+      expect.objectContaining({ id: daily.id, purpose: 'ONE_DAY_REMINDER' }),
+      expect.objectContaining({ id: short.id, purpose: 'SHORT_NOTICE' }),
+    ]));
+    expect(await prisma.auditLog.count()).toBe(auditCount);
+    expect(await prisma.reservation.findUniqueOrThrow({
+      where: { id: daily.id },
+    })).toEqual(daily);
+  });
+
+  it('keeps unanswered follow-ups and clears a matching reached contact', async () => {
+    const actor = await queueStaff();
+    const record = await reminderBooking('2030-01-03T03:00:00Z');
+    async function attempt(result: string) {
+      await prisma.auditLog.create({
+        data: {
+          actorUserId: actor.id,
+          entityType: 'Reservation',
+          entityId: record.id,
+          action: 'reservation.contact_follow_up_recorded',
+          createdAt: new Date(),
+          detailsJson: JSON.stringify({
+            version: 1, channel: 'PHONE', purpose: 'ONE_DAY_REMINDER', result,
+          }),
+        },
+      });
+    }
+    await attempt('NO_ANSWER');
+    expect((await dashboard.contactQueue(actor)).followUps.total).toBe(1);
+    await attempt('REACHED');
+    expect((await dashboard.contactQueue(actor)).followUps.total).toBe(0);
+  });
+
+  it('removes arrival follow-ups after cancellation or actual arrival', async () => {
+    const actor = await queueStaff();
+    const cancelled = await reminderBooking('2030-01-03T03:00:00Z');
+    const arrived = await reminderBooking('2030-01-03T02:00:00Z');
+    await prisma.reservation.update({
+      where: { id: cancelled.id }, data: { status: 'CANCELLED' },
+    });
+    await prisma.reservation.update({
+      where: { id: arrived.id }, data: { actualArrivalAt: new Date() },
+    });
+    expect((await dashboard.contactQueue(actor)).followUps.total).toBe(0);
+  });
 });

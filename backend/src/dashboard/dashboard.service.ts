@@ -1,4 +1,5 @@
 import { inventoryReservationWhere } from '../reservations/inventory-reservation.js';
+import { loadContactReminders } from './contact-reminders.js';
 import {
   Injectable,
   ForbiddenException,
@@ -159,7 +160,9 @@ export class DashboardService {
           guest: { select: { firstName: true, lastName: true } },
         },
       });
+      const followUps = await loadContactReminders(tx, propertyId, now);
       return {
+        followUps,
         asOf: now.toISOString(), timezone: 'Asia/Manila' as const, total, limit: 20,
         items: rows.map((row) => ({
           id: row.id, reservationNumber: row.reservationNumber, guest: row.guest,
