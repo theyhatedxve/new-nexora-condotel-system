@@ -1,7 +1,5 @@
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import {
   afterAll,
@@ -16,74 +14,37 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../../generated/prisma/client.js';
+import type { PrismaClient } from '../../generated/prisma/client.js';
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../../test/helpers/isolated-database.js';
 
 import { OwnershipService } from './ownership.service.js';
 import type { AuthenticatedUser } from './ownership.service.js';
 
 import { USER_ROLES } from '../decorators/roles.decorator.js';
 
-const TEST_DATABASE = resolve(
-  process.cwd(),
-  'step6.ownership.test.db',
-);
 
-const DEVELOPMENT_DATABASE = resolve(
-  process.cwd(),
-  'dev.db',
-);
 
 let prisma: PrismaClient;
+let database: IsolatedTestDatabase | undefined;
 let ownership: OwnershipService;
 
-let propertyId: string;
 let roomTypeId: string;
 let guestAId: string;
 let guestBId: string;
 let reservationAId: string;
 let reservationBId: string;
-let userAId: string;
-let userBId: string;
 
 let guestA: AuthenticatedUser;
 let guestB: AuthenticatedUser;
 
-function verifyDatabaseIsolation(): void {
-  if (
-    process.cwd().split(/[\\/]/).at(-1) !== 'backend'
-  ) {
-    throw new Error('Run tests from backend/.');
-  }
-
-  if (!existsSync(TEST_DATABASE)) {
-    throw new Error(
-      'Missing step6.ownership.test.db. Run migrations first.',
-    );
-  }
-
-  if (
-    existsSync(DEVELOPMENT_DATABASE) &&
-    realpathSync(TEST_DATABASE) ===
-      realpathSync(DEVELOPMENT_DATABASE)
-  ) {
-    throw new Error(
-      'Refusing to run ownership tests against dev.db.',
-    );
-  }
-}
 
 describe('OwnershipService — Phase 3 Step 6', () => {
   beforeAll(async () => {
-    verifyDatabaseIsolation();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./step6.ownership.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-
-    await prisma.$connect();
+    database = await createIsolatedTestDatabase();
+    prisma = database.prisma;
 
     ownership = new OwnershipService(prisma as never);
 
@@ -105,7 +66,6 @@ describe('OwnershipService — Phase 3 Step 6', () => {
       },
     });
 
-    userAId = userA.id;
 
     const userB = await prisma.user.create({
       data: {
@@ -117,7 +77,6 @@ describe('OwnershipService — Phase 3 Step 6', () => {
       },
     });
 
-    userBId = userB.id;
 
     guestA = {
       id: userA.id,
@@ -160,7 +119,6 @@ describe('OwnershipService — Phase 3 Step 6', () => {
       },
     });
 
-    propertyId = property.id;
 
     const roomType = await prisma.roomType.create({
       data: {
@@ -204,56 +162,10 @@ describe('OwnershipService — Phase 3 Step 6', () => {
     });
 
     reservationBId = reservationB.id;
-  });
+  }, 60_000);
 
   afterAll(async () => {
-    if (!prisma) {
-      return;
-    }
-
-    try {
-      // Delete dependent records before their parents.
-      const reservationIds = [
-        reservationAId,
-        reservationBId,
-      ].filter(Boolean);
-
-      if (reservationIds.length > 0) {
-        await prisma.reservation.deleteMany({
-          where: { id: { in: reservationIds } },
-        });
-      }
-
-      const guestIds = [guestAId, guestBId].filter(Boolean);
-
-      if (guestIds.length > 0) {
-        await prisma.guest.deleteMany({
-          where: { id: { in: guestIds } },
-        });
-      }
-
-      if (roomTypeId) {
-        await prisma.roomType.delete({
-          where: { id: roomTypeId },
-        });
-      }
-
-      if (propertyId) {
-        await prisma.property.delete({
-          where: { id: propertyId },
-        });
-      }
-
-      const userIds = [userAId, userBId].filter(Boolean);
-
-      if (userIds.length > 0) {
-        await prisma.user.deleteMany({
-          where: { id: { in: userIds } },
-        });
-      }
-    } finally {
-      await prisma.$disconnect();
-    }
+    await database?.dispose();
   });
 
   it('allows a guest to access their own profile', async () => {

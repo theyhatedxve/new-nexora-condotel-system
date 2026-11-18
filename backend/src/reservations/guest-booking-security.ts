@@ -108,7 +108,23 @@ export function normalizedGuestBooking(
   dto.email = dto.email.trim().toLowerCase();
   dto.phone = dto.phone?.trim() || undefined;
 
-  return { ...dto, arrivalTime: dto.arrivalTime };
+    return {
+    requestId: dto.requestId,
+    recoveryToken: dto.recoveryToken,
+    roomTypeId: dto.roomTypeId,
+    checkIn: dto.checkIn,
+    checkOut: dto.checkOut,
+    guests: dto.guests,
+    rentalType: dto.rentalType,
+    rentalUnits: dto.rentalUnits,
+    arrivalTime: dto.arrivalTime,
+    paymentPreference: dto.paymentPreference,
+    acknowledgmentAccepted: dto.acknowledgmentAccepted,
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+    email: dto.email,
+    phone: dto.phone,
+  };
 }
 
 export function guestBookingFingerprint(

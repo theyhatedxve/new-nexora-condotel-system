@@ -54,10 +54,17 @@ async function fixture() {
   const room = await prisma.room.create({
     data: { roomTypeId: category.id, roomNumber: randomUUID(), status: 'READY' },
   });
-  const input: CreateReservationDto = {
-    roomTypeId: category.id, checkIn: '2030-01-01', checkOut: '2030-01-01',
-    rentalType: 'HOURLY', rentalUnits: 2, arrivalTime: '15:00',
-    guests: 3, firstName: 'Synthetic', lastName: 'Guest', email: 'test@example.invalid',
+    const input: Pick<CreateReservationDto, keyof CreateReservationDto> = {
+    roomTypeId: category.id,
+    checkIn: '2030-01-01',
+    checkOut: '2030-01-01',
+    rentalType: 'HOURLY',
+    rentalUnits: 2,
+    arrivalTime: '15:00',
+    guests: 3,
+    firstName: 'Synthetic',
+    lastName: 'Guest',
+    email: 'test@example.invalid',
   };
   return { category, room, input };
 }

@@ -1,7 +1,5 @@
 
 import { createHash, randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import {
   afterAll,
@@ -12,21 +10,16 @@ import {
 } from 'vitest';
 
 import { JwtService } from '@nestjs/jwt';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../generated/prisma/client.js';
+import type { PrismaClient } from '../generated/prisma/client.js';
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../test/helpers/isolated-database.js';
 
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 
-const TEST_DATABASE = resolve(
-  process.cwd(),
-  'step3.auth.test.db',
-);
 
-const DEVELOPMENT_DATABASE = resolve(
-  process.cwd(),
-  'dev.db',
-);
 
 const TEST_JWT_SECRET =
   'nexora-step4-test-secret-only-not-for-production';
@@ -34,33 +27,10 @@ const TEST_JWT_SECRET =
 const TEST_PASSWORD = 'Step4-Test-Password-2026!';
 
 let prisma: PrismaClient;
+let database: IsolatedTestDatabase | undefined;
 let authService: AuthService;
-let userId: string;
 let userEmail: string;
 
-function verifyDatabaseIsolation(): void {
-  if (
-    process.cwd().split(/[\\/]/).at(-1) !== 'backend'
-  ) {
-    throw new Error('Run tests from the backend directory.');
-  }
-
-  if (!existsSync(TEST_DATABASE)) {
-    throw new Error(
-      'Missing step3.auth.test.db. Do not use dev.db.',
-    );
-  }
-
-  if (
-    existsSync(DEVELOPMENT_DATABASE) &&
-    realpathSync(TEST_DATABASE) ===
-      realpathSync(DEVELOPMENT_DATABASE)
-  ) {
-    throw new Error(
-      'Authentication test database points to dev.db.',
-    );
-  }
-}
 
 function hashRefreshToken(token: string): string {
   return createHash('sha256')
@@ -77,15 +47,8 @@ async function login() {
 
 describe('NEXORA Step 4 logout and revocation', () => {
   beforeAll(async () => {
-    verifyDatabaseIsolation();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./step3.auth.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-
-    await prisma.$connect();
+    database = await createIsolatedTestDatabase();
+    prisma = database.prisma;
 
     const passwordService = new PasswordService();
 
@@ -115,7 +78,7 @@ describe('NEXORA Step 4 logout and revocation', () => {
       create: { name: 'GUEST' },
     });
 
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         name: 'Step 4 Test User',
         email: userEmail,
@@ -126,27 +89,10 @@ describe('NEXORA Step 4 logout and revocation', () => {
       },
     });
 
-    userId = user.id;
-  });
+  }, 60_000);
 
   afterAll(async () => {
-    if (!prisma) {
-      return;
-    }
-
-    try {
-      if (userId) {
-        await prisma.refreshToken.deleteMany({
-          where: { userId },
-        });
-
-        await prisma.user.delete({
-          where: { id: userId },
-        });
-      }
-    } finally {
-      await prisma.$disconnect();
-    }
+    await database?.dispose();
   });
 
   it('revokes the current refresh-token family', async () => {

@@ -1,7 +1,5 @@
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 import {
   afterAll,
   beforeAll,
@@ -10,50 +8,29 @@ import {
   it,
 } from 'vitest';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../generated/prisma/client.js';
+import type { PrismaClient } from '../generated/prisma/client.js';
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../test/helpers/isolated-database.js';
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 
-const TEST_DATABASE = resolve(process.cwd(), 'step3.auth.test.db');
-const DEVELOPMENT_DATABASE = resolve(process.cwd(), 'dev.db');
 
 const testSecret = 'step3-integration-only-strong-secret-not-production';
 
 let prisma: PrismaClient;
+let database: IsolatedTestDatabase | undefined;
 let authService: AuthService;
 let userId: string;
 let userEmail: string;
 let password: string;
 
-function verifyDatabaseIsolation(): void {
-  if (!existsSync(TEST_DATABASE)) {
-    throw new Error('Missing step3.auth.test.db');
-  }
-
-  if (
-    existsSync(DEVELOPMENT_DATABASE) &&
-    realpathSync(TEST_DATABASE) === realpathSync(DEVELOPMENT_DATABASE)
-  ) {
-    throw new Error('Test database points to dev.db');
-  }
-
-  if (process.cwd().split(/[\\/]/).at(-1) !== 'backend') {
-    throw new Error('Run tests from the backend directory.');
-  }
-}
 
 describe('NEXORA Step 3 authentication', () => {
   beforeAll(async () => {
-    verifyDatabaseIsolation();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./step3.auth.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-
-    await prisma.$connect();
+    database = await createIsolatedTestDatabase();
+    prisma = database.prisma;
 
     const passwordService = new PasswordService();
 
@@ -95,22 +72,10 @@ describe('NEXORA Step 3 authentication', () => {
     });
 
     userId = user.id;
-  });
+  }, 60_000);
 
   afterAll(async () => {
-    if (prisma) {
-      if (userId) {
-        await prisma.refreshToken.deleteMany({
-          where: { userId },
-        });
-
-        await prisma.user.delete({
-          where: { id: userId },
-        });
-      }
-
-      await prisma.$disconnect();
-    }
+    await database?.dispose();
   });
 
   it('logs in with valid credentials', async () => {

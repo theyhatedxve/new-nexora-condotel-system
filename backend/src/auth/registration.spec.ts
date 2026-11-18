@@ -1,7 +1,5 @@
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import {
   beforeAll,
@@ -11,8 +9,11 @@ import {
   it,
 } from 'vitest';
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../generated/prisma/client.js';
+import type { PrismaClient } from '../generated/prisma/client.js';
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../test/helpers/isolated-database.js';
 
 import { PasswordService } from './password.service.js';
 import { RegistrationService } from './registration.service.js';
@@ -22,15 +23,7 @@ import {
 import { EmailVerificationService } from './email-verification.service.js';
 import { EmailService } from './email.service.js';
 
-const TEST_DATABASE = resolve(
-  process.cwd(),
-  'step7.registration.test.db',
-);
 
-const DEVELOPMENT_DATABASE = resolve(
-  process.cwd(),
-  'dev.db',
-);
 
 const suffix = randomUUID();
 
@@ -42,28 +35,11 @@ const messages: Array<{
 }> = [];
 
 let prisma: PrismaClient;
+let database: IsolatedTestDatabase | undefined;
 let registration: RegistrationService;
 let verification: EmailVerificationService;
 let passwordService: PasswordService;
 
-function checkIsolation(): void {
-  if (
-    process.cwd().split(/[\\/]/).at(-1) !== 'backend'
-  ) {
-    throw new Error('Run tests from the backend directory.');
-  }
-
-  if (!existsSync(TEST_DATABASE)) {
-    throw new Error('Step 7 test database does not exist.');
-  }
-
-  if (
-    existsSync(DEVELOPMENT_DATABASE) &&
-    realpathSync(TEST_DATABASE) === realpathSync(DEVELOPMENT_DATABASE)
-  ) {
-    throw new Error('Refusing to use the development database.');
-  }
-}
 
 async function register(email: string) {
   return registration.register({
@@ -88,14 +64,8 @@ function latestToken(email: string): string {
 
 describe('Phase 3 Step 7 — Guest registration', () => {
   beforeAll(async () => {
-    checkIsolation();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./step7.registration.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-    await prisma.$connect();
+    database = await createIsolatedTestDatabase();
+    prisma = database.prisma;
 
     passwordService = new PasswordService();
 
@@ -124,41 +94,10 @@ describe('Phase 3 Step 7 — Guest registration', () => {
       update: {},
       create: { name: 'GUEST' },
     });
-  });
+  }, 60_000);
 
   afterAll(async () => {
-    if (!prisma) {
-      return;
-    }
-
-    try {
-      const users = await prisma.user.findMany({
-        where: {
-          email: {
-            endsWith: `-${suffix}@example.invalid`,
-          },
-        },
-        select: { id: true },
-      });
-
-      const userIds = users.map((user) => user.id);
-
-      if (userIds.length > 0) {
-        await prisma.emailVerificationToken.deleteMany({
-          where: { userId: { in: userIds } },
-        });
-
-        await prisma.guest.deleteMany({
-          where: { userId: { in: userIds } },
-        });
-
-        await prisma.user.deleteMany({
-          where: { id: { in: userIds } },
-        });
-      }
-    } finally {
-      await prisma.$disconnect();
-    }
+    await database?.dispose();
   });
 
   it('creates a PENDING GUEST account and guest profile', async () => {

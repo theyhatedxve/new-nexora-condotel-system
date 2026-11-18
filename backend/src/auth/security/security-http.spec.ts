@@ -2,8 +2,6 @@
 import 'reflect-metadata';
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import {
   Controller,
@@ -28,26 +26,20 @@ import {
   vi,
 } from 'vitest';
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../../generated/prisma/client.js';
+import type { PrismaClient } from '../../generated/prisma/client.js';
+import type { AuthService } from '../auth.service.js';
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../../test/helpers/isolated-database.js';
 
-import { AppModule } from '../../app.module.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 import { EmailService } from '../email.service.js';
-import { getAllowedOrigins } from '../auth.config.js';
 
 import { Roles } from '../../common/decorators/roles.decorator.js';
 
-const databasePath = resolve(
-  process.cwd(),
-  'step8.security.test.db',
-);
 
-const developmentPath = resolve(
-  process.cwd(),
-  'dev.db',
-);
 
 const testEmail = `step8-${randomUUID()}@example.invalid`;
 const testPassword = 'Strong-Step8-Password-2026!';
@@ -78,60 +70,27 @@ describe('NEXORA Phase 3 Step 8 — HTTP security', () => {
   let app: INestApplication;
   let prisma: PrismaClient;
   let origin: string;
+  let database: IsolatedTestDatabase | undefined;
+  let sessionAuth: AuthService;
+  let securityPasswordHash: string;
 
   let testRefreshCookie = '';
 
   beforeAll(async () => {
-    if (
-      process.cwd().split(/[\\/]/).at(-1) !== 'backend'
-    ) {
-      throw new Error(
-        'Run the tests from D:\\Web-JSX\\NEXORA\\backend.',
-      );
-    }
+    vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv(
+      'JWT_ACCESS_SECRET',
+      'synthetic-http-security-secret-at-least-thirty-two-bytes',
+    );
+    vi.stubEnv('AUTH_ALLOWED_ORIGINS', 'http://localhost:5175');
+    vi.stubEnv('NEXORA_BOOKING_EMAIL_WORKER_ENABLED', 'false');
+    vi.stubEnv('NEXORA_BOOKING_DEADLINE_WORKER_ENABLED', 'false');
 
-    if (!existsSync(databasePath)) {
-      throw new Error(
-        'Missing isolated Step 8 database.',
-      );
-    }
-
-    if (
-      existsSync(developmentPath) &&
-      realpathSync(databasePath) ===
-        realpathSync(developmentPath)
-    ) {
-      throw new Error(
-        'Refusing to test against development database.',
-      );
-    }
-
-    const allowedOrigins = getAllowedOrigins();
-    origin = allowedOrigins[0];
-
-    if (!origin) {
-      throw new Error(
-        'Configure AUTH_ALLOWED_ORIGINS before testing.',
-      );
-    }
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./step8.security.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-
-    await prisma.$connect();
-
-    const guestRole = await prisma.role.findUnique({
-      where: { name: 'GUEST' },
-    });
-
-    if (!guestRole) {
-      await prisma.role.create({
-        data: { name: 'GUEST' },
-      });
-    }
+    origin = 'http://localhost:5175';
+    sentEmails.length = 0;
+    database = await createIsolatedTestDatabase();
+    prisma = database.prisma;
+    await prisma.role.create({ data: { name: 'GUEST' } });
 
     const fakeEmailService = {
       sendVerificationEmail: vi.fn(
@@ -140,6 +99,11 @@ describe('NEXORA Phase 3 Step 8 — HTTP security', () => {
         },
       ),
     };
+
+    // AuthModule reads JWT settings when it is imported.
+    const { AppModule } = await import('../../app.module.js');
+    const { AuthService } = await import('../auth.service.js');
+    const { PasswordService } = await import('../password.service.js');
 
     const testingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -152,54 +116,28 @@ describe('NEXORA Phase 3 Step 8 — HTTP security', () => {
       .compile();
 
     app = testingModule.createNestApplication();
-
     app.use(cookieParser());
-
     app.setGlobalPrefix('api');
-
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }));
     await app.init();
-  });
+    sessionAuth = app.get(AuthService);
+    securityPasswordHash = await app.get(PasswordService)
+      .hashPassword(testPassword);
+  }, 60_000);
 
   afterAll(async () => {
-    if (prisma) {
-      const user = await prisma.user.findUnique({
-        where: { email: testEmail },
-        select: { id: true },
-      });
-
-      if (user) {
-        await prisma.emailVerificationToken.deleteMany({
-          where: { userId: user.id },
-        });
-
-        await prisma.guest.deleteMany({
-          where: { userId: user.id },
-        });
-
-        await prisma.refreshToken.deleteMany({
-          where: { userId: user.id },
-        });
-
-        await prisma.user.delete({
-          where: { id: user.id },
-        });
+    try {
+      if (app) await app.close();
+    } finally {
+      try {
+        await database?.dispose();
+      } finally {
+        vi.unstubAllEnvs();
       }
-    }
-
-    if (app) {
-      await app.close();
-    }
-
-    if (prisma) {
-      await prisma.$disconnect();
     }
   });
 
@@ -548,6 +486,89 @@ describe('NEXORA Phase 3 Step 8 — HTTP security', () => {
     expect(JSON.stringify(response.body)).not.toContain(
       'User not found',
     );
+  });
+
+
+  async function authenticatedGuest() {
+    const role = await prisma.role.findUniqueOrThrow({
+      where: { name: 'GUEST' },
+    });
+    const user = await prisma.user.create({
+      data: {
+        name: 'Synthetic security guest',
+        email: 'session-' + randomUUID() + '@example.invalid',
+        passwordHash: securityPasswordHash,
+        roleId: role.id,
+        status: 'ACTIVE',
+      },
+    });
+    await prisma.guest.create({
+      data: { userId: user.id, firstName: 'Synthetic', lastName: 'Security' },
+    });
+    const session = await sessionAuth.login({
+      email: user.email,
+      password: testPassword,
+    });
+    return { user, session };
+  }
+
+  it('rejects an access token after the account session version changes', async () => {
+    const { user, session } = await authenticatedGuest();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { sessionVersion: { increment: 1 } },
+    });
+    const response = await request(app.getHttpServer())
+      .get('/api/security-test/authenticated')
+      .set('Authorization', 'Bearer ' + session.accessToken);
+    expect(response.status).toBe(401);
+  });
+
+  it('rejects an access token after the account is disabled', async () => {
+    const { user, session } = await authenticatedGuest();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { status: 'DISABLED' },
+    });
+    const response = await request(app.getHttpServer())
+      .get('/api/security-test/authenticated')
+      .set('Authorization', 'Bearer ' + session.accessToken);
+    expect(response.status).toBe(401);
+  });
+
+  it('rejects an ordinary access token when a password change becomes required', async () => {
+    const { user, session } = await authenticatedGuest();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { mustChangePassword: true },
+    });
+    const response = await request(app.getHttpServer())
+      .get('/api/security-test/authenticated')
+      .set('Authorization', 'Bearer ' + session.accessToken);
+    expect(response.status).toBe(401);
+  });
+
+  it('uses the current database role when authorizing an existing token', async () => {
+    const { user, session } = await authenticatedGuest();
+    const before = await request(app.getHttpServer())
+      .get('/api/security-test/manager')
+      .set('Authorization', 'Bearer ' + session.accessToken);
+    expect(before.status).toBe(403);
+
+    const managerRole = await prisma.role.upsert({
+      where: { name: 'MANAGER' },
+      update: {},
+      create: { name: 'MANAGER' },
+    });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { roleId: managerRole.id },
+    });
+    const after = await request(app.getHttpServer())
+      .get('/api/security-test/manager')
+      .set('Authorization', 'Bearer ' + session.accessToken);
+    expect(after.status).toBe(200);
+    expect(after.body).toEqual({ allowed: true });
   });
 
 });
