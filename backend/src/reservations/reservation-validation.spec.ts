@@ -214,7 +214,7 @@ describe('Phase 6 Step 2 — Reservation validation', () => {
     ).rejects.toThrow(InternalServerErrorException);
   });
 
-  it('queries only the active type at the property', async () => {
+    it('queries only the active type at the property', async () => {
     const { service, findRoomType } = createFixture();
 
     await service.validate(validInput());
@@ -225,10 +225,8 @@ describe('Phase 6 Step 2 — Reservation validation', () => {
         propertyId: 'property-1',
         isActive: true,
       },
-      select: {
-        id: true,
-        capacity: true,
-        baseRateCentavos: true,
+      include: {
+        rentalRates: true,
       },
     });
   });

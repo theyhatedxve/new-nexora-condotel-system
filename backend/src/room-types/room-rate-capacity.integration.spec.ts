@@ -1,7 +1,5 @@
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import {
   afterAll,
@@ -11,24 +9,19 @@ import {
   it,
 } from 'vitest';
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../generated/prisma/client.js';
+import type { PrismaClient } from '../generated/prisma/client.js';
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../test/helpers/isolated-database.js';
 
 import { RoomRateCapacityService } from '../common/validation/room-rate-capacity.service.js';
 
-const testDatabase = resolve(
-  process.cwd(),
-  'phase4.step5.test.db',
-);
-
-const developmentDatabase = resolve(
-  process.cwd(),
-  'dev.db',
-);
 
 const suffix = randomUUID();
 
 let prisma: PrismaClient;
+let database: IsolatedTestDatabase | undefined;
 
 let propertyId = '';
 let roomTypeId = '';
@@ -44,37 +37,11 @@ function futureDate(days: number): Date {
   return result;
 }
 
-function verifyIsolation(): void {
-  if (process.cwd().split(/[\\/]/).at(-1) !== 'backend') {
-    throw new Error('Run tests from backend/.');
-  }
-
-  if (!existsSync(testDatabase)) {
-    throw new Error(
-      'Missing phase4.step5.test.db. Run migrations first.',
-    );
-  }
-
-  if (
-    existsSync(developmentDatabase) &&
-    realpathSync(testDatabase) === realpathSync(developmentDatabase)
-  ) {
-    throw new Error(
-      'Refusing to connect to backend/dev.db.',
-    );
-  }
-}
 
 describe('Phase 4 Step 5 — Rate Snapshot Integration', () => {
   beforeAll(async () => {
-    verifyIsolation();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./phase4.step5.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-    await prisma.$connect();
+    database = await createIsolatedTestDatabase();
+    prisma = database.prisma;
 
     const property = await prisma.property.create({
       data: {
@@ -141,44 +108,10 @@ describe('Phase 4 Step 5 — Rate Snapshot Integration', () => {
     });
 
     reservationId = reservation.id;
-  });
+  }, 60_000);
 
   afterAll(async () => {
-    if (!prisma) return;
-
-    try {
-      if (reservationId) {
-        await prisma.reservation.deleteMany({
-          where: { id: reservationId },
-        });
-      }
-
-      if (guestId) {
-        await prisma.guest.deleteMany({
-          where: { id: guestId },
-        });
-      }
-
-      if (userId) {
-        await prisma.user.deleteMany({
-          where: { id: userId },
-        });
-      }
-
-      if (roomTypeId) {
-        await prisma.roomType.deleteMany({
-          where: { id: roomTypeId },
-        });
-      }
-
-      if (propertyId) {
-        await prisma.property.deleteMany({
-          where: { id: propertyId },
-        });
-      }
-    } finally {
-      await prisma.$disconnect();
-    }
+    await database?.dispose();
   });
 
   it('preserves saved reservation amounts after a rate change', async () => {

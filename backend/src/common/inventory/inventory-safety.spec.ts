@@ -1,7 +1,5 @@
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import {
   BadRequestException,
@@ -9,8 +7,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../../generated/prisma/client.js';
+import type { PrismaClient } from '../../generated/prisma/client.js';
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../../test/helpers/isolated-database.js';
 
 import {
   afterAll,
@@ -24,12 +25,11 @@ import {
 import { RoomRateCapacityService } from '../validation/room-rate-capacity.service.js';
 import { InventorySafetyService } from './inventory-safety.service.js';
 
-const testDb = resolve(process.cwd(), 'phase4.step7.test.db');
-const devDb = resolve(process.cwd(), 'dev.db');
 const suffix = randomUUID();
 
 let prisma: PrismaClient;
 let inventory: InventorySafetyService;
+let database: IsolatedTestDatabase | undefined;
 
 let propertyId: string;
 let roomTypeId: string;
@@ -59,25 +59,6 @@ function phDate(daysFromToday: number): string {
 
 function asDate(date: string): Date {
   return new Date(`${date}T00:00:00.000Z`);
-}
-
-function verifyTestDatabase(): void {
-  if (process.cwd().split(/[\\/]/).at(-1) !== 'backend') {
-    throw new Error('Run the tests from backend/.');
-  }
-
-  if (!existsSync(testDb)) {
-    throw new Error(
-      'Missing phase4.step7.test.db. Apply migrations first.',
-    );
-  }
-
-  if (
-    existsSync(devDb) &&
-    realpathSync(testDb) === realpathSync(devDb)
-  ) {
-    throw new Error('Refusing to use backend/dev.db.');
-  }
 }
 
 function request(
@@ -155,14 +136,8 @@ async function testOnlyAssignInTransaction(
 
 describe('Phase 4 Step 7 — Inventory Safety', () => {
   beforeAll(async () => {
-    verifyTestDatabase();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./phase4.step7.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-    await prisma.$connect();
+    database = await createIsolatedTestDatabase();
+    prisma = database.prisma;
 
     const property = await prisma.property.create({
       data: {
@@ -229,7 +204,7 @@ describe('Phase 4 Step 7 — Inventory Safety', () => {
       prisma as never,
       new RoomRateCapacityService(),
     );
-  });
+  }, 60_000);
 
   beforeEach(async () => {
     // Reset only test-owned records, never dev.db.
@@ -264,56 +239,7 @@ describe('Phase 4 Step 7 — Inventory Safety', () => {
   });
 
   afterAll(async () => {
-    if (!prisma) return;
-
-    try {
-      if (roomId) {
-        await prisma.roomAssignment.deleteMany({
-          where: { roomId },
-        });
-        await prisma.roomBlock.deleteMany({
-          where: { roomId },
-        });
-      }
-
-      if (guestId) {
-        await prisma.reservation.deleteMany({
-          where: { guestId },
-        });
-      }
-
-      if (roomId) {
-        await prisma.room.deleteMany({
-          where: { id: roomId },
-        });
-      }
-
-      if (roomTypeId) {
-        await prisma.roomType.deleteMany({
-          where: { id: roomTypeId },
-        });
-      }
-
-      if (guestId) {
-        await prisma.guest.deleteMany({
-          where: { id: guestId },
-        });
-      }
-
-      if (userId) {
-        await prisma.user.deleteMany({
-          where: { id: userId },
-        });
-      }
-
-      if (propertyId) {
-        await prisma.property.deleteMany({
-          where: { id: propertyId },
-        });
-      }
-    } finally {
-      await prisma.$disconnect();
-    }
+    await database?.dispose();
   });
 
   it('accepts an active READY room', async () => {

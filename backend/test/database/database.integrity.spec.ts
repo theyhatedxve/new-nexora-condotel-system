@@ -1,68 +1,36 @@
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../../src/generated/prisma/client.js';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
+import type { PrismaClient } from '../../src/generated/prisma/client.js';
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../helpers/isolated-database.js';
 
-const TEST_DATABASE = resolve(process.cwd(), 'step10.test.db');
-const DEVELOPMENT_DATABASE = resolve(process.cwd(), 'dev.db');
 
 let prisma: PrismaClient;
+let database: IsolatedTestDatabase | undefined;
 
-function verifyTestDatabase(): void {
-  if (!existsSync(TEST_DATABASE)) {
-    throw new Error(
-      'Step 10 test database is missing. Apply migrations to step10.test.db first.',
-    );
-  }
-
-  if (
-    existsSync(DEVELOPMENT_DATABASE) &&
-    realpathSync(TEST_DATABASE) === realpathSync(DEVELOPMENT_DATABASE)
-  ) {
-    throw new Error(
-      'The test database points to the development database. Tests stopped.',
-    );
-  }
-
-  if (process.cwd().split(/[\\/]/).pop() !== 'backend') {
-    throw new Error(
-      'Run the database tests from the backend directory.',
-    );
-  }
-}
 
 describe('NEXORA database integrity', () => {
-  beforeAll(async () => {
-    verifyTestDatabase();
+    beforeAll(async () => {
+    database = await createIsolatedTestDatabase();
+    prisma = database.prisma;
 
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./step10.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-
-    await prisma.$connect();
-
-    // Verify that the migration created the expected schema.
     await prisma.role.count();
     await prisma.property.count();
     await prisma.roomType.count();
-  });
+  }, 60_000);
 
   afterAll(async () => {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+    await database?.dispose();
   });
 
   it('connects to the migrated SQLite database', async () => {
-    const result = await prisma.$queryRaw<
-      Array<{ value: bigint }>
-    >`SELECT 1 AS value`;
+  const result = await prisma.$queryRaw<
+    Array<{ value: number | bigint }>
+  >`SELECT 1 AS value`;
 
-    expect(result[0]?.value).toBe(1n);
+  expect(Number(result[0]?.value)).toBe(1);
   });
 
   it('rejects duplicate role names', async () => {
@@ -218,5 +186,30 @@ describe('NEXORA database integrity', () => {
         where: { id: role.id },
       });
     }
+  });
+
+    it('passes SQLite integrity and foreign-key checks', async () => {
+    const settings = await prisma.$queryRaw<
+      Array<{ foreign_keys: number | bigint }>
+    >`PRAGMA foreign_keys`;
+
+    expect(Number(settings[0]?.foreign_keys)).toBe(1);
+
+    const integrity = await prisma.$queryRaw<
+      Array<{ integrity_check: string }>
+    >`PRAGMA integrity_check`;
+
+    expect(integrity).toEqual([{ integrity_check: 'ok' }]);
+
+    const violations = await prisma.$queryRaw<
+      Array<{
+        table: string;
+        rowid: number | bigint | null;
+        parent: string;
+        fkid: number | bigint;
+      }>
+    >`PRAGMA foreign_key_check`;
+
+    expect(violations).toEqual([]);
   });
 });
