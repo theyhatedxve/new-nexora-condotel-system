@@ -11,6 +11,7 @@ import { useStaffData } from "../hooks/useStaffData";
 import { listStaffRoomTypes } from "../services/roomTypesApi";
 import StaffDataState from "../components/StaffDataState";
 import RoomTypeManagement from "../components/RoomTypeManagement";
+import RoomTypeRentalPricing from "../components/RoomTypeRentalPricing.jsx";
 import { formatPesos } from "../utils/formatters";
 
 import "../styles/room-types.css";
@@ -56,7 +57,7 @@ export default function RoomTypes() {
       </h1>
 
       <p className="room-ui__intro">
-        Manage category descriptions, guest capacity, and base nightly rates.
+        Manage category descriptions, guest capacity, and rental pricing.
       </p>
 
       <p className="room-types-screen__notice">
@@ -140,6 +141,7 @@ export default function RoomTypes() {
       </section>
 
       <RoomTypeManagement records={records} />
+      <RoomTypeRentalPricing records={records} />
     </section>
   );
 }
