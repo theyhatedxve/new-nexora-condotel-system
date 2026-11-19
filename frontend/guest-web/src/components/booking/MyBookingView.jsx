@@ -13,29 +13,41 @@ export function MyBookingView({ reservationId = null, expectedReference = null }
     useMyBookingView({ reservationId, expectedReference });
 
   return (
-    <main className="my-booking">
+    <main
+      className="my-booking"
+      aria-labelledby="my-booking-title"
+    >
+      <div className="my-booking__toolbar">
+        <Link className="my-booking__back" to="/my-bookings">
+          <ArrowLeft size={18} aria-hidden="true" />
+          Back to My Bookings
+        </Link>
+
+        <button
+          className="my-booking__button"
+          type="button"
+          disabled={signingOut || view.status === "loading"}
+          onClick={view.refresh}
+        >
+          <RefreshCw size={17} aria-hidden="true" />
+          {view.status === "loading"
+            ? "Refreshing…"
+            : "Refresh details"}
+        </button>
+      </div>
+
       <header className="my-booking__heading">
         <div>
-          <p className="my-booking__eyebrow">Your stay at NEXORA</p>
+          <p className="my-booking__eyebrow">
+            Your stay at NEXORA
+          </p>
 
-          <h1>Booking Details</h1>
+          <h1 id="my-booking-title">Booking Details</h1>
 
           <p className="my-booking__intro">
-            Review your stay, booking status, and recorded payments.
+            Review your stay, reservation status, and recorded payments.
           </p>
         </div>
-
-        {view.status !== "loading" && (
-          <button
-            className="my-booking__button"
-            type="button"
-            disabled={signingOut}
-            onClick={view.refresh}
-          >
-            <RefreshCw size={17} aria-hidden="true" />
-            Refresh details
-          </button>
-        )}
       </header>
 
       {view.status === "loading" && (
