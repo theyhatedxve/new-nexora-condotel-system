@@ -14,8 +14,7 @@ export function CurrentOccupancy() {
           <h2 id="occupancy-report-title">Current occupancy snapshot</h2>
 
           <p>
-            These figures describe the current state. The financial date filters below do
-            not change this snapshot.
+            Current snapshot. Financial report dates do not change these figures.
           </p>
         </div>
 
@@ -39,7 +38,7 @@ export function CurrentOccupancy() {
             {timestamp.format(new Date(state.data.asOf))} (Asia/Manila).
           </p>
 
-          <div className="reports-page__metrics">
+          <div className="reports-page__metrics reports-compact__occupancy">
             {operationalCards.map(([key, title, description]) => (
               <article className="reports-page__metric" key={key}>
                 <h3>{title}</h3>

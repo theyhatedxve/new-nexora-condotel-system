@@ -2,14 +2,12 @@ import { RefreshCw } from "lucide-react";
 import StaffDataState from "../StaffDataState";
 import { money, timestamp, financialCards } from "../../constants/reports.js";
 import useCollectionsReport from "../../hooks/useCollectionsReport.js";
-import { ReportFilters } from "./ReportFilters.jsx";
 
-export function CollectionsReport({ query, onApply }) {
+export function CollectionsReport({ query }) {
   const { state, data } = useCollectionsReport({ query });
 
   return (
     <>
-      <ReportFilters key={`${query.from}:${query.to}`} query={query} onApply={onApply} />
 
       <div className="reports-heading reports-page__applied-range">
         <p>

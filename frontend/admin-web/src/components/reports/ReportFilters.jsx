@@ -45,8 +45,8 @@ export function ReportFilters({ query, onApply }) {
       </button>
 
       <p id="report-range-help" className="reports-filter-help">
-        Select up to 31 calendar days. Both dates are included and use Philippine
-        time. This range affects collections and refunds only.
+        Up to 31 calendar days, inclusive, using Philippine time.
+        Applies to financial reports; occupancy remains a current snapshot.
       </p>
 
       {error && (
