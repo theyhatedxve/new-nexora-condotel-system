@@ -18,7 +18,7 @@ import {
   enqueueRefundCompletionInTx,
   enqueueArrivalReminderInTx,
 } from './booking-updates.queue.js';
-import { CHECKOUT_PAID_EVENT } from '../payments/paymongo-webhook.payload.js';
+import { CHECKOUT_PAID_EVENT } from '../payments/paymongo/paymongo-webhook.payload.js';
 import { enqueueDueArrivalReminders } from './arrival-reminders.queue.js';
 
 describe('booking notifications', () => {

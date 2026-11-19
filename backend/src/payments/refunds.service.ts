@@ -30,7 +30,7 @@ import {
   paymentEvidenceSelect,
 } from './payment-evidence.js';
 import { calculatePaymentSummary } from './payment-summary.js';
-import { PaymongoRefundAdapter, type ProviderRefund } from './paymongo-refund.adapter.js';
+import { PaymongoRefundAdapter, type ProviderRefund } from './paymongo/paymongo-refund.adapter.js';
 
 @Injectable()
 export class RefundsService {

@@ -4,20 +4,20 @@ import { OwnershipModule } from '../common/ownership/ownership.module.js';
 import { PaymentsController } from './payments.controller.js';
 import { PaymentSummaryService } from './payment-summary.service.js';
 import { CheckoutService } from './checkout.service.js';
-import { PaymongoAdapter } from './paymongo.adapter.js';
-import { WebhooksController } from './webhooks.controller.js';
-import { PaymongoWebhookService } from './paymongo-webhook.service.js';
+import { PaymongoAdapter } from './paymongo/paymongo.adapter.js';
+import { WebhooksController } from './paymongo/webhooks.controller.js';
+import { PaymongoWebhookService } from './paymongo/paymongo-webhook.service.js';
 import { PayAtPropertyController } from './pay-at-property.controller.js';
 import { PayAtPropertyService } from './pay-at-property.service.js';
 import { RefundsController } from './refunds.controller.js';
 import { RefundsService } from './refunds.service.js';
-import { PaymongoRefundAdapter } from './paymongo-refund.adapter.js';
+import { PaymongoRefundAdapter } from './paymongo/paymongo-refund.adapter.js';
 import { PaymentReconciliationController } from './payment-reconciliation.controller.js';
 import { PaymentReconciliationService } from './payment-reconciliation.service.js';
-import { PaymongoReconciliationAdapter } from './paymongo-reconciliation.adapter.js';
+import { PaymongoReconciliationAdapter } from './paymongo/paymongo-reconciliation.adapter.js';
 import {
   PaymongoCheckoutExpirationAdapter,
-} from './paymongo-checkout-expiration.adapter.js';
+} from './paymongo/paymongo-checkout-expiration.adapter.js';
 
 import {
   GuestBookingDeadlineService,

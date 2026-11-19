@@ -12,7 +12,7 @@ import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/policies/guest-boo
 import { withInventoryWrite } from '../reservations/inventory-write.js';
 import { expirePendingHoldsInTx } from '../reservations/reservation-lifecycle.js';
 import { hasPaymentReview, paymentEvidenceSelect } from './payment-evidence.js';
-import { PaymongoCheckoutExpirationAdapter } from './paymongo-checkout-expiration.adapter.js';
+import { PaymongoCheckoutExpirationAdapter } from './paymongo/paymongo-checkout-expiration.adapter.js';
 
 const REQUESTED = 'payment.checkout.expiration_requested';
 const CONFIRMED = 'payment.checkout.expiration_confirmed';

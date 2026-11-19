@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { BadRequestException } from '@nestjs/common';
-import { REFUND_REASONS } from './dto/create-refund.dto.js';
+import { REFUND_REASONS } from '../dto/create-refund.dto.js';
 
 export const CHECKOUT_PAID_EVENT = 'checkout_session.payment.paid';
 export const REFUND_EVENTS = ['payment.refunded', 'payment.refund.updated'];

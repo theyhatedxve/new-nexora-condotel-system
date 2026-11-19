@@ -8,9 +8,9 @@ import {
 import { isUUID } from 'class-validator';
 import type { Prisma } from '../generated/prisma/client.js';
 
-import { object, REFUND_EVENTS } from './paymongo-webhook.payload.js';
+import { object, REFUND_EVENTS } from './paymongo/paymongo-webhook.payload.js';
 
-import type { ProviderRefund } from './paymongo-refund.adapter.js';
+import type { ProviderRefund } from './paymongo/paymongo-refund.adapter.js';
 
 export const hash = (value: string) =>
   createHash('sha256').update(value).digest('hex');

@@ -1,4 +1,4 @@
-import { PaymongoCheckoutExpirationAdapter } from './paymongo-checkout-expiration.adapter.js';
+import { PaymongoCheckoutExpirationAdapter } from './paymongo/paymongo-checkout-expiration.adapter.js';
 import { activeOnlineAttempts, canReplaceAttempt, isRetiredAttempt, CLOSED_UNPAID_EVENT } from './online-payment-attempts.js';
 import { checkoutResponse } from './checkout-response.js';
 import { createHash } from 'node:crypto';
@@ -20,7 +20,7 @@ import {
 } from '../common/ownership/ownership.service.js';
 import { withInventoryWrite } from '../reservations/inventory-write.js';
 import { calculatePaymentSummary } from './payment-summary.js';
-import { PaymongoAdapter } from './paymongo.adapter.js';
+import { PaymongoAdapter } from './paymongo/paymongo.adapter.js';
 import { hasVerifiedPaymongoEvidence, paymentEvidenceSelect } from './payment-evidence.js';
 import {
   assertCheckoutBookingEligible,

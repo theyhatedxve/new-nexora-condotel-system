@@ -1,8 +1,8 @@
-import { PaymongoCheckoutExpirationAdapter } from './paymongo-checkout-expiration.adapter.js';
+import { PaymongoCheckoutExpirationAdapter } from './paymongo/paymongo-checkout-expiration.adapter.js';
 import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/policies/guest-booking-policy.js';
 import 'reflect-metadata';
 import { CheckoutService } from './checkout.service.js';
-import { PaymongoAdapter } from './paymongo.adapter.js';
+import { PaymongoAdapter } from './paymongo/paymongo.adapter.js';
 import { OwnershipService } from '../common/ownership/ownership.service.js';
 import { randomUUID } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';

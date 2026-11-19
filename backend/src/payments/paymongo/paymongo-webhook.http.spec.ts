@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { CheckoutService } from './checkout.service.js';
+import { CheckoutService } from '../checkout.service.js';
 import { PaymongoAdapter } from './paymongo.adapter.js';
 import { createHmac, randomUUID } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
@@ -13,16 +13,16 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { PrismaClient } from '../generated/prisma/client.js';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { JwtStrategy } from '../auth/jwt.strategy.js';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
-import { RolesGuard } from '../common/guards/roles.guard.js';
-import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
-import { ReservationsModule } from '../reservations/reservations.module.js';
+import { PrismaClient } from '../../generated/prisma/client.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { JwtStrategy } from '../../auth/jwt.strategy.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { todayInPhilippines } from '../../common/validation/philippine-date-range.js';
+import { ReservationsModule } from '../../reservations/reservations.module.js';
 
 import { PaymongoWebhookService } from './paymongo-webhook.service.js';
-import { requireFullRecordedPayment } from '../reservations/policies/stay-payment-policy.js';
+import { requireFullRecordedPayment } from '../../reservations/policies/stay-payment-policy.js';
 
 const webhookSecret = 'isolated-webhook-signing-secret-not-real';
 const secret = 'isolated-payment-summary-test-secret-at-least-32-bytes';

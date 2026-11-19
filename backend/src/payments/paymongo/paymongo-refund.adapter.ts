@@ -1,5 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { REFUND_REASONS, type RefundReason } from './dto/create-refund.dto.js';
+import { REFUND_REASONS, type RefundReason } from '../dto/create-refund.dto.js';
 import { object } from './paymongo-webhook.payload.js';
 
 export type RefundRequest = {

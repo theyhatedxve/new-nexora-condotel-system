@@ -1,8 +1,8 @@
 import { ReservationContactsService } from './reservation-contacts.service.js';
 import { PaymentReconciliationService } from '../payments/payment-reconciliation.service.js';
-import { PaymongoReconciliationAdapter } from '../payments/paymongo-reconciliation.adapter.js';
+import { PaymongoReconciliationAdapter } from '../payments/paymongo/paymongo-reconciliation.adapter.js';
 import { RefundsService } from '../payments/refunds.service.js';
-import { PaymongoRefundAdapter } from '../payments/paymongo-refund.adapter.js';
+import { PaymongoRefundAdapter } from '../payments/paymongo/paymongo-refund.adapter.js';
 import { FINANCIAL_EXCEPTION_EVENT } from '../payments/financial-exceptions.js';
 import { requireFullRecordedPayment } from './policies/stay-payment-policy.js';
 import { AvailabilityService } from '../availability/availability.service.js';
@@ -108,11 +108,11 @@ import {
 
 import {
   PaymongoAdapter,
-} from '../payments/paymongo.adapter.js';
+} from '../payments/paymongo/paymongo.adapter.js';
 
 import {
   PaymongoWebhookService,
-} from '../payments/paymongo-webhook.service.js';
+} from '../payments/paymongo/paymongo-webhook.service.js';
 
 import {
   PaymentSummaryService,
@@ -132,7 +132,7 @@ import {
 
 import {
   PaymongoCheckoutExpirationAdapter,
-} from '../payments/paymongo-checkout-expiration.adapter.js';
+} from '../payments/paymongo/paymongo-checkout-expiration.adapter.js';
 
 const PROPERTY_ID = 'guest-booking-property';
 const ROOM_TYPE_ID = 'guest-booking-room-type';

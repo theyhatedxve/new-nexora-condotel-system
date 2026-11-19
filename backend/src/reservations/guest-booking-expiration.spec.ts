@@ -1,6 +1,6 @@
 import { cancelUnpaidNoShowsInTx, NO_SHOW_ACTION, NO_SHOW_GRACE_MS } from './reservation-no-show.js';
 import { GuestBookingDeadlineService } from '../payments/guest-booking-deadline.service.js';
-import { PaymongoCheckoutExpirationAdapter } from '../payments/paymongo-checkout-expiration.adapter.js';
+import { PaymongoCheckoutExpirationAdapter } from '../payments/paymongo/paymongo-checkout-expiration.adapter.js';
 import { randomUUID } from 'node:crypto';
 
 import {

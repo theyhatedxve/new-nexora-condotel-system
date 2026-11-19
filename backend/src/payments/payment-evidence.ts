@@ -1,5 +1,5 @@
 import type { Payment, PaymentEvent } from '../generated/prisma/client.js';
-import { CHECKOUT_PAID_EVENT, object } from './paymongo-webhook.payload.js';
+import { CHECKOUT_PAID_EVENT, object } from './paymongo/paymongo-webhook.payload.js';
 
 export const paymentEvidenceSelect = {
   paymentId: true,

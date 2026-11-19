@@ -6,7 +6,7 @@ import type { Prisma, Refund } from '../generated/prisma/client.js';
 
 import { hasVerifiedPaymongoEvidence, paymentEvidenceSelect } from './payment-evidence.js';
 
-import { type ProviderRefund } from './paymongo-refund.adapter.js';
+import { type ProviderRefund } from './paymongo/paymongo-refund.adapter.js';
 import { CLAIM, fingerprint } from './refund-policy.js';
 
 export async function assertRefundClaim(

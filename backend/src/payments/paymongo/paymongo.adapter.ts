@@ -1,5 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { getAllowedOrigins } from '../auth/auth.config.js';
+import { getAllowedOrigins } from '../../auth/auth.config.js';
 
 export function validCheckoutUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;

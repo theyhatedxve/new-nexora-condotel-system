@@ -1,6 +1,6 @@
 import type { Prisma } from '../generated/prisma/client.js';
 
-import { REFUND_EVENTS } from './paymongo-webhook.payload.js';
+import { REFUND_EVENTS } from './paymongo/paymongo-webhook.payload.js';
 
 export function reconciliationQueueFilters(propertyId: string) {
     const scope: Prisma.PaymentWhereInput = {

@@ -17,8 +17,8 @@ import { JwtStrategy } from '../auth/jwt.strategy.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { todayInPhilippines } from '../common/validation/philippine-date-range.js';
-import { PaymongoAdapter } from '../payments/paymongo.adapter.js';
-import { PaymongoCheckoutExpirationAdapter } from '../payments/paymongo-checkout-expiration.adapter.js';
+import { PaymongoAdapter } from '../payments/paymongo/paymongo.adapter.js';
+import { PaymongoCheckoutExpirationAdapter } from '../payments/paymongo/paymongo-checkout-expiration.adapter.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ReservationsModule } from './reservations.module.js';
 

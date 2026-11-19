@@ -1,7 +1,7 @@
 import { Controller, Header, Headers, HttpCode, Post, Req, type RawBodyRequest } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
-import { Public } from '../common/decorators/public.decorator.js';
+import { Public } from '../../common/decorators/public.decorator.js';
 import { PaymongoWebhookService } from './paymongo-webhook.service.js';
 
 @Controller('webhooks')

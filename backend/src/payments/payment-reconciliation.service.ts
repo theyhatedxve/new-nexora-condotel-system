@@ -37,10 +37,10 @@ import type {
   ReconciliationStatusQueryDto,
 } from './dto/reconciliation.dto.js';
 import { REFUND_REASONS } from './dto/create-refund.dto.js';
-import { CHECKOUT_PAID_EVENT } from './paymongo-webhook.payload.js';
-import { PaymongoReconciliationAdapter } from './paymongo-reconciliation.adapter.js';
+import { CHECKOUT_PAID_EVENT } from './paymongo/paymongo-webhook.payload.js';
+import { PaymongoReconciliationAdapter } from './paymongo/paymongo-reconciliation.adapter.js';
 
-import { PaymongoWebhookService } from './paymongo-webhook.service.js';
+import { PaymongoWebhookService } from './paymongo/paymongo-webhook.service.js';
 import { settlePaymongoRefund } from './refund-settlement.js';
 
 @Injectable()

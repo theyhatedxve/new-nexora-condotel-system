@@ -2,7 +2,7 @@ import { ConflictException } from '@nestjs/common';
 
 import type { Payment } from '../generated/prisma/client.js';
 
-import { validCheckoutUrl } from './paymongo.adapter.js';
+import { validCheckoutUrl } from './paymongo/paymongo.adapter.js';
 import { hasVerifiedPaymongoEvidence, type PaymentEvidence } from './payment-evidence.js';
 
 export function checkoutResponse(payment: Payment & { events?: PaymentEvidence[] }) {
