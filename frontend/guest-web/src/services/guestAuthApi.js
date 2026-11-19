@@ -79,18 +79,12 @@ async function identify(result, expectedRevision) {
   const user = response.data?.data;
 
   if (
-    typeof user?.id !== "string" ||
-    typeof user.email !== "string" ||
-    ![
-      "GUEST",
-      "SUPER_ADMIN",
-      "ADMIN",
-      "MANAGER",
-      "RECEPTIONIST",
-    ].includes(user.role)
-  ) {
-    throw new Error("Invalid account response.");
-  }
+  typeof user?.id !== "string" ||
+  typeof user.email !== "string" ||
+  user.role !== "GUEST"
+) {
+  throw new Error("Invalid guest account response.");
+}
 
   lastVerified = Date.now();
   publish("authenticated", user);
@@ -107,7 +101,7 @@ export function restoreGuestSession({ ifStale = false } = {}) {
   const expectedRevision = revision;
   operation = (async () => {
     try {
-      const response = await cookieRequest("/auth/refresh");
+      const response = await cookieRequest("/auth/guest/refresh");
       await identify(response.data?.data, expectedRevision);
     } catch (error) {
       if (revision !== expectedRevision) return;
@@ -134,7 +128,7 @@ export function signInGuest(email, password) {
 
   operation = (async () => {
     try {
-      const response = await cookieRequest("/auth/login", {
+      const response = await cookieRequest("/auth/guest/login", {
         email: email.trim().toLowerCase(),
         password,
       });
@@ -160,7 +154,7 @@ export function signOutGuest() {
   logoutOperation = (async () => {
     await pending;
     try {
-      await cookieRequest("/auth/logout");
+      await cookieRequest("/auth/guest/logout");
       publish("anonymous", null, "You have signed out.");
     } catch {
       publish("logout-error", null, "Server sign-out could not be confirmed. Please retry.");

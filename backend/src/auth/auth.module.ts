@@ -18,6 +18,8 @@ import { EmailService } from './email.service.js';
 import { StaffPasswordController } from './staff-password.controller.js';
 import { StaffPasswordService } from './staff-password.service.js';
 
+import { AuthRealmController } from './auth-realm.controller.js';
+
 @Module({
   imports: [
     PrismaModule,
@@ -34,6 +36,7 @@ import { StaffPasswordService } from './staff-password.service.js';
   ],
   controllers: [
     AuthController,
+    AuthRealmController,
     StaffPasswordController,
   ],
   providers: [

@@ -45,9 +45,9 @@ async function identify(result, currentRevision) {
   if (
     typeof user?.id !== "string" ||
     typeof user.email !== "string" ||
-    !["SUPER_ADMIN", "ADMIN", "MANAGER", "RECEPTIONIST", "GUEST"].includes(user.role)
+    !["SUPER_ADMIN", "ADMIN", "MANAGER", "RECEPTIONIST"].includes(user.role)
   ) {
-    throw new Error("Invalid identity response.");
+    throw new Error("Invalid staff account response.");
   }
 
   lastVerified = Date.now();
@@ -77,7 +77,7 @@ export function restoreSession({ ifStale = false } = {}) {
 
   operation = (async () => {
     try {
-      const response = await api.post("/auth/refresh");
+      const response = await api.post("/auth/staff/refresh");
       await identify(response.data?.data, currentRevision);
     } catch (error) {
       if (currentRevision !== revision) return;
@@ -112,7 +112,7 @@ export function signIn(email, password) {
 
   operation = (async () => {
     try {
-      const response = await api.post("/auth/login", {
+      const response = await api.post("/auth/staff/login", {
         email,
         password,
       });
@@ -179,7 +179,7 @@ export function signOut() {
     await pending;
 
     try {
-      await api.post("/auth/logout");
+      await api.post("/auth/staff/logout");
       publish("anonymous", null, "You have signed out.");
     } catch {
       publish(

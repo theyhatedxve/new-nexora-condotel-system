@@ -9,6 +9,12 @@
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
 
+import {
+  getAuthRealmRoles,
+  isAuthRealmRole,
+} from './auth-realm.config.js';
+import type { AuthRealm } from './auth-realm.config.js';
+
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PasswordService } from './password.service.js';
 import {
@@ -50,7 +56,10 @@ export class AuthService {
 
   private dummyPasswordHash: Promise<string> | undefined;
 
-  async login(data: LoginDto): Promise<AuthResult> {
+  async login(
+    data: LoginDto,
+    realm?: AuthRealm,
+  ): Promise<AuthResult> {
     const email = data.email.trim().toLowerCase();
     const invalid = () => new UnauthorizedException(
       'Invalid email or password. If you recently made several attempts, wait before retrying.',
@@ -71,7 +80,13 @@ export class AuthService {
       data.password,
     );
 
-    if (!snapshot || snapshot.status !== 'ACTIVE') throw invalid();
+    if (
+      !snapshot ||
+      snapshot.status !== 'ACTIVE' ||
+      !isAuthRealmRole(snapshot.role.name, realm)
+    ) {
+      throw invalid();
+    }
 
     const refreshToken = generateRefreshToken();
     const outcome = await this.prisma.$transaction(async (tx) => {
@@ -88,6 +103,7 @@ export class AuthService {
       if (
         !user ||
         user.status !== 'ACTIVE' ||
+        !isAuthRealmRole(user.role.name, realm) ||
         user.sessionVersion !== snapshot.sessionVersion ||
         user.passwordHash !== snapshot.passwordHash
       ) {
@@ -178,118 +194,144 @@ export class AuthService {
   }
 
   async refresh(
-    rawToken: string | undefined,
-  ): Promise<AuthResult> {
-    if (!rawToken || !/^[a-f0-9]{64}$/.test(rawToken)) {
-      throw new UnauthorizedException('Invalid refresh session.');
-    }
+  rawToken: string | undefined,
+  realm?: AuthRealm,
+): Promise<AuthResult> {
+  if (!rawToken || !/^[a-f0-9]{64}$/.test(rawToken)) {
+    throw new UnauthorizedException('Invalid refresh session.');
+  }
 
-    const existing = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash: hashRefreshToken(rawToken) },
+  const existing = await this.prisma.refreshToken.findUnique({
+    where: { tokenHash: hashRefreshToken(rawToken) },
+  });
+
+  if (!existing || !existing.familyId) {
+    throw new UnauthorizedException('Invalid refresh session.');
+  }
+
+  const user = await this.prisma.user.findUnique({
+    where: { id: existing.userId },
+    include: { role: true },
+  });
+
+  // Reject another application's token before changing its family.
+  if (realm && user && !isAuthRealmRole(user.role.name, realm)) {
+    throw new UnauthorizedException('Invalid refresh session.');
+  }
+
+  const familyId = existing.familyId;
+  const now = new Date();
+
+  if (existing.revokedAt || existing.expiresAt <= now) {
+    await this.revokeFamily(familyId);
+    throw new UnauthorizedException('Invalid refresh session.');
+  }
+
+  if (
+    !user ||
+    user.status !== 'ACTIVE' ||
+    user.mustChangePassword
+  ) {
+    await this.revokeFamily(familyId);
+    throw new UnauthorizedException('Invalid refresh session.');
+  }
+
+  const nextRefreshToken = generateRefreshToken();
+
+  const rotated = await this.prisma.$transaction(async (tx) => {
+    const consumed = await tx.refreshToken.updateMany({
+      where: {
+        id: existing.id,
+        revokedAt: null,
+        expiresAt: { gt: now },
+      },
+      data: { revokedAt: now },
     });
 
-    if (!existing || !existing.familyId) {
-      throw new UnauthorizedException('Invalid refresh session.');
+    if (consumed.count !== 1) {
+      return false;
     }
 
-    const familyId = existing.familyId;
-    const now = new Date();
-
-    if (existing.revokedAt || existing.expiresAt <= now) {
-      await this.revokeFamily(familyId);
-      throw new UnauthorizedException('Invalid refresh session.');
-    }
-
-    const user = await this.prisma.user.findUnique({
-      where: { id: existing.userId },
+    // Recheck eligibility after obtaining the transactional write lock.
+    const eligible = await tx.user.findFirst({
+      where: {
+        id: user.id,
+        status: 'ACTIVE',
+        mustChangePassword: false,
+        sessionVersion: user.sessionVersion,
+        ...(realm
+          ? {
+              role: {
+                name: { in: getAuthRealmRoles(realm) },
+              },
+            }
+          : {}),
+      },
+      select: { id: true },
     });
 
-    if (
-      !user ||
-      user.status !== 'ACTIVE' ||
-      user.mustChangePassword
-    ) {
-      await this.revokeFamily(familyId);
-      throw new UnauthorizedException('Invalid refresh session.');
+    if (!eligible) {
+      return false;
     }
 
-    const nextRefreshToken = generateRefreshToken();
-
-    const rotated = await this.prisma.$transaction(async (tx) => {
-      const consumed = await tx.refreshToken.updateMany({
-        where: {
-          id: existing.id,
-          revokedAt: null,
-          expiresAt: { gt: now },
-        },
-        data: { revokedAt: now },
-      });
-
-      if (consumed.count !== 1) {
-        return false;
-      }
-
-      // Recheck after obtaining the transactional write lock.
-      const eligible = await tx.user.findFirst({
-        where: {
-          id: user.id,
-          status: 'ACTIVE',
-          mustChangePassword: false,
-          sessionVersion: user.sessionVersion,
-        },
-        select: { id: true },
-      });
-
-      if (!eligible) {
-        return false;
-      }
-
-      await tx.refreshToken.create({
-        data: {
-          userId: user.id,
-          familyId,
-          tokenHash: hashRefreshToken(nextRefreshToken),
-          expiresAt: getRefreshExpiry(),
-        },
-      });
-
-      return true;
+    await tx.refreshToken.create({
+      data: {
+        userId: user.id,
+        familyId,
+        tokenHash: hashRefreshToken(nextRefreshToken),
+        expiresAt: getRefreshExpiry(),
+      },
     });
 
-    if (!rotated) {
-      await this.revokeFamily(familyId);
-      throw new UnauthorizedException('Invalid refresh session.');
-    }
+    return true;
+  });
 
-    const accessToken = await this.createAccessToken(
+  if (!rotated) {
+    await this.revokeFamily(familyId);
+    throw new UnauthorizedException('Invalid refresh session.');
+  }
+
+  return {
+    accessToken: await this.createAccessToken(
       user.id,
       user.sessionVersion,
-    );
+    ),
+    tokenType: 'Bearer',
+    expiresIn: ACCESS_TOKEN_SECONDS,
+    refreshToken: nextRefreshToken,
+  };
+}
 
-    return {
-      accessToken,
-      tokenType: 'Bearer',
-      expiresIn: ACCESS_TOKEN_SECONDS,
-      refreshToken: nextRefreshToken,
-    };
+async logout(
+  rawToken: string | undefined,
+  realm?: AuthRealm,
+): Promise<void> {
+  if (!rawToken || !/^[a-f0-9]{64}$/.test(rawToken)) {
+    return;
   }
 
-  async logout(rawToken: string | undefined): Promise<void> {
-    if (!rawToken || !/^[a-f0-9]{64}$/.test(rawToken)) {
-      return;
-    }
+  const existing = await this.prisma.refreshToken.findUnique({
+    where: { tokenHash: hashRefreshToken(rawToken) },
+    select: { familyId: true, userId: true },
+  });
 
-    const existing = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash: hashRefreshToken(rawToken) },
-      select: { familyId: true },
+  if (!existing?.familyId) {
+    return;
+  }
+
+  if (realm) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: existing.userId },
+      include: { role: true },
     });
 
-    if (!existing?.familyId) {
-      return;
+    if (!user || !isAuthRealmRole(user.role.name, realm)) {
+      throw new UnauthorizedException('Invalid refresh session.');
     }
-
-    await this.revokeFamily(existing.familyId);
   }
+
+  await this.revokeFamily(existing.familyId);
+}
 
   private async revokeFamily(familyId: string): Promise<void> {
     await this.prisma.refreshToken.updateMany({
