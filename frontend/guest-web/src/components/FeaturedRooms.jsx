@@ -91,7 +91,7 @@ function FeaturedRoomCard({ room, onRetry }) {
             to={`/rooms/${encodeURIComponent(room.id)}`}
             className="featured-room__details"
           >
-            View Details
+            View Room
             <ArrowRight size={17} aria-hidden="true" />
             <span className="visually-hidden"> for {room.name}</span>
           </Link>
@@ -107,9 +107,9 @@ function FeaturedRooms() {
     <section className="featured-rooms" aria-labelledby="featured-rooms-title">
       <div className="featured-rooms__heading">
         <div>
-          <p className="featured-rooms__eyebrow">Find your space</p>
+          <p className="featured-rooms__eyebrow">Featured rooms</p>
 
-          <h2 id="featured-rooms-title">Featured Rooms</h2>
+          <h2 id="featured-rooms-title">Our Featured Rooms</h2>
 
           <p className="featured-rooms__intro">
             Explore our room types. Search your dates to check availability and the full

@@ -3,17 +3,17 @@ import { BedDouble, CalendarDays, KeyRound } from "lucide-react";
 export const staySteps = [
   {
     icon: CalendarDays,
-    title: "Choose your dates",
-    text: "Select your check-in, check-out, and guest count to check availability.",
+    title: "Choose your stay",
+    text: "Select your rental type, arrival, duration, and guest count to check availability.",
   },
   {
     icon: BedDouble,
     title: "Explore room types",
-    text: "Compare room capacity, recorded amenities, and nightly rates.",
+    text: "Compare recorded room capacity, amenities, and rental options.",
   },
   {
     icon: KeyRound,
-    title: "Access your booking",
-    text: "Request a private access link using your booking reference and reservation email.",
+    title: "Manage your booking",
+    text: "Sign in to your verified guest account to view your bookings and stay details.",
   },
 ];

@@ -105,7 +105,7 @@ export default function Navbar() {
           <div className="guest-header__actions">
             {auth.status === "loading" && (
               <span className="guest-header__session" role="status">
-                {auth.message || "Checking session…"}{auth.message || "Checking session…"}
+                {auth.message || "Checking session…"}
               </span>
             )}
 

@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
+import { useGuestAuth } from "../auth/useGuestAuth";
 
 import nexoraLogo from "../assets/branding/logo-horizontal-dark.svg";
 
@@ -8,7 +9,11 @@ import "../styles/guest-footer.css";
 
 const currentYear = new Date().getFullYear();
 
+
 function Footer() {
+  const auth = useGuestAuth();
+  const guestSignedIn =
+   auth.status === "authenticated" && auth.user.role === "GUEST";
   return (
     <footer className="guest-footer">
       <div className="guest-footer__inner">
@@ -68,8 +73,9 @@ function Footer() {
             <h2>Your booking</h2>
 
             <p>
-              Sign in to view and manage
-              your reservations.
+              {guestSignedIn
+                ? "View and manage your reservations."
+                : "Sign in to your guest account to view and manage your reservations."}
             </p>
 
             <Link
