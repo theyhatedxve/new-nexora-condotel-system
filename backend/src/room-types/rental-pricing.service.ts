@@ -5,7 +5,7 @@ import {
 import type { Prisma } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { withInventoryWrite } from '../reservations/inventory-write.js';
+import { withInventoryWrite } from '../reservations/inventory/inventory-write.js';
 import { assertRentalRate, calculateRentalQuote, RENTAL_TYPES } from './rental-pricing.policy.js';
 import type { RentalQuoteDto, SaveRentalPricingDto } from './dto/rental-pricing.dto.js';
 

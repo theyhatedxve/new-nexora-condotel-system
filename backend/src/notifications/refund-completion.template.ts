@@ -3,7 +3,7 @@ import type { Refund, Reservation } from '../generated/prisma/client.js';
 import {
   calculatePaymentSummary,
   type SummaryPayment,
-} from '../payments/payment-summary.js';
+} from '../payments/summary/payment-summary.js';
 
 type RefundBooking = Pick<
   Reservation,

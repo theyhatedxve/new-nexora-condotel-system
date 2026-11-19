@@ -27,10 +27,10 @@ import {
 } from '../room-types/rental-pricing.policy.js';
 import {
   ReservationValidationService,
-} from '../reservations/reservation-validation.service.js';
+} from '../reservations/inventory/reservation-validation.service.js';
 import {
   ReservationAcquisitionService,
-} from '../reservations/reservation-acquisition.service.js';
+} from '../reservations/inventory/reservation-acquisition.service.js';
 import {
   initialGuestBookingTiming,
 } from '../reservations/policies/guest-booking-policy.js';

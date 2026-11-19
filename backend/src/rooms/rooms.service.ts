@@ -24,7 +24,7 @@ import type { UpdateRoomDto } from './dto/update-room.dto.js';
 import {
   withInventoryWrite,
   assertInventoryCommitments,
-} from '../reservations/inventory-write.js';
+} from '../reservations/inventory/inventory-write.js';
 
 import type { Prisma } from '../generated/prisma/client.js';
 

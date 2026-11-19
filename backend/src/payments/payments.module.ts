@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { OwnershipModule } from '../common/ownership/ownership.module.js';
-import { PaymentsController } from './payments.controller.js';
-import { PaymentSummaryService } from './payment-summary.service.js';
-import { CheckoutService } from './checkout.service.js';
+import { PaymentsController } from './checkout/payments.controller.js';
+import { PaymentSummaryService } from './summary/payment-summary.service.js';
+import { CheckoutService } from './checkout/checkout.service.js';
 import { PaymongoAdapter } from './paymongo/paymongo.adapter.js';
 import { WebhooksController } from './paymongo/webhooks.controller.js';
 import { PaymongoWebhookService } from './paymongo/paymongo-webhook.service.js';
-import { PayAtPropertyController } from './pay-at-property.controller.js';
-import { PayAtPropertyService } from './pay-at-property.service.js';
-import { RefundsController } from './refunds.controller.js';
-import { RefundsService } from './refunds.service.js';
+import { PayAtPropertyController } from './collections/pay-at-property.controller.js';
+import { PayAtPropertyService } from './collections/pay-at-property.service.js';
+import { RefundsController } from './refunds/refunds.controller.js';
+import { RefundsService } from './refunds/refunds.service.js';
 import { PaymongoRefundAdapter } from './paymongo/paymongo-refund.adapter.js';
-import { PaymentReconciliationController } from './payment-reconciliation.controller.js';
-import { PaymentReconciliationService } from './payment-reconciliation.service.js';
+import { PaymentReconciliationController } from './reconciliation/payment-reconciliation.controller.js';
+import { PaymentReconciliationService } from './reconciliation/payment-reconciliation.service.js';
 import { PaymongoReconciliationAdapter } from './paymongo/paymongo-reconciliation.adapter.js';
 import {
   PaymongoCheckoutExpirationAdapter,
@@ -21,14 +21,14 @@ import {
 
 import {
   GuestBookingDeadlineService,
-} from './guest-booking-deadline.service.js';
+} from './deadlines/guest-booking-deadline.service.js';
 
 import {
   GuestBookingDeadlineWorker,
-} from './guest-booking-deadline.worker.js';
+} from './deadlines/guest-booking-deadline.worker.js';
 
-import { StaffPaymentsController } from './staff-payments.controller.js';
-import { StaffPaymentsService } from './staff-payments.service.js';
+import { StaffPaymentsController } from './summary/staff-payments.controller.js';
+import { StaffPaymentsService } from './summary/staff-payments.service.js';
 @Module({
   imports: [PrismaModule, OwnershipModule],
   controllers: [

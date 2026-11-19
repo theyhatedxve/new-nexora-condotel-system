@@ -1,12 +1,12 @@
-import { inventoryReservationWhere } from '../reservations/inventory-reservation.js';
+import { inventoryReservationWhere } from '../reservations/inventory/inventory-reservation.js';
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { parseAvailabilityStay } from './availability-stay.js';
 import { parsePhilippineDate, todayInPhilippines } from '../common/validation/philippine-date-range.js';
 import { blockWindow, calendarInstant, reservationWindow } from '../common/inventory/reservation-window.js';
-import { assertAllocatable, connectedStays, type Stay } from '../reservations/room-allocation.js';
-import { reservationRentalQuote } from '../reservations/rental-reservation.js';
+import { assertAllocatable, connectedStays, type Stay } from '../reservations/assignments/room-allocation.js';
+import { reservationRentalQuote } from '../reservations/inventory/rental-reservation.js';
 import type { SearchAvailabilityDto } from './dto/search-availability.dto.js';
 
 @Injectable()

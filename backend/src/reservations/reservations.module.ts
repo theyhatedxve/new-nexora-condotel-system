@@ -1,11 +1,11 @@
-import { ReservationDepositsController } from './reservation-deposits.controller.js';
-import { ReservationDepositsService } from './reservation-deposits.service.js';
-import { ReservationChargesController } from './reservation-charges.controller.js';
-import { ReservationChargesService } from './reservation-charges.service.js';
-import { StayOperationsController } from './stay-operations.controller.js';
-import { StayOperationsService } from './stay-operations.service.js';
-import { ReservationContactsController } from './reservation-contacts.controller.js';
-import { ReservationContactsService } from './reservation-contacts.service.js';
+import { ReservationDepositsController } from './deposits/reservation-deposits.controller.js';
+import { ReservationDepositsService } from './deposits/reservation-deposits.service.js';
+import { ReservationChargesController } from './charges/reservation-charges.controller.js';
+import { ReservationChargesService } from './charges/reservation-charges.service.js';
+import { StayOperationsController } from './stay/stay-operations.controller.js';
+import { StayOperationsService } from './stay/stay-operations.service.js';
+import { ReservationContactsController } from './contacts/reservation-contacts.controller.js';
+import { ReservationContactsService } from './contacts/reservation-contacts.service.js';
 import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '../prisma/prisma.module.js';
@@ -16,19 +16,19 @@ import {
 
 import {
   ReservationValidationService,
-} from './reservation-validation.service.js';
+} from './inventory/reservation-validation.service.js';
 
 import {
   ReservationAcquisitionService,
-} from './reservation-acquisition.service.js';
+} from './inventory/reservation-acquisition.service.js';
 
 import {
   ReservationsController,
-} from './reservations.controller.js';
+} from './compatibility/reservations.controller.js';
 
 import {
   BookingAccessController,
-} from './booking-access.controller.js';
+} from './compatibility/booking-access.controller.js';
 
 import {
   InventorySafetyModule,
@@ -36,35 +36,35 @@ import {
 
 import {
   RoomAssignmentsController,
-} from './room-assignments.controller.js';
+} from './assignments/room-assignments.controller.js';
 
 import {
   RoomAssignmentsService,
-} from './room-assignments.service.js';
+} from './assignments/room-assignments.service.js';
 
 import {
   ReservationLifecycleController,
-} from './reservation-lifecycle.controller.js';
+} from './lifecycle/reservation-lifecycle.controller.js';
 
 import {
   ReservationLifecycleService,
-} from './reservation-lifecycle.service.js';
+} from './lifecycle/reservation-lifecycle.service.js';
 
 import {
   ReservationCancellationController,
-} from './reservation-cancellation.controller.js';
+} from './lifecycle/reservation-cancellation.controller.js';
 
 import {
   ReservationCancellationService,
-} from './reservation-cancellation.service.js';
+} from './lifecycle/reservation-cancellation.service.js';
 
 import {
   ReservationStayController,
-} from './reservation-stay.controller.js';
+} from './stay/reservation-stay.controller.js';
 
 import {
   ReservationStayService,
-} from './reservation-stay.service.js';
+} from './stay/reservation-stay.service.js';
 
 import {
   PaymentsModule,
@@ -76,23 +76,23 @@ import {
 
 import {
   StaffReservationsController,
-} from './staff-reservations.controller.js';
+} from './staff/staff-reservations.controller.js';
 
 import {
   StaffReservationsService,
-} from './staff-reservations.service.js';
+} from './staff/staff-reservations.service.js';
 
 import {
   GuestBookingService,
-} from './guest-booking.service.js';
+} from './guest-booking/guest-booking.service.js';
 
 import {
   GuestBookingStaffService,
-} from './guest-booking-staff.service.js';
+} from './staff/guest-booking-staff.service.js';
 
 import {
   GuestBookingStaffController,
-} from './guest-booking-staff.controller.js';
+} from './staff/guest-booking-staff.controller.js';
 
 import type {
   MiddlewareConsumer,
@@ -101,19 +101,19 @@ import type {
 
 import {
   GuestBookingsController,
-} from './guest-bookings.controller.js';
+} from './guest-booking/guest-bookings.controller.js';
 
 import {
   GuestBookingPrivacyMiddleware,
-} from './guest-booking-privacy.middleware.js';
+} from './guest-booking/guest-booking-privacy.middleware.js';
 
 import {
   GuestReservationsController,
-} from './guest-reservations.controller.js';
+} from './guest-booking/guest-reservations.controller.js';
 
 import {
   GuestReservationsService,
-} from './guest-reservations.service.js';
+} from './guest-booking/guest-reservations.service.js';
 
 @Module({
   imports: [

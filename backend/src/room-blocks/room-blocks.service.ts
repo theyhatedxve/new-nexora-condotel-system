@@ -24,7 +24,7 @@ import type { Prisma } from '../generated/prisma/client.js';
 import {
   withInventoryWrite,
   assertRoomInventoryCommitments,
-} from '../reservations/inventory-write.js';
+} from '../reservations/inventory/inventory-write.js';
 
 @Injectable()
 export class RoomBlocksService {

@@ -1,4 +1,4 @@
-import { inventoryReservationWhere } from '../reservations/inventory-reservation.js';
+import { inventoryReservationWhere } from '../reservations/inventory/inventory-reservation.js';
 import { loadContactReminders } from './contact-reminders.js';
 import {
   Injectable,
@@ -17,7 +17,7 @@ import {
 
 import {
   paymentEvidenceSelect,
-} from '../payments/payment-evidence.js';
+} from '../payments/summary/payment-evidence.js';
 
 import {
   dashboardPeriod,

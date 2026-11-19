@@ -3,7 +3,7 @@ import { isEmail } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { EmailService } from '../auth/email.service.js';
 import { buildConfirmationEmail, guestWebBaseUrl } from './booking-confirmation.template.js';
-import { paymentEvidenceSelect } from '../payments/payment-evidence.js';
+import { paymentEvidenceSelect } from '../payments/summary/payment-evidence.js';
 import {
   CANCELLATION_TEMPLATE,
   PAYMENT_UPDATE_PREFIX,

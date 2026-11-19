@@ -9,10 +9,10 @@ import {
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import { OwnershipService } from '../ownership/ownership.service.js';
 import { RoomRateCapacityService } from '../validation/room-rate-capacity.service.js';
-import { ReservationValidationService } from '../../reservations/reservation-validation.service.js';
-import { ReservationAcquisitionService } from '../../reservations/reservation-acquisition.service.js';
-import { GuestBookingService } from '../../reservations/guest-booking.service.js';
-import { StaffReservationsService } from '../../reservations/staff-reservations.service.js';
+import { ReservationValidationService } from '../../reservations/inventory/reservation-validation.service.js';
+import { ReservationAcquisitionService } from '../../reservations/inventory/reservation-acquisition.service.js';
+import { GuestBookingService } from '../../reservations/guest-booking/guest-booking.service.js';
+import { StaffReservationsService } from '../../reservations/staff/staff-reservations.service.js';
 import { StaffGuestsService } from '../../guests/staff-guests.service.js';
 import { migrateGuestPhones } from '../../prisma/guest-phone-migration.js';
 import {

@@ -7,7 +7,7 @@ import {
 
 import {
   MAX_EXPIRATION_BATCH,
-} from '../reservation-lifecycle.js';
+} from '../lifecycle/reservation-lifecycle.js';
 
 export class ExpireHoldsDto {
   @IsOptional()

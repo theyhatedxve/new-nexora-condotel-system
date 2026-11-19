@@ -3,7 +3,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { financialMetrics } from '../dashboard/dashboard-metrics.js';
 
-import { paymentEvidenceSelect } from '../payments/payment-evidence.js';
+import { paymentEvidenceSelect } from '../payments/summary/payment-evidence.js';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 

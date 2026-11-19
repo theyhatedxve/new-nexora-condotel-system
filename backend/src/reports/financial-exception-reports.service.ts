@@ -5,7 +5,7 @@ import {
 import type { PaymentEventStatus, Prisma } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { FINANCIAL_EXCEPTION_EVENT } from '../payments/financial-exceptions.js';
+import { FINANCIAL_EXCEPTION_EVENT } from '../payments/reconciliation/financial-exceptions.js';
 import { collectionsReportRange } from './collections-report-range.js';
 import type { FinancialExceptionReportQueryDto } from './dto/financial-exception-report-query.dto.js';
 

@@ -17,7 +17,7 @@ import type { ManualRoomStatus } from './dto/update-room-status.dto.js';
 import {
   withInventoryWrite,
   assertRoomInventoryCommitments,
-} from '../reservations/inventory-write.js';
+} from '../reservations/inventory/inventory-write.js';
 
 const transitions: Record<string, readonly string[]> = {
   READY: ['CLEANING', 'MAINTENANCE', 'OUT_OF_SERVICE'],

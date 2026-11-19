@@ -7,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { PrismaClient, type Prisma, type PaymentEventStatus } from '../generated/prisma/client.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
-import { FINANCIAL_EXCEPTION_EVENT } from '../payments/financial-exceptions.js';
+import { FINANCIAL_EXCEPTION_EVENT } from '../payments/reconciliation/financial-exceptions.js';
 import { FinancialExceptionReportsService } from './financial-exception-reports.service.js';
 
 describe('financial-exception reports', () => {

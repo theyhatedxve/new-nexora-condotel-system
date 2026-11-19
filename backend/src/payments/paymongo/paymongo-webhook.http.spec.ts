@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { CheckoutService } from '../checkout.service.js';
+import { CheckoutService } from '../checkout/checkout.service.js';
 import { PaymongoAdapter } from './paymongo.adapter.js';
 import { createHmac, randomUUID } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';

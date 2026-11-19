@@ -7,8 +7,8 @@ import { RolesGuard } from '../common/guards/roles.guard.js';
 import { canManageStaff } from './staff-access.policy.js';
 import { AuditController } from '../audit/audit.controller.js';
 import { SettingsController } from '../settings/settings.controller.js';
-import { RefundsController } from '../payments/refunds.controller.js';
-import { PaymentReconciliationController } from '../payments/payment-reconciliation.controller.js';
+import { RefundsController } from '../payments/refunds/refunds.controller.js';
+import { PaymentReconciliationController } from '../payments/reconciliation/payment-reconciliation.controller.js';
 
 class ProtectedActions {
   @Roles('SUPER_ADMIN')

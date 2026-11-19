@@ -22,7 +22,7 @@ import { RoomRateCapacityService } from '../common/validation/room-rate-capacity
 import {
   withInventoryWrite,
   assertInventoryCommitments,
-} from '../reservations/inventory-write.js';
+} from '../reservations/inventory/inventory-write.js';
 
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 

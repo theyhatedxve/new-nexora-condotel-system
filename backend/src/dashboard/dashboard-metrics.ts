@@ -11,7 +11,7 @@ import {
 import {
   calculatePaymentSummary,
   type SummaryPayment,
-} from '../payments/payment-summary.js';
+} from '../payments/summary/payment-summary.js';
 
 export function dashboardPeriod(now: Date) {
   const parts = new Intl.DateTimeFormat('en-US', {
