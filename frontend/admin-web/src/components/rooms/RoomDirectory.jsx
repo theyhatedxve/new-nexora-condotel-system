@@ -7,7 +7,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import StaffDataState from "../StaffDataState";
-import CreateRoomForm from "../CreateRoomForm";
+import CreateRoomDialog from "./CreateRoomDialog.jsx";
 import { formatStatus } from "../../utils/formatters";
 import useRoomDirectory from "../../hooks/useRoomDirectory.js";
 import { RoomFilters } from "./RoomFilters.jsx";
@@ -40,6 +40,11 @@ export function RoomDirectory({ query, queryKey, onApply, onClear, onPage }) {
             Manage room types and nightly rates
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
+
+          <CreateRoomDialog
+            rooms={creationCatalog}
+            returnSearch={listSearch}
+          />
         </div>
       )}
 
@@ -217,12 +222,6 @@ export function RoomDirectory({ query, queryKey, onApply, onClear, onPage }) {
         )}
       </section>
 
-      {canManage && (
-        <CreateRoomForm
-          rooms={creationCatalog}
-          returnSearch={listSearch}
-        />
-      )}
     </>
   );
 }

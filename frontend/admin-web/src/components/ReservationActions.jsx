@@ -2,6 +2,7 @@ import StaffDataState from "./StaffDataState";
 import { formatStatus } from "../utils/formatters";
 import { titles } from "../constants/reservationActions.js";
 import useReservationActions from "../hooks/useReservationActions.js";
+import AssignmentConfirmationDialog from "./reservations/AssignmentConfirmationDialog.jsx";
 
 export default function ReservationActions({
   reservationId,
@@ -182,35 +183,6 @@ export default function ReservationActions({
         </fieldset>
       )}
 
-      {cancellableState && (
-        <fieldset disabled={disabled} className="action-fields reservation-cancellation">
-          <legend>Cancellation</legend>
-
-          <p id="cancellation-policy-help">
-            The reservation cannot be cancelled when any payment record exists, including
-            failed or refunded records. Cancellation does not issue a refund.
-          </p>
-
-          <label htmlFor="cancellation-reason">Cancellation reason</label>
-
-          <textarea
-            id="cancellation-reason"
-            value={reason}
-            minLength={3}
-            maxLength={500}
-            rows={3}
-            aria-describedby="cancellation-policy-help cancellation-reason-help"
-            onChange={changeReason}
-          />
-
-          <p id="cancellation-reason-help">Enter 3–500 characters.</p>
-
-          <button type="button" className="danger-button" onClick={reviewCancel}>
-            Review cancellation
-          </button>
-        </fieldset>
-      )}
-
       {confirmed && (
         <fieldset disabled={disabled} className="action-fields">
           <legend>Check-in</legend>
@@ -228,7 +200,7 @@ export default function ReservationActions({
               checked={identityVerified}
               onChange={changeIdentityVerified}
             />
-            I completed the property's guest identity check.
+            <span>I completed the property's guest identity check.</span>
           </label>
 
           <button
@@ -255,13 +227,75 @@ export default function ReservationActions({
           </button>
         </fieldset>
       )}
+      {cancellableState && (
+        <details className="workspace-details workspace-details--danger">
+          <summary>Cancel reservation</summary>
+
+          <div className="workspace-details__body">
+            <fieldset
+              disabled={disabled}
+              className="action-fields reservation-cancellation"
+            >
+              <legend>Cancellation</legend>
+
+              <p id="cancellation-policy-help">
+                Cancellation is unavailable when any payment record
+                exists, including failed or refunded records.
+                Cancellation does not issue a refund.
+              </p>
+
+              <label htmlFor="cancellation-reason">
+                Cancellation reason
+              </label>
+
+              <textarea
+                id="cancellation-reason"
+                value={reason}
+                minLength={3}
+                maxLength={500}
+                rows={3}
+                aria-describedby="cancellation-policy-help cancellation-reason-help"
+                onChange={changeReason}
+              />
+
+              <p id="cancellation-reason-help">
+                Enter 3–500 characters.
+              </p>
+
+              <button
+                type="button"
+                className="danger-button"
+                onClick={reviewCancel}
+              >
+                Review cancellation
+              </button>
+            </fieldset>
+          </div>
+        </details>
+      )}
       </div>
 
       {!["CONFIRMED", "PENDING", "CHECKED_IN"].includes(booking.status) && (
         <p>No actions are available for this reservation state.</p>
       )}
 
-      {confirmation && (
+      {confirmation &&
+        ["assign", "reassign"].includes(confirmation.command.kind) && (
+          <AssignmentConfirmationDialog
+            reference={booking.reservationNumber}
+            roomLabel={confirmation.roomLabel}
+            reassign={confirmation.command.kind === "reassign"}
+            pending={pending}
+            confirmationCurrent={confirmationCurrent}
+            locked={locked}
+            headingRef={confirmationHeading}
+            onConfirm={confirmReservationAction}
+            onBack={back}
+          />
+        )}
+
+      {confirmation &&
+        !["assign", "reassign"].includes(confirmation.command.kind) && (
         <section
           className="action-confirmation"
           aria-labelledby="action-confirmation-title"

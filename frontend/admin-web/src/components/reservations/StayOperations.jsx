@@ -38,7 +38,7 @@ function Workspace({ actorId, reservationId }) {
 
   return (
     <section 
-      className="record-section" 
+      className="record-section stay-workspace"
       aria-labelledby="stay-operations-title"
       aria-busy={state.loading}
     >
@@ -53,19 +53,79 @@ function Workspace({ actorId, reservationId }) {
       <StaffDataState state={state} label="Stay guidance" />
       {data && (
         <>
-          <dl className="record-fields">
-            <div><dt>Reservation status</dt><dd>{formatStatus(data.status)}</dd></div>
-            <div><dt>Room readiness</dt><dd>{data.roomStatus ? formatStatus(data.roomStatus) : "No single active assignment"}</dd></div>
-            <div><dt>Actual arrival</dt><dd>{formatTimestamp(data.actualArrivalAt)}</dd></div>
-            <div><dt>Actual departure</dt><dd>{formatTimestamp(data.actualDepartureAt)}</dd></div>
-            <div><dt>Applicable departure</dt><dd>{data.effectiveDepartureAt ? formatTimestamp(data.effectiveDepartureAt) : "No precise checkout clock recorded"}</dd></div>
-            <div><dt>Original grace deadline</dt><dd>{data.graceEndsAt ? formatTimestamp(data.graceEndsAt) : "Timing review required"}</dd></div>
+                    <dl className="workspace-facts">
+            <div>
+              <dt>Room readiness</dt>
+              <dd>
+                {data.roomStatus
+                  ? formatStatus(data.roomStatus)
+                  : "No single active assignment"}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Reservation status</dt>
+              <dd>{formatStatus(data.status)}</dd>
+            </div>
+
+            <div className="workspace-facts__priority">
+              <dt>Applicable departure</dt>
+              <dd>
+                {data.effectiveDepartureAt
+                  ? formatTimestamp(data.effectiveDepartureAt)
+                  : "No precise checkout clock recorded"}
+              </dd>
+            </div>
+
+            <div className="workspace-facts__priority">
+              <dt>Original grace deadline</dt>
+              <dd>
+                {data.graceEndsAt
+                  ? formatTimestamp(data.graceEndsAt)
+                  : "Timing review required"}
+              </dd>
+            </div>
+
+            <div>
+              <dt>Checkout phase</dt>
+              <dd>{formatStatus(data.phase)}</dd>
+            </div>
+
             {data.paidBillingThroughAt && (
-              <div><dt>Billing coverage through</dt><dd>{formatTimestamp(data.paidBillingThroughAt)} (pricing only; does not extend room rights)</dd></div>
+              <div>
+                <dt>Billing coverage through</dt>
+                <dd>
+                  {formatTimestamp(data.paidBillingThroughAt)}
+                  <small>
+                    Pricing only. This does not extend room rights.
+                  </small>
+                </dd>
+              </div>
             )}
-            <div><dt>Checkout phase</dt><dd>{formatStatus(data.phase)}</dd></div>
-            <div><dt>Checked at</dt><dd>{formatTimestamp(data.checkedAt)}</dd></div>
           </dl>
+
+          <details className="workspace-details">
+            <summary>Actual stay timestamps and snapshot</summary>
+
+            <div className="workspace-details__body">
+              <dl className="workspace-facts">
+                <div>
+                  <dt>Actual arrival</dt>
+                  <dd>{formatTimestamp(data.actualArrivalAt)}</dd>
+                </div>
+
+                <div>
+                  <dt>Actual departure</dt>
+                  <dd>{formatTimestamp(data.actualDepartureAt)}</dd>
+                </div>
+
+                <div>
+                  <dt>Guidance checked at</dt>
+                  <dd>{formatTimestamp(data.checkedAt)}</dd>
+                </div>
+              </dl>
+            </div>
+          </details>
           {data.requestedDepartureAt && (
             <div role="status">
               <p>Proposal checked: {formatTimestamp(data.requestedDepartureAt)}</p>

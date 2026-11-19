@@ -43,14 +43,34 @@ function Workspace({ user, reservationId, bookingStatus, onReload }) {
   }
   return (
     <section
-      className="record-section"
+      className="record-section charges-workspace"
       aria-labelledby="reservation-charges-title"
       aria-busy={busy}
     >
       <h2 id="reservation-charges-title">Additional charges</h2>
-      <p>Separate from accommodation payments. This prototype records full cash receipts at the property; it does not charge a card or PayMongo account.</p>
-      <p>Late checkout: one 30-minute grace period per stay, then each started hour. Repeated extensions do not restart grace or charge prepaid hours twice.</p>
-      <button type="button" onClick={history.reload} disabled={history.loading}>Refresh charges</button>
+      <p>
+        Additional charges are separate from accommodation payments.
+      </p>
+
+      <details className="workspace-details">
+        <summary>Cash receipts and late-checkout rules</summary>
+
+        <div className="workspace-details__body">
+          <p>
+            This prototype records full cash receipts at the property.
+            It does not charge a card or PayMongo account.
+          </p>
+
+          <p>
+            Late checkout uses one 30-minute grace period per stay,
+            then each started hour. Repeated extensions do not restart
+            grace or charge prepaid hours twice.
+          </p>
+        </div>
+      </details>
+      <button type="button" onClick={history.reload} disabled={history.loading}>
+        Refresh charges
+      </button>
       <StaffDataState state={history} label="Additional charges" />
       {message && <p role="status">{message}</p>}
       {history.status === "ready" && (
@@ -88,8 +108,16 @@ function Workspace({ user, reservationId, bookingStatus, onReload }) {
           </nav>
         </>
       )}
-      <label htmlFor="charge-decision-reason">Reason for rejection or cash correction</label>
-      <textarea id="charge-decision-reason" value={reason} maxLength={500} onChange={(event) => setReason(event.target.value)} />
+      <div className="workspace-field charges-workspace__reason">
+        <label htmlFor="charge-decision-reason">Reason for rejection or cash correction</label>
+        <textarea id="charge-decision-reason" rows={3} value={reason} maxLength={500}
+          disabled={busy || blocked || Boolean(draft)}
+          aria-describedby="charge-decision-reason-help"
+          onChange={(event) => setReason(event.target.value)} />
+        <p id="charge-decision-reason-help">
+          Required for rejection or cash correction. Enter at least 3 characters.
+        </p>
+      </div>
       {["CHECKED_IN", "CHECKED_OUT"].includes(bookingStatus) && (
         <form onSubmit={propose} hidden={Boolean(draft)}>
           <fieldset className="action-fields" disabled={busy || blocked || Boolean(draft)}>
@@ -116,9 +144,9 @@ function Workspace({ user, reservationId, bookingStatus, onReload }) {
           <p>{draft.label}</p><p>Request: {draft.command.requestId}</p>
           {draft.phase === "rejected" ? <button type="button" onClick={back} disabled={busy}>Acknowledge rejection and start over</button> : (
             <form onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-              {["COLLECT", "REFUND_UNFULFILLED_EXTENSION"].includes(draft.command.action) && <label>
+              {["COLLECT", "REFUND_UNFULFILLED_EXTENSION"].includes(draft.command.action) && <label className="action-checkbox">
                 <input type="checkbox" required />
-                {draft.command.action === "COLLECT" ? "I have received the full cash amount shown above. Recording it does not grant an extension." : "I have actually returned the full cash amount for this unfulfilled extension."}
+                <span>{draft.command.action === "COLLECT" ? "I have received the full cash amount shown above. Recording it does not grant an extension." : "I have actually returned the full cash amount for this unfulfilled extension."}</span>
               </label>}
               <div className="actions">
                 {draft.phase === "review" && <button type="button" onClick={back} disabled={busy}>Back</button>}

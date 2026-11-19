@@ -10,8 +10,7 @@ import {
 import { useStaffData } from "../hooks/useStaffData";
 import { listStaffRoomTypes } from "../services/roomTypesApi";
 import StaffDataState from "../components/StaffDataState";
-import RoomTypeManagement from "../components/RoomTypeManagement";
-import RoomTypeRentalPricing from "../components/RoomTypeRentalPricing.jsx";
+import RoomTypeDialogs from "../components/rooms/RoomTypeDialogs.jsx";
 import { formatPesos } from "../utils/formatters";
 
 import "../styles/room-types.css";
@@ -42,13 +41,7 @@ export default function RoomTypes() {
             {records.loading ? "Refreshing…" : "Refresh"}
           </button>
 
-          <a
-            className="room-types-screen__primary"
-            href="#type-management-title"
-          >
-            <Pencil size={16} aria-hidden="true" />
-            Create or edit
-          </a>
+          <RoomTypeDialogs records={records} />
         </div>
       </header>
 
@@ -85,7 +78,7 @@ export default function RoomTypes() {
         {records.status === "ready" && (
           records.data.length === 0 ? (
             <p className="room-types-screen__empty" role="status">
-              No room types found. Use the form below to review a new category.
+              No room types found. Authorized staff can use Create or edit to add a category.
             </p>
           ) : (
             <ul className="room-types-screen__list">
@@ -140,8 +133,7 @@ export default function RoomTypes() {
         )}
       </section>
 
-      <RoomTypeManagement records={records} />
-      <RoomTypeRentalPricing records={records} />
+
     </section>
   );
 }

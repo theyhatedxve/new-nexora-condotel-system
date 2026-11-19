@@ -25,6 +25,7 @@ export default function CreateRoomForm({ rooms, returnSearch = "" }) {
     <section
       className="record-section room-management"
       aria-labelledby="create-room-title"
+      aria-busy={change.state.status === "pending"}
     >
       <h2 id="create-room-title">Create room</h2>
 

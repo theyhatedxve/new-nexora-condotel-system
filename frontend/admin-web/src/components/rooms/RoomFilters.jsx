@@ -30,7 +30,7 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
       <fieldset className="room-filter-fields">
         <legend>
           <SlidersHorizontal size={16} aria-hidden="true" />
-          Filter physical rooms
+          Filter rooms
         </legend>
 
         {error && (
@@ -83,7 +83,7 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
         </div>
 
         <div>
-          <label htmlFor="room-status-filter">Operational status</label>
+          <label htmlFor="room-status-filter">Status</label>
           <select id="room-status-filter" value={draft.status} onChange={changeStatus}>
             <option value="">All statuses</option>
 
@@ -96,7 +96,7 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
         </div>
 
         <div>
-          <label htmlFor="room-active-filter">Room active</label>
+          <label htmlFor="room-active-filter">Active state</label>
           <select
             id="room-active-filter"
             value={draft.isActive}
@@ -109,7 +109,7 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
         </div>
 
         <div>
-          <label htmlFor="room-page-size">Records per page</label>
+          <label htmlFor="room-page-size">Rows</label>
           <select id="room-page-size" value={draft.limit} onChange={changeLimit}>
             <option value="20">20</option>
             <option value="50">50</option>
@@ -119,7 +119,7 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
         <div className="actions room-filter-actions">
           <button type="submit" className="rooms-screen__primary">
             <Search size={16} aria-hidden="true" />
-            Apply filters
+            Search
           </button>
 
           <button
@@ -127,13 +127,13 @@ export function RoomFilters({ query, catalog, onApply, onClear }) {
             className="rooms-screen__secondary"
             onClick={onClear}
           >
-            Clear filters
+            Clear
           </button>
         </div>
 
         <p id="room-filter-help" className="rooms-screen__filter-help">
-          Apply filters to update the results. Room-type choices come from the
-          current physical-room catalog.
+          Select Search to apply. Room types come from the current
+          physical-room catalog.
         </p>
       </fieldset>
     </form>

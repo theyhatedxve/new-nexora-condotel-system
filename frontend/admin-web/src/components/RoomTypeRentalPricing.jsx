@@ -364,6 +364,7 @@ function RentalPricingWorkspace({ records, actorId }) {
     <section
       className="rental-pricing"
       aria-labelledby="rental-pricing-title"
+      aria-busy={busy}
     >
       <h2 id="rental-pricing-title">Rental Pricing</h2>
       <p>

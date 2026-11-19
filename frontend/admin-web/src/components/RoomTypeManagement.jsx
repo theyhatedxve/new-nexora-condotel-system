@@ -24,6 +24,7 @@ export default function RoomTypeManagement({ records }) {
     <section
       className="record-section room-management room-types-screen__management"
       aria-labelledby="type-management-title"
+      aria-busy={change.state.status === "pending"}
     >
       <h2 id="type-management-title" tabIndex={-1}>
         Create or edit a room type

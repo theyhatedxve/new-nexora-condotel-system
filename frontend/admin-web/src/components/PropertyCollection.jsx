@@ -32,7 +32,7 @@ export default function PropertyCollection({ reservationId, record, payment, onR
 
   return (
     <section
-      className="record-section room-management"
+      className="record-section room-management collection-workspace"
       aria-labelledby="property-collection-title"
       aria-busy={pending || checking || state.status === "loading"}
     >
@@ -43,19 +43,22 @@ export default function PropertyCollection({ reservationId, record, payment, onR
         online payment method.
       </p>
 
-      <p>
-        Remaining backend balance:{" "}
-        <strong>
-          {summary && !summary.requiresReview
+      <dl className="workspace-balance">
+        <dt>Accommodation balance due</dt>
+        <dd>
+          {summary &&
+          !summary.requiresReview &&
+          summary.balanceDueCentavos !== null
             ? formatPesos(summary.balanceDueCentavos)
             : "Unavailable"}
-        </strong>
-      </p>
+        </dd>
+      </dl>
 
       {!eligible && change.ready && state.status === "idle" && (
-        <p role="status">
-          New collection is unavailable for this booking’s current stay or payment state.
-          Resolve any pending attempts or financial review first.
+        <p role="status" className="workspace-notice">
+          Collection is unavailable for the current booking or payment
+          state. Check the balance, pending payment attempts, and any
+          financial review before proceeding.
         </p>
       )}
 
