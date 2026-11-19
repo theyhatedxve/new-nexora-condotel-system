@@ -2,21 +2,21 @@ import { BedDouble, CalendarDays, ShieldCheck } from "lucide-react";
 
 export const features = [
   {
-    title: "Plan your stay",
+    title: "Comfortable Spaces",
     description:
-      "Explore room types, review amenities, and check availability for your preferred dates.",
+      "Compare room categories, guest capacity, and recorded amenities to find a space that suits your stay.",
     Icon: BedDouble,
   },
   {
-    title: "Choose how to book",
+    title: "Flexible Stays",
     description:
-      "Choose online payment or request Pay at Property. Review the confirmation requirements before continuing.",
+      "Explore hourly, nightly, weekly, and monthly stays where enabled, with availability and pricing checked for your selection.",
     Icon: CalendarDays,
   },
   {
-    title: "Access your booking",
+    title: "Hassle-Free Booking",
     description:
-      "Request a private email link to review your reservation details and recorded payment status.",
+      "Sign in to reserve your stay and use My Bookings to review reservation details and payment status.",
     Icon: ShieldCheck,
   },
 ];

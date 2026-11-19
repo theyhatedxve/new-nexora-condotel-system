@@ -1,31 +1,42 @@
 import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
+
 import propertyEvening from "../assets/hero/property-evening.jpg";
 import { features } from "../constants/aboutContent.js";
+
 import "../styles/about.css";
 
 export default function About() {
   return (
-    <main className="about-page">
-      <section className="about-page__intro" aria-labelledby="about-title">
+    <main className="about-page" aria-labelledby="about-title">
+      <section
+        className="about-page__intro"
+        aria-labelledby="about-title"
+      >
         <div className="about-page__copy">
-          <p className="about-page__eyebrow">Welcome to NEXORA</p>
+          <p className="about-page__eyebrow">About NEXORA</p>
 
-          <h1 id="about-title">A space for your next stay.</h1>
+          <h1 id="about-title">
+            A better way
+            <br />
+            to stay.
+          </h1>
 
           <p className="about-page__lead">
-            Discover NEXORA and find a room that suits your plans.
+            NEXORA brings room information, flexible stay options,
+            and booking services together in one place.
           </p>
 
           <p className="about-page__description">
-            Our guest website brings room information, availability, and booking details
-            together in one place. Explore your options, select your dates, and review
-            your stay before sending a reservation request.
+            Whether you are planning a short visit, a family getaway,
+            or a longer stay, explore room categories, compare
+            available options, and manage your reservations through
+            your guest account.
           </p>
 
           <Link className="about-page__primary" to="/rooms">
-            Explore rooms
-            <ArrowRight size={18} aria-hidden="true" />
+            Explore Rooms
+            <ArrowRight size={19} aria-hidden="true" />
           </Link>
         </div>
 
@@ -38,40 +49,64 @@ export default function About() {
         </figure>
       </section>
 
-      <section className="about-page__features" aria-labelledby="about-features-title">
+      <section
+        className="about-page__features"
+        aria-labelledby="about-features-title"
+      >
         <header className="about-page__section-heading">
-          <p className="about-page__eyebrow">Your booking experience</p>
+          <p className="about-page__eyebrow">
+            Why guests choose NEXORA
+          </p>
 
-          <h2 id="about-features-title">From finding a room to reviewing your stay</h2>
+          <h2 id="about-features-title">
+            Designed for a comfortable and flexible stay
+          </h2>
         </header>
 
         <div className="about-page__feature-grid">
           {features.map(({ title, description, Icon }) => (
             <article key={title} className="about-page__feature">
-              <span className="about-page__feature-icon">
-                <Icon size={26} aria-hidden="true" />
+              <span
+                className="about-page__feature-icon"
+                aria-hidden="true"
+              >
+                <Icon size={29} />
               </span>
 
-              <h3>{title}</h3>
-              <p>{description}</p>
+              <div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </div>
             </article>
           ))}
         </div>
+
+        <p className="about-page__account-note">
+          Already have a reservation? Sign in to your guest account
+          and open{" "}
+          <Link to="/my-bookings">My Bookings</Link>
+          {" "}to review your stay.
+        </p>
       </section>
 
-      <section className="about-page__booking" aria-labelledby="about-booking-title">
+      <section
+        className="about-page__booking"
+        aria-labelledby="about-booking-title"
+      >
         <div>
-          <h2 id="about-booking-title">Already have a reservation?</h2>
+          <h2 id="about-booking-title">
+            Ready to plan your stay?
+          </h2>
 
           <p>
-            Request a private access link using your booking reference and reservation
-            email.
+            Explore our rooms, choose your stay, and check the full
+            price before reserving.
           </p>
         </div>
 
-        <Link className="about-page__secondary" to="/my-bookings">
-          My Bookings
-          <ArrowRight size={18} aria-hidden="true" />
+        <Link className="about-page__secondary" to="/rooms">
+          Explore Rooms
+          <ArrowRight size={19} aria-hidden="true" />
         </Link>
       </section>
     </main>

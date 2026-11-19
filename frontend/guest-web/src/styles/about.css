@@ -1,26 +1,36 @@
 .about-page {
-  width: min(1120px, calc(100% - 3rem));
+  box-sizing: border-box;
+  width: min(
+    var(--luxury-width, 1280px),
+    calc(
+      100% -
+      var(--luxury-gutter, 24px) -
+      var(--luxury-gutter, 24px)
+    )
+  );
   margin-inline: auto;
-  padding-block: clamp(2rem, 5vw, 4rem);
-  color: var(--color-text);
+  padding-block: clamp(2rem, 4vw, 3.5rem);
+  color: var(--color-text, #15273f);
 }
 
 .about-page__intro {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   align-items: center;
-  gap: clamp(1.5rem, 4vw, 3.5rem);
+  gap: clamp(2rem, 5vw, 4.5rem);
 }
 
-.about-page__copy {
+.about-page__copy,
+.about-page__feature > div {
   min-width: 0;
 }
 
 .about-page__eyebrow {
-  margin: 0 0 var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-0-75rem);
-  font-weight: var(--font-weight-700);
+  margin: 0 0 0.85rem;
+  color: var(--color-text-muted, #465675);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.5;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -28,42 +38,45 @@
 .about-page h1,
 .about-page h2,
 .about-page h3 {
-  color: var(--color-primary);
+  color: var(--color-primary, #15273f);
 }
 
 .about-page h1 {
-  max-width: 12ch;
   margin: 0;
-  font-size: clamp(2rem, 4.5vw, 3.25rem);
-  line-height: var(--line-height-1-15);
+  font-size: clamp(2.75rem, 4.8vw, 4.25rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
 }
 
 .about-page__lead {
-  margin: var(--space-1-25rem) 0 0;
-  color: var(--color-primary);
-  font-size: var(--font-size-1-1rem);
-  line-height: var(--line-height-1-7);
+  margin: 1.25rem 0 0;
+  color: var(--color-primary, #15273f);
+  font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+  line-height: 1.6;
 }
 
 .about-page__description {
-  margin: var(--space-4) 0 var(--space-6);
-  color: var(--color-text-muted);
-  line-height: var(--line-height-1-8);
+  margin: 1rem 0 1.5rem;
+  color: var(--color-text-muted, #465675);
+  line-height: 1.75;
 }
 
 .about-page__primary,
 .about-page__secondary {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-0-625rem);
-  min-height: 2.875rem;
-  padding: var(--space-0-875rem) var(--space-1-25rem);
+  gap: 0.85rem;
+  min-height: 48px;
+  max-width: 100%;
+  padding: 0.75rem 1.35rem;
   border: 1px solid;
-  border-radius: var(--radius-small);
-  font-size: var(--font-size-0-95rem);
-  font-weight: var(--font-weight-700);
-  line-height: var(--line-height-1-5);
+  border-radius: 0.5rem;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.5;
   text-align: center;
   text-decoration: none;
 }
@@ -74,23 +87,27 @@
 }
 
 .about-page__primary {
-  color: var(--color-on-gold);
-  background: var(--color-gold-light);
-  border-color: var(--color-gold);
+  color: var(--color-on-gold, #15273f);
+  background: linear-gradient(110deg, #e8ca84, #d4aa54);
+  border-color: #c99d43;
 }
 
 .about-page__primary:hover {
-  background: var(--color-e4ca95);
+  background: #e8ca84;
 }
 
 .about-page__image {
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  aspect-ratio: 4 / 3;
-  background: var(--color-border);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
+  aspect-ratio: 16 / 10;
+  background: var(--color-border, #d6deeb);
+  border: 1px solid var(--color-border, #d6deeb);
+  border-radius: 1.15rem;
+  box-shadow: var(
+    --luxury-shadow,
+    0 8px 24px rgb(20 38 63 / 8%)
+  );
 }
 
 .about-page__image img {
@@ -98,127 +115,159 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 
 .about-page__features {
-  margin-top: clamp(2.5rem, 6vw, 4rem);
+  margin-top: clamp(2.75rem, 5vw, 4rem);
 }
 
 .about-page__section-heading {
-  max-width: 40rem;
-  margin: 0 auto var(--space-6);
+  max-width: 52rem;
+  margin: 0 auto 1.5rem;
   text-align: center;
 }
 
 .about-page__section-heading h2 {
   margin: 0;
-  font-size: clamp(1.4rem, 3vw, 1.8rem);
-  line-height: var(--line-height-1-4);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  line-height: 1.3;
+  letter-spacing: -0.025em;
 }
 
 .about-page__feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-1-25rem);
+  gap: 1.25rem;
 }
 
 .about-page__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.15rem;
   min-width: 0;
-  padding: var(--space-1-75rem) var(--space-1-25rem);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
-  text-align: center;
+  padding: 1.5rem;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #d6deeb);
+  border-radius: 0.9rem;
 }
 
 .about-page__feature-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  margin-bottom: var(--space-4);
-  color: var(--color-primary);
-  background: var(--color-surface-warm);
-  border: 1px solid var(--color-ead8ad);
-  border-radius: var(--radius-small);
+  flex: 0 0 60px;
+  width: 60px;
+  height: 60px;
+  color: var(--color-primary, #15273f);
+  background: linear-gradient(135deg, #fbefd7, #faf7ef);
+  border: 1px solid #ead8ad;
+  border-radius: 1.4rem;
 }
 
 .about-page__feature h3 {
   margin: 0;
-  font-size: var(--font-size-1-05rem);
-  line-height: var(--line-height-1-5);
+  font-size: 1.08rem;
+  line-height: 1.4;
 }
 
 .about-page__feature p {
-  margin: var(--space-3) 0 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-0-9rem);
-  line-height: var(--line-height-1-8);
+  margin: 0.5rem 0 0;
+  color: var(--color-text-muted, #465675);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.about-page__account-note {
+  margin: 1.5rem 0 0;
+  color: var(--color-text-muted, #465675);
+  line-height: 1.7;
+  text-align: center;
+}
+
+.about-page__account-note a {
+  color: var(--color-primary, #15273f);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 .about-page__booking {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-6);
-  margin-top: var(--space-8);
-  padding: clamp(1.25rem, 3vw, 2rem);
-  color: var(--color-on-primary);
-  background: var(--color-primary);
-  border-radius: var(--radius-medium);
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  color: #fff;
+  background: linear-gradient(110deg, #10243f, #192e47);
+  border: 1px solid #10243f;
+  border-radius: 1rem;
 }
 
 .about-page__booking h2 {
   margin: 0;
-  color: var(--color-on-primary);
-  font-size: var(--font-size-1-25rem);
-  line-height: var(--line-height-1-4);
+  color: #fff;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  line-height: 1.3;
 }
 
 .about-page__booking p {
-  max-width: 38rem;
-  margin: var(--space-0-625rem) 0 0;
-  line-height: var(--line-height-1-7);
+  max-width: 42rem;
+  margin: 0.6rem 0 0;
+  color: #eef2f8;
+  line-height: 1.65;
 }
 
 .about-page__secondary {
   flex-shrink: 0;
-  color: var(--color-gold-light);
-  border-color: var(--color-gold-light);
+  color: #f0ce7d;
+  background: transparent;
+  border-color: #e5bf69;
 }
 
 .about-page__secondary:hover {
-  color: var(--color-on-gold);
-  background: var(--color-gold-light);
+  color: #15273f;
+  background: #e5bf69;
+}
+
+.about-page a:focus-visible {
+  outline: 3px solid #8c6418;
+  outline-offset: 4px;
 }
 
 .about-page__booking a:focus-visible {
-  outline-color: var(--color-gold-light);
+  outline-color: #f0ce7d;
 }
 
-@media (max-width: 760px) {
-  .about-page {
-    width: calc(100% - 2rem);
-  }
-
-  .about-page__intro,
+@media (max-width: 1100px) {
   .about-page__feature-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
 
-  .about-page h1 {
-    max-width: 16ch;
+@media (max-width: 760px) {
+  .about-page__intro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .about-page__image {
+    aspect-ratio: 16 / 10;
   }
 
   .about-page__booking {
-    align-items: stretch;
     flex-direction: column;
+    align-items: stretch;
   }
 }
 
 @media (max-width: 420px) {
   .about-page__primary {
     width: 100%;
+  }
+
+  .about-page__feature {
+    flex-direction: column;
+    padding: 1.25rem;
   }
 }
