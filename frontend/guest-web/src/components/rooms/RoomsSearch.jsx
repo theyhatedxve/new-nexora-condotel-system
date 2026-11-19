@@ -1,9 +1,16 @@
+import { BedDouble, Search } from "lucide-react";
 import RentalStayFields from "../RentalStayFields.jsx";
 import useRoomsSearch from "../../hooks/useRoomsSearch.js";
 import { RoomCatalog } from "./RoomCatalog.jsx";
 import { AvailabilityResults } from "./AvailabilityResults.jsx";
 
-export function RoomsSearch({ query, search, metadata, onApply, onClear }) {
+export function RoomsSearch({
+  query,
+  search,
+  metadata,
+  onApply,
+  onClear,
+}) {
   const {
     formRef,
     values,
@@ -17,45 +24,71 @@ export function RoomsSearch({ query, search, metadata, onApply, onClear }) {
 
   return (
     <div className="rooms-directory__layout">
-      <aside className="rooms-directory__sidebar" aria-labelledby="availability-title">
-        <section className="availability-search">
-          <h2 id="availability-title">Search your stay</h2>
+      <section
+        className="availability-search rooms-searchbar"
+        aria-labelledby="availability-title"
+      >
+        <header className="rooms-searchbar__heading">
+          <span className="rooms-searchbar__icon">
+            <BedDouble size={27} aria-hidden="true" />
+          </span>
 
-          <p className="availability-description">
-            Choose your dates and guests to check availability.
-          </p>
+          <div>
+            <h2 id="availability-title">Find Your Stay</h2>
+            <p>
+              Check availability and compare the full price for your stay.
+            </p>
+          </div>
+        </header>
 
-          <form ref={formRef} className="availability-form" onSubmit={submit} noValidate>
-            <RentalStayFields values={values} errors={errors} onChange={changeField} prefix="rooms" />
+        <form
+          ref={formRef}
+          className="availability-form rooms-searchbar__form"
+          onSubmit={submit}
+          noValidate
+        >
+          <RentalStayFields
+            values={values}
+            errors={errors}
+            onChange={changeField}
+            prefix="rooms"
+          />
 
-            <div className="rooms-directory__search-actions">
+          <div className="rooms-directory__search-actions">
+            <button
+              className="availability-button"
+              type="submit"
+              disabled={searchingCurrentDraft}
+            >
+              <Search size={18} aria-hidden="true" />
+              {searchingCurrentDraft
+                ? "Searching…"
+                : "Search Available Rooms"}
+            </button>
+
+            {query && (
               <button
-                className="availability-button"
-                type="submit"
-                disabled={searchingCurrentDraft}
+                className="outline-button"
+                type="button"
+                onClick={onClear}
               >
-                {searchingCurrentDraft ? "Searching..." : "Search Available Rooms"}
+                Clear stay search
               </button>
-
-              {query && (
-                <button className="outline-button" type="button" onClick={onClear}>
-                  Clear stay search
-                </button>
-              )}
-            </div>
-          </form>
+            )}
+          </div>
 
           {Object.keys(errors).length > 0 && (
             <p className="availability-error" role="alert">
               Check the highlighted search fields.
             </p>
           )}
+        </form>
 
-          <p className="rooms-directory__search-help">
-            Maximum stay: 30 days. Hourly stays must finish by 11 PM.
-          </p>
-        </section>
-      </aside>
+        <p className="rooms-directory__search-help">
+          Maximum stay: 30 days. Hourly stays must finish by 11 PM.
+          Times use Philippine time.
+        </p>
+      </section>
 
       <div className="rooms-directory__content">
         {!query && <RoomCatalog metadata={metadata} />}
@@ -67,13 +100,7 @@ export function RoomsSearch({ query, search, metadata, onApply, onClear }) {
             aria-busy="true"
           >
             <h2 id="rooms-loading-title">Search Results</h2>
-
-            <p role="status">Checking room availability...</p>
-
-            <p>
-              {query.checkIn} to {query.checkOut}, {query.guests}{" "}
-              {query.guests === 1 ? "guest" : "guests"}.
-            </p>
+            <p role="status">Checking room availability…</p>
           </section>
         )}
 
@@ -82,9 +109,13 @@ export function RoomsSearch({ query, search, metadata, onApply, onClear }) {
             className="rooms-directory__feedback"
             aria-labelledby="rooms-error-title"
           >
-            <h2 id="rooms-error-title">Availability could not be loaded</h2>
+            <h2 id="rooms-error-title">
+              Availability could not be loaded
+            </h2>
 
-            <p role="alert">Your applied dates remain selected. Try the search again.</p>
+            <p role="alert">
+              Your applied stay remains selected. Try again.
+            </p>
 
             <button
               type="button"

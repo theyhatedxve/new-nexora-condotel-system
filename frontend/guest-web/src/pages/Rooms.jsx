@@ -2,13 +2,14 @@ import useRoomsPage from "../hooks/useRoomsPage.js";
 import { RoomsSearch } from "../components/rooms/RoomsSearch.jsx";
 import "../styles/rooms-listing.css";
 import "../styles/availability.css";
+import "../styles/rooms-luxury.css";
 
 function Rooms() {
   const { metadata, search, parsed, clearInvalidSearch, applySearch, clearSearch } =
     useRoomsPage();
 
   return (
-    <main className="rooms-page rooms-directory">
+    <main className="rooms-page rooms-directory rooms-luxury">
       <h1>Our Rooms</h1>
 
       <p className="rooms-intro">

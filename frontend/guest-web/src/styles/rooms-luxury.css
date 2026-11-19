@@ -1,0 +1,531 @@
+.site--luxury .rooms-page.rooms-directory.rooms-luxury {
+  width: min(
+    var(--luxury-width, 1280px),
+    calc(100% - 32px)
+  );
+  margin-inline: auto;
+  padding: 30px 0 36px;
+}
+
+.site--luxury .rooms-page.rooms-luxury > h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  font-weight: 800;
+}
+
+.site--luxury .rooms-luxury > .rooms-intro {
+  margin: 8px 0 22px;
+  color: var(--color-text-muted);
+}
+
+.site--luxury .rooms-luxury .rooms-directory__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 26px;
+}
+
+/* Search toolbar */
+.site--luxury .rooms-luxury .rooms-searchbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  margin: 0;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--luxury-shadow);
+}
+
+.site--luxury .rooms-luxury .rooms-searchbar__heading {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.site--luxury .rooms-luxury .rooms-searchbar__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #faf0d8;
+  color: #795418;
+}
+
+.site--luxury .rooms-luxury .rooms-searchbar__heading h2 {
+  margin: 0 0 5px;
+  font-size: 21px;
+}
+
+.site--luxury .rooms-luxury .rooms-searchbar__heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.site--luxury .rooms-luxury .rooms-searchbar__form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+}
+
+.site--luxury .rooms-luxury .rental-stay-fields {
+  grid-column: 1;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.site--luxury .rooms-luxury .rental-stay-field label {
+  min-height: 30px;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.site--luxury .rooms-luxury .rental-stay-field :is(input, select) {
+  min-height: 44px;
+  padding: 9px 10px;
+  font-size: 14px;
+}
+
+.site--luxury .rooms-luxury .rental-stay-departure {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.site--luxury .rooms-luxury .rooms-directory__search-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.site--luxury .rooms-luxury .availability-button,
+.site--luxury .rooms-luxury .rooms-booking-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-gold-light);
+  border-radius: 7px;
+  background: linear-gradient(
+    110deg,
+    var(--color-e4ca95),
+    var(--color-gold-light)
+  );
+  color: var(--color-on-gold);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site--luxury .rooms-luxury .rooms-directory__search-help {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 12px;
+}
+
+.site--luxury .rooms-luxury .availability-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+/* Heading, filters and sorting */
+.site--luxury .rooms-luxury .rooms-browser__toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__heading {
+  flex: 1 1 260px;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__title {
+  margin: 0 0 6px;
+  color: var(--color-primary);
+  font-size: 25px;
+  line-height: 1.25;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__controls,
+.site--luxury .rooms-luxury .rooms-browser__filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__controls {
+  gap: 12px 18px;
+  min-width: 0;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__filters button {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #f9fbff;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.site--luxury .rooms-luxury
+.rooms-browser__filters button[aria-pressed="true"] {
+  border-color: var(--color-gold-light);
+  background: var(--color-e4ca95);
+  font-weight: 700;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__sort {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__sort select {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+}
+
+/* Three-card browsing */
+.site--luxury .rooms-luxury .rooms-browser__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__slot {
+  display: flex;
+  min-width: 0;
+}
+
+.site--luxury .rooms-luxury :is(
+  .room-card,
+  .availability-result-card
+) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--luxury-shadow);
+}
+
+.site--luxury .rooms-luxury .room-card-media {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 190px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #edf2f8;
+}
+
+.site--luxury .rooms-luxury .room-card-media .room-card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  object-fit: cover;
+}
+
+.site--luxury .rooms-luxury .room-card-media .room-card-placeholder {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 16px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.site--luxury .rooms-luxury .rooms-card__type {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  max-width: calc(100% - 20px);
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #fff9e9;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.site--luxury .rooms-luxury :is(
+  .room-card-body,
+  .availability-result-body
+) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 10px 8px;
+}
+
+.site--luxury .rooms-luxury .room-card-information h3,
+.site--luxury .rooms-luxury .availability-result-heading h3 {
+  margin: 0 0 6px;
+  color: var(--color-primary);
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.site--luxury .rooms-luxury .room-card-description {
+  margin: 0 0 10px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.site--luxury .rooms-luxury .room-card-capacity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.site--luxury .rooms-luxury .rooms-card__amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 14px;
+  margin: 0;
+  padding: 12px 0;
+  border-block: 1px solid var(--color-border);
+  list-style: none;
+}
+
+.site--luxury .rooms-luxury .rooms-card__amenities li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.site--luxury .rooms-luxury .rooms-card__note {
+  margin: 0;
+  padding-block: 10px;
+  border-block: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.site--luxury .rooms-luxury .room-card-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.site--luxury .rooms-luxury .room-card-price {
+  margin: 0;
+  text-align: left;
+}
+
+.site--luxury .rooms-luxury .room-card-price strong {
+  font-size: 23px;
+}
+
+.site--luxury .rooms-luxury .outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 0;
+  padding: 9px 13px;
+  border: 1px solid var(--color-gold);
+  border-radius: 7px;
+  background: #fff8e9;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.site--luxury .rooms-luxury .availability-result-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.site--luxury .rooms-luxury .availability-badge {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.site--luxury .rooms-luxury .rental-summary {
+  margin: 0;
+  font-size: 13px;
+}
+
+.site--luxury .rooms-luxury .rental-detail-row {
+  display: grid;
+  gap: 3px;
+}
+
+.site--luxury .rooms-luxury .availability-total {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.site--luxury .rooms-luxury .availability-total strong {
+  color: var(--color-primary);
+  font-size: 21px;
+}
+
+.site--luxury .rooms-luxury .availability-booking-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.site--luxury .rooms-luxury .availability-disclaimer,
+.site--luxury .rooms-luxury .rooms-browser__count {
+  margin: 16px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Functional page controls */
+.site--luxury .rooms-luxury .rooms-browser__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 14px;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__pager button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__pager button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.site--luxury .rooms-luxury .rooms-browser__dot span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #c5cede;
+}
+
+.site--luxury .rooms-luxury
+.rooms-browser__dot[aria-current="page"] span {
+  background: var(--color-gold);
+}
+
+.site--luxury .rooms-luxury :is(
+  button,
+  select,
+  input,
+  a
+):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+@media (min-width: 640px) {
+  .site--luxury .rooms-luxury .rental-stay-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .site--luxury .rooms-luxury .rooms-browser__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .site--luxury .rooms-luxury .rooms-browser__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .site--luxury .rooms-luxury .rooms-searchbar {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 18px 22px;
+  }
+
+  .site--luxury .rooms-luxury .rooms-searchbar__heading {
+    align-self: start;
+    height: 100%;
+    padding-right: 18px;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .site--luxury .rooms-luxury .rooms-searchbar__form {
+    grid-template-columns: minmax(0, 1fr) 170px;
+  }
+
+  .site--luxury .rooms-luxury .rental-stay-fields {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .site--luxury .rooms-luxury .rooms-directory__search-actions {
+    margin-top: 38px;
+  }
+}

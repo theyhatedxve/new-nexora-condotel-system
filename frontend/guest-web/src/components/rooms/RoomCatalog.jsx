@@ -1,7 +1,22 @@
 import RoomCard from "../RoomCard";
+import RoomBrowser from "./RoomBrowser.jsx";
 
 export function RoomCatalog({ metadata }) {
   const { status, rooms, retry } = metadata;
+
+  if (status === "success" && rooms.length > 0) {
+    return (
+      <RoomBrowser
+        headingId="all-rooms-title"
+        title="Explore Our Rooms"
+        description="Compare room types and recorded amenities. Catalog rates are per night."
+        items={rooms}
+        priceKey="baseRateCentavos"
+        priceLabel="Nightly rate"
+        renderRoom={(room) => <RoomCard room={room} />}
+      />
+    );
+  }
 
   return (
     <section aria-labelledby="all-rooms-title">
@@ -9,43 +24,39 @@ export function RoomCatalog({ metadata }) {
         Explore Our Rooms
       </h2>
 
-      <p className="rooms-intro">Rates shown are per night.</p>
-
       {status === "loading" && (
         <p className="rooms-message" role="status">
-          Loading rooms...
+          Loading rooms…
         </p>
       )}
 
       {status === "error" && (
-        <div className="guest-feedback" role="alert">
-          <h3>Unable to load rooms</h3>
-
-          <p>We could not retrieve the room listings. Please try again.</p>
-
-          <button type="button" className="feedback-retry-button" onClick={retry}>
+        <div className="guest-feedback">
+          <p role="alert">
+            We could not retrieve the room listings.
+          </p>
+          <button
+            type="button"
+            className="feedback-retry-button"
+            onClick={retry}
+          >
             Try Again
           </button>
         </div>
       )}
 
       {status === "success" && rooms.length === 0 && (
-        <div className="guest-feedback" role="status">
-          <h3>No rooms to display</h3>
-
-          <p>There are currently no room types listed. Please check again later.</p>
-
-          <button type="button" className="feedback-retry-button" onClick={retry}>
+        <div className="guest-feedback">
+          <p role="status">
+            No room types are currently listed.
+          </p>
+          <button
+            type="button"
+            className="feedback-retry-button"
+            onClick={retry}
+          >
             Refresh Rooms
           </button>
-        </div>
-      )}
-
-      {status === "success" && rooms.length > 0 && (
-        <div className="room-grid">
-          {rooms.map((room) => (
-            <RoomCard key={room.id} room={room} />
-          ))}
         </div>
       )}
     </section>

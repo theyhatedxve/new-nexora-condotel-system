@@ -3,8 +3,9 @@ import { ArrowRight, BedDouble, Users } from "lucide-react";
 import { toApiUrl } from "../services/api.js";
 import { formatPesos } from "../utils/formatMoney.js";
 import useRoomCard from "../hooks/useRoomCard.js";
+import RoomAmenities from "./rooms/RoomAmenities.jsx";
 
-function RoomCard({ room }) {
+export default function RoomCard({ room }) {
   const {
     handleImageError,
     id,
@@ -31,26 +32,34 @@ function RoomCard({ room }) {
         ) : (
           <div className="room-card-image room-card-placeholder">
             <BedDouble size={34} aria-hidden="true" />
-
-            <span>{imageUnavailable ? "Photo unavailable" : "Photo coming soon"}</span>
+            <span>
+              {imageUnavailable
+                ? "Photo unavailable"
+                : "Photo coming soon"}
+            </span>
           </div>
         )}
+
+        <span className="rooms-card__type">{name}</span>
       </div>
 
       <div className="room-card-body">
         <div className="room-card-information">
           <h3>{name}</h3>
 
-          {description && <p className="room-card-description">{description}</p>}
+          {description && (
+            <p className="room-card-description">{description}</p>
+          )}
 
           <p className="room-card-capacity">
             <Users size={18} aria-hidden="true" />
-
             <span>
               Up to {capacity} {capacity === 1 ? "guest" : "guests"}
             </span>
           </p>
         </div>
+
+        <RoomAmenities room={room} />
 
         <div className="room-card-actions">
           <p className="room-card-price">
@@ -58,7 +67,10 @@ function RoomCard({ room }) {
             <span>per night</span>
           </p>
 
-          <Link to={`/rooms/${encodeURIComponent(id)}`} className="outline-button">
+          <Link
+            to={`/rooms/${encodeURIComponent(id)}`}
+            className="outline-button"
+          >
             View Details
             <ArrowRight size={17} aria-hidden="true" />
             <span className="visually-hidden"> for {name}</span>
@@ -68,4 +80,3 @@ function RoomCard({ room }) {
     </article>
   );
 }
-export default RoomCard;

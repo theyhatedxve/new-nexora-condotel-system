@@ -1,80 +1,123 @@
-
 import { useEffect, useState } from "react";
-
 import {
   listRoomTypes,
   listRoomTypeImages,
+  listRoomTypeAmenities,
 } from "../services/roomTypesApi.js";
 
-// Missing room photos should not prevent room listings.
-async function addPrimaryImage(roomType) {
-  try {
-    const images = await listRoomTypeImages(roomType.id);
+function readAmenities(data) {
+  if (!Array.isArray(data)) return null;
 
-    const image =
-      images.find((item) => item.isPrimary) ??
-      images[0] ??
-      null;
+  const ids = new Set();
 
-    return { ...roomType, image };
-  } catch {
-    return { ...roomType, image: null };
+  for (const item of data) {
+    if (
+      !item ||
+      typeof item.id !== "string" ||
+      !item.id ||
+      ids.has(item.id) ||
+      typeof item.name !== "string" ||
+      !item.name.trim()
+    ) {
+      return null;
+    }
+
+    ids.add(item.id);
   }
+
+  return data.map(({ id, name }) => ({ id, name }));
+}
+
+async function addRoomInformation(room) {
+  const [imageResult, amenityResult] = await Promise.allSettled([
+    listRoomTypeImages(room.id),
+    listRoomTypeAmenities(room.id),
+  ]);
+
+  const images =
+    imageResult.status === "fulfilled" &&
+    Array.isArray(imageResult.value)
+      ? imageResult.value.filter(
+          (image) =>
+            typeof image?.url === "string" &&
+            /^\/api\/room-images\/[^/?#]+\/file$/.test(image.url),
+        )
+      : [];
+
+  const image =
+    images.find((item) => item.isPrimary) ?? images[0] ?? null;
+
+  const amenities =
+    amenityResult.status === "fulfilled"
+      ? readAmenities(amenityResult.value)
+      : null;
+
+  return {
+    ...room,
+    image,
+    amenities: amenities ?? [],
+    amenitiesStatus: amenities === null ? "error" : "ready",
+  };
 }
 
 export function useRoomTypes() {
-  const [state, setState] = useState({
-    status: "loading",
-    rooms: [],
-  });
-
-  const [retryCount, setRetryCount] = useState(0);
-
-  function retry() {
-    setRetryCount((count) => count + 1);
-  }
+  const [revision, setRevision] = useState(0);
+  const [state, setState] = useState(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let active = true;
 
-    async function loadRooms() {
-      setState({
-        status: "loading",
-        rooms: [],
-      });
-
+    async function load() {
       try {
-        const roomTypes = await listRoomTypes();
+        const data = await listRoomTypes();
 
-        const rooms = await Promise.all(
-          roomTypes.map(addPrimaryImage),
-        );
+        if (
+          !Array.isArray(data) ||
+          data.some(
+            (room) =>
+              !room ||
+              typeof room.id !== "string" ||
+              !room.id ||
+              typeof room.name !== "string" ||
+              !room.name.trim() ||
+              !Number.isSafeInteger(room.capacity) ||
+              room.capacity < 1 ||
+              !Number.isSafeInteger(room.baseRateCentavos) ||
+              room.baseRateCentavos < 0 ||
+              (room.description != null &&
+                typeof room.description !== "string"),
+          ) ||
+          new Set(data.map((room) => room.id)).size !== data.length
+        ) {
+          throw new Error("Invalid room information.");
+        }
 
-        if (!cancelled) {
-          setState({
-            status: "success",
-            rooms,
-          });
+        const rooms = await Promise.all(data.map(addRoomInformation));
+
+        if (active) {
+          setState({ revision, status: "success", rooms });
         }
       } catch {
-        if (!cancelled) {
-          setState({
-            status: "error",
-            rooms: [],
-          });
+        if (active) {
+          setState({ revision, status: "error", rooms: [] });
         }
       }
     }
 
-    loadRooms();
+    void load();
 
     return () => {
-      cancelled = true;
+      active = false;
     };
-  }, [retryCount]);
+  }, [revision]);
 
-  return {
-    ...state,
-    retry,
-  };
+  function retry() {
+    setRevision((value) => value + 1);
+  }
+
+  if (state?.revision !== revision) {
+    return { status: "loading", rooms: [], retry };
+  }
+
+  return { ...state, retry };
 }
