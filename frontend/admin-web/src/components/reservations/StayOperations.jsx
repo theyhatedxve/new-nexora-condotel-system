@@ -37,7 +37,11 @@ function Workspace({ actorId, reservationId }) {
   }
 
   return (
-    <section className="record-section" aria-labelledby="stay-operations-title">
+    <section 
+      className="record-section" 
+      aria-labelledby="stay-operations-title"
+      aria-busy={state.loading}
+    >
       <h2 id="stay-operations-title">Stay operations</h2>
       <p>
         Guidance only. The 30-minute grace period does not override another booking

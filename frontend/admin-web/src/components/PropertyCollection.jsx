@@ -34,6 +34,7 @@ export default function PropertyCollection({ reservationId, record, payment, onR
     <section
       className="record-section room-management"
       aria-labelledby="property-collection-title"
+      aria-busy={pending || checking || state.status === "loading"}
     >
       <h2 id="property-collection-title">Record Pay at Property collection</h2>
 

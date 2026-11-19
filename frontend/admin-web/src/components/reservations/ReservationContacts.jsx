@@ -13,7 +13,11 @@ function ContactWorkspace({ actorId, reservationId, bookingStatus }) {
   const draft = intent?.draft;
 
   return (
-    <section className="record-section" aria-labelledby="contact-history-title">
+    <section
+      className="record-section"
+      aria-labelledby="contact-history-title"
+      aria-busy={busy}
+    >
       <h2 id="contact-history-title" ref={heading} tabIndex={-1}>Guest contact history</h2>
       <p>
         Record factual follow-ups here. First contact and booking confirmation still

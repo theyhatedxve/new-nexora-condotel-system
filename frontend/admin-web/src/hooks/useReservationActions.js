@@ -241,6 +241,7 @@ export default function useReservationActions({
 
   function handleKeyDown(event) {
     if (event.key === "Escape" && confirmation && !pending) {
+      event.preventDefault();
       event.stopPropagation();
       back();
     }

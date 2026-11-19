@@ -25,7 +25,11 @@ function Workspace({ user, reservationId, bookingStatus, onReload }) {
     } catch { setMessage("Enter a valid positive deposit amount in PHP."); }
   }
   return (
-    <section className="record-section" aria-labelledby="reservation-deposits-title">
+    <section
+      className="record-section"
+      aria-labelledby="reservation-deposits-title"
+      aria-busy={busy}
+    >
       <h2 id="reservation-deposits-title">Optional security deposit</h2>
       <p>Deposits are held funds, separate from accommodation revenue. Approval of a return reserves money; it does not record a cash handover. Deductions settle an approved charge in full.</p>
       <button type="button" onClick={history.reload} disabled={history.loading}>Refresh deposit records</button>

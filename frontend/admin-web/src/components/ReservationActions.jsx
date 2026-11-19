@@ -56,6 +56,7 @@ export default function ReservationActions({
     <section
       className="content-card record-section reservation-actions"
       aria-labelledby="reservation-actions-title"
+      aria-busy={pending}
       onKeyDown={handleKeyDown}
     >
       <h2 id="reservation-actions-title" tabIndex={-1}>Reservation actions</h2>

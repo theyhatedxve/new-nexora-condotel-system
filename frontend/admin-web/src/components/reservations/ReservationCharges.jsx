@@ -42,7 +42,11 @@ function Workspace({ user, reservationId, bookingStatus, onReload }) {
       (item.requestedDepartureAt ? ". To: " + formatTimestamp(item.requestedDepartureAt) : ""));
   }
   return (
-    <section className="record-section" aria-labelledby="reservation-charges-title">
+    <section
+      className="record-section"
+      aria-labelledby="reservation-charges-title"
+      aria-busy={busy}
+    >
       <h2 id="reservation-charges-title">Additional charges</h2>
       <p>Separate from accommodation payments. This prototype records full cash receipts at the property; it does not charge a card or PayMongo account.</p>
       <p>Late checkout: one 30-minute grace period per stay, then each started hour. Repeated extensions do not restart grace or charge prepaid hours twice.</p>
