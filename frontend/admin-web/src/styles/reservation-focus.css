@@ -581,3 +581,271 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Security deposit dialog */
+.deposit-workspace {
+  min-width: 0;
+}
+
+.deposit-workspace .deposit-workspace__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.deposit-workspace .deposit-workspace__header h2 {
+  margin: 0;
+}
+
+.deposit-workspace .deposit-workspace__muted {
+  margin: 0.4rem 0;
+  color: #526078;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.deposit-workspace .deposit-workspace__balances {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 0 0 1.25rem;
+}
+
+.deposit-workspace .deposit-workspace__balances > div {
+  min-width: 0;
+  padding: 0.8rem;
+  background: #f8faff;
+  border-radius: 0.65rem;
+}
+
+.deposit-workspace .deposit-workspace__balances dt {
+  margin-bottom: 0.35rem;
+  color: #526078;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.deposit-workspace .deposit-workspace__balances dd {
+  margin: 0;
+  color: #10213c;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.deposit-workspace
+  .deposit-workspace__balances
+  > .deposit-workspace__balance {
+  background: #f2f6fd;
+  border-left: 3px solid #d6b365;
+}
+
+.deposit-workspace
+  .deposit-workspace__balance dd {
+  font-size: clamp(1.3rem, 2vw, 1.65rem);
+  font-weight: 750;
+}
+
+.deposit-workspace .deposit-workspace__reason,
+.deposit-workspace .deposit-workspace__field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.deposit-workspace .deposit-workspace__reason {
+  margin-bottom: 1rem;
+}
+
+.deposit-workspace .deposit-workspace__reason label,
+.deposit-workspace .deposit-workspace__field label {
+  display: block;
+  margin: 0;
+  color: #10213c;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.deposit-workspace .deposit-workspace__reason textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 90px;
+  padding: 0.75rem;
+  font: inherit;
+  color: #10213c;
+  background: #fff;
+  border: 1px solid #c5d2e7;
+  border-radius: 0.5rem;
+  resize: vertical;
+}
+
+.deposit-workspace .deposit-workspace__reason textarea:disabled {
+  background: #f3f6fa;
+}
+
+.deposit-workspace .deposit-workspace__receipt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: end;
+  gap: 1rem;
+}
+
+.deposit-workspace .deposit-workspace__receipt input {
+  box-sizing: border-box;
+  min-height: 44px;
+}
+
+.deposit-workspace .deposit-workspace__receipt button {
+  margin: 0;
+}
+
+.deposit-workspace .deposit-workspace__pending {
+  margin-top: 1.5rem;
+}
+
+.deposit-workspace .deposit-workspace__pending > h3 {
+  margin: 0 0 0.5rem;
+}
+
+.deposit-workspace .deposit-workspace__queue {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #d5e0f2;
+  border-radius: 0.75rem;
+}
+
+.deposit-workspace .deposit-workspace__queue h4 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  color: #10213c;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.deposit-workspace .deposit-workspace__queue h4 span {
+  color: #526078;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.deposit-workspace .deposit-workspace__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deposit-workspace .deposit-workspace__list > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.85rem;
+  border-top: 1px solid #e4eaf4;
+}
+
+.deposit-workspace .deposit-workspace__list > li > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.deposit-workspace .deposit-workspace__list p {
+  margin: 0.3rem 0;
+  line-height: 1.6;
+}
+
+.deposit-workspace .deposit-workspace__list button {
+  flex-shrink: 0;
+}
+
+.deposit-workspace .deposit-workspace__history {
+  margin-top: 1.25rem;
+  border: 1px solid #d5e0f2;
+  border-radius: 0.75rem;
+}
+
+.deposit-workspace .deposit-workspace__history > summary {
+  min-height: 44px;
+  padding: 0.9rem 1rem;
+  color: #10213c;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.deposit-workspace
+  .deposit-workspace__history[open] > summary {
+  border-bottom: 1px solid #e4eaf4;
+}
+
+.deposit-workspace .deposit-workspace__history-body {
+  padding: 1rem;
+}
+
+.deposit-workspace .deposit-workspace__movements {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.deposit-workspace .deposit-workspace__movements li {
+  padding-block: 0.6rem;
+  overflow-wrap: anywhere;
+}
+
+.deposit-workspace .deposit-workspace__movements p {
+  margin: 0.35rem 0;
+  line-height: 1.6;
+}
+
+.deposit-workspace .deposit-workspace__pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.deposit-workspace .deposit-workspace__message {
+  padding: 0.85rem 1rem;
+  background: #fff7e4;
+  border-left: 3px solid #d6b365;
+  border-radius: 0.5rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.deposit-workspace .deposit-workspace__request {
+  color: #526078;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.deposit-workspace .action-review .actions {
+  margin-top: 1rem;
+}
+
+@media (max-width: 640px) {
+  .deposit-workspace .deposit-workspace__receipt,
+  .deposit-workspace .deposit-workspace__balances {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .deposit-workspace .deposit-workspace__list > li {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .deposit-workspace .deposit-workspace__receipt button,
+  .deposit-workspace .deposit-workspace__list button {
+    width: 100%;
+  }
+}
