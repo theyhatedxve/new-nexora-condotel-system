@@ -465,3 +465,119 @@
     padding: 1rem;
   }
 }
+/* Reservation overview: four related cards */
+.reservation-focus .reservation-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.reservation-focus
+  .reservation-overview-grid
+  > .reservation-focus__card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.4rem);
+}
+
+.reservation-focus .reservation-overview-grid__headline {
+  margin: 0 0 1rem;
+  color: #10213c;
+  font-size: clamp(1.15rem, 1.5vw, 1.4rem);
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.reservation-focus .reservation-overview-grid__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  margin: 0;
+}
+
+.reservation-focus .reservation-overview-grid__fields > div {
+  min-width: 0;
+}
+
+.reservation-focus .reservation-overview-grid__fields dt,
+.reservation-focus .reservation-overview-grid__highlight dt {
+  margin: 0 0 0.3rem;
+  color: #526078;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.reservation-focus .reservation-overview-grid__fields dd {
+  margin: 0;
+  color: #10213c;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.reservation-focus .reservation-overview-grid__fields--contact {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.reservation-focus .reservation-overview-grid__highlight {
+  min-width: 0;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  background: #f2f6fd;
+  border-left: 3px solid #d6b365;
+  border-radius: 0.65rem;
+}
+
+.reservation-focus .reservation-overview-grid__highlight dd {
+  margin: 0;
+  color: #10213c;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  font-weight: 750;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.reservation-focus
+  .reservation-overview-grid
+  .reservation-focus__muted {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.reservation-focus .reservation-overview-grid__details {
+  margin-top: 0.25rem;
+  border-top: 1px solid #e4eaf4;
+}
+
+.reservation-focus .reservation-overview-grid__details > summary {
+  min-height: 44px;
+  padding-block: 0.8rem;
+  color: #10213c;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.reservation-focus
+  .reservation-overview-grid__details[open]
+  > summary {
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 761px) {
+  .reservation-focus .reservation-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .reservation-focus .reservation-overview-grid__fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

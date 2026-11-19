@@ -1,4 +1,9 @@
-import { BedDouble, CreditCard } from "lucide-react";
+import {
+  BedDouble,
+  CreditCard,
+  ReceiptText,
+  UserRound,
+} from "lucide-react";
 import StaffDataState from "../StaffDataState";
 
 import {
@@ -17,20 +22,35 @@ export default function ReservationOverview({
   const financialReady =
     payment.status === "ready" && Boolean(summary);
 
+  const settlementReady =
+    financialReady && !summary.requiresReview;
+
   const currentAssignments =
     assignments.status === "ready"
       ? assignments.data.filter((item) => !item.releasedAt)
       : [];
 
+  const guestName =
+    [booking.guest.firstName, booking.guest.lastName]
+      .filter(Boolean)
+      .join(" ") || "Guest name not recorded";
+
+  const physicalRoom =
+    assignments.status !== "ready"
+      ? "Assignment records not loaded"
+      : currentAssignments.length === 1
+        ? currentAssignments[0].room.roomNumber
+        : currentAssignments.length > 1
+          ? "Multiple assignments — review required"
+          : "Not assigned";
+
   const needsAttention =
     booking.status === "PENDING" ||
     Boolean(booking.arrivalPolicy) ||
     (financialReady &&
-      (
-        summary.requiresReview ||
+      (summary.requiresReview ||
         summary.hasPendingPayment ||
-        summary.pendingRefundCentavos > 0
-      ));
+        summary.pendingRefundCentavos > 0));
 
   return (
     <>
@@ -110,7 +130,7 @@ export default function ReservationOverview({
         </section>
       )}
 
-      <div className="reservation-focus__overview">
+      <div className="reservation-focus__overview reservation-overview-grid">
         <section
           className="reservation-focus__card"
           aria-labelledby="reservation-stay-title"
@@ -120,19 +140,18 @@ export default function ReservationOverview({
             Stay overview
           </h2>
 
-          <dl className="record-fields">
-            <div>
-              <dt>Room category</dt>
-              <dd>{booking.roomType.name}</dd>
-            </div>
+          <p className="reservation-overview-grid__headline">
+            {booking.roomType.name}
+          </p>
 
+          <dl className="reservation-overview-grid__fields">
             <div>
-              <dt>Recorded arrival date</dt>
+              <dt>Recorded arrival</dt>
               <dd>{formatStayDate(booking.checkInDate)}</dd>
             </div>
 
             <div>
-              <dt>Recorded departure date</dt>
+              <dt>Recorded departure</dt>
               <dd>{formatStayDate(booking.checkOutDate)}</dd>
             </div>
 
@@ -143,21 +162,13 @@ export default function ReservationOverview({
 
             <div>
               <dt>Physical room</dt>
-              <dd>
-                {assignments.status !== "ready"
-                  ? "Assignment records not loaded"
-                  : currentAssignments.length === 1
-                    ? currentAssignments[0].room.roomNumber
-                    : currentAssignments.length > 1
-                      ? "Multiple assignments — review required"
-                      : "Not assigned"}
-              </dd>
+              <dd>{physicalRoom}</dd>
             </div>
           </dl>
 
           <p className="reservation-focus__muted">
-            Times and deadlines use Philippine time. Open Stay
-            Operations for current arrival and departure guidance.
+            Philippine time. Open Stay Operations for current arrival
+            and departure guidance.
           </p>
         </section>
 
@@ -190,88 +201,119 @@ export default function ReservationOverview({
                   settlement amounts.
                 </p>
               ) : (
-                <dl className="record-fields">
-                  <div>
-                    <dt>Booked total</dt>
-                    <dd>
-                      {formatPesos(summary.bookedTotalCentavos)}
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt>Net paid</dt>
-                    <dd>{formatPesos(summary.netPaidCentavos)}</dd>
-                  </div>
-
-                  <div className="reservation-focus__balance">
+                <>
+                  <dl className="reservation-overview-grid__highlight">
                     <dt>Balance due</dt>
                     <dd>
                       {summary.balanceDueCentavos === null
                         ? "Not available"
                         : formatPesos(summary.balanceDueCentavos)}
                     </dd>
-                  </div>
-                </dl>
+                  </dl>
+
+                  <dl className="reservation-overview-grid__fields">
+                    <div>
+                      <dt>Booked total</dt>
+                      <dd>
+                        {formatPesos(summary.bookedTotalCentavos)}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt>Net paid</dt>
+                      <dd>{formatPesos(summary.netPaidCentavos)}</dd>
+                    </div>
+                  </dl>
+                </>
               )}
             </>
           )}
 
           <p className="reservation-focus__muted">
-            Additional charges and security deposits have separate
-            records. Reservation status and payment status are separate.
+            Accommodation only. Additional charges and security
+            deposits have separate records. Payment and reservation
+            statuses are separate.
           </p>
         </section>
-      </div>
 
-      <details className="reservation-focus__accordion">
-        <summary>Guest contact details</summary>
-        <div className="reservation-focus__accordion-body">
-          <dl className="record-fields">
+        <section
+          className="reservation-focus__card"
+          aria-labelledby="reservation-contact-title"
+        >
+          <h2 id="reservation-contact-title">
+            <UserRound size={20} aria-hidden="true" />
+            Guest contact
+          </h2>
+
+          <p className="reservation-overview-grid__headline">
+            {guestName}
+          </p>
+
+          <dl className="reservation-overview-grid__fields reservation-overview-grid__fields--contact">
             <div>
               <dt>Email</dt>
               <dd>{booking.guest.email || "Not provided"}</dd>
             </div>
+
             <div>
               <dt>Phone</dt>
               <dd>{booking.guest.phone || "Not provided"}</dd>
             </div>
           </dl>
-        </div>
-      </details>
 
-      <details className="reservation-focus__accordion">
-        <summary>Booked price and accommodation payment breakdown</summary>
-        <div className="reservation-focus__accordion-body">
-          <dl className="record-fields">
-            <div>
-              <dt>Stored nightly rate</dt>
-              <dd>{formatPesos(booking.nightlyRateCentavos)}</dd>
-            </div>
-            <div>
-              <dt>Original booked stay total</dt>
-              <dd>{formatPesos(booking.totalAmountCentavos)}</dd>
-            </div>
+          <p className="reservation-focus__muted">
+            Open Guest Contact History to review previous contacts
+            and record follow-ups.
+          </p>
+        </section>
+
+        <section
+          className="reservation-focus__card"
+          aria-labelledby="reservation-price-title"
+        >
+          <h2 id="reservation-price-title">
+            <ReceiptText size={20} aria-hidden="true" />
+            Price breakdown
+          </h2>
+
+          <dl className="reservation-overview-grid__highlight">
+            <dt>Original booked stay total</dt>
+            <dd>{formatPesos(booking.totalAmountCentavos)}</dd>
           </dl>
 
-          {financialReady && !summary.requiresReview ? (
-            <dl className="record-fields">
+          <details className="reservation-overview-grid__details">
+            <summary>View rate and collection details</summary>
+
+            <dl className="reservation-overview-grid__fields">
               <div>
-                <dt>Verified or recorded collections</dt>
-                <dd>{formatPesos(summary.collectedCentavos)}</dd>
+                <dt>Stored nightly rate</dt>
+                <dd>{formatPesos(booking.nightlyRateCentavos)}</dd>
               </div>
-              <div>
-                <dt>Completed refunds</dt>
-                <dd>{formatPesos(summary.refundedCentavos)}</dd>
-              </div>
+
+              {settlementReady && (
+                <>
+                  <div>
+                    <dt>Verified or recorded collections</dt>
+                    <dd>{formatPesos(summary.collectedCentavos)}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Completed refunds</dt>
+                    <dd>{formatPesos(summary.refundedCentavos)}</dd>
+                  </div>
+                </>
+              )}
             </dl>
-          ) : (
-            <p>
-              Load a payment summary without financial-review
-              restrictions to inspect settlement amounts.
-            </p>
-          )}
-        </div>
-      </details>
+
+            {!settlementReady && (
+              <p className="reservation-focus__muted">
+                Collection and refund amounts require an available
+                payment summary without financial-review restrictions.
+              </p>
+            )}
+          </details>
+        </section>
+      </div>
     </>
   );
 }
