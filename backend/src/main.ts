@@ -1,13 +1,14 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+
+import { AppModule } from './app.module.js';
 import { getAllowedOrigins } from './auth/auth.config.js';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
-
-
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+  });
 
   app.use(cookieParser());
 
@@ -24,10 +25,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // All routes will start with /api
   app.setGlobalPrefix('api');
 
-  // Start the backend on port 3000
   await app.listen(3000);
 }
 

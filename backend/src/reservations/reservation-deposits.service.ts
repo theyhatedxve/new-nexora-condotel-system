@@ -12,7 +12,7 @@ import { STAFF_ROLES } from './guest-booking-staff-policy.js';
 import { withInventoryWrite } from './inventory-write.js';
 import { StayOperationsService } from './stay-operations.service.js';
 import { depositBalance, type DepositTotals } from './deposit-ledger.policy.js';
-import { ReservationDepositCommandDto } from './reservation-deposits.dto.js';
+import { ReservationDepositCommandDto } from './dto/reservation-deposits.dto.js';
 
 const managers = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'];
 function digest(value: unknown) {

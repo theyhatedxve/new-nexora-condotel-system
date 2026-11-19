@@ -7,7 +7,7 @@ import { getAllowedOrigins } from '../auth/auth.config.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { RecordIdDto } from '../common/validation/record-id.dto.js';
-import { ReservationDepositCommandDto, ReservationDepositQueryDto } from './reservation-deposits.dto.js';
+import { ReservationDepositCommandDto, ReservationDepositQueryDto } from './dto/reservation-deposits.dto.js';
 import { ReservationDepositsService } from './reservation-deposits.service.js';
 
 @Controller('staff/reservations/:id/deposits')

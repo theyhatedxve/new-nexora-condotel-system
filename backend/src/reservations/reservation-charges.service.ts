@@ -15,7 +15,7 @@ import { checkoutGuidance } from './stay-operations.policy.js';
 import { StayOperationsService } from './stay-operations.service.js';
 import { requireFullRecordedPayment } from './stay-payment-policy.js';
 import { lateCheckoutCharge } from './late-checkout-charge.policy.js';
-import { ReservationChargeCommandDto } from './reservation-charges.dto.js';
+import { ReservationChargeCommandDto } from './dto/reservation-charges.dto.js';
 
 const managers = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'];
 const select = {
