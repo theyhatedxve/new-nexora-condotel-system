@@ -38,7 +38,7 @@ export function ReservationFilters({ query, onApply, onClear }) {
         </div>
 
         <div>
-          <label htmlFor="reservation-status-filter">Reservation status</label>
+          <label htmlFor="reservation-status-filter">Status</label>
           <select
             id="reservation-status-filter"
             value={draft.status}
@@ -65,7 +65,7 @@ export function ReservationFilters({ query, onApply, onClear }) {
         </div>
 
         <div>
-          <label htmlFor="reservation-check-in-to">Check-in through</label>
+          <label htmlFor="reservation-check-in-to">Through</label>
           <input
             id="reservation-check-in-to"
             type="date"
@@ -75,7 +75,7 @@ export function ReservationFilters({ query, onApply, onClear }) {
         </div>
 
         <div>
-          <label htmlFor="reservation-page-size">Records per page</label>
+          <label htmlFor="reservation-page-size">Rows</label>
           <select id="reservation-page-size" value={draft.limit} onChange={changeLimit}>
             <option value="20">20</option>
             <option value="50">50</option>
@@ -83,18 +83,18 @@ export function ReservationFilters({ query, onApply, onClear }) {
         </div>
 
         <p id="reservation-filter-help" className="reservation-filter-help">
-          Both selected check-in dates are included. Apply filters to update the results.
+          Check-in range includes both dates. Select Search to apply.
         </p>
 
         <div className="actions reservation-filter-actions">
           <button type="submit" className="reservations-screen__primary">
             <Search size={17} aria-hidden="true" />
-            Apply filters
+            Search
           </button>
 
           <button type="button" onClick={onClear} className="reservations-screen__secondary">
             <RotateCcw size={17} aria-hidden="true" />
-            Clear filters
+            Clear
           </button>
         </div>
       </fieldset>
