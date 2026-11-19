@@ -484,13 +484,28 @@ p {
 .action-checkbox {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-0-6rem);
+  gap: 0.65rem;
+  min-width: 0;
 }
 
-.action-checkbox input {
+.action-checkbox input[type="checkbox"],
+.action-checkbox input[type="radio"] {
+  box-sizing: border-box;
+  flex: 0 0 1.2rem;
   width: 1.2rem;
+  min-width: 1.2rem;
+  max-width: 1.2rem;
   height: 1.2rem;
-  flex-shrink: 0;
+  min-height: 1.2rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+}
+
+.action-checkbox > span {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .danger-button {
@@ -540,7 +555,7 @@ p {
   margin-left: var(--space-0-5rem);
 }
 
-.room-management input,
+.room-management input:not([type="checkbox"]):not([type="radio"]),
 .room-management select,
 .room-management textarea {
   width: 100%;
