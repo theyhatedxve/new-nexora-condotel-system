@@ -6,10 +6,10 @@ export const policies = [
       "Review your stay details and confirmation requirements before reserving.",
     points: [
       "Reservations depend on room availability. Availability and prices are checked again when you submit.",
-      "You can book without creating an account.",
+      "Create and verify your guest account, then sign in before submitting a new reservation.",
       "Check your stay dates, guest count, contact information, and expected arrival time before submitting.",
       "Expected arrival times use Philippine time.",
-      "Submitting a request does not always mean your reservation is confirmed. Review the latest status through Find my booking.",
+      "Submitting a request does not always mean your reservation is confirmed. Sign in and review the latest reservation and payment status through My Bookings.",
     ],
   },
   {
@@ -53,7 +53,7 @@ export const policies = [
     points: [
       "Booking forms request guest contact information, stay dates, guest count, expected arrival time, and payment preference.",
       "These details support reservation processing, property contact, payment-status review, and stay management.",
-      "Use your booking reference and reservation email to request a private access link. A booking reference alone does not grant access.",
+      "Sign in to your guest account to review your bookings. For help accessing a historical reservation, contact the property. A booking reference alone does not grant access.",
       "Payment-card entry takes place through PayMongo Hosted Checkout. Do not send card details through property messages.",
     ],
     notice:

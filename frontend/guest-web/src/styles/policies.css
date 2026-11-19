@@ -1,110 +1,173 @@
 .policies-page {
-  width: min(1040px, calc(100% - 3rem));
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  color: var(--color-text, #15273f);
+  background: linear-gradient(135deg, #f2f6fd, #fafbfe);
+}
+
+.policies-page__backdrop {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  width: 65%;
+  height: 340px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.policies-page__inner {
+  width: min(
+    var(--luxury-width, 1280px),
+    calc(
+      100% -
+      var(--luxury-gutter, 24px) -
+      var(--luxury-gutter, 24px)
+    )
+  );
   margin-inline: auto;
-  padding-block: clamp(2rem, 5vw, 4rem);
-  color: var(--color-text);
+  padding-block: clamp(2rem, 4vw, 3rem);
 }
 
 .policies-page__heading {
   max-width: 42rem;
-  margin-bottom: var(--space-1-75rem);
+  margin-bottom: 1.25rem;
 }
 
 .policies-page__eyebrow {
-  margin: 0 0 var(--space-3);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-0-75rem);
-  font-weight: var(--font-weight-700);
+  margin: 0 0 0.6rem;
+  color: var(--color-text-muted, #465675);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.5;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .policies-page h1,
 .policies-page h2 {
-  color: var(--color-primary);
+  color: var(--color-primary, #15273f);
 }
 
 .policies-page h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 2.75rem);
-  line-height: var(--line-height-1-2);
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
 }
 
 .policies-page__heading > p:last-child {
-  margin: var(--space-0-875rem) 0 0;
-  color: var(--color-text-muted);
-  line-height: var(--line-height-1-8);
+  margin: 0.75rem 0 0;
+  color: var(--color-text-muted, #465675);
+  font-size: 1.05rem;
+  line-height: 1.7;
 }
 
 .policies-page__preview,
 .policies-page__notice {
-  padding: var(--space-4);
-  border: 1px solid var(--color-ead19a);
-  border-radius: var(--radius-small);
-  background: var(--color-fff7e5);
-  color: var(--color-754d08);
-  font-size: var(--font-size-0-9rem);
-  line-height: var(--line-height-1-7);
+  padding: 0.9rem 1.15rem;
+  color: #624715;
+  background: #fff6e2;
+  border: 1px solid #ead19a;
+  border-radius: 0.65rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
 }
 
 .policies-page__preview {
-  margin: 0 0 var(--space-6);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.policies-page__preview p {
+  margin: 0;
+}
+
+.policies-page__preview svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
 }
 
 .policies-page__tabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-  padding: var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
-  background: var(--color-surface);
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .policies-page__tab {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
   min-width: 0;
-  min-height: 48px;
-  padding: var(--space-0-875rem) var(--space-3);
-  border: 1px solid transparent;
-  border-bottom: 3px solid transparent;
-  border-radius: var(--radius-small);
-  background: transparent;
-  color: var(--color-primary);
+  min-height: 210px;
+  padding: 1.25rem 1rem;
+  color: var(--color-primary, #15273f);
+  background: var(--color-surface, #fff);
+  border: 2px solid var(--color-border, #d6deeb);
+  border-radius: 1rem;
   font: inherit;
-  font-size: var(--font-size-0-95rem);
-  font-weight: var(--font-weight-600);
-  line-height: var(--line-height-1-5);
-  overflow-wrap: anywhere;
+  text-align: center;
   cursor: pointer;
 }
 
 .policies-page__tab:hover {
-  background: var(--color-background);
+  border-color: #b78a2f;
+  background: #fffdf8;
 }
 
 .policies-page__tab[aria-selected="true"] {
-  border-color: var(--color-gold);
-  border-bottom-color: var(--color-primary);
-  background: var(--color-gold-light);
-  color: var(--color-on-gold);
+  border-color: #b78a2f;
+  box-shadow: var(
+    --luxury-shadow,
+    0 8px 24px rgb(20 38 63 / 8%)
+  );
 }
 
-.policies-page__tab:focus-visible,
-.policies-page__panel:focus-visible,
-.policies-page__booking-link:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
+.policies-page__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  color: var(--color-primary, #15273f);
+  background: linear-gradient(135deg, #fbefd7, #faf7ef);
+  border: 1px solid #ead8ad;
+  border-radius: 0.9rem;
+}
+
+.policies-page__tab-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.policies-page__tab-description {
+  color: var(--color-text-muted, #465675);
+  font-size: 0.92rem;
+  line-height: 1.65;
 }
 
 .policies-page__panel {
   min-width: 0;
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border: 1px solid var(--color-border);
-  border-top: 3px solid var(--color-gold);
-  border-radius: var(--radius-medium);
-  background: var(--color-surface);
-  overflow-wrap: anywhere;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #d6deeb);
+  border-top: 3px solid #b78a2f;
+  border-radius: 0.85rem;
+  box-shadow: var(
+    --luxury-shadow,
+    0 8px 24px rgb(20 38 63 / 8%)
+  );
 }
 
 .policies-page__panel[hidden] {
@@ -113,95 +176,105 @@
 
 .policies-page__panel h2 {
   margin: 0;
-  font-size: var(--font-size-1-4rem);
-  line-height: var(--line-height-1-4);
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  line-height: 1.35;
 }
 
 .policies-page__introduction {
-  max-width: 48rem;
-  margin: var(--space-0-875rem) 0 var(--space-1-25rem);
-  color: var(--color-text-muted);
-  line-height: var(--line-height-1-8);
+  margin: 0.6rem 0 1rem;
+  color: var(--color-text-muted, #465675);
+  line-height: 1.7;
 }
 
 .policies-page__list {
   margin: 0;
-  padding-left: var(--space-1-4rem);
-  line-height: var(--line-height-1-8);
+  padding-left: 1.25rem;
 }
 
-.policies-page__list li + li {
-  margin-top: var(--space-3);
-}
-
-.policies-page__list li::marker {
-  color: var(--color-primary);
+.policies-page__list li {
+  margin-block: 0.65rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
 .policies-page__notice {
-  margin: var(--space-6) 0 0;
+  margin: 1.25rem 0 0;
 }
 
 .policies-page__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-1-25rem);
-  margin-top: var(--space-1-75rem);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 0.5rem;
 }
 
 .policies-page__footer h2 {
   margin: 0;
-  font-size: var(--font-size-1-1rem);
+  font-size: 1.05rem;
+  line-height: 1.5;
 }
 
 .policies-page__footer p {
-  max-width: 36rem;
-  margin: var(--space-2) 0 0;
-  color: var(--color-text-muted);
-  line-height: var(--line-height-1-7);
+  margin: 0.4rem 0 0;
+  color: var(--color-text-muted, #465675);
+  line-height: 1.7;
 }
 
 .policies-page__booking-link {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-small);
-  color: var(--color-primary);
-  font-weight: var(--font-weight-600);
+  flex-shrink: 0;
+  gap: 0.85rem;
+  min-height: 46px;
+  padding: 0.7rem 1.25rem;
+  color: var(--color-primary, #15273f);
+  background: #fff6e2;
+  border: 1px solid #c99d43;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-decoration: none;
 }
 
 .policies-page__booking-link:hover {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  background: #e8ca84;
 }
 
-.policies-page__booking-link svg {
-  flex-shrink: 0;
+.policies-page :is(
+  [role="tab"],
+  [role="tabpanel"],
+  a
+):focus-visible {
+  outline: 3px solid #8c6418;
+  outline-offset: 4px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1000px) {
   .policies-page__tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .policies-page__backdrop {
+    width: 85%;
+    opacity: 0.4;
+  }
 }
 
-@media (max-width: 480px) {
-  .policies-page {
-    width: calc(100% - 2rem);
+@media (max-width: 600px) {
+  .policies-page__tabs {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .policies-page__tab {
-    padding: var(--space-3) var(--space-2);
-    font-size: var(--font-size-0-9rem);
+    min-height: auto;
   }
 
-  .policies-page__booking-link {
-    width: 100%;
+  .policies-page__footer {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
