@@ -1,36 +1,29 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import {
-  ArrowRight,
   BedDouble,
-  Bell,
   Brush,
   CalendarCheck,
   CalendarDays,
-  ChevronDown,
-  ClipboardList,
-  Coins,
   LogOut,
   MessageSquare,
   RefreshCw,
   Wallet,
 } from "lucide-react";
 
-import DashboardContacts from "../components/DashboardContacts.jsx";
-import DashboardAttention from "../components/DashboardAttention.jsx";
+import DashboardBottomGrid from "../components/DashboardBottomGrid.jsx";
 import useDashboardPage from "../hooks/useDashboardPage.js";
 
 import {
   formatPesos,
-  formatStatus,
-  formatStayDate,
   formatTimestamp,
-  guestName,
 } from "../utils/formatters";
 
 import "../styles/dashboard.css";
+import "../styles/dashboard-refined.css";
+import "../styles/dashboard-bottom-grid.css";
 
-function workflowCount(state, key = "total") {
+function count(state, key = "total") {
   if (state.status === "ready") {
     return state.data[key].toLocaleString("en-PH");
   }
@@ -38,29 +31,30 @@ function workflowCount(state, key = "total") {
   return state.status === "loading" ? "…" : "—";
 }
 
-function WorkflowStep({
+function OperationCard({
   Icon,
   title,
   description,
   value,
   to,
   onClick,
-  priority = false,
+  priority,
 }) {
   const Control = to ? Link : "button";
+  const controlProps = to
+    ? { to }
+    : { type: "button", onClick };
 
   return (
     <li className="daily-workflow__step">
       <Control
+        {...controlProps}
         className={
           "daily-workflow__control" +
           (priority ? " daily-workflow__control--priority" : "")
         }
-        to={to}
-        type={to ? undefined : "button"}
-        onClick={onClick}
       >
-        <Icon size={28} aria-hidden="true" />
+        <Icon size={24} aria-hidden="true" />
 
         <span className="daily-workflow__text">
           <strong>{title}</strong>
@@ -70,10 +64,10 @@ function WorkflowStep({
         <span
           className="daily-workflow__count"
           aria-label={
-            value === "—"
-              ? "Count unavailable"
-              : value === "…"
-                ? "Loading count"
+            value === "…"
+              ? "Loading count"
+              : value === "—"
+                ? "Count unavailable"
                 : `${value} items`
           }
         >
@@ -88,21 +82,40 @@ function Metric({ Icon, tone, title, value, description }) {
   return (
     <article className="daily-metric">
       <span className={`daily-metric__icon daily-metric__icon--${tone}`}>
-        <Icon size={28} aria-hidden="true" />
+        <Icon size={25} aria-hidden="true" />
       </span>
 
       <div>
         <p className="daily-metric__value">{value}</p>
         <h2>{title}</h2>
-        <p className="daily-metric__description">{description}</p>
+        {description && (
+          <p className="daily-metric__description">{description}</p>
+        )}
       </div>
     </article>
   );
 }
 
+function LoadIssue({ state, label }) {
+  if (
+    ["ready", "loading", "hidden"].includes(state.status)
+  ) {
+    return null;
+  }
+
+  return (
+    <p className="dashboard-screen__error" role="alert">
+      {state.status === "denied"
+        ? `Your account cannot view ${label}.`
+        : `${label} could not be loaded. Refresh or open its section to retry.`}
+    </p>
+  );
+}
+
 export default function Dashboard() {
   const location = useLocation();
-  const remindersPanel = useRef(null);
+  const remindersRef = useRef(null);
+  const [contactMode, setContactMode] = useState("requests");
 
   const {
     operations,
@@ -118,37 +131,26 @@ export default function Dashboard() {
     refreshDashboard,
   } = useDashboardPage();
 
-  function openReminders() {
-    const panel = remindersPanel.current;
+  function openRequests() {
+    setContactMode("requests");
 
+    const panel = remindersRef.current;
     if (!panel) return;
 
     panel.open = true;
-    panel
-      .querySelector("summary")
-      ?.focus({ preventScroll: true });
-
-    panel.scrollIntoView({
-      block: "start",
-      behavior: "instant",
-    });
+    panel.querySelector("summary")?.focus({ preventScroll: true });
+    panel.scrollIntoView({ block: "start", behavior: "instant" });
   }
 
   useEffect(() => {
     if (location.hash !== "#guest-reminders") return;
 
-    const panel = remindersPanel.current;
+    const panel = remindersRef.current;
     if (!panel) return;
 
     panel.open = true;
-    panel
-      .querySelector("summary")
-      ?.focus({ preventScroll: true });
-
-    panel.scrollIntoView({
-      block: "start",
-      behavior: "instant",
-    });
+    panel.querySelector("summary")?.focus({ preventScroll: true });
+    panel.scrollIntoView({ block: "start", behavior: "instant" });
   }, [location.hash, location.key]);
 
   const arrivalSearch = new URLSearchParams({
@@ -160,32 +162,34 @@ export default function Dashboard() {
     arrivalSearch.set("checkInTo", operations.data.date);
   }
 
-  const occupancy = operations.status === "ready"
-    ? operations.data.totalRooms === 0
-      ? "0% occupancy"
-      : `${(
-          operations.data.occupiedRooms /
-          operations.data.totalRooms *
-          100
-        ).toFixed(1)}% of configured rooms`
-    : "Occupancy unavailable";
-
-  let collections = "Loading…";
-
-  if (financial.status === "error") {
-    collections = "Unavailable";
-  } else if (finance?.status === "REVIEW_REQUIRED") {
-    collections = "Review required";
-  } else if (
+  const financialReady =
     financial.status === "ready" &&
-    finance?.status === "READY"
-  ) {
-    collections = formatPesos(finance.netCollectionsCentavos);
-  }
+    finance?.status === "READY";
+
+  const financialReview =
+    financial.status === "ready" &&
+    finance?.status === "REVIEW_REQUIRED";
+
+  const collections = financialReady
+    ? formatPesos(finance.netCollectionsCentavos)
+    : financialReview
+      ? "Review required"
+      : financial.status === "loading"
+        ? "Loading…"
+        : "Unavailable";
+
+  const occupancy = operations.status === "ready"
+    ? `${(
+        operations.data.totalRooms === 0
+          ? 0
+          : operations.data.occupiedRooms /
+            operations.data.totalRooms * 100
+      ).toFixed(1)}% occupancy`
+    : "Occupancy unavailable";
 
   return (
     <section
-      className="dashboard-screen daily-dashboard"
+      className="dashboard-screen daily-dashboard dashboard-refined"
       aria-labelledby="dashboard-title"
     >
       <h1 id="dashboard-title" className="daily-dashboard__sr-only">
@@ -200,7 +204,7 @@ export default function Dashboard() {
           <div>
             <h2 id="daily-workflow-title">Today’s Operations</h2>
             <p className="dashboard-screen__muted">
-              Follow the daily workflow to keep reservations and rooms on track.
+              Review requests, welcome guests, and prepare rooms.
             </p>
           </div>
 
@@ -216,52 +220,46 @@ export default function Dashboard() {
         </header>
 
         <ol className="daily-workflow__list">
-          <WorkflowStep
+          <OperationCard
             Icon={MessageSquare}
-            title="Review Requests"
-            description="Pay at Property requests"
-            value={workflowCount(contacts)}
-            onClick={openReminders}
-            priority
+            title="Requests"
+            description="Pending guest agreement"
+            value={count(contacts)}
+            onClick={openRequests}
+            priority={
+              contacts.status === "ready" &&
+              contacts.data.total > 0
+            }
           />
 
-          <WorkflowStep
+          <OperationCard
             Icon={CalendarCheck}
-            title="Process Arrivals"
+            title="Arrivals"
             description="Confirmed arrivals today"
-            value={workflowCount(operations, "expectedArrivals")}
-            to={"/reservations?" + arrivalSearch.toString()}
+            value={count(operations, "expectedArrivals")}
+            to={`/reservations?${arrivalSearch.toString()}`}
           />
 
-          <WorkflowStep
+          <OperationCard
             Icon={LogOut}
-            title="Process Departures"
-            description="Departures due today"
-            value={workflowCount(operations, "expectedDepartures")}
+            title="Departures"
+            description="Due today · view checked-in stays"
+            value={count(operations, "expectedDepartures")}
             to="/reservations?status=CHECKED_IN"
           />
 
-          <WorkflowStep
+          <OperationCard
             Icon={Brush}
-            title="Prepare Rooms"
-            description="Active rooms awaiting cleaning"
-            value={workflowCount(cleaningRooms)}
+            title="Room Preparation"
+            description="Rooms awaiting cleaning"
+            value={count(cleaningRooms)}
             to="/rooms?status=CLEANING&isActive=true"
           />
         </ol>
       </section>
 
-      {operations.status === "error" && (
-        <p role="alert" className="dashboard-screen__error">
-          Operational figures could not be loaded. Refresh the dashboard.
-        </p>
-      )}
-
-      {!cleaningRooms.loading && cleaningRooms.status !== "ready" && (
-        <p role="alert" className="dashboard-screen__error">
-          The room-preparation count is unavailable. Open Rooms to review.
-        </p>
-      )}
+      <LoadIssue state={operations} label="Operational figures" />
+      <LoadIssue state={cleaningRooms} label="Room-preparation count" />
 
       <div className="daily-dashboard__metrics">
         <Metric
@@ -269,7 +267,7 @@ export default function Dashboard() {
           tone="blue"
           title="Total Rooms"
           value={countValue("totalRooms")}
-          description="All configured physical rooms"
+          description="Configured physical rooms"
         />
 
         <Metric
@@ -285,7 +283,7 @@ export default function Dashboard() {
           tone="purple"
           title="Active Reservations"
           value={countValue("activeReservations")}
-          description="Confirmed, checked-in and inventory-held requests"
+          description="Includes inventory-held requests"
         />
 
         {financial.status !== "hidden" && (
@@ -294,249 +292,41 @@ export default function Dashboard() {
             tone="gold"
             title="Net Collections Today"
             value={collections}
-            description="Accommodation collections after refunds"
+            description="Accommodation receipts after refunds"
           />
         )}
       </div>
 
       {operations.status === "ready" && (
         <p className="dashboard-screen__updated">
-          Operational figures as of {formatTimestamp(operations.data.asOf)},
+          Updated {formatTimestamp(operations.data.asOf)},
           Philippine time.
         </p>
       )}
 
-      {financial.status === "error" && (
-        <p role="alert" className="dashboard-screen__error">
-          Financial figures could not be loaded. Refresh the dashboard.
+      <LoadIssue state={financial} label="Financial summary" />
+      <LoadIssue state={contacts} label="Guest reminders" />
+      <LoadIssue state={attention} label="Operational queues" />
+
+      {financialReview && (
+        <p className="dashboard-screen__review" role="alert">
+          Payment records require financial review.
+          Collection totals are unavailable.
         </p>
       )}
 
-      {finance?.status === "REVIEW_REQUIRED" && (
-        <p role="alert" className="dashboard-screen__review">
-          Payment records require financial review. Collection totals are unavailable.
-        </p>
-      )}
-
-      <section
-        className="dashboard-screen__panel"
-        aria-labelledby="dashboard-recent-title"
-      >
-        <header className="dashboard-screen__section-heading">
-          <div className="daily-dashboard__panel-heading">
-            <CalendarDays size={28} aria-hidden="true" />
-            <div>
-              <h2 id="dashboard-recent-title">Recent Reservations</h2>
-              <p className="dashboard-screen__muted">
-                Most recently created bookings.
-              </p>
-            </div>
-          </div>
-
-          <Link
-            to="/reservations"
-            className="daily-dashboard__outline-link"
-          >
-            View All Reservations
-            <ArrowRight size={17} aria-hidden="true" />
-          </Link>
-        </header>
-
-        {recent.loading && (
-          <p role="status">Loading recent reservations…</p>
-        )}
-
-        {!recent.loading && recent.status !== "ready" && (
-          <div className="dashboard-screen__message">
-            <p role="alert">
-              {recent.status === "denied"
-                ? "Your account cannot view these reservations."
-                : "Recent reservations could not be loaded."}
-            </p>
-
-            <button
-              type="button"
-              className="dashboard-screen__refresh"
-              onClick={recent.reload}
-            >
-              Retry reservations
-            </button>
-          </div>
-        )}
-
-        {recent.status === "ready" && recentItems.length === 0 && (
-          <p role="status">No reservations have been recorded yet.</p>
-        )}
-
-        {recent.status === "ready" && recentItems.length > 0 && (
-          <>
-            <div
-              className="dashboard-screen__table-scroll"
-              role="region"
-              aria-label="Recent reservations table"
-              tabIndex={0}
-            >
-              <table className="dashboard-screen__table">
-                <caption className="daily-dashboard__sr-only">
-                  Five newest reservations, or fewer when fewer exist
-                </caption>
-
-                <thead>
-                  <tr>
-                    <th scope="col">Reference</th>
-                    <th scope="col">Guest</th>
-                    <th scope="col">Room Type</th>
-                    <th scope="col">Stay Period</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {recentItems.map((item) => (
-                    <tr key={item.id}>
-                      <th scope="row">
-                        <Link
-                          to={
-                            "/reservations/" +
-                            encodeURIComponent(item.id)
-                          }
-                        >
-                          {item.reservationNumber}
-                        </Link>
-                      </th>
-
-                      <td>{guestName(item.guest)}</td>
-                      <td>{item.roomType.name}</td>
-
-                      <td>
-                        <span className="dashboard-screen__stay-date">
-                          {formatStayDate(item.checkInDate)}
-                        </span>
-                        <span className="dashboard-screen__stay-date">
-                          to {formatStayDate(item.checkOutDate)}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span
-                          className="dashboard-screen__badge"
-                          data-status={item.status}
-                        >
-                          {formatStatus(item.status)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <p className="dashboard-screen__updated">
-              Showing {recentItems.length} of{" "}
-              {recent.data.total.toLocaleString("en-PH")} reservations.
-            </p>
-          </>
-        )}
-      </section>
-
-      {financial.status !== "hidden" && (
-        <details className="daily-dashboard__accordion">
-          <summary>
-            <Coins size={25} aria-hidden="true" />
-            <strong>Financial Overview</strong>
-            <span>Collections, refunds, and financial review</span>
-            <ChevronDown
-              size={19}
-              className="daily-dashboard__chevron"
-              aria-hidden="true"
-            />
-          </summary>
-
-          <div className="daily-dashboard__accordion-body">
-            <h2>Accommodation collections today</h2>
-            <p className="dashboard-screen__muted">
-              Verified accommodation receipts minus completed accommodation
-              refunds, before provider fees. Deposits and additional-charge
-              receipts are excluded.
-            </p>
-
-            {financial.status === "loading" && (
-              <p role="status">Loading financial summary…</p>
-            )}
-
-            {financial.status === "error" && (
-              <p role="alert">Financial summary is unavailable.</p>
-            )}
-
-            {finance?.status === "REVIEW_REQUIRED" && (
-              <p role="alert" className="dashboard-screen__review">
-                Relevant payment records require review.
-              </p>
-            )}
-
-            {finance?.status === "READY" && (
-              <dl className="dashboard-screen__breakdown">
-                <div>
-                  <dt>Verified receipts</dt>
-                  <dd>{formatPesos(finance.collectionsCentavos)}</dd>
-                </div>
-                <div>
-                  <dt>Completed refunds</dt>
-                  <dd>{formatPesos(finance.refundsCentavos)}</dd>
-                </div>
-                <div>
-                  <dt>Net collections</dt>
-                  <dd>{formatPesos(finance.netCollectionsCentavos)}</dd>
-                </div>
-              </dl>
-            )}
-
-            {finance && (
-              <p className="dashboard-screen__updated">
-                Financial figures as of {formatTimestamp(finance.asOf)}.
-              </p>
-            )}
-          </div>
-        </details>
-      )}
-
-      <details
-        id="guest-reminders"
-        ref={remindersPanel}
-        className="daily-dashboard__accordion"
-      >
-        <summary>
-          <Bell size={25} aria-hidden="true" />
-          <strong>Guest Reminders</strong>
-          <span>Pending requests and arrival follow-ups</span>
-          <ChevronDown
-            size={19}
-            className="daily-dashboard__chevron"
-            aria-hidden="true"
-          />
-        </summary>
-
-        <div className="daily-dashboard__accordion-body">
-          <DashboardContacts contacts={contacts} />
-        </div>
-      </details>
-
-      <details className="daily-dashboard__accordion">
-        <summary>
-          <ClipboardList size={25} aria-hidden="true" />
-          <strong>Operational Queues</strong>
-          <span>Charge approvals, deposit returns, and corrections</span>
-          <ChevronDown
-            size={19}
-            className="daily-dashboard__chevron"
-            aria-hidden="true"
-          />
-        </summary>
-
-        <div className="daily-dashboard__accordion-body">
-          <DashboardAttention attention={attention} />
-        </div>
-      </details>
+      <DashboardBottomGrid
+        recent={recent}
+        recentItems={recentItems}
+        financial={financial}
+        finance={finance}
+        collections={collections}
+        contacts={contacts}
+        attention={attention}
+        remindersRef={remindersRef}
+        contactMode={contactMode}
+        onContactModeChange={setContactMode}
+      />
     </section>
   );
 }

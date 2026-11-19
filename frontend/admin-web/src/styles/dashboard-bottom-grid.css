@@ -1,0 +1,324 @@
+.dashboard-refined .dashboard-bottom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.dashboard-refined .dashboard-bottom__card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+  background: #fff;
+  border: 1px solid #d8e2ef;
+  border-radius: 1rem;
+  box-shadow: 0 2px 6px rgb(16 33 60 / 4%);
+}
+
+.dashboard-bottom__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-refined .dashboard-bottom__heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  color: #10213c;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.dashboard-bottom__heading h2 svg {
+  color: #526b88;
+}
+
+.dashboard-bottom__view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  color: #214b80;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dashboard-bottom__view-all:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.dashboard-bottom__reservations {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dashboard-bottom__reservation {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding-block: 0.9rem;
+  border-bottom: 1px solid #e6ecf4;
+}
+
+.dashboard-bottom__reservation:first-child {
+  padding-top: 0;
+}
+
+.dashboard-bottom__reservation > div {
+  min-width: 0;
+}
+
+.dashboard-bottom__reservation a {
+  display: inline-block;
+  padding-block: 0.2rem;
+  color: #214b80;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-underline-offset: 0.2em;
+}
+
+.dashboard-bottom__reservation p {
+  margin: 0.2rem 0 0;
+  color: #526078;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-bottom__reservation .dashboard-screen__badge {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+
+.dashboard-bottom__label {
+  margin: 0;
+  color: #526078;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.dashboard-bottom__amount {
+  margin: 0.5rem 0 1.25rem;
+  color: #10213c;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-bottom__values {
+  margin: 0 0 1rem;
+}
+
+.dashboard-bottom__values > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.8rem;
+  border-bottom: 1px solid #e6ecf4;
+}
+
+.dashboard-bottom__values dt {
+  min-width: 0;
+  color: #526078;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.dashboard-bottom__values dd {
+  margin: 0;
+  color: #10213c;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-bottom__queue-values dd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  min-height: 30px;
+  padding-inline: 0.45rem;
+  color: #526078;
+  background: #edf2fa;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.dashboard-bottom__queue-values
+  > div[data-attention="true"] dd {
+  color: #77500d;
+  background: #fff0bd;
+}
+
+.dashboard-bottom__counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.dashboard-bottom__counts > div {
+  min-width: 0;
+  padding: 1rem;
+  background: #f5f8fc;
+  border: 1px solid #e0e8f3;
+  border-radius: 0.8rem;
+}
+
+.dashboard-bottom__counts dt {
+  color: #526078;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.dashboard-bottom__counts dd {
+  margin: 0.35rem 0 0;
+  color: #10213c;
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.dashboard-bottom__counts
+  > div[data-attention="true"] {
+  background: #fff9eb;
+  border-color: #ead8ad;
+}
+
+.dashboard-bottom__preview-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.dashboard-bottom__preview-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding-block: 0.6rem;
+}
+
+.dashboard-bottom__preview-list li > span {
+  color: #526078;
+  font-size: 0.8rem;
+}
+
+.dashboard-bottom__preview-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  color: #214b80;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+}
+
+.dashboard-bottom__muted,
+.dashboard-bottom__empty {
+  margin: 0 0 1rem;
+  color: #526078;
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.dashboard-bottom__warning {
+  margin: 0 0 1rem;
+  padding: 0.85rem;
+  color: #77500d;
+  background: #fff6e2;
+  border: 1px solid #ead19a;
+  border-radius: 0.65rem;
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+
+.dashboard-bottom__meta {
+  margin: 0.85rem 0 0;
+  color: #526078;
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.dashboard-bottom__details {
+  margin-top: auto;
+  padding-top: 0.85rem;
+}
+
+.dashboard-bottom__details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.65rem 0;
+  color: #214b80;
+  border-top: 1px solid #e6ecf4;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.6;
+  list-style: none;
+  cursor: pointer;
+}
+
+.dashboard-bottom__details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-bottom__details[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.dashboard-bottom__expanded {
+  min-width: 0;
+  padding-top: 1rem;
+}
+
+.dashboard-bottom__feedback {
+  color: #526078;
+  line-height: 1.7;
+}
+
+.dashboard-bottom svg {
+  flex-shrink: 0;
+}
+
+.dashboard-bottom :is(a, button, summary):focus-visible {
+  outline: 3px solid #9c741f;
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-refined .dashboard-bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard-bottom__reservation {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .dashboard-bottom__counts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
