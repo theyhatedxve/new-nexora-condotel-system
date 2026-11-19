@@ -6,6 +6,7 @@ import { formatPesos } from "../utils/formatMoney.js";
 import { stayNights } from "../utils/staySearch.js";
 import useRoomDetailsPage from "../hooks/useRoomDetailsPage.js";
 import "../styles/room-details.css";
+import "../styles/room-details-luxury.css";
 
 function BackLink({ to }) {
   return (
