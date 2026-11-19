@@ -1,5 +1,38 @@
 # NEXORA
 
+## Current project checkpoint — 2026-11-20
+
+**Status:** Cleanup Batches 1–5 completed, owner-confirmed.
+Documentation closure and consolidated final verification remain pending.
+
+The latest cleanup removes four unused Dashboard files, extracts
+backend command validation and Admin form logic, and consolidates
+common dialog styling.
+
+The starter E2E test has been replaced with an isolated smoke suite.
+It checks database isolation, the health endpoint, and an unauthenticated
+protected request. It does not establish full booking acceptance.
+
+- Development database: backend/dev.db.
+- Demonstration database: backend/nexora.demo.db.
+- Admin and Guest share the backend at http://localhost:3000/api.
+- Automated tests use isolated databases.
+- All 14 Prisma migrations and existing recovery archives are retained.
+
+No application data was merged, reset, or reseeded in this cleanup.
+
+Completion is owner-confirmed. Source review is separate from runtime
+verification; no consolidated final successful totals are recorded here.
+
+See [the current handoff](docs/AI_HANDOFF.md) for final commands and
+[the current checkpoint](docs/MD_Files/AGENTS.md) for continuation rules.
+
+NFC remains postponed. Production deployment remains deferred.
+
+The November 19 checkpoint and earlier entries below are historical.
+Their statements describing the starter E2E fixture as unfinished
+are superseded by this checkpoint.
+
 ## Current project checkpoint — 2026-11-19
 
 **Status:** Local prototype and cleanup accepted, owner-confirmed.

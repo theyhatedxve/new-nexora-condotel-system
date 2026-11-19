@@ -1,0 +1,70 @@
+/* Shared native-dialog structure.
+   Keep existing selectors so specificity remains unchanged. */
+
+.reservation-focus .reservation-dialog,
+.reservation-focus .assignment-confirmation,
+.room-ui .create-room-dialog,
+.reports-page .report-dialog {
+  box-sizing: border-box;
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  color: #10213c;
+  background: #fff;
+  border-radius: 1rem;
+}
+
+.reservation-focus .reservation-dialog,
+.room-ui .create-room-dialog,
+.reports-page .report-dialog {
+  padding: 0;
+  overflow: hidden;
+}
+
+.reservation-focus .assignment-confirmation,
+.room-ui .create-room-dialog,
+.reports-page .report-dialog {
+  border: 1px solid #d5e0f2;
+  box-shadow: 0 20px 65px rgb(10 26 48 / 25%);
+}
+
+.reservation-focus .assignment-confirmation::backdrop,
+.room-ui .create-room-dialog::backdrop,
+.reports-page .report-dialog::backdrop {
+  background: rgb(8 22 40 / 55%);
+}
+
+.reservation-dialog__frame,
+.room-ui .create-room-dialog__frame,
+.reports-page .report-dialog__frame {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2rem);
+}
+
+.reservation-dialog__header,
+.room-ui .create-room-dialog__header,
+.reports-page .report-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: 1rem;
+  background: #f8faff;
+  border-bottom: 1px solid #d5e0f2;
+}
+
+.reservation-dialog__body,
+.room-ui .create-room-dialog__body,
+.reports-page .report-dialog__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.reservation-dialog__footer,
+.room-ui .create-room-dialog__footer,
+.reports-page .report-dialog__footer {
+  flex: 0 0 auto;
+  background: #f8faff;
+  border-top: 1px solid #d5e0f2;
+}

@@ -1,28 +1,12 @@
-import {
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
-
-import {
-  getSession,
-  subscribeSession,
-} from "../services/authApi";
+import { useState, useSyncExternalStore } from "react";
+import { getSession, subscribeSession } from "../services/authApi";
 import { useStaffData } from "../hooks/useStaffData";
-import {
-  readRentalPricing,
-  saveRentalPricing,
-} from "../services/rentalPricingApi.js";
-import {
-  RENTAL_TYPES,
-  createPricingDraft,
-  createPricingRequest,
-} from "../utils/rentalPricing.js";
+import { readRentalPricing } from "../services/rentalPricingApi.js";
+import { RENTAL_TYPES } from "../utils/rentalPricing.js";
 import { formatPesos } from "../utils/formatters";
+import useRentalPricingForm, { PRICING_ROLES } from "../hooks/useRentalPricingForm.js";
 
 import "../styles/rental-pricing.css";
-
-const PRICING_ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
 
 function PricingForm({
   pricing,
@@ -31,82 +15,10 @@ function PricingForm({
   onSaved,
   onBusy,
 }) {
-  const [draft, setDraft] = useState(
-    () => createPricingDraft(pricing),
-  );
-  const [review, setReview] = useState(null);
-  const [error, setError] = useState("");
-  const [blocked, setBlocked] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const sending = useRef(false);
-
-  function changeRate(index, field, value) {
-    setDraft((current) => ({
-      ...current,
-      rates: current.rates.map((rate, position) =>
-        position === index ? { ...rate, [field]: value } : rate,
-      ),
-    }));
-    setError("");
-  }
-
-  function prepare(event) {
-    event.preventDefault();
-    setError("");
-
-    try {
-      setReview(createPricingRequest(pricing, draft));
-    } catch (failure) {
-      setError(failure.message);
-    }
-  }
-
-  async function save() {
-    if (!review || sending.current || blocked) return;
-
-    const session = getSession();
-
-    if (
-      session.status !== "authenticated" ||
-      session.user?.id !== actorId ||
-      !PRICING_ROLES.includes(session.user?.role)
-    ) {
-      setReview(null);
-      setError("Your account changed. Reload before saving.");
-      setBlocked(true);
-      return;
-    }
-
-    sending.current = true;
-    setSaving(true);
-    onBusy(true);
-    setError("");
-
-    try {
-      await saveRentalPricing(pricing.id, review);
-
-      if (getSession().user?.id === actorId) {
-        onSaved(pricing.name);
-      }
-    } catch (failure) {
-      setReview(null);
-      setBlocked(true);
-
-      const status = failure.response?.status;
-
-      setError(
-        status === 409
-          ? "Pricing changed while you were editing. Reload current pricing before saving."
-          : status === 403
-            ? "This account cannot change rental pricing."
-            : "Saving could not be confirmed. Reload current pricing before trying again.",
-      );
-    } finally {
-      sending.current = false;
-      setSaving(false);
-      onBusy(false);
-    }
-  }
+  const {
+    draft, review, error, blocked, saving, changeRate,
+    changeIncludedOccupancy, backToEditing, prepare, save,
+  } = useRentalPricingForm({ pricing, actorId, onSaved, onBusy });
 
   return (
     <form className="rental-pricing__form" onSubmit={prepare}>
@@ -157,13 +69,7 @@ function PricingForm({
             step="1"
             required
             value={draft.includedOccupancy}
-            onChange={(event) => {
-              setDraft((current) => ({
-                ...current,
-                includedOccupancy: event.target.value,
-              }));
-              setError("");
-            }}
+            onChange={changeIncludedOccupancy}
           />
         </div>
 
@@ -298,7 +204,7 @@ function PricingForm({
               type="button"
               className="room-types-screen__secondary"
               disabled={saving}
-              onClick={() => setReview(null)}
+              onClick={backToEditing}
             >
               Back to editing
             </button>

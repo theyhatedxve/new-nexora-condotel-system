@@ -1,5 +1,72 @@
 # NEXORA — System Directory Structure
 
+## Current organization checkpoint — 2026-11-20
+
+**Status:** Paths source-inspected; cleanup Batches 1–5 owner-confirmed.
+
+This checkpoint supplements the retained organization and supersedes
+older references to the removed Dashboard files or starter E2E fixture.
+
+```text
+backend/
+  src/
+    reservations/
+      dto/
+      policies/
+      validation/
+        reservation-charge-command.ts
+        reservation-deposit-command.ts
+      reservation-charges.service.ts
+      reservation-deposits.service.ts
+    payments/
+      dto/
+      paymongo/
+  test/
+    app.e2e-spec.ts
+    helpers/
+      isolated-database.ts
+  dev.db
+  nexora.demo.db
+
+frontend/admin-web/src/
+  components/
+    reservations/
+      ReservationCharges.jsx
+      ReservationDeposits.jsx
+    RoomTypeRentalPricing.jsx
+  hooks/
+    useReservationChargeForm.js
+    useReservationDepositForm.js
+    useRentalPricingForm.js
+  styles/
+    admin-dialogs.css
+    reservation-focus.css
+    room-workspace.css
+    reports-compact.css
+```
+
+This is a focused map of the latest changes, not a full inventory.
+
+- DTOs define request fields.
+- Reservation validation helpers normalize and validate commands.
+- Services retain authorization and transaction orchestration.
+- Frontend hooks own substantial form state and action preparation.
+- Components retain presentation and simple display conditions.
+- Shared dialog CSS owns common structure; feature CSS owns variations.
+
+Removed Admin Web files:
+DashboardAttention.jsx, DashboardContacts.jsx, DashboardWorklist.jsx,
+and dashboard-calm.css.
+
+Keep dashboardContactsApi.js and dashboardAttentionApi.js:
+the Dashboard and notification panel still use them.
+
+Development data remains in backend/dev.db.
+Tests use isolated databases. The demonstration database remains separate.
+All 14 migrations and existing recovery archives remain preserved.
+
+Earlier dated inventories below are historical.
+
 ## Current organization checkpoint — 2026-11-19
 
 **Status:** Cleanup completed, owner-confirmed; paths source-inspected.

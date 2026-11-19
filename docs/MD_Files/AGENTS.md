@@ -8,6 +8,83 @@
 
 > This proposed file is a condensed replacement guide. The existing 2026-11-11 `AGENTS.md` contains detailed historical implementation records, dependency inventories, test evidence, and screen-level checkpoints. Preserve or archive those records before adopting a replacement. This draft does not verify live repository or database state.
 
+## Finalization checkpoint — 2026-11-20
+
+**Status:** Cleanup Batches 1–5 completed, owner-confirmed.
+Documentation closure and consolidated final verification remain pending.
+
+This checkpoint supersedes older statements describing the starter E2E
+test as unfinished. Preserve earlier checkpoints as historical records.
+The document-level draft designation remains unchanged.
+
+### Completed cleanup
+
+1. Removed four unused Admin Web files:
+   - src/components/DashboardAttention.jsx
+   - src/components/DashboardContacts.jsx
+   - src/components/DashboardWorklist.jsx
+   - src/styles/dashboard-calm.css
+
+2. Confirmed development database configuration:
+   - Backend runtime and Prisma tooling target backend/dev.db.
+   - Admin and Guest use http://localhost:3000/api.
+   - Automated tests retain isolated databases.
+   - No test or demonstration data was merged into dev.db.
+
+3. Replaced backend/test/app.e2e-spec.ts:
+   - Reuses test/helpers/isolated-database.ts.
+   - Overrides Prisma before application initialization.
+   - Checks database isolation, /api/health, and unauthenticated access.
+   - Disables booking-deadline and booking-email workers for the suite.
+   - Disposes of the temporary database after application shutdown.
+
+4. Extracted charge and deposit command validation:
+   - backend/src/reservations/validation/reservation-charge-command.ts
+   - backend/src/reservations/validation/reservation-deposit-command.ts
+
+   Services retain authorization, transactions, and database writes.
+
+5. Extracted Admin Web form logic:
+   - frontend/admin-web/src/hooks/useReservationChargeForm.js
+   - frontend/admin-web/src/hooks/useReservationDepositForm.js
+   - frontend/admin-web/src/hooks/useRentalPricingForm.js
+
+   Components retain their existing UI and use existing API/recovery flows.
+
+6. Consolidated shared dialog structure:
+   - frontend/admin-web/src/styles/admin-dialogs.css
+   - Imported by reservation-focus.css, room-workspace.css,
+     and reports-compact.css.
+   - Feature-specific widths, focus styles, and responsive rules remain.
+
+### Evidence and limits
+
+The owner confirmed completion after each batch.
+Source comparison confirmed unchanged extracted backend validator bodies
+and service classes, unchanged charge/deposit JSX, and the two approved
+pricing JSX handler substitutions.
+
+These comparisons are not runtime verification.
+The assistant did not run tests, lint, builds, servers, or browser checks.
+Do not invent successful command output or final test totals.
+
+### Retained files and data
+
+Keep backend/dev.db, backend/nexora.demo.db, all 14 Prisma migrations,
+active tests, generated Prisma code, uploaded images, encryption
+configuration, and the three recovery ZIPs under backups/.
+
+The retired booking controllers remain intentional 410 Gone responses.
+They are not unused files.
+
+### Continuation
+
+Complete the four-file documentation update and owner-run final checks.
+Do not reopen accepted UI batches or perform further deletion without
+an identified need and appropriate authorization.
+
+NFC remains postponed. Production deployment remains deferred.
+
 ## Cleanup and organization checkpoint — 2026-11-19
 
 **Status:** Completed, owner-confirmed.

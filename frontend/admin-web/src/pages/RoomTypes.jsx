@@ -2,7 +2,6 @@
 import {
   ArrowLeft,
   BedDouble,
-  Pencil,
   RefreshCw,
   Users,
 } from "lucide-react";

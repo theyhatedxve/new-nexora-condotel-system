@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAuth } from "../../auth/useAuth";
 import StaffDataState from "../StaffDataState";
 import {
@@ -6,68 +5,23 @@ import {
   formatStatus,
   formatTimestamp,
 } from "../../utils/formatters";
-import { parsePropertyCollectionAmount } from "../../services/paymentsApi";
 import {
   depositStaffRoles,
   depositManagerRoles,
 } from "../../services/reservationDepositsApi";
-import useReservationDeposits from "../../hooks/useReservationDeposits";
+import useReservationDepositForm from "../../hooks/useReservationDepositForm.js";
 
 function Workspace({ user, reservationId, bookingStatus, onReload }) {
-  const [reason, setReason] = useState("");
-
   const {
-    history,
-    page,
-    setPage,
-    draft,
-    busy,
-    message,
-    blocked,
-    heading,
-    prepare,
-    back,
-    submit,
-    setMessage,
-  } = useReservationDeposits(user.id, reservationId, onReload);
+    history, page, setPage, draft, busy, message, blocked, heading,
+    back, submit, reason, setReason, review, collect,
+  } = useReservationDepositForm({ actorId: user.id, reservationId, onReload });
 
   const data = history.status === "ready" ? history.data : null;
   const manager = depositManagerRoles.includes(user.role);
   const locked = Boolean(draft) || busy || blocked;
   const returnEligible =
     ["CHECKED_OUT", "CANCELLED", "EXPIRED"].includes(bookingStatus);
-
-  function review(action, fields, label) {
-    const actionReason = reason.trim();
-
-    if (actionReason.length < 3) {
-      setMessage("Enter a reason of at least 3 characters.");
-      return;
-    }
-
-    prepare(
-      { action, reason: actionReason, ...fields },
-      `${label}. Reason: ${actionReason}`,
-    );
-  }
-
-  function collect(event) {
-    event.preventDefault();
-
-    try {
-      const amount = parsePropertyCollectionAmount(
-        String(new FormData(event.currentTarget).get("amount") || ""),
-      );
-
-      review(
-        "COLLECT",
-        { amountCentavos: amount, moneyReceived: true },
-        `Record cash deposit ${formatPesos(amount)}`,
-      );
-    } catch {
-      setMessage("Enter a valid positive deposit amount in PHP.");
-    }
-  }
 
   return (
     <section

@@ -1,46 +1,16 @@
-import { useState } from "react";
 import { useAuth } from "../../auth/useAuth";
 import StaffDataState from "../StaffDataState";
 import { formatPesos, formatStatus, formatTimestamp } from "../../utils/formatters";
-import { parsePropertyCollectionAmount } from "../../services/paymentsApi";
 import { chargeManagerRoles, chargeStaffRoles } from "../../services/reservationChargesApi";
-import useReservationCharges from "../../hooks/useReservationCharges";
+import useReservationChargeForm from "../../hooks/useReservationChargeForm.js";
 
 function Workspace({ user, reservationId, bookingStatus, onReload }) {
-  const [kind, setKind] = useState("DAMAGE");
-  const [reason, setReason] = useState("");
-  const { history, page, setPage, draft, busy, message, blocked, heading,
-    prepare, back, submit, setMessage } = useReservationCharges(user.id, reservationId, onReload);
+  const {
+    history, page, setPage, draft, busy, message, blocked, heading,
+    back, submit, kind, setKind, reason, setReason, propose, action,
+  } = useReservationChargeForm({ actorId: user.id, reservationId, onReload });
   const manager = chargeManagerRoles.includes(user.role);
-  function propose(event) {
-    event.preventDefault();
-    try {
-      const data = new FormData(event.currentTarget);
-      if (kind === "DAMAGE") {
-        const amount = parsePropertyCollectionAmount(String(data.get("amount") || ""));
-        const description = String(data.get("description") || "").trim();
-        const evidenceNotes = String(data.get("evidence") || "").trim();
-        prepare({ action: "PROPOSE_DAMAGE", description, evidenceNotes, amountCentavos: amount },
-          "Propose damage: " + description + " — " + formatPesos(amount));
-      } else {
-        const at = new Date(String(data.get("departure")) + ":00+08:00").toISOString();
-        prepare({ action: "PROPOSE_EXTENSION", requestedDepartureAt: at },
-          "Request extension to " + formatTimestamp(at) + ". The backend calculates the quote.");
-      }
-    } catch { setMessage("Check the amount, description and Philippine departure time."); }
-  }
-  function action(type, item) {
-    const needsReason = ["REJECT", "REFUND_UNFULFILLED_EXTENSION"].includes(type);
-    if (needsReason && reason.trim().length < 3) { setMessage("Enter a reason of at least 3 characters."); return; }
-    prepare({
-      action: type, chargeId: item.id,
-      ...(needsReason ? { reason: reason.trim() } : {}),
-      ...(type === "COLLECT" ? { moneyReceived: true } : {}),
-      ...(type === "REFUND_UNFULFILLED_EXTENSION" ? { moneyReturned: true } : {}),
-    }, formatStatus(type) + ": " + item.description + " — " + formatPesos(item.amountCentavos) +
-      (needsReason ? ". Reason: " + reason.trim() : "") +
-      (item.requestedDepartureAt ? ". To: " + formatTimestamp(item.requestedDepartureAt) : ""));
-  }
+
   return (
     <section
       className="record-section charges-workspace"

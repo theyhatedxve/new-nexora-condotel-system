@@ -1,3 +1,5 @@
+@import "./admin-dialogs.css";
+
 .reservation-focus {
   min-width: 0;
 }
@@ -301,17 +303,9 @@
 }
 
 .reservation-focus .reservation-dialog {
-  box-sizing: border-box;
   width: min(1040px, calc(100% - 2rem));
   max-width: none;
-  max-height: calc(100dvh - 2rem);
-  margin: auto;
-  padding: 0;
-  overflow: hidden;
-  color: #10213c;
-  background: #fff;
   border: 1px solid #cbd7e9;
-  border-radius: 1rem;
   box-shadow: 0 24px 80px rgb(8 25 48 / 25%);
 }
 
@@ -320,22 +314,10 @@
 }
 
 .reservation-dialog__frame {
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100dvh - 2rem);
   min-height: 0;
 }
 
-.reservation-dialog__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex: 0 0 auto;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  background: #f8faff;
-  border-bottom: 1px solid #d5e0f2;
-}
+
 
 .reservation-dialog__header > div {
   min-width: 0;
@@ -370,12 +352,7 @@
   cursor: pointer;
 }
 
-.reservation-dialog__body {
-  min-height: 0;
-  padding: 1.25rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
+
 
 .reservation-focus .reservation-dialog .record-section {
   margin-bottom: 1rem;
@@ -391,13 +368,7 @@
 }
 
 .reservation-dialog__footer {
-  flex: 0 0 auto;
-  padding: 0.9rem 1.5rem;
   color: #526078;
-  background: #f8faff;
-  border-top: 1px solid #d5e0f2;
-  font-size: 0.8rem;
-  line-height: 1.6;
 }
 
 .reservation-dialog__warning {
@@ -1125,22 +1096,12 @@
 
 /* Room assignment confirmation */
 .reservation-focus .assignment-confirmation {
-  box-sizing: border-box;
   width: min(460px, calc(100vw - 2rem));
-  max-height: calc(100dvh - 2rem);
-  margin: auto;
   padding: 1.5rem;
   overflow-y: auto;
   overscroll-behavior: contain;
-  color: #10213c;
-  background: #fff;
-  border: 1px solid #d5e0f2;
-  border-radius: 1rem;
-  box-shadow: 0 20px 65px rgb(10 26 48 / 25%);
 }
-.reservation-focus .assignment-confirmation::backdrop {
-  background: rgb(8 22 40 / 55%);
-}
+
 .reservation-focus .assignment-confirmation__header {
   display: flex;
   align-items: center;

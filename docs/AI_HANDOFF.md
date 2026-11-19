@@ -1,5 +1,84 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
+## Current finalization handoff — 2026-11-20
+
+**Status:** Cleanup Batches 1–5 owner-confirmed complete.
+Documentation closure and consolidated final verification remain pending.
+
+This checkpoint supersedes older "next task" statements about repairing
+the Hello World E2E fixture. Its replacement is now present in source.
+
+### Latest changes
+
+- Removed four unused Dashboard component/style files.
+- Confirmed backend runtime and Prisma tooling target backend/dev.db.
+- Replaced the starter E2E test with an isolated application smoke suite.
+- Extracted charge/deposit validation into reservations/validation/.
+- Extracted charge, deposit, and pricing form logic into three Admin hooks.
+- Centralized common dialog structure in styles/admin-dialogs.css.
+- Removed the unused Pencil import from RoomTypes.jsx.
+
+Existing workflows, API contracts, permissions, recovery behavior,
+transaction ownership, and saved application data remain the
+behavior-preservation boundary.
+
+### Verification boundary
+
+Completion confirmations are owner-reported.
+The assistant performed source inspection and comparisons only.
+No consolidated final run output or exact successful totals have been
+supplied for this checkpoint.
+
+The owner runs tests, lint, builds, applications, and browser checks.
+Do not run them without the applicable owner authorization.
+
+### Owner-run final commands
+
+Run from D:\Web-JSX\NEXORA:
+
+```powershell
+npm.cmd --prefix backend run lint
+npm.cmd --prefix backend run build
+npm.cmd --prefix backend run test
+npm.cmd --prefix backend run test:e2e
+
+npm.cmd --prefix frontend/admin-web run lint
+npm.cmd --prefix frontend/admin-web run build
+
+npm.cmd --prefix frontend/guest-web run lint
+npm.cmd --prefix frontend/guest-web run build
+```
+
+Stop and resolve any failures before treating final verification as complete.
+Record warnings separately from errors and successful builds.
+
+### Browser acceptance
+
+- Admin: Dashboard, notifications, Rooms, Room Types, and Reports.
+- Reservation assignment, charges, deposits, and confirmation/retry flows.
+- Dialog keyboard focus, Escape/Back, pending-save restrictions,
+  internal scrolling, and narrow-screen layouts.
+- Guest: login/logout, room search, booking, and My Bookings.
+- Shared application data through the same backend API.
+- Existing financial warnings and role restrictions.
+
+### Retention boundary
+
+Keep dev.db, nexora.demo.db, all 14 migrations, active tests,
+uploaded images, encryption configuration, and existing recovery ZIPs.
+Do not merge test fixtures into dev.db.
+
+No reset, seed, migration consolidation, archive deletion,
+dependency upgrade, commit, or deployment is part of this closure.
+
+### Next action
+
+After documentation is applied, collect the owner's final command and
+browser results. Record actual results before marking consolidated
+verification complete.
+
+NFC remains postponed. Production deployment remains deferred.
+
 ## Cleanup handoff — 2026-11-19
 
 **Status:** Cleanup and organization completed, owner-confirmed.
