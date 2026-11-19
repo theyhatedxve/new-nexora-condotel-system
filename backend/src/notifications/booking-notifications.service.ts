@@ -16,7 +16,7 @@ import {
 import { buildRefundCompletionEmail } from './refund-completion.template.js';
 import {
   ARRIVAL_REMINDER_PREFIX, arrivalReminderDue, arrivalReminderKey,
-} from '../reservations/booking-reminder.policy.js';
+} from '../reservations/policies/booking-reminder.policy.js';
 import { enqueueDueArrivalReminders } from './arrival-reminders.queue.js';
 import { buildArrivalReminderEmail } from './arrival-reminder.template.js';
 

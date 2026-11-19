@@ -33,10 +33,10 @@ import {
 } from '../reservations/reservation-acquisition.service.js';
 import {
   initialGuestBookingTiming,
-} from '../reservations/guest-booking-policy.js';
+} from '../reservations/policies/guest-booking-policy.js';
 import {
   HOLD_DURATION_MS,
-} from '../reservations/reservation-acquisition-policy.js';
+} from '../reservations/policies/reservation-acquisition-policy.js';
 
 import type {
   RentalType,

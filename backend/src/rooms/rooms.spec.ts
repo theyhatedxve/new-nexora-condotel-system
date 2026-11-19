@@ -1,7 +1,5 @@
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import {
   afterAll,
@@ -17,20 +15,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../generated/prisma/client.js';
+import type { PrismaClient } from '../generated/prisma/client.js';
+
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../test/helpers/isolated-database.js';
 
 import { RoomsService } from './rooms.service.js';
 
-const testDb = resolve(
-  process.cwd(),
-  'phase4.step2.test.db',
-);
-
-const devDb = resolve(process.cwd(), 'dev.db');
 const suffix = randomUUID();
 
 let prisma: PrismaClient;
+let isolatedDatabase: IsolatedTestDatabase | undefined;
 let service: RoomsService;
 
 let propertyId = '';
@@ -48,39 +45,10 @@ function futureDate(days: number): Date {
   return result;
 }
 
-function assertIsolation(): void {
-  if (
-    process.cwd().split(/[\\/]/).at(-1) !== 'backend'
-  ) {
-    throw new Error('Run tests from backend/.');
-  }
-
-  if (!existsSync(testDb)) {
-    throw new Error(
-      'Missing phase4.step2.test.db. Run migrations first.',
-    );
-  }
-
-  if (
-    existsSync(devDb) &&
-    realpathSync(testDb) === realpathSync(devDb)
-  ) {
-    throw new Error(
-      'Refusing to use backend/dev.db.',
-    );
-  }
-}
-
 describe('Phase 4 Step 2 — RoomsService', () => {
   beforeAll(async () => {
-    assertIsolation();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./phase4.step2.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-    await prisma.$connect();
+    isolatedDatabase = await createIsolatedTestDatabase();
+    prisma = isolatedDatabase.prisma;
 
     const property = await prisma.property.create({
       data: {
@@ -164,7 +132,7 @@ describe('Phase 4 Step 2 — RoomsService', () => {
         });
       }
     } finally {
-      await prisma.$disconnect();
+      await isolatedDatabase?.dispose();
     }
   });
 

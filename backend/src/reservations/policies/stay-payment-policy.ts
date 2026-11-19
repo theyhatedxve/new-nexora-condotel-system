@@ -1,20 +1,20 @@
-import { activeOnlineAttempts } from '../payments/online-payment-attempts.js';
+import { activeOnlineAttempts } from '../../payments/online-payment-attempts.js';
 import {
   ConflictException,
 } from '@nestjs/common';
 
 import type {
   Prisma,
-} from '../generated/prisma/client.js';
+} from '../../generated/prisma/client.js';
 
 import {
   calculatePaymentSummary,
-} from '../payments/payment-summary.js';
+} from '../../payments/payment-summary.js';
 
 import {
   hasVerifiedPaymongoEvidence,
   paymentEvidenceSelect,
-} from '../payments/payment-evidence.js';
+} from '../../payments/payment-evidence.js';
 
 // Read inside the same inventory transaction as the stay transition.
 export async function requireFullRecordedPayment(

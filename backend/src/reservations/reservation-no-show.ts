@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { enqueueBookingCancellationInTx } from '../notifications/booking-updates.queue.js';
 import type { Prisma, Reservation } from '../generated/prisma/client.js';
-import { GUEST_BOOKING_POLICY_VERSION } from './guest-booking-policy.js';
+import { GUEST_BOOKING_POLICY_VERSION } from './policies/guest-booking-policy.js';
 import { assertReservationTransition } from './reservation-lifecycle.js';
 
 export const NO_SHOW_GRACE_MS = 60 * 60 * 1000;

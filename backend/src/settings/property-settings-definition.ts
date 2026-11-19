@@ -1,4 +1,4 @@
-import { HOLD_DURATION_MS } from '../reservations/reservation-acquisition-policy.js';
+import { HOLD_DURATION_MS } from '../reservations/policies/reservation-acquisition-policy.js';
 
 export const PROPERTY_FIELDS = [
   'name',

@@ -1,16 +1,12 @@
 
 import { randomUUID } from 'node:crypto';
 import {
-  existsSync,
-  realpathSync,
-} from 'node:fs';
-import {
   mkdtemp,
   readdir,
   rm,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 
 import {
   afterAll,
@@ -27,19 +23,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../generated/prisma/client.js';
+import type { PrismaClient } from '../generated/prisma/client.js';
+
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../test/helpers/isolated-database.js';
 
 import { ImageStorageService } from './image-storage.service.js';
 import { ImageValidationService } from './image-validation.service.js';
 import { RoomImagesService } from './room-images.service.js';
 
-const testDb = resolve(process.cwd(), 'phase4.step4.test.db');
-const devDb = resolve(process.cwd(), 'dev.db');
-
 const suffix = randomUUID();
 
 let prisma: PrismaClient;
+let isolatedDatabase: IsolatedTestDatabase | undefined;
 let service: RoomImagesService;
 let storage: ImageStorageService;
 let temporaryDirectory = '';
@@ -49,23 +47,6 @@ let propertyId = '';
 let roomTypeId = '';
 let firstImageId = '';
 let secondImageId = '';
-
-function checkIsolation(): void {
-  if (process.cwd().split(/[\\/]/).at(-1) !== 'backend') {
-    throw new Error('Run tests from backend/.');
-  }
-
-  if (!existsSync(testDb)) {
-    throw new Error('Missing isolated Phase 4 Step 4 database.');
-  }
-
-  if (
-    existsSync(devDb) &&
-    realpathSync(testDb) === realpathSync(devDb)
-  ) {
-    throw new Error('Refusing to test against dev.db.');
-  }
-}
 
 async function sampleImage(
   format: 'jpeg' | 'png' | 'webp',
@@ -101,25 +82,19 @@ function fileFixture(buffer: Buffer): Express.Multer.File {
 
 describe('Phase 4 Step 4 — Room Images', () => {
   beforeAll(async () => {
-    checkIsolation();
+    previousStorageDirectory =
+      process.env.ROOM_IMAGE_STORAGE_DIR;
+
+    isolatedDatabase = await createIsolatedTestDatabase();
+    prisma = isolatedDatabase.prisma;
 
     temporaryDirectory = await mkdtemp(
       join(tmpdir(), 'nexora-step4-images-'),
     );
 
-    previousStorageDirectory =
-      process.env.ROOM_IMAGE_STORAGE_DIR;
-
     process.env.ROOM_IMAGE_STORAGE_DIR = temporaryDirectory;
 
     storage = new ImageStorageService();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./phase4.step4.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-    await prisma.$connect();
 
     const property = await prisma.property.create({
       data: {
@@ -169,21 +144,24 @@ describe('Phase 4 Step 4 — Room Images', () => {
           });
         }
 
-        await prisma.$disconnect();
       }
     } finally {
-      if (previousStorageDirectory === undefined) {
-        delete process.env.ROOM_IMAGE_STORAGE_DIR;
-      } else {
-        process.env.ROOM_IMAGE_STORAGE_DIR =
-          previousStorageDirectory;
-      }
+      try {
+        await isolatedDatabase?.dispose();
+      } finally {
+        if (previousStorageDirectory === undefined) {
+          delete process.env.ROOM_IMAGE_STORAGE_DIR;
+        } else {
+          process.env.ROOM_IMAGE_STORAGE_DIR =
+            previousStorageDirectory;
+        }
 
-      if (temporaryDirectory) {
-        await rm(temporaryDirectory, {
-          recursive: true,
-          force: true,
-        });
+        if (temporaryDirectory) {
+          await rm(temporaryDirectory, {
+            recursive: true,
+            force: true,
+          });
+        }
       }
     }
   });

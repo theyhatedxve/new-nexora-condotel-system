@@ -1,5 +1,5 @@
 import type { Prisma } from '../generated/prisma/client.js';
-import { FOLLOW_UP_ACTION, WEEK_MS, dueContactReminder } from '../reservations/booking-reminder.policy.js';
+import { FOLLOW_UP_ACTION, WEEK_MS, dueContactReminder } from '../reservations/policies/booking-reminder.policy.js';
 
 export async function loadContactReminders(
   tx: Prisma.TransactionClient, propertyId: string, now: Date,

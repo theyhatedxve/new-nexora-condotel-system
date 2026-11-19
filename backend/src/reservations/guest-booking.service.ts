@@ -19,14 +19,14 @@ import { hash } from './reservation-crypto.js';
 import {
   GUEST_BOOKING_POLICY_VERSION,
   initialGuestBookingTiming,
-} from './guest-booking-policy.js';
+} from './policies/guest-booking-policy.js';
 import {
   equalGuestDigests,
   guestBookingCredentials,
   guestBookingFingerprint,
   normalizedGuestBooking,
 } from './guest-booking-security.js';
-import { HOLD_DURATION_MS } from './reservation-acquisition-policy.js';
+import { HOLD_DURATION_MS } from './policies/reservation-acquisition-policy.js';
 import { ReservationAcquisitionService } from './reservation-acquisition.service.js';
 import { withInventoryWrite } from './inventory-write.js';
 

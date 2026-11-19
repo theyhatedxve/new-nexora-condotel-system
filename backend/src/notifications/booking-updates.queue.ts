@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { arrivalReminderKey } from '../reservations/booking-reminder.policy.js';
+import { arrivalReminderKey } from '../reservations/policies/booking-reminder.policy.js';
 import type { Prisma } from '../generated/prisma/client.js';
 
 export const PAYMENT_UPDATE_PREFIX = 'PAYMENT_RECORDED:';

@@ -4,7 +4,7 @@ import { ReservationChargesService } from './reservation-charges.service.js';
 import { StayOperationsService } from './stay-operations.service.js';
 import { cancelUnpaidNoShowsInTx } from './reservation-no-show.js';
 import { withInventoryWrite } from './inventory-write.js';
-import { GUEST_BOOKING_POLICY_VERSION } from './guest-booking-policy.js';
+import { GUEST_BOOKING_POLICY_VERSION } from './policies/guest-booking-policy.js';
 import { NO_SHOW_ACTION } from './reservation-no-show.js';
 import 'reflect-metadata';
 

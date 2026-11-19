@@ -1,5 +1,5 @@
-import type { ReminderBooking } from '../reservations/booking-reminder.policy.js';
-import { arrivalReminderDue, arrivalReminderKey } from '../reservations/booking-reminder.policy.js';
+import type { ReminderBooking } from '../reservations/policies/booking-reminder.policy.js';
+import { arrivalReminderDue, arrivalReminderKey } from '../reservations/policies/booking-reminder.policy.js';
 
 type ArrivalBooking = ReminderBooking & {
   id: string; reservationNumber: string; roomType: { name: string };

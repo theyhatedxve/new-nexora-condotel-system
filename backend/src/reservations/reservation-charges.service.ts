@@ -9,12 +9,12 @@ import { validateSync } from 'class-validator';
 import type { Prisma, Reservation } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { STAFF_ROLES } from './guest-booking-staff-policy.js';
+import { STAFF_ROLES } from './policies/guest-booking-staff-policy.js';
 import { withInventoryWrite } from './inventory-write.js';
-import { checkoutGuidance } from './stay-operations.policy.js';
+import { checkoutGuidance } from './policies/stay-operations.policy.js';
 import { StayOperationsService } from './stay-operations.service.js';
-import { requireFullRecordedPayment } from './stay-payment-policy.js';
-import { lateCheckoutCharge } from './late-checkout-charge.policy.js';
+import { requireFullRecordedPayment } from './policies/stay-payment-policy.js';
+import { lateCheckoutCharge } from './policies/late-checkout-charge.policy.js';
 import { ReservationChargeCommandDto } from './dto/reservation-charges.dto.js';
 
 const managers = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'];

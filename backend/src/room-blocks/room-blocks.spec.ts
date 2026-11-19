@@ -1,7 +1,5 @@
 
 import { randomUUID } from 'node:crypto';
-import { existsSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import {
   afterAll,
@@ -18,17 +16,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../generated/prisma/client.js';
+import type { PrismaClient } from '../generated/prisma/client.js';
+
+import {
+  createIsolatedTestDatabase,
+  type IsolatedTestDatabase,
+} from '../../test/helpers/isolated-database.js';
 
 import { RoomBlocksService } from './room-blocks.service.js';
 import { RoomStatusService } from '../rooms/room-status.service.js';
 
-const testDb = resolve(process.cwd(), 'phase4.step6.test.db');
-const devDb = resolve(process.cwd(), 'dev.db');
 const suffix = randomUUID();
 
 let prisma: PrismaClient;
+let isolatedDatabase: IsolatedTestDatabase | undefined;
 let blocks: RoomBlocksService;
 let statuses: RoomStatusService;
 
@@ -55,33 +56,10 @@ function phDate(daysFromNow: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-function verifyIsolation() {
-  if (process.cwd().split(/[\\/]/).at(-1) !== 'backend') {
-    throw new Error('Run tests from the backend directory.');
-  }
-
-  if (!existsSync(testDb)) {
-    throw new Error('Step 6 test database does not exist.');
-  }
-
-  if (
-    existsSync(devDb) &&
-    realpathSync(devDb) === realpathSync(testDb)
-  ) {
-    throw new Error('Refusing to use development database.');
-  }
-}
-
 describe('Phase 4 Step 6 — Room Operations', () => {
   beforeAll(async () => {
-    verifyIsolation();
-
-    const adapter = new PrismaBetterSqlite3({
-      url: 'file:./phase4.step6.test.db',
-    });
-
-    prisma = new PrismaClient({ adapter });
-    await prisma.$connect();
+    isolatedDatabase = await createIsolatedTestDatabase();
+    prisma = isolatedDatabase.prisma;
 
     const property = await prisma.property.create({
       data: {
@@ -91,52 +69,6 @@ describe('Phase 4 Step 6 — Room Operations', () => {
         province: 'Test Province',
       },
     });
-
-
-    it('does not allow editing a canceled block', async () => {
-    await expect(
-        blocks.update(roomId, blockId, {
-        reason: 'Attempt to reactivate canceled block',
-        }),
-    ).rejects.toBeInstanceOf(ConflictException);
-    });
-
-    it('does not commit two simultaneous overlapping blocks', async () => {
-    const startDate = phDate(40);
-    const endDate = phDate(43);
-
-    const requests = await Promise.allSettled([
-        blocks.create(roomId, {
-        startDate,
-        endDate,
-        reason: 'Concurrent repair A',
-        }),
-        blocks.create(roomId, {
-        startDate,
-        endDate,
-        reason: 'Concurrent repair B',
-        }),
-    ]);
-
-    const successful = requests.filter(
-        (result) => result.status === 'fulfilled',
-    );
-
-    expect(successful).toHaveLength(1);
-
-    const stored = await prisma.roomBlock.findMany({
-        where: {
-        roomId,
-        canceledAt: null,
-        startDate: new Date(`${startDate}T00:00:00.000Z`),
-        endDate: new Date(`${endDate}T00:00:00.000Z`),
-        },
-    });
-
-    expect(stored).toHaveLength(1);
-    });
-
-
     propertyId = property.id;
 
     const roomType = await prisma.roomType.create({
@@ -215,7 +147,7 @@ describe('Phase 4 Step 6 — Room Operations', () => {
         });
       }
     } finally {
-      await prisma.$disconnect();
+      await isolatedDatabase?.dispose();
     }
   });
 
@@ -331,6 +263,49 @@ describe('Phase 4 Step 6 — Room Operations', () => {
 
     expect(stored).not.toBeNull();
     expect(stored?.canceledAt).not.toBeNull();
+  });
+
+  it('does not allow editing a canceled block', async () => {
+    await expect(
+      blocks.update(roomId, blockId, {
+        reason: 'Attempt to reactivate canceled block',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('does not commit two simultaneous overlapping blocks', async () => {
+    const startDate = phDate(40);
+    const endDate = phDate(43);
+
+    const requests = await Promise.allSettled([
+      blocks.create(roomId, {
+        startDate,
+        endDate,
+        reason: 'Concurrent repair A',
+      }),
+      blocks.create(roomId, {
+        startDate,
+        endDate,
+        reason: 'Concurrent repair B',
+      }),
+    ]);
+
+    const successful = requests.filter(
+      (result) => result.status === 'fulfilled',
+    );
+
+    expect(successful).toHaveLength(1);
+
+    const stored = await prisma.roomBlock.findMany({
+      where: {
+        roomId,
+        canceledAt: null,
+        startDate: new Date(`${startDate}T00:00:00.000Z`),
+        endDate: new Date(`${endDate}T00:00:00.000Z`),
+      },
+    });
+
+    expect(stored).toHaveLength(1);
   });
 
   it('allows dates previously blocked by a canceled block', async () => {

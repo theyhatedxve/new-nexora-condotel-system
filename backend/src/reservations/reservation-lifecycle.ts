@@ -11,7 +11,7 @@ import type {
 import {
   ARRIVAL_GRACE_MS,
   GUEST_BOOKING_POLICY_VERSION,
-} from './guest-booking-policy.js';
+} from './policies/guest-booking-policy.js';
 
 const transitions: Record<
   ReservationStatus,

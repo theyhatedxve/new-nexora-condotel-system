@@ -8,10 +8,10 @@ import { validateSync } from 'class-validator';
 import type { Prisma } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { STAFF_ROLES } from './guest-booking-staff-policy.js';
+import { STAFF_ROLES } from './policies/guest-booking-staff-policy.js';
 import { withInventoryWrite } from './inventory-write.js';
 import { StayOperationsService } from './stay-operations.service.js';
-import { depositBalance, type DepositTotals } from './deposit-ledger.policy.js';
+import { depositBalance, type DepositTotals } from './policies/deposit-ledger.policy.js';
 import { ReservationDepositCommandDto } from './dto/reservation-deposits.dto.js';
 
 const managers = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'];

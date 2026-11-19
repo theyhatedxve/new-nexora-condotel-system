@@ -1,4 +1,4 @@
-import type { Reservation } from '../generated/prisma/client.js';
+import type { Reservation } from '../../generated/prisma/client.js';
 
 type StayClock = Pick<Reservation,
   'status' | 'rentalType' | 'inventoryStartAt' | 'inventoryEndAt' |

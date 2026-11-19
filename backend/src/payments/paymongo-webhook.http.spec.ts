@@ -22,7 +22,7 @@ import { todayInPhilippines } from '../common/validation/philippine-date-range.j
 import { ReservationsModule } from '../reservations/reservations.module.js';
 
 import { PaymongoWebhookService } from './paymongo-webhook.service.js';
-import { requireFullRecordedPayment } from '../reservations/stay-payment-policy.js';
+import { requireFullRecordedPayment } from '../reservations/policies/stay-payment-policy.js';
 
 const webhookSecret = 'isolated-webhook-signing-secret-not-real';
 const secret = 'isolated-payment-summary-test-secret-at-least-32-bytes';

@@ -44,7 +44,7 @@ import {
 
 import {
   GUEST_BOOKING_POLICY_VERSION,
-} from './guest-booking-policy.js';
+} from './policies/guest-booking-policy.js';
 
 import {
   withInventoryWrite,

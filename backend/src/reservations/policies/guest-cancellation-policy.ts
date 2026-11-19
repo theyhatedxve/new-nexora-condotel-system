@@ -1,5 +1,5 @@
-import type { Reservation } from '../generated/prisma/client.js';
-import { stayHasEnded } from '../common/inventory/reservation-window.js';
+import type { Reservation } from '../../generated/prisma/client.js';
+import { stayHasEnded } from '../../common/inventory/reservation-window.js';
 import { GUEST_BOOKING_POLICY_VERSION } from './guest-booking-policy.js';
 
 export const GUEST_CANCELLATION_WINDOW_MS = 5 * 60 * 60 * 1000;

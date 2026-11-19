@@ -5,7 +5,7 @@ import {
   CONFIRM_ACTION,
   REJECT_ACTION,
   type StaffAction,
-} from './guest-booking-staff-policy.js';
+} from './policies/guest-booking-staff-policy.js';
 import { receipt } from './guest-booking-staff-receipt.js';
 import { enqueueBookingConfirmationInTx } from '../notifications/booking-confirmation.queue.js';
 import {
@@ -27,7 +27,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import {
   GUEST_BOOKING_POLICY_VERSION,
   payAtPropertyDeadlines,
-} from './guest-booking-policy.js';
+} from './policies/guest-booking-policy.js';
 
 import { assertInventoryCommitments, withInventoryWrite } from './inventory-write.js';
 

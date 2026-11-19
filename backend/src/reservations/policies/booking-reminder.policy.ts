@@ -1,4 +1,4 @@
-import type { Reservation } from '../generated/prisma/client.js';
+import type { Reservation } from '../../generated/prisma/client.js';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 export const WEEK_MS = 7 * DAY_MS;

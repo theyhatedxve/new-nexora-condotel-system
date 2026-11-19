@@ -1,5 +1,5 @@
 import { PaymongoCheckoutExpirationAdapter } from './paymongo-checkout-expiration.adapter.js';
-import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/guest-booking-policy.js';
+import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/policies/guest-booking-policy.js';
 import 'reflect-metadata';
 import { CheckoutService } from './checkout.service.js';
 import { PaymongoAdapter } from './paymongo.adapter.js';

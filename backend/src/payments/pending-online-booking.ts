@@ -14,7 +14,7 @@ import { stayHasEnded } from '../common/inventory/reservation-window.js';
 
 import {
   GUEST_BOOKING_POLICY_VERSION,
-} from '../reservations/guest-booking-policy.js';
+} from '../reservations/policies/guest-booking-policy.js';
 
 import {
   assertInventoryCommitments,

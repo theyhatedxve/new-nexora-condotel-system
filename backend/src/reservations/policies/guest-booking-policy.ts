@@ -4,11 +4,11 @@ import {
 
 import {
   parsePhilippineDate,
-} from '../common/validation/philippine-date-range.js';
+} from '../../common/validation/philippine-date-range.js';
 
 import type {
   GuestPaymentMethod,
-} from './dto/create-guest-booking.dto.js';
+} from '../dto/create-guest-booking.dto.js';
 
 export const GUEST_BOOKING_POLICY_VERSION =
   'guest-booking-v2';

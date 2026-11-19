@@ -24,8 +24,8 @@ import {
   financialMetrics,
 } from './dashboard-metrics.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
-import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/guest-booking-policy.js';
-import { STAFF_ROLES } from '../reservations/guest-booking-staff-policy.js';
+import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/policies/guest-booking-policy.js';
+import { STAFF_ROLES } from '../reservations/policies/guest-booking-staff-policy.js';
 
 @Injectable()
 export class DashboardService {

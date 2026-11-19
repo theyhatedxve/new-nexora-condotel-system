@@ -10,10 +10,10 @@ import type { Prisma } from '../generated/prisma/client.js';
 import type { AuthenticatedUser } from '../common/ownership/ownership.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { withInventoryWrite } from './inventory-write.js';
-import { CONTACT_ACTION, STAFF_ROLES } from './guest-booking-staff-policy.js';
+import { CONTACT_ACTION, STAFF_ROLES } from './policies/guest-booking-staff-policy.js';
 import { ReservationContactDto } from './dto/reservation-contact.dto.js';
 
-import { FOLLOW_UP_ACTION } from './booking-reminder.policy.js';
+import { FOLLOW_UP_ACTION } from './policies/booking-reminder.policy.js';
 const contactSelect = {
   id: true, actorUserId: true, detailsJson: true, createdAt: true,
   action: true, entityType: true, entityId: true,

@@ -41,7 +41,7 @@ import {
 
 import {
   requireFullRecordedPayment,
-} from './stay-payment-policy.js';
+} from './policies/stay-payment-policy.js';
 
 @Injectable()
 export class ReservationStayService {

@@ -15,7 +15,7 @@ import {
 
 import { PaymentSummaryService } from '../payments/payment-summary.service.js';
 
-import { guestCancellationPolicy } from './guest-cancellation-policy.js';
+import { guestCancellationPolicy } from './policies/guest-cancellation-policy.js';
 
 import { GuestReservationListDto } from './dto/guest-reservation-list.dto.js';
 

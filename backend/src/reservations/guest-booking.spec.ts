@@ -4,7 +4,7 @@ import { PaymongoReconciliationAdapter } from '../payments/paymongo-reconciliati
 import { RefundsService } from '../payments/refunds.service.js';
 import { PaymongoRefundAdapter } from '../payments/paymongo-refund.adapter.js';
 import { FINANCIAL_EXCEPTION_EVENT } from '../payments/financial-exceptions.js';
-import { requireFullRecordedPayment } from './stay-payment-policy.js';
+import { requireFullRecordedPayment } from './policies/stay-payment-policy.js';
 import { AvailabilityService } from '../availability/availability.service.js';
 import {
   randomBytes,

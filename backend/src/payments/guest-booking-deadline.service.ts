@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/guest-booking-policy.js';
+import { GUEST_BOOKING_POLICY_VERSION } from '../reservations/policies/guest-booking-policy.js';
 import { withInventoryWrite } from '../reservations/inventory-write.js';
 import { expirePendingHoldsInTx } from '../reservations/reservation-lifecycle.js';
 import { hasPaymentReview, paymentEvidenceSelect } from './payment-evidence.js';

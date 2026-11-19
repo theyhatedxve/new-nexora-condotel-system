@@ -9,10 +9,10 @@ import type { AuthenticatedUser } from '../common/ownership/ownership.service.js
 import { PrismaService } from '../prisma/prisma.service.js';
 import { InventorySafetyService } from '../common/inventory/inventory-safety.service.js';
 import { blockWindow, calendarMarker, reservationWindow } from '../common/inventory/reservation-window.js';
-import { STAFF_ROLES } from './guest-booking-staff-policy.js';
+import { STAFF_ROLES } from './policies/guest-booking-staff-policy.js';
 import { inventoryReservationWhere } from './inventory-reservation.js';
 import { assertAllocatable, connectedStays, type Stay } from './room-allocation.js';
-import { checkoutGuidance } from './stay-operations.policy.js';
+import { checkoutGuidance } from './policies/stay-operations.policy.js';
 
 @Injectable()
 export class StayOperationsService {

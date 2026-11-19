@@ -1,4 +1,4 @@
-import { GUEST_BOOKING_POLICY_VERSION } from './guest-booking-policy.js';
+import { GUEST_BOOKING_POLICY_VERSION } from './policies/guest-booking-policy.js';
 import 'reflect-metadata';
 
 import { randomUUID } from 'node:crypto';
@@ -88,7 +88,7 @@ import {
 
 import {
   UNPAID_CANCELLATION_POLICY,
-} from './cancellation-policy.js';
+} from './policies/cancellation-policy.js';
 
 const secret =
   'isolated-reservation-cancellation-test-secret-at-least-32-bytes';

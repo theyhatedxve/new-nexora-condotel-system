@@ -1,6 +1,6 @@
 import { InternalServerErrorException } from '@nestjs/common';
 import type { PrismaService } from '../prisma/prisma.service.js';
-import { DAY_MS, arrivalReminderDue } from '../reservations/booking-reminder.policy.js';
+import { DAY_MS, arrivalReminderDue } from '../reservations/policies/booking-reminder.policy.js';
 import { enqueueArrivalReminderInTx } from './booking-updates.queue.js';
 
 export async function enqueueDueArrivalReminders(

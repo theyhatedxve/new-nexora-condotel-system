@@ -1,4 +1,4 @@
-import { guestCancellationPolicy } from './guest-cancellation-policy.js';
+import { guestCancellationPolicy } from './policies/guest-cancellation-policy.js';
 import { enqueueBookingCancellationInTx } from '../notifications/booking-updates.queue.js';
 import {
   BadRequestException,
@@ -28,7 +28,7 @@ import {
 
 import {
   UNPAID_CANCELLATION_POLICY,
-} from './cancellation-policy.js';
+} from './policies/cancellation-policy.js';
 
 @Injectable()
 export class ReservationCancellationService {
