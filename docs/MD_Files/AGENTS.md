@@ -8,6 +8,67 @@
 
 > This proposed file is a condensed replacement guide. The existing 2026-11-11 `AGENTS.md` contains detailed historical implementation records, dependency inventories, test evidence, and screen-level checkpoints. Preserve or archive those records before adopting a replacement. This draft does not verify live repository or database state.
 
+## Cleanup and organization checkpoint — 2026-11-19
+
+**Status:** Completed, owner-confirmed.
+
+This checkpoint supersedes older cleanup and database-recovery tasks.
+
+### Completed scope
+
+- Removed 22 unused frontend files and two empty database files.
+- Standardized development database settings on backend/dev.db.
+- Set Guest Vite to port 5175 and Admin Vite to port 5176, using strictPort.
+- Consolidated allowed frontend origins.
+- Validated development seed targets before Prisma connection creation.
+- Cleaned backend startup/module/controller formatting.
+- Moved charge and deposit DTOs into reservations/dto/.
+- Grouped 10 reservation policies and six matching tests in policies/.
+- Grouped 12 PayMongo integration/test files in payments/paymongo/.
+- Updated affected imports while preserving business-rule implementations.
+- Converted five room-related suites to fresh isolated databases.
+- Corrected rental-rate cleanup and image-environment restoration.
+- Moved two room-block tests out of beforeAll without changing assertions.
+- Archived old databases, schema snapshots, and expanded recovery copies.
+- Preserved the active database, demo database, uploaded images, and migrations.
+
+The bottom profile menu opens Sign out above the profile.
+The notification bell opens authorized operational queues without page scrolling.
+
+### Evidence
+
+Source inspection confirmed the new folder locations and retained databases.
+Static comparison confirmed preservation of the 58 existing test bodies
+in the five corrected suites.
+
+The last supplied full-suite output reported 954 passing tests and one
+reservation-journey timeout. The owner subsequently confirmed completion.
+Exact successful rerun totals and the command used were not supplied.
+
+Do not describe owner confirmation as independently executed verification.
+
+### Database and recovery boundaries
+
+- Development database: backend/dev.db.
+- Demonstration database: backend/nexora.demo.db.
+- Local cleanup archives: backups/archive/.
+- Policy and PayMongo recovery ZIPs remain under backups/.
+- All 14 Prisma migrations remain preserved and required.
+- Tests must use isolated databases.
+- Database reset, seed, migration consolidation, and archive restoration
+  require their own explicit scope.
+
+### Remaining item and continuation
+
+The separate legacy backend/test/app.e2e-spec.ts still expects Hello World!
+and does not override the real Prisma provider with an isolated database.
+Repair and verify it before presenting test:e2e as a supported acceptance check.
+
+NFC functionality remains postponed.
+Production deployment remains deferred.
+
+The owner selects the next approved task.
+
 ## Admin UI redesign closure — 2026-11-19
 
 **Status:** Completed and accepted, owner-confirmed.

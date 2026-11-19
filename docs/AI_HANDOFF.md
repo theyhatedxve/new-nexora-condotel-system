@@ -1,5 +1,45 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
+## Cleanup handoff — 2026-11-19
+
+**Status:** Cleanup and organization completed, owner-confirmed.
+
+Reservation policies are in backend/src/reservations/policies/.
+PayMongo integration files are in backend/src/payments/paymongo/.
+Charge and deposit DTOs are in backend/src/reservations/dto/.
+
+Five room-related test suites use the existing isolated-database helper.
+Their 58 test bodies were preserved. Cleanup and nested test registration
+were corrected.
+
+The backend uses backend/dev.db.
+backend/nexora.demo.db remains the optional synthetic demonstration database.
+Both database settings must point to the intended target.
+
+Old databases and expanded recovery folders were archived.
+Recovery ZIPs remain under backups/ and backups/archive/.
+All 14 migrations remain required and preserved.
+
+### Verification record
+
+The latest supplied full-suite output showed 954 passing tests and one
+reservation-journey timeout. The owner later confirmed completion.
+No successful rerun output or exact final totals were supplied.
+
+Do not rerun tests, lint, builds, servers, seeds, or database operations
+without the applicable owner execution authorization.
+
+### Next scoped task
+
+Review and repair backend/test/app.e2e-spec.ts before treating test:e2e
+as finalized. It retains the Hello World! template assertion and uses
+AppModule without an isolated Prisma override.
+
+NFC remains postponed. Production deployment remains deferred.
+Consult [the current checkpoint](MD_Files/AGENTS.md) before further changes.
+
+Earlier handoff checkpoints below remain historical context.
+
 ## Admin UI handoff update — 2026-11-19
 
 **Status:** Admin UI redesign closed, owner-confirmed.
@@ -105,7 +145,7 @@ exists. Recovery instructions verify that column and migration history before
 reconciling its record and deploying the remaining migrations. Recovery output
 is pending. The owner runs migrations, tests, lint, builds, and browser checks.
 Next, recover the five Phase 4 test databases, rerun backend checks, and obtain
-browser acceptance. Use [AGENTS.md](AGENTS.md) for exact names and status.
+browser acceptance. Use [AGENTS.md](MD_Files/AGENTS.md) for exact names and status.
 
 ## Historical continuation checkpoint — 2026-11-14
 
@@ -127,7 +167,7 @@ Use the current checkpoint in AGENTS.md. Earlier transfer records and
 accountless implementation descriptions below are historical.
 
 Updated 2026-11-03. This is a continuation of implemented work, not a request to
-restart the redesign. Read [AGENTS.md](AGENTS.md), especially section J, and the
+restart the redesign. Read [AGENTS.md](MD_Files/AGENTS.md), especially section J, and the
 relevant guides before proposing another change. This document is suitable for
 uploading to another AI account; it contains no credentials or guest records.
 
@@ -140,7 +180,7 @@ has `styles/tokens.css`. Backend services use feature-local policy, projection,
 validation, refund-settlement, and reconciliation helpers while retaining their
 authorization and transaction boundaries.
 
-Use [AGENTS.md section K](AGENTS.md#k-responsibility-separation-checkpoint-2026-11-10)
+Use [AGENTS.md section K](MD_Files/AGENTS.md)
 and the [current directory updates](DIRECTORY_STRUCTURE.md#21-current-refactor-directory-updates-2026-11-10)
 for these file locations and verification records. This addition records source
 organization only; it does not establish new browser, backend runtime, or
@@ -152,7 +192,7 @@ provider acceptance, or change the historical instructions below.
 - Follow [NEXORA Architecture v2.1](NEXORA_ARCHITECTURE_V2.1.md),
   [coding patterns](CODING_PATTERNS.md), [principles](CODING_PRINCIPLES.md),
   [development rules](DEVELOPMENT_RULES.md), [security](SECURITY.md) and
-  [design guidelines](design_guidelines.md). The owner's revised booking policy
+  [design guidelines](MD_Files/design_guidelines.md). The owner's revised booking policy
   below supersedes the earlier Pay at Property auto-confirmation policy.
 - Earlier conversation reached owner-reported Step 10.5 acceptance and a request
   to continue Step 11.2 before cleanup/redesign. NFC was postponed. This is

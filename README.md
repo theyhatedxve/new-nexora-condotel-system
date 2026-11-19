@@ -1,13 +1,50 @@
 # NEXORA
 
-## Current development checkpoint — 2026-11-15
+## Current project checkpoint — 2026-11-19
+
+**Status:** Local prototype and cleanup accepted, owner-confirmed.
+
+Completed work includes the Admin UI redesign, guest account booking,
+guest-phone encryption, navigation corrections, unused-file cleanup,
+database configuration standardization, and backend file organization.
+
+| Component | Local address |
+|---|---|
+| Backend API | http://localhost:3000/api |
+| Guest website | http://localhost:5175 |
+| Admin website | http://localhost:5176 |
+
+The active development database is backend/dev.db.
+backend/nexora.demo.db remains available for synthetic demonstrations.
+
+Both DATABASE_URL and NEXORA_RUNTIME_DATABASE_URL must point to the
+intended database. Tests use isolated databases.
+
+Reservation policies are grouped under backend/src/reservations/policies/.
+PayMongo integration files are grouped under backend/src/payments/paymongo/.
+
+Old databases and expanded recovery copies were archived.
+All 14 Prisma migrations remain preserved and are still required.
+
+Completion is owner-confirmed. Final successful rerun output and exact
+test totals were not supplied after the last reported timeout.
+
+The separate legacy test:e2e fixture remains unfinished.
+NFC functionality is postponed. Production deployment is deferred.
+
+Start with [Local Prototype Setup](docs/LOCAL_PROTOTYPE_SETUP.md).
+See [the current checkpoint](docs/MD_Files/AGENTS.md) for continuation rules.
+
+Older checkpoints below are historical and do not define current pending work.
+
+## Historical checkpoint — 2026-11-15
 
 Guest Account Booking Steps 1-4 and Step 5 source cleanup are applied. Website
 booking requires verified guest login and account ownership. Admin UI redesign
 is owner-confirmed complete. Step 5 is in progress during test database recovery.
 The latest owner run reported 33 failed tests, 583 passed, and 53 skipped.
 Backend build passed. The final lint correction and database recovery await
-owner rechecks. See [current status and evidence](docs/AGENTS.md).
+owner rechecks. See [current status and evidence](docs/MD_Files/AGENTS.md).
 
 **Condotel Management System**
 
@@ -65,7 +102,7 @@ NEXORA/
 └── README.md         # System overview
 ```
 
-## Development Status
+## Historical development status — 2026-11-15
 
 | Phase | Owner-confirmed status |
 |---|---|
@@ -80,7 +117,7 @@ source cleanup are applied. Step 5 remains in progress during isolated database
 recovery, owner regression checks, and browser acceptance. These checks apply to
 the current upgrade and do not resume the paused Phase 11 program.
 
-See [AGENTS.md](docs/AGENTS.md) for current source, owner results, and recovery.
+See [AGENTS.md](docs/MD_Files/AGENTS.md) for current source, owner results, and recovery.
 
 ## Project Scope
 
@@ -97,4 +134,4 @@ Authenticated guests can prepare and resume PayMongo test checkout from owned re
 
 ## Verified test-mode payment recording
 
-Step 7.3 adds signed PayMongo test webhook processing. Guest pages read protected backend payment summaries; browser returns alone never establish payment success. Reception still completes check-in. See docs/AGENTS.md for verification results and pending owner/provider acceptance.
+Step 7.3 adds signed PayMongo test webhook processing. Guest pages read protected backend payment summaries; browser returns alone never establish payment success. Reception still completes check-in. See docs/MD_Files/AGENTS.md for verification results and pending owner/provider acceptance.

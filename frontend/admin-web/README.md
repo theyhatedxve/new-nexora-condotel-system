@@ -1,11 +1,30 @@
 # NEXORA Admin Web
 
-## Current source checkpoint — 2026-11-15
+## Current admin checkpoint — 2026-11-19
+
+**Status:** Admin redesign and interaction corrections accepted, owner-confirmed.
+
+The staff interface includes the redesigned screens, an upward-opening
+bottom profile panel, and a notification panel backed by authorized queues.
+Opening the notification bell does not navigate to guest reminders.
+
+Unused template styles, assets, and retired components were removed.
+
+Vite defaults to port 5176 with strictPort enabled.
+The backend API is http://localhost:3000/api.
+
+Run npm.cmd run dev from this directory.
+The owner runs npm.cmd run lint and npm.cmd run build.
+
+See [the current checkpoint](../../docs/MD_Files/AGENTS.md).
+Earlier checkpoint and framework-template material below is historical.
+
+## Historical checkpoint — 2026-11-15
 
 The staff app includes the owner-completed admin redesign, Users & Roles,
 staff setup, and settings with the retired booking-link field removed.
 Earlier owner lint/build checks passed. Browser acceptance remains pending.
-See [AGENTS.md](../../docs/AGENTS.md) for current verification and recovery.
+See [AGENTS.md](../../docs/MD_Files/AGENTS.md) for current verification and recovery.
 
 ## Local development
 
@@ -27,7 +46,7 @@ npm.cmd run build
 
 NEXORA uses this React JavaScript/JSX application with Vite, React Router,
 Axios, plain CSS, and Lucide React. The [master architecture](../../docs/NEXORA_ARCHITECTURE_V2.1.md)
-and [development reference](../../docs/AGENTS.md) govern the project. Remaining
+and [development reference](../../docs/MD_Files/AGENTS.md) govern the project. Remaining
 framework-template notes are background, not approval to change dependencies.
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

@@ -1,13 +1,49 @@
 # NEXORA Backend
 
-## Current source and verification — 2026-11-15
+## Current backend checkpoint — 2026-11-19
+
+**Status:** Cleanup and regression follow-up completed, owner-confirmed.
+
+The backend uses NestJS, TypeScript, Prisma, and SQLite for the local prototype.
+
+- Development database: backend/dev.db.
+- Optional synthetic demonstration database: backend/nexora.demo.db.
+- Reservation DTOs: src/reservations/dto/.
+- Reservation policies and matching tests: src/reservations/policies/.
+- PayMongo integration and matching tests: src/payments/paymongo/.
+- Shared isolated test-database helper: test/helpers/isolated-database.ts.
+
+Both database environment settings must identify the intended database.
+Development seed validation checks them before creating a Prisma connection.
+Seeding remains an explicit operation and is not required for startup.
+
+All 14 migrations remain required for schema setup and isolated tests.
+Old Phase 4 database files are no longer prerequisites for the corrected suites.
+
+The five room-related suites now use fresh temporary databases.
+Their existing assertions were preserved, cleanup was corrected, and two
+room-block tests were moved out of beforeAll.
+
+The owner reported completion after the reservation-journey timeout follow-up.
+Exact successful rerun results were not provided.
+
+npm.cmd run test:e2e selects a separate legacy fixture that still expects
+Hello World! and uses AppModule without an isolated Prisma override.
+That fixture is not finalized and is separate from the accepted HTTP suites.
+
+Use [Local Prototype Setup](../docs/LOCAL_PROTOTYPE_SETUP.md) for startup.
+See [the current checkpoint](../docs/MD_Files/AGENTS.md).
+
+Older verification records and template material below are historical.
+
+## Historical checkpoint — 2026-11-15
 
 NestJS/TypeScript provides shared guest and staff APIs. Website bookings use
 verified GUEST accounts and account ownership. Guest account Step 5 cleanup,
 authenticated test migration, and regression corrections are applied.
 The latest owner run reported 33 failed tests, 583 passed, and 53 skipped.
 Backend build passed. The final role-test lint correction and isolated test
-database recovery await rechecks. See [AGENTS.md](../docs/AGENTS.md).
+database recovery await rechecks. See [AGENTS.md](../docs/MD_Files/AGENTS.md).
 
 ## Local development
 
@@ -15,6 +51,7 @@ Run from D:\Web-JSX\NEXORA\backend in its own PowerShell terminal.
 
 ```powershell
 $env:NODE_ENV = 'development'
+$env:DATABASE_URL = 'file:D:/Web-JSX/NEXORA/backend/dev.db'
 $env:NEXORA_RUNTIME_DATABASE_URL = 'file:D:/Web-JSX/NEXORA/backend/dev.db'
 $env:NEXORA_BOOKING_DEADLINE_WORKER_ENABLED = 'false'
 $env:AUTH_ALLOWED_ORIGINS = 'http://localhost:5175,http://localhost:5176'
@@ -23,8 +60,11 @@ npm.cmd run start:dev
 ```
 
 Prisma CLI migrations use DATABASE_URL through prisma7.config.ts. Runtime Prisma
-uses NEXORA_RUNTIME_DATABASE_URL. The owner selects each isolated test database
-explicitly for recovery and runs checks after its migrations succeed.
+uses NEXORA_RUNTIME_DATABASE_URL.
+
+Current test suites use their isolated database setup.
+Do not recreate archived database files merely to run the corrected suites.
+Never point test fixtures at backend/dev.db.
 
 ```powershell
 npm.cmd run test
@@ -38,7 +78,7 @@ npm.cmd run build
 > framework-template README is background, not the project acceptance record.
 > Use the [master architecture](../docs/NEXORA_ARCHITECTURE_V2.1.md),
 > [current commands and test limitations](../docs/IMPLEMENTATION_GUIDE.md#15-command-guidance),
-> and [dependency inventory](../docs/AGENTS.md). Installations and deployment
+> and [dependency inventory](../docs/MD_Files/AGENTS.md). Installations and deployment
 > require their approved phase; the legacy end-to-end fixture is not a release pass.
 
 <p align="center">
@@ -105,7 +145,7 @@ $ npm run test:cov
 NEXORA hosting, production configuration, and monitoring tools remain TBD.
 The original template recommendations to install Mau and NestJS Observe were
 not approved NEXORA requirements and have been removed. Follow the
-[CI/CD roadmap](../docs/CI_CD_ROADMAP.MD) during the approved deployment phase.
+[CI/CD roadmap](../docs/MD_Files/CI_CD_ROADMAP.MD) during the approved deployment phase.
 
 ## Resources
 

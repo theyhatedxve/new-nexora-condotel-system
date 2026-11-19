@@ -1,6 +1,25 @@
 # 1. NEXORA
 
-## Current project checkpoint — 2026-11-18
+## Current cleanup checkpoint — 2026-11-19
+
+Cleanup and backend organization are completed, owner-confirmed.
+
+The active database remains backend/dev.db.
+The optional demonstration database remains backend/nexora.demo.db.
+Old databases and expanded recovery copies are archived.
+All 14 migrations are preserved.
+
+Reservation policies and PayMongo integrations now have dedicated subfolders.
+Exact successful final test totals were not supplied.
+
+Use [AGENTS.md](MD_Files/AGENTS.md) for current status,
+[DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md) for current paths,
+and [AI_HANDOFF.md](AI_HANDOFF.md) for continuation.
+
+The separate legacy test:e2e fixture still requires correction.
+NFC is postponed. Production deployment is deferred.
+
+## Previous project checkpoint — 2026-11-18
 
 The owner confirmed completion of Phase 11 verification and acceptance of
 the Phase 12 local prototype demonstration.
@@ -149,7 +168,7 @@ development; PostgreSQL is the recommended production target and requires
 separate migration and deployment verification. Test payment integration is
 installed. Hardware integration remains postponed.
 
-Technical references: [API contracts](API.md), [system design](SYSTEM_DESIGN.md),
+Technical references: [API contracts](MD_Files/API.md), [system design](MD_Files/SYSTEM_DESIGN.md),
 [database architecture](DATABASE_SCHEMA.md), and [security](SECURITY.md).
 
 ## 11. System Vision

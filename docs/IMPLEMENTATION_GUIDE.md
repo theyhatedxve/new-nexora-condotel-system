@@ -1,5 +1,25 @@
 # NEXORA — Implementation Guide
 
+## Cleanup continuation checkpoint — 2026-11-19
+
+Cleanup, backend organization, and regression follow-up are owner-confirmed.
+
+Current locations:
+
+- Reservation policies/tests: backend/src/reservations/policies/.
+- PayMongo integration/tests: backend/src/payments/paymongo/.
+- Charge/deposit DTOs: backend/src/reservations/dto/.
+
+Old named test databases were archived.
+The corrected suites create isolated databases from the retained migrations.
+Never substitute backend/dev.db for a test database.
+
+Exact successful final regression totals were not supplied.
+See [the current checkpoint](MD_Files/AGENTS.md).
+
+The separate legacy test:e2e fixture remains unfinished.
+Earlier checkpoints below are historical where superseded by this section.
+
 ## Current continuation checkpoint — 2026-11-18
 
 The owner confirmed completion of Phase 11 verification, database recovery,
@@ -28,7 +48,7 @@ acceptance. Source review found no actionable defects in the applied batches.
 The latest owner regression result is 33 failures, 583 passes, and 53 skips.
 Backend build passed. The final lint correction and database recovery await
 owner output. Complete those checks before marking Step 5 accepted.
-See [AGENTS.md](AGENTS.md) for the database recovery checkpoint.
+See [AGENTS.md](MD_Files/AGENTS.md) for the database recovery checkpoint.
 
 ## 1. Working Method
 
@@ -91,7 +111,7 @@ Before continuing development:
 
 - Read applicable AGENTS.md instructions.
 - Read the authoritative [docs/NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md).
-- Reconcile source deviations through [owner review](TECHNICAL_PLAN.md#11-architecture-and-implementation-review-items), not by altering the approved baseline.
+- Reconcile source deviations through [owner review](MD_Files/TECHNICAL_PLAN.md), not by altering the approved baseline.
 - Check the existing frontend folder structure.
 - Inspect package scripts and locked versions.
 - Inspect the Prisma schema and configuration.
@@ -156,7 +176,7 @@ Schema approval does not authorize a new database migration.
 The implemented contracts include ACTIVE-only JWT sessions, rotating refresh
 families, cookie clearing, explicit roles, reusable record ownership, optional
 PENDING guest registration, and single-use 30-minute email verification.
-[API.md](API.md) defines endpoint details; [SECURITY.md](SECURITY.md) describes
+[API.md](MD_Files/API.md) defines endpoint details; [SECURITY.md](SECURITY.md) describes
 session behavior, acceptance evidence, and production-hardening concerns.
 
 The owner's final 23/23 checks include real HTTP integration and full Vitest
@@ -188,8 +208,8 @@ Implementation and test sources were inspected; no fresh tests/build ran here.
   snapshots and concurrent assignment safety.
 
 Detailed files, rules, and test targets are maintained in
-[AGENTS.md](AGENTS.md#c-completed-project-phases); exact endpoints and DTOs in
-[API.md](API.md#5-implemented-room-management-and-availability).
+[AGENTS.md](MD_Files/AGENTS.md); exact endpoints and DTOs in
+[API.md](MD_Files/API.md).
 Inventory eligibility does not reserve a room or expose public booking/availability.
 Full room-type allocation, hold expiry/acquisition, and connected frontend forms
 remain future integration work. Phase 5 Steps 4–5 frontend work remains in progress and Steps 6–7 remain pending;
@@ -406,6 +426,42 @@ Pass condition:
 The deployment passes functional, security, integration, and recovery checks.
 
 ## 15. Command Guidance
+
+### Current command guidance — 2026-11-19
+
+Run owner-authorized backend checks from D:\Web-JSX\NEXORA\backend.
+
+```powershell
+npm.cmd run lint
+npm.cmd run build
+npm.cmd run test -- src/reservations/policies
+npm.cmd run test -- src/payments/paymongo
+npm.cmd run test
+```
+
+Tests create or use their isolated synthetic databases.
+The five corrected room-related suites use
+test/helpers/isolated-database.ts, which applies the retained migration SQL.
+
+The old phase4.step*.test.db and step*.test.db files are no longer current
+setup prerequisites. Do not recreate them based on the historical table below.
+
+Builds write generated output. Tests write synthetic fixtures.
+These commands do not authorize seeding, resetting, or migrating dev.db.
+
+The separate test:e2e script selects a legacy fixture that still expects
+Hello World! and uses AppModule without an isolated Prisma override.
+It requires a separate correction before acceptance.
+
+If a full-suite timeout recurs, investigate the affected test in isolation.
+The previously suggested --maxWorkers=2 flag was a diagnostic option,
+not an adopted permanent configuration change.
+
+### Historical command guidance
+
+The following original commands, database table, and verification notes
+describe earlier checkpoints. Their old database prerequisites are superseded
+by the current guidance above.
 
 Existing scripts were inspected in backend/package.json. Run from
 D:\Web-JSX\NEXORA\backend only after authorizing the relevant checks:

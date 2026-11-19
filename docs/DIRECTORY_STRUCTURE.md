@@ -1,6 +1,53 @@
 # NEXORA — System Directory Structure
 
-## Latest source-file checkpoint — 2026-11-15
+## Current organization checkpoint — 2026-11-19
+
+**Status:** Cleanup completed, owner-confirmed; paths source-inspected.
+
+```text
+NEXORA/
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── migrations/             # 14 retained migrations
+│   ├── src/
+│   │   ├── reservations/
+│   │   │   ├── dto/
+│   │   │   └── policies/
+│   │   ├── payments/
+│   │   │   ├── dto/
+│   │   │   └── paymongo/
+│   │   └── other existing feature modules
+│   ├── test/
+│   │   └── helpers/isolated-database.ts
+│   ├── dev.db                     # Active development data
+│   └── nexora.demo.db             # Optional synthetic demonstration
+├── frontend/
+│   ├── admin-web/                 # Port 5176
+│   └── guest-web/                 # Port 5175
+├── backups/
+│   ├── archive/                   # Final cleanup recovery ZIP
+│   └── policy/PayMongo recovery ZIPs
+├── storage/room-images/
+└── docs/
+```
+
+This is a focused current tree, not an exhaustive file inventory.
+
+Both frontends retain their assets, auth, components, constants, hooks,
+layouts, pages, services, styles, and utils folders.
+
+The backend retains feature modules, shared helpers, generated Prisma code,
+and the existing module/service boundaries.
+
+Old test database files, schema snapshots, and expanded historical backups
+were archived. Archive ZIPs are recovery artifacts, not application source.
+
+Earlier dated inventories, migration counts, paths, and pending-work statements
+below are historical. Use this checkpoint and
+[AGENTS.md](MD_Files/AGENTS.md) for the current organization.
+
+## Historical source-file checkpoint — 2026-11-15
 
 The current correction batch touches guest-booking-staff.http.spec.ts,
 guest-booking.http.spec.ts, guest-booking.service.ts, guest-booking.spec.ts,
@@ -8,7 +55,7 @@ reservation-acquisition.spec.ts, reservation-lifecycle.http.spec.ts,
 reservation-cancellation.http.spec.ts, and common/guards/roles.guard.spec.ts.
 The removed booking-access service/email/security/configuration/DTO files have
 no active source callers. Checkout uses authenticated users. Schema and
-migration files were retained. See [AGENTS.md](AGENTS.md) for owner-run results.
+migration files were retained. See [AGENTS.md](MD_Files/AGENTS.md) for owner-run results.
 
 ## Guest booking cleanup checkpoint — 2026-11-14
 
@@ -42,13 +89,13 @@ documentation. Paths are relative to the `NEXORA/` repository root at
 The selected source/documentation structure below was inspected on 2026-11-01. Runtime artifacts are
 identified without exposing their contents. File presence does not establish
 that a feature has been tested or deployed. The [approved architecture v2.1](NEXORA_ARCHITECTURE_V2.1.md)
-defines system scope; the [development reference](AGENTS.md) records current scope and approval gates.
+defines system scope; the [development reference](MD_Files/AGENTS.md) records current scope and approval gates.
 The [system overview](README.md) describes the product without development logs.
 
 The owner-confirmed roadmap records Phases 1-8 and 10 complete. Guest Account
 Booking Step 5 source cleanup is applied. Current schema source has 29 models
 and eight migrations. Isolated test database recovery and owner verification
-are pending. See [AGENTS.md](AGENTS.md) for the exact checkpoint.
+are pending. See [AGENTS.md](MD_Files/AGENTS.md) for the exact checkpoint.
 
 ## 2. Earlier Directory Snapshot (2026-11-01)
 
@@ -443,32 +490,32 @@ were not changed by these refactors.
 
 | Location | Responsibility | Related documentation |
 |---|---|---|
-| `frontend/guest-web/` | Public guest interface; future booking and guest flows | [System design](SYSTEM_DESIGN.md), [business flows](BUSINESS_FLOWS.md), [design guidelines](design_guidelines.md) |
-| `frontend/admin-web/` | Staff interface, shared admin layout, and operational screens as implemented | [System design](SYSTEM_DESIGN.md), [design guidelines](design_guidelines.md), [security](SECURITY.md) |
-| Frontend `src/components/` | Reusable interface pieces | [Coding patterns](CODING_PATTERNS.md), [design guidelines](design_guidelines.md) |
-| Frontend `src/pages/` and existing `src/layouts/` | Route-level screens and shared page shells | [Technical plan](TECHNICAL_PLAN.md), [business flows](BUSINESS_FLOWS.md) |
-| Frontend `src/services/` | HTTP client configuration and API access | [API contracts](API.md), [coding patterns](CODING_PATTERNS.md) |
+| `frontend/guest-web/` | Public guest interface; future booking and guest flows | [System design](MD_Files/SYSTEM_DESIGN.md), [business flows](BUSINESS_FLOWS.md), [design guidelines](MD_Files/design_guidelines.md) |
+| `frontend/admin-web/` | Staff interface, shared admin layout, and operational screens as implemented | [System design](MD_Files/SYSTEM_DESIGN.md), [design guidelines](MD_Files/design_guidelines.md), [security](SECURITY.md) |
+| Frontend `src/components/` | Reusable interface pieces | [Coding patterns](CODING_PATTERNS.md), [design guidelines](MD_Files/design_guidelines.md) |
+| Frontend `src/pages/` and existing `src/layouts/` | Route-level screens and shared page shells | [Technical plan](MD_Files/TECHNICAL_PLAN.md), [business flows](BUSINESS_FLOWS.md) |
+| Frontend `src/services/` | HTTP client configuration and API access | [API contracts](MD_Files/API.md), [coding patterns](CODING_PATTERNS.md) |
 | Frontend `src/hooks/` | Screen/form state, effects, event handlers, and workflow coordination | [Coding patterns](CODING_PATTERNS.md) |
 | Frontend `src/constants/` and `src/utils/` | Feature display definitions and focused validation/formatting helpers | [Coding principles](CODING_PRINCIPLES.md) |
-| Each frontend's `src/styles/tokens.css` | Existing application-specific visual constants | [Design guidelines](design_guidelines.md) |
-| Frontend `src/styles/`, `src/assets/`, and `public/` | Shared CSS, imported assets, and static public files | [Design guidelines](design_guidelines.md) |
-| `backend/src/` | API bootstrap, modules, controllers, and services | [System design](SYSTEM_DESIGN.md), [API contracts](API.md), [technical plan](TECHNICAL_PLAN.md) |
-| `backend/src/payments/` | Read-only payment-summary calculation, JWT/ownership service, controller/module and two test suites | [API](API.md#7-payments-and-webhooks), [payment semantics](DATABASE_SCHEMA.md#phase-71-payment-semantics), [security](SECURITY.md#phase-71-payment-summary-authorization) |
-| `backend/src/reservations/` | Implemented checkout, private access, assignments, lifecycle, cancellation and stay APIs; private-session payment-summary route | [Current contracts](AGENTS.md), [business flows](BUSINESS_FLOWS.md) |
-| `backend/src/availability/` | Public read-only date/capacity search and backend stay-price quote; guest search/quote integration is implemented | [API](API.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
-| `frontend/guest-web/src/layouts/`, `hooks/`, `services/`, and `utils/` | Shared guest layout, connected room metadata, image URL handling, and nightly-rate formatting | [System design](SYSTEM_DESIGN.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
-| `backend/src/auth/` | Auth, registration, SMTP delivery, verification, DTOs, and security tests | [Implemented API](API.md), [security](SECURITY.md) |
+| Each frontend's `src/styles/tokens.css` | Existing application-specific visual constants | [Design guidelines](MD_Files/design_guidelines.md) |
+| Frontend `src/styles/`, `src/assets/`, and `public/` | Shared CSS, imported assets, and static public files | [Design guidelines](MD_Files/design_guidelines.md) |
+| `backend/src/` | API bootstrap, modules, controllers, and services | [System design](MD_Files/SYSTEM_DESIGN.md), [API contracts](MD_Files/API.md), [technical plan](MD_Files/TECHNICAL_PLAN.md) |
+| `backend/src/payments/` | Read-only payment-summary calculation, JWT/ownership service, controller/module and two test suites | [API](MD_Files/API.md), [payment semantics](DATABASE_SCHEMA.md#phase-71-payment-semantics), [security](SECURITY.md#phase-71-payment-summary-authorization) |
+| `backend/src/reservations/` | Implemented checkout, private access, assignments, lifecycle, cancellation and stay APIs; private-session payment-summary route | [Current contracts](MD_Files/AGENTS.md), [business flows](BUSINESS_FLOWS.md) |
+| `backend/src/availability/` | Public read-only date/capacity search and backend stay-price quote; guest search/quote integration is implemented | [API](MD_Files/API.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
+| `frontend/guest-web/src/layouts/`, `hooks/`, `services/`, and `utils/` | Shared guest layout, connected room metadata, image URL handling, and nightly-rate formatting | [System design](MD_Files/SYSTEM_DESIGN.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
+| `backend/src/auth/` | Auth, registration, SMTP delivery, verification, DTOs, and security tests | [Implemented API](MD_Files/API.md), [security](SECURITY.md) |
 | `backend/src/common/` | Public/role decorators, global guards, and reusable OwnershipModule/OwnershipService | [Security](SECURITY.md), [coding patterns](CODING_PATTERNS.md) |
-| `backend/src/room-types/`, `rooms/`, `amenities/`, `room-images/`, `room-blocks/` | Implemented room-management modules, DTOs, controllers, services, and isolated tests | [API](API.md), [security](SECURITY.md) |
-| `backend/src/common/validation/` and `common/inventory/` | Shared numeric/date validation and transaction-scoped room eligibility; no public booking endpoint | [Database safety](DATABASE_SCHEMA.md), [development reference](AGENTS.md) |
+| `backend/src/room-types/`, `rooms/`, `amenities/`, `room-images/`, `room-blocks/` | Implemented room-management modules, DTOs, controllers, services, and isolated tests | [API](MD_Files/API.md), [security](SECURITY.md) |
+| `backend/src/common/validation/` and `common/inventory/` | Shared numeric/date validation and transaction-scoped room eligibility; no public booking endpoint | [Database safety](DATABASE_SCHEMA.md), [development reference](MD_Files/AGENTS.md) |
 | `backend/src/prisma/` | NestJS database provider, connection lifecycle, and guarded development seed | [Database schema](DATABASE_SCHEMA.md), [coding patterns](CODING_PATTERNS.md) |
 | `backend/prisma/` | All 29 model definitions and eight migration sources | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
-| `backend/src/generated/prisma/` | Prisma-generated client used by backend code; regenerate through Prisma tooling | [Database schema](DATABASE_SCHEMA.md), [technical plan](TECHNICAL_PLAN.md) |
-| `backend/src/*.spec.ts` and `backend/test/` | Colocated unit tests and separate end-to-end tests using Vitest configuration | [Implementation guide](IMPLEMENTATION_GUIDE.md), [technical plan](TECHNICAL_PLAN.md) |
+| `backend/src/generated/prisma/` | Prisma-generated client used by backend code; regenerate through Prisma tooling | [Database schema](DATABASE_SCHEMA.md), [technical plan](MD_Files/TECHNICAL_PLAN.md) |
+| `backend/src/*.spec.ts` and `backend/test/` | Colocated unit tests and separate end-to-end tests using Vitest configuration | [Implementation guide](IMPLEMENTATION_GUIDE.md), [technical plan](MD_Files/TECHNICAL_PLAN.md) |
 | `backend/test/database/` | Database integrity tests using an existing migrated `backend/step10.test.db`; covers connectivity, constraints, relations, rollback, and persistence | [Database schema](DATABASE_SCHEMA.md), [implementation guide](IMPLEMENTATION_GUIDE.md) |
 | `.env.example` files | Environment configuration templates without real credentials | [Security](SECURITY.md), [development rules](DEVELOPMENT_RULES.md) |
-| Application `package.json` files | Per-application dependencies and executable scripts | [Implementation guide](IMPLEMENTATION_GUIDE.md), [CI/CD roadmap](CI_CD_ROADMAP.MD) |
-| `docs/` | Architecture explanations, standards, contracts, and delivery guidance | [Development reference](AGENTS.md) |
+| Application `package.json` files | Per-application dependencies and executable scripts | [Implementation guide](IMPLEMENTATION_GUIDE.md), [CI/CD roadmap](MD_Files/CI_CD_ROADMAP.MD) |
+| `docs/` | Architecture explanations, standards, contracts, and delivery guidance | [Development reference](MD_Files/AGENTS.md) |
 
 Both frontend applications communicate with the shared backend API. Database
 access belongs in the backend. Backend authentication and room management are implemented; placeholder screens and
@@ -485,7 +532,7 @@ backend/src/auth/dto/verify-email.dto.ts. This task performed no source cleanup.
 
 ## 4. Planned Structure and Placement Rules
 
-The [technical plan's project structure](TECHNICAL_PLAN.md#2-project-structure)
+The [technical plan's project structure](MD_Files/TECHNICAL_PLAN.md)
 includes future directories. They are created when an approved implementation
 needs them:
 
@@ -512,28 +559,28 @@ Follow the approval and verification process in the
 | Document | How it relates to this guide |
 |---|---|
 | [README.md](README.md) | Product-focused system overview and intended user experiences |
-| [AGENTS.md](AGENTS.md) | Phase completion checklist and current agent handoff; maintained only in docs/ |
+| [AGENTS.md](MD_Files/AGENTS.md) | Phase completion checklist and current agent handoff; maintained only in docs/ |
 | [NEXORA_ARCHITECTURE_V2.1.md](NEXORA_ARCHITECTURE_V2.1.md) | Authoritative approved architecture baseline; maintained only in docs/ |
-| [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) | Explains system boundaries and the responsibilities behind the directories |
-| [TECHNICAL_PLAN.md](TECHNICAL_PLAN.md) | Defines the intended expanded layout, naming, request lifecycle, and roadmap |
+| [SYSTEM_DESIGN.md](MD_Files/SYSTEM_DESIGN.md) | Explains system boundaries and the responsibilities behind the directories |
+| [TECHNICAL_PLAN.md](MD_Files/TECHNICAL_PLAN.md) | Defines the intended expanded layout, naming, request lifecycle, and roadmap |
 | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) | Explains the models and constraints represented in `backend/prisma/` |
-| [API.md](API.md) | Defines contracts between frontend services and backend endpoints, with contract status |
+| [API.md](MD_Files/API.md) | Defines contracts between frontend services and backend endpoints, with contract status |
 | [BUSINESS_FLOWS.md](BUSINESS_FLOWS.md) | Explains workflows that future pages and backend feature modules must support |
 | [SECURITY.md](SECURITY.md) | Defines security requirements across applications, configuration, and integrations |
-| [design_guidelines.md](design_guidelines.md) | Guides frontend components, layouts, styles, and interface states |
+| [design_guidelines.md](MD_Files/design_guidelines.md) | Guides frontend components, layouts, styles, and interface states |
 | [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) | Defines implementation sequence and checks for changes in these locations |
 | [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md) | Sets stack, folder organization, security, and development rules |
 | [CODING_PRINCIPLES.md](CODING_PRINCIPLES.md) | Guides maintainable code and responsibility boundaries within the layout |
 | [CODING_PATTERNS.md](CODING_PATTERNS.md) | Provides patterns for components, API services, backend services, and transactions |
 | [CONVENTIONAL_COMMITS.md](CONVENTIONAL_COMMITS.md) | Defines how to describe repository changes in commits |
-| [CI_CD_ROADMAP.MD](CI_CD_ROADMAP.MD) | Plans checks, artifacts, migrations, and deployment across the three applications |
+| [CI_CD_ROADMAP.MD](MD_Files/CI_CD_ROADMAP.MD) | Plans checks, artifacts, migrations, and deployment across the three applications |
 
 ## 6. Maintaining This Guide
 
 Update this file when source directories or significant entry points change.
 Keep the current tree aligned with the working source and identify planned
-directories separately. Update the [technical plan](TECHNICAL_PLAN.md) when the
-intended layout changes, and keep the [development reference](AGENTS.md) aligned with
+directories separately. Update the [technical plan](MD_Files/TECHNICAL_PLAN.md) when the
+intended layout changes, and keep the [development reference](MD_Files/AGENTS.md) aligned with
 this guide.
 
 Exclude dependency contents, build output, secrets, and local database contents
