@@ -105,7 +105,7 @@ export default function Navbar() {
           <div className="guest-header__actions">
             {auth.status === "loading" && (
               <span className="guest-header__session" role="status">
-                Checking session…
+                {auth.message || "Checking session…"}{auth.message || "Checking session…"}
               </span>
             )}
 
@@ -151,18 +151,33 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {sessionError && (
-        <div className="guest-header__feedback">
-          <p role="alert">{auth.message}</p>
-          <button
-            type="button"
-            className="guest-header__account"
-            onClick={retrySession}
-          >
-            {auth.status === "logout-error" ? "Retry Sign Out" : "Retry Session"}
-          </button>
-        </div>
-      )}
+            {sessionError && (
+              <div className="guest-header__feedback">
+                <p role="alert">{auth.message}</p>
+
+                <div className="guest-header__actions">
+                  {auth.status === "error" && (
+                    <button
+                      type="button"
+                      className="guest-header__account"
+                      onClick={retrySession}
+                    >
+                      Retry Session
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="guest-header__account"
+                    onClick={signOut}
+                  >
+                    {auth.status === "logout-error"
+                      ? "Retry Sign Out"
+                      : "Sign Out"}
+                  </button>
+                </div>
+              </div>
+            )}
     </header>
   );
 }

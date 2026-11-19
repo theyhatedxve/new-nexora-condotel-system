@@ -81,7 +81,13 @@ async function identify(result, expectedRevision) {
   if (
     typeof user?.id !== "string" ||
     typeof user.email !== "string" ||
-    !["GUEST", "ADMIN", "MANAGER", "RECEPTIONIST"].includes(user.role)
+    ![
+      "GUEST",
+      "SUPER_ADMIN",
+      "ADMIN",
+      "MANAGER",
+      "RECEPTIONIST",
+    ].includes(user.role)
   ) {
     throw new Error("Invalid account response.");
   }
@@ -149,7 +155,7 @@ export function signOutGuest() {
   ++revision;
   const pending = operation;
   clearToken();
-  publish("loading");
+  publish("loading", null, "Signing out…");
 
   logoutOperation = (async () => {
     await pending;
