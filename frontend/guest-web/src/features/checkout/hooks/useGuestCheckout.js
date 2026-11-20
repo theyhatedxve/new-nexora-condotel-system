@@ -20,6 +20,9 @@ import {
   saveBookingAttempt,
 } from "../utils/bookingAttempt.js";
 
+import { getAccountBooking } from "../../booking/services/accountBookingsApi.js";
+import { guestBookingFeedback } from "../../booking/utils/guestBookingFeedback.js";
+
 function initialState(apiScope) {
   try {
     return {
@@ -415,37 +418,111 @@ export default function useGuestCheckout(
     }
   }
 
-  async function resume() {
-    if (
-      pending.current ||
-      !state.attempt
-    ) {
-      return;
+  async function verifySavedBooking(attempt) {
+    if (!attempt.reservationNumber) {
+      throw new Error("The original booking reference is unavailable.");
     }
 
+    const booking = await getAccountBooking(attempt.reservationNumber);
+
+    const summary = await getGuestBookingPaymentSummary(
+      attempt.reservationNumber,
+    );
+
+    const feedback = guestBookingFeedback({
+      booking,
+      summary,
+    });
+
+    if (!feedback.canStartAnother) {
+      throw new Error(
+        "Open My Bookings and resolve the original booking or payment before starting another stay.",
+      );
+    }
+
+    return {
+      requestId: attempt.requestId,
+      reservationNumber: booking.reservationNumber,
+    };
+  }
+
+  async function resume() {
+    if (pending.current || !state.attempt) return;
+
+    const attempt = state.attempt;
     pending.current = true;
 
     publish({
       busy: true,
       error: "",
       payment: null,
+      verifiedBooking: null,
     });
 
     try {
-      const receipt =
-        await recoverGuestBooking(
-          state.attempt,
-        );
+      const receipt = await recoverGuestBooking(attempt);
+      await acceptReceipt(attempt, receipt);
+    } catch {
+      try {
+        const verifiedBooking = await verifySavedBooking(attempt);
 
-      await acceptReceipt(
-        state.attempt,
-        receipt,
-      );
+        publish({
+          receipt: null,
+          verifiedBooking,
+          error: "",
+        });
+      } catch {
+        publish({
+          verifiedBooking: null,
+          error:
+            "Recovery could not be completed, or this booking still needs attention. Open My Bookings to check its details and payment status before booking again.",
+        });
+      }
+    } finally {
+      pending.current = false;
+      publish({ busy: false });
+    }
+  }
+
+  async function startNewBooking() {
+    if (
+      pending.current ||
+      !state.attempt ||
+      state.verifiedBooking?.requestId !== state.attempt.requestId
+    ) {
+      return false;
+    }
+
+    const attempt = state.attempt;
+    pending.current = true;
+    publish({ busy: true, error: "" });
+
+    try {
+      // Recheck ownership and payment eligibility before clearing recovery.
+      await verifySavedBooking(attempt);
+
+      if (!mounted.current) return false;
+
+      clearBookingAttempt(apiScope, attempt.requestId);
+
+      publish({
+        attempt: null,
+        receipt: null,
+        verifiedBooking: null,
+        payment: null,
+        summary: null,
+        error: "",
+      });
+
+      return true;
     } catch {
       publish({
+        verifiedBooking: null,
         error:
-          "Recovery is unavailable or expired. This does not prove the booking failed. Check the account booking details or contact the property before booking again.",
+          "A new booking could not be started safely. Your existing reservation is unchanged. Check My Bookings, then retry.",
       });
+
+      return false;
     } finally {
       pending.current = false;
       publish({ busy: false });
@@ -482,6 +559,7 @@ export default function useGuestCheckout(
     ...state,
     submit,
     resume,
+    startNewBooking,
     finishKnownBooking,
   };
 }

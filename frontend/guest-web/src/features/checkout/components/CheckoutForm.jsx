@@ -1,6 +1,6 @@
 import RentalDetails from "../../../shared/components/RentalDetails.jsx";
 import { rentalCaption } from "../../../shared/utils/rentalStay.js";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { formatPesos } from "../../../shared/utils/formatMoney.js";
 import GuestBookingReceipt from "./GuestBookingReceipt.jsx";
@@ -28,6 +28,14 @@ export function CheckoutForm({ selection, selectionError, profile }) {
     reviewing,
   } = useCheckoutForm({ selection, profile });
 
+  const navigate = useNavigate();
+
+  async function handleStartNewBooking() {
+    if (await flow.startNewBooking()) {
+      navigate("/rooms");
+    }
+  }
+
   if (flow.receipt) {
     return <GuestBookingReceipt flow={flow} />;
   }
@@ -38,12 +46,49 @@ export function CheckoutForm({ selection, selectionError, profile }) {
         <section className="checkout-panel checkout-receipt" aria-busy={flow.busy}>
           <p className="checkout-kicker">ORIGINAL BOOKING REQUEST</p>
 
-          <h1>{flow.busy ? "Checking your booking" : "Recover your booking"}</h1>
+          <h1>
+            {flow.busy
+              ? "Checking your booking"
+              : flow.verifiedBooking
+                ? "Your existing booking was found"
+                : "Recover your booking"}
+          </h1>
 
-          <p className="checkout-view__receipt-intro">
-            This tab holds an earlier request. Recover it before creating another booking.
-            Reloading this page does not submit it again.
-          </p>
+                    <div className="checkout-view__receipt-actions">
+            {flow.verifiedBooking ? (
+              <button
+                className="checkout-button"
+                type="button"
+                disabled={flow.busy}
+                onClick={handleStartNewBooking}
+              >
+                {flow.busy ? "Please wait..." : "Start a new booking"}
+              </button>
+            ) : (
+              <button
+                className="checkout-button"
+                type="button"
+                disabled={flow.busy}
+                onClick={flow.resume}
+              >
+                {flow.busy ? "Please wait..." : "Recover original request"}
+              </button>
+            )}
+
+            <Link
+              className="checkout-view__secondary-link"
+              to="/my-bookings"
+            >
+              View My Bookings
+            </Link>
+
+            <Link
+              className="checkout-view__secondary-link"
+              to="/rooms"
+            >
+              Browse rooms
+            </Link>
+          </div>
 
           {flow.attempt.reservationNumber && (
             <div className="checkout-view__reference">
