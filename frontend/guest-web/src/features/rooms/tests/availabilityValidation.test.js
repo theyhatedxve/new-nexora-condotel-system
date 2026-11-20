@@ -1,13 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import { validateResults } from "../utils/validateAvailabilityResults.js";
 import {
-  differenceInNights,
-  formatCentavos,
-  validateSearch,
-} from "../utils/availabilitySearch.js";
+  MAX_GUESTS,
+  stayNights,
+  validateStaySearch,
+} from "../../../shared/utils/staySearch.js";
+import { formatPesos } from "../../../shared/utils/formatMoney.js";
 
-const query = { checkIn: "2099-01-01", checkOut: "2099-01-03", guests: 2 };
+// Fixed reference date keeps validation tests independent of today's date.
+const today = "2099-01-01";
+
+const query = {
+  checkIn: "2099-01-01",
+  checkOut: "2099-01-03",
+  guests: 2,
+};
+
 const room = {
   id: "suite",
   name: "Deluxe Suite",
@@ -19,11 +29,23 @@ const room = {
 };
 
 test("availability accepts valid server data without changing amounts or room ordering", () => {
-  const results = [room, { ...room, id: "studio", available: false }];
+  const results = [
+    room,
+    { ...room, id: "studio", available: false },
+  ];
+
   assert.equal(validateResults(results, query), results);
   assert.deepEqual(validateResults([], query), []);
+
   assert.doesNotThrow(() =>
-    validateResults([{ ...room, nightlyRateCentavos: 0, totalAmountCentavos: 0 }], query),
+    validateResults(
+      [{
+        ...room,
+        nightlyRateCentavos: 0,
+        totalAmountCentavos: 0,
+      }],
+      query,
+    ),
   );
 });
 
@@ -39,9 +61,10 @@ for (const [label, patch] of [
   ["mismatched stay length", { nights: 3 }],
 ]) {
   test(`availability rejects ${label}`, () => {
-    assert.throws(() => validateResults([{ ...room, ...patch }], query), {
-      message: "Invalid availability response.",
-    });
+    assert.throws(
+      () => validateResults([{ ...room, ...patch }], query),
+      { message: "Invalid availability response." },
+    );
   });
 }
 
@@ -50,39 +73,109 @@ test("availability rejects duplicate room IDs and null records", () => {
   assert.throws(() => validateResults([null], query));
 });
 
-test("legacy search preserves missing-date, past-date, and date-order feedback", () => {
-  assert.equal(
-    validateSearch({ ...query, checkIn: "" }),
-    "Please select check-in and check-out dates.",
-  );
-  assert.equal(
-    validateSearch({ ...query, checkIn: "2000-01-01" }),
+test("shared search accepts a valid date-range selection", () => {
+  const result = validateStaySearch(query, today);
+
+  assert.deepEqual(result.errors, {});
+  assert.deepEqual(result.value, query);
+});
+
+for (const [label, patch, field, message] of [
+  [
+    "missing check-in",
+    { checkIn: "" },
+    "checkIn",
+    "Select a valid check-in date.",
+  ],
+  [
+    "missing check-out",
+    { checkOut: "" },
+    "checkOut",
+    "Select a valid check-out date.",
+  ],
+  [
+    "past check-in",
+    { checkIn: "2098-12-31" },
+    "checkIn",
     "Check-in cannot be in the past.",
-  );
-  assert.equal(
-    validateSearch({ ...query, checkOut: query.checkIn }),
-    "Check-out must be later than check-in.",
-  );
-});
-
-test("legacy search keeps its 30-night boundary and integer guest validation", () => {
-  assert.equal(validateSearch({ ...query, checkOut: "2099-01-31" }), "");
-  assert.equal(
-    validateSearch({ ...query, checkOut: "2099-02-01" }),
-    "The maximum stay is 30 nights.",
-  );
-  for (const guests of [0, -1, 1.5, NaN]) {
-    assert.equal(
-      validateSearch({ ...query, guests }),
-      "Please enter at least one guest.",
+  ],
+  [
+    "same-day date-range departure",
+    { checkOut: query.checkIn },
+    "checkOut",
+    "Check-out must be after check-in.",
+  ],
+]) {
+  test(`shared search rejects ${label}`, () => {
+    const result = validateStaySearch(
+      { ...query, ...patch },
+      today,
     );
-  }
-  assert.equal(differenceInNights("2099-01-31", "2099-02-01"), 1);
+
+    assert.equal(result.value, null);
+    assert.equal(result.errors[field], message);
+  });
+}
+
+test("shared date-range search allows 30 nights and rejects 31", () => {
+  const allowed = validateStaySearch(
+    { ...query, checkOut: "2099-01-31" },
+    today,
+  );
+
+  assert.ok(allowed.value);
+  assert.deepEqual(allowed.errors, {});
+
+  const rejected = validateStaySearch(
+    { ...query, checkOut: "2099-02-01" },
+    today,
+  );
+
+  assert.equal(rejected.value, null);
+  assert.equal(
+    rejected.errors.checkOut,
+    "A stay cannot exceed 30 nights.",
+  );
 });
 
-test("legacy money formatting preserves centavo conversion", () => {
-  assert.equal(
-    formatCentavos(12345),
-    new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(123.45),
+test("shared search rejects invalid guest counts", () => {
+  for (const guests of [
+    0,
+    -1,
+    1.5,
+    NaN,
+    Infinity,
+    MAX_GUESTS + 1,
+  ]) {
+    const result = validateStaySearch(
+      { ...query, guests },
+      today,
+    );
+
+    assert.equal(result.value, null);
+    assert.ok(result.errors.guests);
+  }
+});
+
+test("shared search normalizes a guest count from a form field", () => {
+  const result = validateStaySearch(
+    { ...query, guests: "2" },
+    today,
   );
+
+  assert.deepEqual(result.errors, {});
+  assert.equal(result.value.guests, 2);
+});
+
+test("shared stay length handles month boundaries and invalid dates", () => {
+  assert.equal(stayNights("2099-01-31", "2099-02-01"), 1);
+  assert.equal(stayNights(query.checkIn, query.checkOut), 2);
+  assert.ok(Number.isNaN(stayNights("invalid", query.checkOut)));
+  assert.ok(Number.isNaN(stayNights("2099-02-31", "2099-03-02")));
+});
+
+test("shared PHP formatting converts centavos and groups whole pesos", () => {
+  assert.match(formatPesos(0), /^₱\s?0\.00$/u);
+  assert.match(formatPesos(12345), /^₱\s?123\.45$/u);
+  assert.match(formatPesos(125000), /^₱\s?1,250\.00$/u);
 });

@@ -1,5 +1,23 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
+## Current cleanup handoff - 2026-11-20
+
+**Status:** Admin/Guest legacy CSS and test-only utility cleanup completed, owner-confirmed. This supersedes older cleanup continuation instructions below; preserve their historical records.
+
+The owner completed the preview-first CSS batches, the backend ignore-file simplification, and retirement of frontend/guest-web/src/features/rooms/utils/availabilitySearch.js.
+
+The active availabilityValidation.test.js imports validateStaySearch(), stayNights(), and MAX_GUESTS from shared/utils/staySearch.js and formatPesos() from shared/utils/formatMoney.js. Its availability-response tests remain. Deterministic reference dates replace the legacy helper's dependence on the current date for search-validation assertions.
+
+Source inspection confirmed retirement/import changes and representative removed selectors. Verification completion is owner-reported; the assistant did not run tests, lint, builds, apps, or browser journeys and does not assert specific totals.
+
+Recovery copies, active tests, standalone bootstrap/seed/encryption tools, runtime databases/uploads, migrations, dependencies, and generated Prisma code were not deleted by this batch. Do not merge test data into dev.db.
+
+### Next handoff action
+
+Review and save the final Git checkpoint, including the updated availability test, retired helper, and closure documents. Do not commit automatically or infer that older pending profile/reset verification labels were independently resolved by this cleanup.
+
+The separate proposed free-hosting review remains unimplemented: hosted SQLite transaction/raw-SQL compatibility, durable image storage, per-frontend API proxy/cookie behavior, and free-service cold-start/worker limits require review before deployment. No cloud services were created or deployed.
+
 ## Final cleanup and naming handoff — 2026-11-20
 
 **Status:** Cleanup and Guest booking-file renaming completed,

@@ -1,5 +1,18 @@
 # NEXORA | AGENTS.md
 
+## Legacy CSS and Guest utility cleanup closure - 2026-11-20
+
+**Status:** Cleanup completed, owner-confirmed. This checkpoint closes only this cleanup batch, not unrelated pending feature or deployment checks.
+
+- Removed obsolete Admin connection-indicator and section-navigation styles; simplified backend/.gitignore to retain the generated Prisma client rule and rely on repository-root shared ignores.
+- Completed the reviewed Admin and Guest legacy CSS cleanup. Shared active selectors, dynamic metric/status classes, current layouts, and responsive behavior were excluded from removal.
+- Retired frontend/guest-web/src/features/rooms/utils/availabilitySearch.js. The remaining availabilityValidation.test.js now uses active shared validateStaySearch(), stayNights(), and formatPesos() utilities while preserving availability-response validation coverage.
+- Source inspection confirmed the retired utility is absent, its imports are gone, and representative obsolete CSS selectors are absent. The owner reported completion after the supplied verification steps. No test totals or runtime results were independently established by the assistant.
+- Recovery archives, test-only operational tools, active tests, databases, migrations, assets, dependencies, and generated Prisma code remain outside this cleanup scope.
+- Only status/directory documentation was edited for this closure. No application changes, tests, lint, builds, servers, browser checks, or database operations were performed by the assistant.
+
+**Next:** Review and save the final Git checkpoint. Resume the separately proposed free-hosting compatibility review only when requested; no further cleanup or redesign is scheduled automatically.
+
 ## Staff account editor and default-password reset - 2026-11-20
 
 **Status:** Approved source saved; owner verification pending.

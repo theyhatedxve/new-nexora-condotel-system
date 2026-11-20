@@ -1,5 +1,18 @@
 # NEXORA — System Directory Structure
 
+## Current cleanup inventory - 2026-11-20
+
+**Status:** Legacy CSS and Guest helper retirement completed, owner-confirmed; key source paths inspected. This focused update does not replace the historical directory maps below.
+
+- Retired: frontend/guest-web/src/features/rooms/utils/availabilitySearch.js.
+- Retained: frontend/guest-web/src/features/rooms/tests/availabilityValidation.test.js and utils/validateAvailabilityResults.js.
+- Active shared dependencies: frontend/guest-web/src/shared/utils/staySearch.js and shared/utils/formatMoney.js.
+- Admin/Guest legacy CSS cleanup removed selectors, not entire stylesheets or feature folders.
+- backend/.gitignore retains /src/generated/prisma/; repository-root .gitignore owns shared dependency/build/environment/database/upload/recovery rules.
+- Recovery archives, active tests, operational utilities, databases, migrations, assets, and generated dependencies remain retained.
+
+No automatic follow-up renaming, folder deletion, or recovery-archive removal is scheduled.
+
 ## Current Guest booking filenames — 2026-11-20
 
 **Status:** Renaming completed, owner-confirmed.
