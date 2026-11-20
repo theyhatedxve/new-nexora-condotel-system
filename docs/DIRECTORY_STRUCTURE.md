@@ -1,5 +1,114 @@
 # NEXORA — System Directory Structure
 
+## Current feature-based structure — 2026-11-20
+
+**Status:** Source-inspected; organization completed, owner-confirmed.
+
+This map supersedes older source paths below.
+
+```text
+NEXORA/
+  backend/
+    src/
+      reservations/
+        reservations.module.ts
+        guest-booking/
+        staff/
+        assignments/
+        lifecycle/
+        stay/
+        charges/
+        deposits/
+        contacts/
+        inventory/
+        compatibility/
+        tests/
+        dto/
+        policies/
+        validation/
+      payments/
+        payments.module.ts
+        checkout/
+        collections/
+        refunds/
+        reconciliation/
+        summary/
+        deadlines/
+        dto/
+        paymongo/
+      other existing feature modules/
+      generated/
+      prisma/
+    test/
+    scripts/
+    prisma/
+      schema.prisma
+      migrations/
+    dev.db
+    nexora.demo.db
+
+  frontend/
+    admin-web/
+      src/
+        main.jsx
+        app/
+        features/
+          auth/
+          dashboard/
+          reservations/
+          rooms/
+          guests/
+          payments/
+          reports/
+          users/
+          settings/
+          audit/
+        shared/
+      scripts/
+
+    guest-web/
+      src/
+        main.jsx
+        app/
+        assets/
+        features/
+          auth/
+          home/
+          rooms/
+          booking/
+          checkout/
+          payments/
+          information/
+        shared/
+      scripts/
+
+  backups/
+  storage/room-images/
+  docs/
+```
+
+This is a focused directory map, not an exhaustive inventory.
+
+Feature folders contain related pages, components, hooks, services,
+styles, constants, utilities, and tests as needed.
+Do not create empty layers solely to match this convention.
+
+Shared folders contain reused code. Application-shell code belongs in app/.
+Guest assets remain in their existing locations.
+
+Backend controllers retain HTTP responsibilities. Services retain workflow,
+authorization, and transaction ownership. Existing policies, DTOs, and
+validation helpers retain their responsibilities.
+
+Tests moved with their features where appropriate.
+Cross-feature frontend helper tests are under shared/tests/.
+Backend reservation journey tests are under reservations/tests/.
+
+Recovery copies contain original files and relocation-manifest.json.
+They are recovery artifacts, not active application source.
+
+Earlier maps below are historical and may contain obsolete paths.
+
 ## Current organization checkpoint — 2026-11-20
 
 **Status:** Paths source-inspected; cleanup Batches 1–5 owner-confirmed.

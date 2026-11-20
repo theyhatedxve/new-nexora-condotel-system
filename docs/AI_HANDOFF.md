@@ -1,5 +1,85 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
+## Source organization handoff — 2026-11-20
+
+**Status:** All three source-arrangement batches completed, owner-confirmed.
+
+This checkpoint supersedes earlier pending organization tasks and old
+file/test paths below. No additional implementation batch is scheduled.
+
+### Current layout
+
+Both frontends use src/app/, src/features/, and src/shared/.
+src/main.jsx remains the entry point.
+Guest assets remain under src/assets/.
+
+Backend Reservations and Payments files are grouped into feature
+subfolders. Their .module.ts files remain at the module roots.
+See DIRECTORY_STRUCTURE.md for the current map.
+
+### Recovery locations
+
+Paths relative to the repository root:
+
+- backups/admin-source-layout-fc681c11-50f5-4744-9aeb-6a6f82ff70cc/
+- backups/guest-source-layout-88b5af13-3389-4745-8d1a-834c06fe79b7/
+- backups/backend-module-layout-c20677f4-332b-41f7-825d-af0c74ad5f30/
+
+Each contains original source and relocation-manifest.json.
+Preserve these copies. Restore only through a separately reviewed operation.
+
+The scripts under frontend/admin-web/scripts/,
+frontend/guest-web/scripts/, and backend/scripts/ are one-time relocation
+tools. They reject the already-organized layout. Do not rerun them.
+
+### Verification record
+
+The owner confirmed completion of Admin, Guest, and backend organization.
+Static comparison found source unchanged outside relative import paths.
+Guest asset hashes matched their recovery copies.
+
+The assistant did not run tests, lint, builds, servers, or browser checks.
+Do not present static comparisons as runtime proof or invent test totals.
+
+### Current command reference
+
+These commands are for future owner-authorized checks.
+They are not a requirement to repeat already-completed checks.
+
+Run from D:\Web-JSX\NEXORA:
+
+```powershell
+npm.cmd --prefix backend run lint
+npm.cmd --prefix backend run build
+npm.cmd --prefix backend run test
+npm.cmd --prefix backend run test:e2e
+
+npm.cmd --prefix frontend/admin-web run lint
+npm.cmd --prefix frontend/admin-web run build
+node --test frontend/admin-web/src/shared/tests/adminHelpers.test.js frontend/admin-web/src/features/rooms/tests/rentalPricing.test.js
+
+npm.cmd --prefix frontend/guest-web run lint
+npm.cmd --prefix frontend/guest-web run build
+node --test frontend/guest-web/src/features/rooms/tests/availabilityValidation.test.js frontend/guest-web/src/features/booking/tests/guestBookingFeedback.test.js frontend/guest-web/src/shared/tests/rentalStay.test.js
+```
+
+Backend test discovery remains recursive. Direct commands targeting
+individual relocated test files must use their current paths.
+
+### Retention and next action
+
+Keep backend/dev.db, backend/nexora.demo.db, all 14 migrations,
+generated Prisma code, uploads, encryption configuration, active tests,
+and recovery copies.
+
+No database merge, reset, reseed, dependency change, commit, or deployment
+was part of source organization.
+
+Finish the approved documentation update. The owner then selects the
+next task. Do not reopen accepted UI or organization batches automatically.
+
+NFC remains postponed. Production deployment remains deferred.
+
 ## Current finalization handoff — 2026-11-20
 
 **Status:** Cleanup Batches 1–5 owner-confirmed complete.

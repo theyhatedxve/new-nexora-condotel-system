@@ -8,6 +8,78 @@
 
 > This proposed file is a condensed replacement guide. The existing 2026-11-11 `AGENTS.md` contains detailed historical implementation records, dependency inventories, test evidence, and screen-level checkpoints. Preserve or archive those records before adopting a replacement. This draft does not verify live repository or database state.
 
+## Feature organization closure — 2026-11-20
+
+**Status:** Admin frontend, Guest frontend, and backend organization
+completed, owner-confirmed. Current paths were source-inspected.
+
+This checkpoint supersedes earlier folder maps and pending organization
+tasks below. Preserve earlier checkpoints as historical records.
+The document-level draft designation remains unchanged.
+
+### Frontend organization
+
+Both applications use:
+
+- src/main.jsx: unchanged entry-point location.
+- src/app/: routing, layout, and application-shell files.
+- src/features/: related pages, components, hooks, services, styles,
+  constants, utilities, and tests.
+- src/shared/: genuinely reusable components, services, styles,
+  utilities, hooks, and tests where applicable.
+
+Guest images and branding remain under frontend/guest-web/src/assets/.
+
+Admin features:
+auth, dashboard, reservations, rooms, guests, payments, reports,
+users, settings, and audit.
+
+Guest features:
+auth, home, rooms, booking, checkout, payments, and information.
+
+### Backend organization
+
+Reservations groups:
+guest-booking, staff, assignments, lifecycle, stay, charges, deposits,
+contacts, inventory, compatibility, and tests.
+
+Payments groups:
+checkout, collections, refunds, reconciliation, summary, and deadlines.
+
+Existing dto/, policies/, validation/, and paymongo/ folders remain.
+reservations.module.ts and payments.module.ts remain at their module roots.
+
+### Preservation evidence
+
+- Admin: 202 relocated files; main.jsx updated.
+- Guest: 124 relocated files; all 34 asset files retained unchanged.
+- Backend: 85 relocated files and 23 additional files with import updates.
+- Source comparisons found no changes outside relative import paths.
+- Relative-reference inspection resolved 475 Admin references,
+  225 Guest references, and 724 references in affected backend files.
+
+These are static observations, not runtime verification.
+
+The owner confirmed completion after each application.
+Exact final command output and test totals were not supplied with those
+confirmations. The assistant did not run tests, lint, builds, servers,
+or browser checks.
+
+### Boundaries and continuation
+
+Database locations, migrations, generated Prisma code, routes,
+business logic, and environment settings were not changed by these moves.
+
+Keep recovery copies and relocation manifests under backups/.
+Do not rerun the one-time relocation scripts on the organized source.
+
+The approved source-organization work is closed.
+Apply the corresponding documentation updates, then let the owner select
+the next task. Do not repeat verification or start further restructuring
+without a new need or owner request.
+
+NFC remains postponed. Production deployment remains deferred.
+
 ## Finalization checkpoint — 2026-11-20
 
 **Status:** Cleanup Batches 1–5 completed, owner-confirmed.

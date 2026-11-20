@@ -1,5 +1,36 @@
 # NEXORA
 
+## Current source organization — 2026-11-20
+
+**Status:** Admin frontend, Guest frontend, and backend arrangement
+completed, owner-confirmed.
+
+Both frontends group code under src/app/, src/features/, and src/shared/.
+Their src/main.jsx entry points remain in place.
+Guest images and branding remain under src/assets/.
+
+Backend Reservations and Payments use smaller feature subfolders.
+Module entry files remain at their original module roots.
+
+Source comparison found changes limited to file locations and relative
+import paths. Guest asset hashes were unchanged.
+Runtime completion is owner-confirmed; the assistant did not run checks.
+
+Application data remains in backend/dev.db.
+backend/nexora.demo.db remains separate. Tests use isolated databases.
+All 14 migrations, uploaded images, encryption configuration, and
+recovery copies are retained.
+
+See:
+- [Current directory map](docs/DIRECTORY_STRUCTURE.md)
+- [Current handoff and command paths](docs/AI_HANDOFF.md)
+- [Owner-confirmed checkpoint](docs/MD_Files/AGENTS.md)
+
+Earlier checkpoints below are historical. Their previous source paths
+and pending organization tasks are superseded by this checkpoint.
+
+NFC remains postponed. Production deployment remains deferred.
+
 ## Current project checkpoint — 2026-11-20
 
 **Status:** Cleanup Batches 1–5 completed, owner-confirmed.
