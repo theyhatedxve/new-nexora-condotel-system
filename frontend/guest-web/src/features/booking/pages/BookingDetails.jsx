@@ -1,14 +1,14 @@
 import { Link } from "react-router";
 
-import useMyBookingContext from "../hooks/useMyBookingContext.js";
-import { MyBookingView } from "../components/MyBookingView.jsx";
+import useBookingDetailsContext from "../hooks/useBookingDetailsContext.js";
+import { BookingDetailsView } from "../components/BookingDetailsView.jsx";
 
 import "../../checkout/styles/checkout.css";
-import "../styles/my-booking.css";
-import "../styles/my-booking-luxury.css";
+import "../styles/booking-details.css";
+import "../styles/booking-details-luxury.css";
 
-export default function MyBooking() {
-  const { context } = useMyBookingContext();
+export default function BookingDetails() {
+  const { context } = useBookingDetailsContext();
 
   if (context.error) {
     return (
@@ -41,7 +41,7 @@ export default function MyBooking() {
   }
 
   return (
-    <MyBookingView
+    <BookingDetailsView
       key={
         context.reservationId ||
         context.reference ||

@@ -18,8 +18,8 @@ import "../shared/styles/tokens.css";
 import "../shared/styles/global.css";
 
 import Checkout from "../features/checkout/pages/Checkout.jsx";
-import BookingAccess from "../features/booking/pages/BookingAccess.jsx";
-import MyBooking from "../features/booking/pages/MyBooking.jsx";
+import BookingAccessRedirect from "../features/booking/pages/BookingAccessRedirect.jsx";
+import BookingDetails from "../features/booking/pages/BookingDetails.jsx";
 import MyBookings from "../features/booking/pages/MyBookings.jsx";
 import PaymentReturn from '../features/payments/pages/PaymentReturn.jsx';
 
@@ -43,10 +43,10 @@ function App() {
               <Route path="/checkout/:roomTypeId" element={<Checkout />} />
               <Route path="/payment-return" element={<PaymentReturn />} />
               <Route path="/my-bookings" element={<MyBookings />} />
-              <Route path="/my-bookings/:reservationId" element={<MyBooking />} />
+              <Route path="/my-bookings/:reservationId" element={<BookingDetails />} />
               <Route path="/my-booking" element={<Navigate to="/my-bookings" replace />} />
             </Route>
-            <Route path="/booking-access" element={<BookingAccess />} />
+            <Route path="/booking-access" element={<BookingAccessRedirect />} />
           </Route>
         </Routes>
       </GuestAuthProvider>

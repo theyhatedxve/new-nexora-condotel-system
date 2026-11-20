@@ -4,13 +4,13 @@ import { Link } from "react-router";
 import { ArrowLeft, CalendarDays, LogOut, RefreshCw } from "lucide-react";
 import BookingPayment from "../../payments/components/BookingPayment.jsx";
 import { formatPesos } from "../../../shared/utils/formatMoney.js";
-import useMyBookingView from "../hooks/useMyBookingView.js";
+import useBookingDetailsView from "../hooks/useBookingDetailsView.js";
 import { displayTime } from "../utils/bookingDisplayTime.js";
 import { SummaryRow } from "./SummaryRow.jsx";
 
-export function MyBookingView({ reservationId = null, expectedReference = null }) {
+export function BookingDetailsView({ reservationId = null, expectedReference = null }) {
   const { view, error, signingOut, booking, signOut, method, propertyPending, closed } =
-    useMyBookingView({ reservationId, expectedReference });
+    useBookingDetailsView({ reservationId, expectedReference });
 
   return (
     <main

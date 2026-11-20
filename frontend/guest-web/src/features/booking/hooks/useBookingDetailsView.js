@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { signOutGuest } from "../../auth/services/guestAuthApi.js";
 import usePrivateBooking from "./usePrivateBooking.js";
 
-export default function useMyBookingView({
+export default function useBookingDetailsView({
   reservationId = null,
   expectedReference = null,
 }) {

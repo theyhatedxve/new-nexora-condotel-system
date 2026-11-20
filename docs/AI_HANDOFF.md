@@ -28,9 +28,12 @@ Paths relative to the repository root:
 Each contains original source and relocation-manifest.json.
 Preserve these copies. Restore only through a separately reviewed operation.
 
-The scripts under frontend/admin-web/scripts/,
-frontend/guest-web/scripts/, and backend/scripts/ are one-time relocation
-tools. They reject the already-organized layout. Do not rerun them.
+The three completed source-relocation scripts were retired after
+owner-confirmed completion. Unreferenced public/icons.svg template
+sprites were also removed from both frontends.
+
+Recovery copies and relocation manifests remain under backups/.
+The historical relocation instructions are not current execution steps.
 
 ### Verification record
 

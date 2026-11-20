@@ -4,7 +4,7 @@ import { bookingReferenceFromSearch } from "../../checkout/utils/bookingContext.
 
 const RESERVATION_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
-export default function useMyBookingContext() {
+export default function useBookingDetailsContext() {
   const { reservationId } = useParams();
   const [params] = useSearchParams();
 
