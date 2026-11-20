@@ -1,0 +1,291 @@
+.room-focus {
+  display: grid;
+  gap: 16px;
+}
+
+.room-focus .room-ui__toolbar {
+  margin-bottom: 0;
+}
+
+.room-focus .room-ui__identity {
+  margin: 0;
+}
+
+.room-focus__guidance,
+.room-focus__muted {
+  color: #52627a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.room-focus__guidance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+}
+
+.room-focus__help summary {
+  color: #214b80;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.room-focus__help p {
+  max-width: 65ch;
+  margin: 8px 0 0;
+}
+
+.room-focus__housekeeping {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.room-focus__next-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #d5e0f2;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.room-focus__next-action h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+
+.room-focus__next-action p {
+  margin: 0;
+  color: #52627a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.room-focus__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #b58b3c;
+  border-radius: 10px;
+  background: #dec17c;
+  color: #10213c;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.room-focus__primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.room-focus__accordion {
+  min-width: 0;
+  border: 1px solid #d5e0f2;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.room-focus__accordion > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 58px;
+  padding: 16px 20px;
+  color: #14263f;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.room-focus__accordion > summary::-webkit-details-marker {
+  display: none;
+}
+
+.room-focus__accordion > summary > svg {
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+
+.room-focus__accordion[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.room-focus__accordion summary small {
+  display: block;
+  margin-top: 4px;
+  color: #52627a;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.room-focus__content {
+  padding: 0 20px 20px;
+  overflow-wrap: anywhere;
+}
+
+.room-focus__content > :first-child {
+  margin-top: 0;
+}
+
+.room-focus__history {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.room-focus__history li {
+  display: grid;
+  gap: 6px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e5ebf4;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.room-focus__history li:last-child {
+  border-bottom: 0;
+}
+
+.room-focus__history small,
+.room-focus__history span {
+  color: #52627a;
+}
+
+.room-focus__pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.room-focus__management > .record-section {
+  margin: 0;
+}
+
+.room-focus__warning {
+  padding: 12px 14px;
+  border: 1px solid #e3c98e;
+  border-radius: 10px;
+  background: #fff8e8;
+  color: #694711;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.room-focus__dialog {
+  width: min(540px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 24px;
+  overflow-y: auto;
+  border: 1px solid #d5e0f2;
+  border-radius: 18px;
+  background: #fff;
+  color: #14263f;
+  box-shadow: 0 24px 80px #10213c33;
+}
+
+.room-focus__dialog::backdrop {
+  background: #10213c80;
+}
+
+.room-focus__dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.room-focus__eyebrow {
+  margin: 0 0 6px;
+  color: #52627a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.room-focus__dialog h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.room-focus__dialog p {
+  line-height: 1.6;
+}
+
+.room-focus__icon-button {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #d5e0f2;
+  border-radius: 10px;
+  background: #fff;
+  color: #14263f;
+  cursor: pointer;
+}
+
+.room-focus__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 24px 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.room-focus__check input[type="checkbox"] {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.room-focus__dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.room-focus summary:focus-visible,
+.room-focus button:focus-visible,
+.room-focus__dialog button:focus-visible,
+.room-focus__dialog input:focus-visible {
+  outline: 3px solid #345fa3;
+  outline-offset: 3px;
+}
+
+@media (max-width: 540px) {
+  .room-focus__next-action > button {
+    width: 100%;
+  }
+
+  .room-focus__dialog {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-focus__accordion > summary > svg {
+    transition: none;
+  }
+}

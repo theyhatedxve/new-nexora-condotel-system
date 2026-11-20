@@ -1,5 +1,15 @@
 import { cancelUnpaidNoShowsInTx } from '../lifecycle/reservation-no-show.js';
-import { RENTAL_RESERVATION_SELECT, actualRentalWindow } from '../inventory/rental-reservation.js';
+import {
+  RENTAL_RESERVATION_SELECT,
+  actualRentalWindow,
+  isWithinRentalArrivalWindow,
+} from '../inventory/rental-reservation.js';
+
+import {
+  calendarInstant,
+  type TimeWindow,
+} from '../../common/inventory/reservation-window.js';
+
 import {
   BadRequestException,
   ConflictException,
@@ -245,6 +255,35 @@ export class ReservationStayService {
         const now = new Date();
         const today = todayInPhilippines();
 
+        const canOverrideArrivalWindow =
+          actor.role === 'SUPER_ADMIN' ||
+          actor.role === 'ADMIN';
+
+        const outsideArrivalWindow =
+          target === 'CHECKED_IN' &&
+          (
+            booking.rentalType
+              ? !isWithinRentalArrivalWindow(booking, now)
+              : (
+                  booking.checkInDate > today ||
+                  booking.checkOutDate <= today
+                )
+          );
+
+        const arrivalWindowOverrideUsed =
+          outsideArrivalWindow && canOverrideArrivalWindow;
+
+        if (
+          target === 'CHECKED_IN' &&
+          !booking.rentalType &&
+          outsideArrivalWindow &&
+          !canOverrideArrivalWindow
+        ) {
+          throw new ConflictException(
+            'Check-in must be within the booked Philippine calendar dates.',
+          );
+        }
+
         if (
           target === 'CHECKED_IN' && !booking.rentalType &&
           (
@@ -375,9 +414,40 @@ export class ReservationStayService {
           if (unresolved) throw new ConflictException('Resolve additional charges before checkout.');
         }
 
-        // Every successful check-in has passed full-payment verification above.
-        const actualWindow = target === 'CHECKED_IN' && booking.rentalType
-          ? actualRentalWindow(booking, now, true) : undefined;
+        // Full payment has already been verified.
+        let actualWindow: TimeWindow | undefined;
+
+        if (target === 'CHECKED_IN' && booking.rentalType) {
+          actualWindow = actualRentalWindow(
+            booking,
+            now,
+            true,
+            canOverrideArrivalWindow,
+          );
+        } else if (
+          target === 'CHECKED_IN' &&
+          arrivalWindowOverrideUsed
+        ) {
+          const bookedStart = calendarInstant(booking.checkInDate);
+          const bookedEnd = calendarInstant(booking.checkOutDate);
+
+          const durationMs =
+            bookedEnd.getTime() - bookedStart.getTime();
+
+          if (!Number.isFinite(durationMs) || durationMs <= 0) {
+            throw new ConflictException(
+              'The booked duration is invalid. Staff review is required.',
+            );
+          }
+
+          actualWindow = {
+            start: now,
+            end:
+              now < bookedEnd
+                ? bookedEnd
+                : new Date(now.getTime() + durationMs),
+          };
+        }
 
         if (target === 'CHECKED_IN') {
           await this.inventory.assertEligibleInTx(
@@ -496,10 +566,37 @@ export class ReservationStayService {
             detailsJson: JSON.stringify({
               assignmentId,
               roomId: assigned.roomId,
-              ...(target === 'CHECKED_IN' ? {
-                actualArrivalAt: now.toISOString(),
-                ...(actualWindow ? { inventoryEndAt: actualWindow.end.toISOString() } : {}),
-              } : { actualDepartureAt: now.toISOString() }),
+              ...(target === 'CHECKED_IN'
+                ? {
+                    actualArrivalAt: now.toISOString(),
+                    arrivalWindowOverrideUsed,
+                    ...(arrivalWindowOverrideUsed
+                      ? {
+                          overrideActorRole: actor.role,
+                          originalArrivalAt:
+                            booking.scheduledArrivalAt?.toISOString() ??
+                            calendarInstant(
+                              booking.checkInDate,
+                            ).toISOString(),
+                          originalDepartureAt:
+                            booking.scheduledDepartureAt?.toISOString() ??
+                            calendarInstant(
+                              booking.checkOutDate,
+                            ).toISOString(),
+                        }
+                      : {}),
+                    ...(actualWindow
+                      ? {
+                          inventoryStartAt:
+                            actualWindow.start.toISOString(),
+                          inventoryEndAt:
+                            actualWindow.end.toISOString(),
+                        }
+                      : {}),
+                  }
+                : {
+                    actualDepartureAt: now.toISOString(),
+                  }),
               paymentPolicy:
                 'FULL_RECORDED_PAYMENT_V1',
               recordedPaidCentavos: paid,

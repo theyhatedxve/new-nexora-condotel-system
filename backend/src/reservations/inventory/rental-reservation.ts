@@ -89,24 +89,82 @@ type RentalTiming = Pick<Reservation,
   'rentalType' | 'rentalUnits' | 'scheduledArrivalAt' | 'scheduledDepartureAt'
 >;
 
-export function actualRentalWindow(booking: RentalTiming, now: Date, preserveLateDeparture = false) {
-  if (!booking.rentalType || booking.rentalUnits == null ||
-      !booking.scheduledArrivalAt || !booking.scheduledDepartureAt) {
-    throw new ConflictException('Rental timing is incomplete. Staff review is required.');
-  }
+export function isWithinRentalArrivalWindow(
+  booking: RentalTiming,
+  now: Date,
+): boolean {
   if (
-    !Number.isFinite(now.getTime()) ||
-    now.getTime() < booking.scheduledArrivalAt.getTime() - 30 * 60_000 ||
-    now >= booking.scheduledDepartureAt
-  ) throw new ConflictException('Check-in is outside the permitted arrival window.');
-  const end = preserveLateDeparture && now > booking.scheduledArrivalAt
-    ? new Date(booking.scheduledDepartureAt.getTime())
-    : new Date(now.getTime() + rentalDurationMinutes(
-    booking.rentalType, booking.rentalUnits,
-  ) * 60_000);
-  if (booking.rentalType === 'HOURLY') {
-    const closing = new Date(calendarMarker(now).getTime() + 15 * 60 * 60_000);
-    if (end > closing) throw new ConflictException('Hourly stays must finish by 11 PM.');
+    !booking.scheduledArrivalAt ||
+    !booking.scheduledDepartureAt ||
+    !Number.isFinite(now.getTime())
+  ) {
+    return false;
   }
+
+  return (
+    now.getTime() >=
+      booking.scheduledArrivalAt.getTime() - 30 * 60_000 &&
+    now.getTime() < booking.scheduledDepartureAt.getTime()
+  );
+}
+
+export function actualRentalWindow(
+  booking: RentalTiming,
+  now: Date,
+  preserveLateDeparture = false,
+  allowArrivalWindowOverride = false,
+) {
+  if (
+    !booking.rentalType ||
+    booking.rentalUnits == null ||
+    !booking.scheduledArrivalAt ||
+    !booking.scheduledDepartureAt ||
+    !Number.isFinite(booking.scheduledArrivalAt.getTime()) ||
+    !Number.isFinite(booking.scheduledDepartureAt.getTime()) ||
+    booking.scheduledArrivalAt >= booking.scheduledDepartureAt ||
+    !Number.isFinite(now.getTime())
+  ) {
+    throw new ConflictException(
+      'Rental timing is incomplete. Staff review is required.',
+    );
+  }
+
+  if (
+    !isWithinRentalArrivalWindow(booking, now) &&
+    !allowArrivalWindowOverride
+  ) {
+    throw new ConflictException(
+      'Check-in is outside the permitted arrival window.',
+    );
+  }
+
+  const preserveDeparture =
+    preserveLateDeparture &&
+    now > booking.scheduledArrivalAt &&
+    now < booking.scheduledDepartureAt;
+
+  const end = preserveDeparture
+    ? new Date(booking.scheduledDepartureAt.getTime())
+    : new Date(
+        now.getTime() +
+          rentalDurationMinutes(
+            booking.rentalType,
+            booking.rentalUnits,
+          ) *
+            60_000,
+      );
+
+  if (booking.rentalType === 'HOURLY') {
+    const closing = new Date(
+      calendarMarker(now).getTime() + 15 * 60 * 60_000,
+    );
+
+    if (end > closing) {
+      throw new ConflictException(
+        'Hourly stays must finish by 11 PM.',
+      );
+    }
+  }
+
   return { start: now, end };
 }
