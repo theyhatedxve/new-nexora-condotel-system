@@ -200,19 +200,6 @@ p {
   font-size: var(--font-size-0-8rem);
 }
 
-.backend-status {
-  padding: var(--space-0-6rem) var(--space-2rem);
-  font-size: var(--font-size-0-8rem);
-  border-bottom: 1px solid var(--border);
-}
-
-.status-connected {
-  color: var(--color-166534);
-}
-
-.status-offline {
-  color: var(--color-b91c1c);
-}
 
 .mobile-menu {
   display: none;
@@ -276,80 +263,6 @@ p {
   max-width: 700px;
   margin: var(--space-2rem) auto;
   padding: var(--space-1-5rem);
-}
-
-.dashboard-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-1rem);
-  flex-wrap: wrap;
-}
-
-.dashboard-heading h1 {
-  margin-bottom: var(--space-0-5rem);
-}
-
-.dashboard-heading button {
-  min-height: 44px;
-}
-
-.dashboard-context,
-.summary-updated {
-  color: var(--muted);
-}
-
-.summary-updated {
-  font-size: var(--font-size-0-8rem);
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-1rem);
-  margin-top: var(--space-1-5rem);
-}
-
-.summary-card {
-  min-width: 0;
-  padding: var(--space-1-5rem);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--gold);
-  border-radius: var(--radius-0-75rem);
-}
-
-.summary-card h2 {
-  font-size: var(--font-size-1rem);
-}
-
-.summary-value {
-  margin: var(--space-0-75rem) 0;
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  font-weight: var(--font-weight-700);
-  line-height: var(--line-height-1-25);
-}
-
-.summary-description {
-  color: var(--muted);
-  font-size: var(--font-size-0-9rem);
-}
-
-.summary-breakdown {
-  font-size: var(--font-size-0-9rem);
-}
-
-.summary-breakdown div {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-0-5rem);
-  margin-top: var(--space-0-4rem);
-}
-
-.summary-breakdown dd {
-  margin: 0;
-  font-weight: var(--font-weight-600);
 }
 
 .records-heading {
@@ -933,18 +846,6 @@ p {
   }
 }
 
-@media (max-width: 1100px) {
-  .summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 600px) {
-  .summary-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 @media (max-width: 767px) {
   .admin-layout {
     display: block;
@@ -984,9 +885,6 @@ p {
     padding: var(--space-1rem);
   }
 
-  .backend-status {
-    padding: var(--space-0-6rem) var(--space-1rem);
-  }
 
   .auth-card {
     padding: var(--space-1-25rem);

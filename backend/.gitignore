@@ -1,40 +1,5 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Generated Prisma client
+/src/generated/prisma/
 
-/src/generated/prisma
-
-
-# Prisma generated files
-backend/src/generated/prisma/
-
-# SQLite development database
-backend/dev.db
-backend/dev.db-journal
-backend/prisma/dev.db
-backend/prisma/dev.db-journal
-
-# Isolated NEXORA database tests
-backend/step10.test.db
-backend/step10.test.db-journal
-backend/step10.test.db-wal
-backend/step10.test.db-shm
-
-
-#Phase 4 Step 1 test
-backend/phase4.step1.test.db
-backend/phase4.step1.test.db-journal
-backend/phase4.step1.test.db-wal
-backend/phase4.step1.test.db-shm
-
-
-#Phase 4 Step 2 Test 
-backend/phase4.step2.test.db
-backend/phase4.step2.test.db-journal
-backend/phase4.step2.test.db-wal
-backend/phase4.step2.test.db-shm
-
-
-# Uploaded room images and isolated tests
-storage/room-images/
-backend/phase4.step4.test.db*
+# Dependencies, builds, environment files, databases, logs,
+# uploads, and backups are covered by NEXORA/.gitignore.

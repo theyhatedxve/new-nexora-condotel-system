@@ -1,6 +1,5 @@
 .dashboard-refined .dashboard-screen__panel,
-.dashboard-refined .daily-metric,
-.dashboard-refined .daily-dashboard__accordion {
+.dashboard-refined .daily-metric {
   background: #fff;
   border-color: #d8e2ef;
   box-shadow: 0 2px 6px rgb(16 33 60 / 4%);
@@ -26,8 +25,7 @@
   line-height: 1.65;
 }
 
-.dashboard-refined .dashboard-screen__refresh,
-.dashboard-refined .daily-dashboard__outline-link {
+.dashboard-refined .dashboard-screen__refresh {
   min-height: 44px;
   padding: 0.65rem 0.9rem;
   border-color: #cbd7e9;
@@ -37,8 +35,7 @@
   font-weight: 600;
 }
 
-.dashboard-refined .dashboard-screen__refresh:hover:not(:disabled),
-.dashboard-refined .daily-dashboard__outline-link:hover {
+.dashboard-refined .dashboard-screen__refresh:hover:not(:disabled) {
   background: #fff8e9;
   border-color: #c5a15a;
 }
@@ -192,86 +189,8 @@
 }
 
 /* Keep the reservation table prominent and readable. */
-.dashboard-refined .dashboard-screen__table {
-  min-width: 650px;
-}
-
-.dashboard-refined .dashboard-screen__table th,
-.dashboard-refined .dashboard-screen__table td {
-  padding: 0.9rem 0.75rem;
-  line-height: 1.6;
-}
-
-.dashboard-refined .dashboard-screen__table thead th {
-  color: #405574;
-  background: #f0f4fa;
-  font-size: 0.8rem;
-}
-
-.dashboard-refined .dashboard-screen__table tbody th {
-  width: 35%;
-}
-
-.dashboard-refined .dashboard-screen__table tbody th a {
-  color: #214b80;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.dashboard-refined__reference {
-  display: block;
-  margin-top: 0.3rem;
-  color: #526078;
-  font-size: 0.72rem;
-  font-weight: 400;
-  overflow-wrap: anywhere;
-}
 
 /* Preserve the three separate accordion bars. */
-.dashboard-refined .daily-dashboard__accordion {
-  margin-top: 0.75rem;
-  border-radius: 0.85rem;
-}
-
-.dashboard-refined .daily-dashboard__accordion > summary {
-  gap: 0.85rem;
-  min-height: 60px;
-  padding: 0.9rem 1.25rem;
-  border-radius: 0.85rem;
-}
-
-.dashboard-refined
-  .daily-dashboard__accordion > summary > svg:first-child {
-  color: #7b642f;
-}
-
-.dashboard-refined
-  .daily-dashboard__accordion > summary > strong {
-  font-size: 0.98rem;
-  line-height: 1.5;
-}
-
-.dashboard-refined
-  .daily-dashboard__accordion > summary >
-  .dashboard-refined__accordion-summary {
-  margin-left: auto;
-  color: #526078;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  text-align: right;
-}
-
-.dashboard-refined .daily-dashboard__chevron {
-  margin-left: 0;
-}
-
-.dashboard-refined .daily-dashboard__accordion-body {
-  padding: 1.25rem;
-}
-
-.dashboard-refined .dashboard-screen__breakdown {
-  margin-top: 1rem;
-}
 
 .dashboard-refined .dashboard-screen__error,
 .dashboard-refined .dashboard-screen__review {
@@ -411,23 +330,6 @@
   .dashboard-refined .daily-workflow__list,
   .dashboard-refined .daily-dashboard__metrics {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .dashboard-refined .daily-dashboard__accordion > summary {
-    flex-wrap: wrap;
-  }
-
-  .dashboard-refined
-    .daily-dashboard__accordion > summary >
-    .dashboard-refined__accordion-summary {
-    flex-basis: 100%;
-    margin-left: 0;
-    padding-left: 2.3rem;
-    text-align: left;
-  }
-
-  .dashboard-refined .daily-dashboard__chevron {
-    margin-left: auto;
   }
 
   .refined-queues__list > li {

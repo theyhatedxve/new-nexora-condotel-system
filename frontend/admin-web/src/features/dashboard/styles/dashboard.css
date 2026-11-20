@@ -15,8 +15,7 @@
 }
 
 .dashboard-screen__panel,
-.daily-metric,
-.daily-dashboard__accordion {
+.daily-metric {
   border: 1px solid #d5e0f2;
   border-radius: 16px;
   background: linear-gradient(140deg, #ffffff, #fcfdff);
@@ -53,8 +52,7 @@
   line-height: 1.6;
 }
 
-.dashboard-screen__refresh,
-.daily-dashboard__outline-link {
+.dashboard-screen__refresh {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -71,8 +69,7 @@
   text-decoration: none;
 }
 
-.dashboard-screen__refresh:hover:not(:disabled),
-.daily-dashboard__outline-link:hover {
+.dashboard-screen__refresh:hover:not(:disabled) {
   background: #fff7e5;
 }
 
@@ -241,65 +238,6 @@
   line-height: 1.5;
 }
 
-.daily-dashboard__panel-heading {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.dashboard-screen__table-scroll {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.dashboard-screen__table {
-  width: 100%;
-  min-width: 760px;
-  border-collapse: collapse;
-  color: #122745;
-  text-align: left;
-  font-size: 12px;
-}
-
-.dashboard-screen__table caption {
-  padding: 10px 0;
-  color: #526078;
-  text-align: left;
-}
-
-.dashboard-screen__table th,
-.dashboard-screen__table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #e8edf6;
-  vertical-align: middle;
-}
-
-.dashboard-screen__table thead {
-  background: #edf1f8;
-  color: #152a49;
-}
-
-.dashboard-screen__table thead th {
-  font-weight: 750;
-  white-space: nowrap;
-}
-
-.dashboard-screen__table tbody th {
-  max-width: 320px;
-  overflow-wrap: anywhere;
-  font-weight: 600;
-}
-
-.dashboard-screen__table a {
-  color: #153f7b;
-  text-decoration-thickness: 1px;
-}
-
-.dashboard-screen__stay-date {
-  display: block;
-  white-space: nowrap;
-}
-
 .dashboard-screen__badge {
   display: inline-block;
   padding: 4px 11px;
@@ -344,13 +282,6 @@
   line-height: 1.6;
 }
 
-.dashboard-screen__message {
-  margin: 12px 0;
-  padding: 12px;
-  border-radius: 9px;
-  background: #f0f4fb;
-}
-
 .dashboard-screen__error,
 .dashboard-screen__review {
   padding: 12px 14px;
@@ -360,101 +291,6 @@
   color: #734d13;
   font-size: 12px;
   line-height: 1.6;
-}
-
-.daily-dashboard__accordion {
-  margin-top: 10px;
-  scroll-margin-top: 16px;
-}
-
-.daily-dashboard__accordion > summary {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 54px;
-  padding: 13px 20px;
-  border-radius: 16px;
-  list-style: none;
-  cursor: pointer;
-}
-
-.daily-dashboard__accordion > summary::-webkit-details-marker {
-  display: none;
-}
-
-.daily-dashboard__accordion > summary > svg:first-child {
-  flex-shrink: 0;
-  color: #95620f;
-}
-
-.daily-dashboard__accordion > summary > strong {
-  color: #111d30;
-  font-size: 16px;
-}
-
-.daily-dashboard__accordion > summary > span {
-  color: #405574;
-  font-size: 11px;
-}
-
-.daily-dashboard__chevron {
-  flex-shrink: 0;
-  margin-left: auto;
-  color: #1c385d;
-}
-
-.daily-dashboard__accordion[open] > summary {
-  border-bottom: 1px solid #e0e7f3;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.daily-dashboard__accordion[open] > summary .daily-dashboard__chevron {
-  transform: rotate(180deg);
-}
-
-.daily-dashboard__accordion-body {
-  min-width: 0;
-  padding: 20px;
-}
-
-.daily-dashboard__accordion-body > .dashboard-screen__panel {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.daily-dashboard__accordion-body h3 {
-  margin-top: 24px;
-  font-size: 15px;
-}
-
-.dashboard-screen__breakdown {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin: 18px 0;
-}
-
-.dashboard-screen__breakdown > div {
-  padding: 14px;
-  border: 1px solid #e0e7f3;
-  border-radius: 10px;
-  background: #f8faff;
-}
-
-.dashboard-screen__breakdown dt {
-  color: #526078;
-  font-size: 12px;
-}
-
-.dashboard-screen__breakdown dd {
-  margin: 6px 0 0;
-  color: #112743;
-  font-size: 19px;
-  font-weight: 700;
 }
 
 @media (max-width: 1350px) {
@@ -482,14 +318,6 @@
     width: 40px;
     height: 40px;
   }
-
-  .daily-dashboard__accordion > summary > span {
-    display: none;
-  }
-
-  .dashboard-screen__breakdown {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 520px) {
@@ -500,18 +328,5 @@
   .daily-workflow__list,
   .daily-dashboard__metrics {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .daily-dashboard__accordion > summary {
-    gap: 10px;
-    padding-inline: 15px;
-  }
-
-  .daily-dashboard__accordion > summary > strong {
-    font-size: 14px;
-  }
-
-  .daily-dashboard__accordion-body {
-    padding: 16px;
   }
 }
