@@ -13,40 +13,6 @@
   color: var(--color-primary);
 }
 
-.availability-description {
-  color: var(--color-text-muted);
-  line-height: var(--line-height-1-6);
-}
-
-.availability-fields {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
-  margin: var(--space-6) 0;
-}
-
-.availability-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.availability-field label {
-  font-weight: var(--font-weight-600);
-  color: var(--color-text);
-}
-
-.availability-field input {
-  width: 100%;
-  min-width: 0;
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-small);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font: inherit;
-}
-
 .availability-button {
   padding: var(--space-0-85rem) var(--space-6);
   background: var(--color-primary);
@@ -90,12 +56,6 @@
   text-align: center;
   color: var(--color-text-muted);
   margin-bottom: var(--space-6);
-}
-
-.availability-results-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-  gap: var(--space-6);
 }
 
 .availability-result-card {
@@ -178,21 +138,10 @@
 /* Phase 5 Step 7 — Search layout safeguards */
 
 .availability-search,
-.availability-result,
 .availability-result-card,
 .availability-results {
   min-width: 0;
   max-width: 100%;
-}
-
-.availability-fields > *,
-.availability-results-grid > * {
-  min-width: 0;
-}
-
-.availability-fields input {
-  max-width: 100%;
-  min-height: 44px;
 }
 
 .availability-search button,
@@ -200,7 +149,6 @@
   min-height: 44px;
 }
 
-.availability-result,
 .availability-result-card {
   overflow-wrap: anywhere;
 }
@@ -211,20 +159,7 @@
   gap: var(--space-3);
 }
 
-@media (max-width: 700px) {
-  .availability-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .availability-results-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
-  .availability-fields {
-    grid-template-columns: 1fr;
-  }
 
   .availability-search {
     padding: var(--space-4);

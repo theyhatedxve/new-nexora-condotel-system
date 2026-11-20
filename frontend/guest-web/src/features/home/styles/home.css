@@ -112,20 +112,6 @@
   outline-offset: 5px;
 }
 
-.home-hero__caption {
-  position: absolute;
-  right: max(1.5rem, calc((100% - 1200px) / 2));
-  bottom: 1.25rem;
-  margin: 0;
-  padding: var(--space-0-4rem) var(--space-0-65rem);
-  border: 1px solid var(--color-rgb-255-255-255-25);
-  border-radius: var(--radius-0-25rem);
-  background: var(--color-rgb-12-27-46-78);
-  color: var(--color-on-primary);
-  font-size: var(--font-size-0-72rem);
-  line-height: var(--line-height-1-4);
-}
-
 @media (max-width: 760px) {
   .home-hero {
     min-height: 560px;

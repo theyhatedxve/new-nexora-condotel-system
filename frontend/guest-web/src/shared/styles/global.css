@@ -57,54 +57,6 @@ a {
 
 /* ---------- Navbar ---------- */
 
-.navbar {
-  position: relative;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  padding: var(--space-4) 8%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.navbar :focus-visible {
-  outline-color: var(--color-gold-light);
-}
-
-.logo {
-  color: var(--color-gold-light);
-  font-size: var(--font-size-26px);
-  font-weight: bold;
-  letter-spacing: 2px;
-}
-
-.nav-links {
-  display: flex;
-  gap: var(--space-6);
-}
-
-.nav-links a {
-  color: var(--color-on-primary);
-  padding: var(--space-1) 0;
-  border-bottom: 2px solid transparent;
-}
-
-.nav-links a:hover,
-.nav-links a.active {
-  color: var(--color-gold-light);
-  border-bottom-color: var(--color-gold-light);
-}
-
-.nav-toggle {
-  display: none;
-  background: none;
-  border: 0;
-  color: var(--color-on-primary);
-  padding: var(--space-2);
-  cursor: pointer;
-}
-
 /* ---------- Footer ---------- */
 
 .footer {
@@ -117,24 +69,6 @@ a {
 
 /* ---------- Backend status (development helper) ---------- */
 
-.backend-status {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-2) var(--space-4);
-  text-align: center;
-  font-size: var(--font-size-13px);
-}
-
-.status-connected {
-  color: var(--color-success);
-  font-weight: bold;
-}
-
-.status-offline {
-  color: var(--color-danger);
-  font-weight: bold;
-}
-
 /* ---------- Existing page styles (Home and Rooms) ---------- */
 
 .hero {
@@ -145,36 +79,9 @@ a {
   padding: var(--space-105px) var(--space-20px);
 }
 
-.eyebrow {
-  color: var(--color-gold-light);
-  font-size: var(--font-size-13px);
-  font-weight: bold;
-  letter-spacing: 3px;
-}
-
 .hero h1 {
   font-size: var(--font-size-44px);
   margin: var(--space-20px) 0;
-}
-
-.hero-description {
-  max-width: 520px;
-  margin: 0 auto var(--space-35px);
-  line-height: var(--line-height-1-7);
-  color: var(--color-text-on-dark-muted);
-}
-
-.primary-button {
-  display: inline-block;
-  background: var(--color-gold-light);
-  color: var(--color-on-gold);
-  padding: var(--space-14px) var(--space-28px);
-  border-radius: var(--radius-small);
-  font-weight: bold;
-}
-
-.primary-button:hover {
-  background: var(--color-f0d39a);
 }
 
 .features {
@@ -184,54 +91,6 @@ a {
 
 .features h2 {
   margin-bottom: var(--space-35px);
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-20px);
-}
-
-.feature-card {
-  padding: var(--space-30px) var(--space-20px);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
-}
-
-.feature-card svg {
-  color: var(--color-gold);
-}
-
-.feature-card h3 {
-  margin-top: var(--space-15px);
-}
-
-.feature-card p {
-  color: var(--color-text-muted);
-  line-height: var(--line-height-1-6);
-}
-
-.cta-band {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  text-align: center;
-  padding: var(--space-12) 8%;
-}
-
-.cta-band h2 {
-  color: var(--color-on-primary);
-  margin-top: 0;
-}
-
-.cta-band p {
-  margin-bottom: var(--space-6);
-}
-
-.simple-page {
-  min-height: 60vh;
-  padding: var(--space-70px) 8%;
-  text-align: center;
 }
 
 /* ---------- Rooms page ---------- */
@@ -254,17 +113,6 @@ a {
 .rooms-message {
   text-align: center;
   color: var(--color-text-muted);
-}
-
-.rooms-error {
-  color: var(--color-danger);
-  font-weight: bold;
-}
-
-.room-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-6);
 }
 
 .room-card {
@@ -348,67 +196,8 @@ a {
   margin: 0 auto;
 }
 
-.back-link {
-  display: inline-block;
-  margin-bottom: var(--space-4);
-  color: var(--color-primary);
-  font-weight: bold;
-}
-
 .room-details h1 {
   margin: 0 0 var(--space-2);
-}
-
-.room-details-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-2);
-}
-
-.room-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--space-4);
-  margin: var(--space-6) 0;
-}
-
-.room-gallery img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: var(--radius-medium);
-}
-
-.room-gallery img:first-child {
-  grid-column: 1 / -1;
-  aspect-ratio: 16 / 9;
-}
-
-.room-details-description {
-  line-height: var(--line-height-1-7);
-  color: var(--color-text-muted);
-}
-
-.amenity-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-3);
-}
-
-.amenity-list li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.amenity-list svg {
-  color: var(--color-gold);
 }
 
 /* Phase 5 Step 6 — Loading, Empty, and Failure States */
@@ -504,38 +293,20 @@ textarea:focus-visible {
 }
 
 /* Maintain visible focus on dark navigation. */
-.navbar a:focus-visible,
-.navbar button:focus-visible {
-  outline-color: var(--color-gold-light);
-}
 
 /* Improve clickable target sizes. */
-.nav-toggle {
-  min-width: 44px;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-}
 
-.primary-button,
 .outline-button,
 .feedback-retry-button {
   min-height: 44px;
 }
 
 /* Fix grid overflow on narrow mobile screens. */
-.room-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-}
 
 /* Responsive room gallery. */
-.room-gallery {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-}
 
 /* Preserve image proportions. */
-.room-card-image,
-.room-gallery img {
+.room-card-image {
   max-width: 100%;
 }
 
@@ -553,14 +324,6 @@ textarea:focus-visible {
 
 /* Keep menu toggle visible and usable on mobile. */
 @media (max-width: 768px) {
-  .nav-toggle {
-    display: inline-flex;
-  }
-
-  .navbar {
-    padding-left: 5%;
-    padding-right: 5%;
-  }
 
   .rooms-page {
     padding: var(--space-8) 5%;
@@ -569,18 +332,10 @@ textarea:focus-visible {
   .room-details {
     padding: var(--space-6) 5%;
   }
-
-  .room-gallery img:first-child {
-    grid-column: 1 / -1;
-  }
 }
 
 /* Additional adjustments for very narrow phones. */
 @media (max-width: 360px) {
-  .logo {
-    font-size: var(--font-size-22px);
-    letter-spacing: 1px;
-  }
 
   .hero {
     padding: var(--space-60px) 5%;
@@ -611,30 +366,6 @@ textarea:focus-visible {
 /* ---------- Narrow screens ---------- */
 
 @media (max-width: 768px) {
-  .nav-toggle {
-    display: block;
-  }
-
-  .nav-links {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    gap: 0;
-    background: var(--color-primary);
-    padding: var(--space-2) 8% var(--space-4);
-    z-index: 5;
-  }
-
-  .nav-links.is-open {
-    display: flex;
-  }
-
-  .nav-links a {
-    padding: var(--space-3) 0;
-  }
 
   .hero {
     padding: var(--space-75px) var(--space-20px);
@@ -642,9 +373,5 @@ textarea:focus-visible {
 
   .hero h1 {
     font-size: var(--font-size-32px);
-  }
-
-  .feature-grid {
-    grid-template-columns: 1fr;
   }
 }
