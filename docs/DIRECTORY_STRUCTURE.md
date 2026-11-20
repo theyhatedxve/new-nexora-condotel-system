@@ -1,5 +1,49 @@
 # NEXORA — System Directory Structure
 
+## Current Guest booking filenames — 2026-11-20
+
+**Status:** Renaming completed, owner-confirmed.
+
+This focused map supersedes older booking-detail filenames below.
+
+```text
+frontend/guest-web/src/features/booking/
+  pages/
+    MyBookings.jsx
+    BookingDetails.jsx
+    BookingAccessRedirect.jsx
+  components/
+    BookingDetailsView.jsx
+    other retained booking components
+  hooks/
+    useBookingDetailsContext.js
+    useBookingDetailsView.js
+    other retained booking hooks
+  styles/
+    my-bookings.css
+    booking-details.css
+    booking-details-luxury.css
+  services/
+  utils/
+  tests/
+```
+
+This is a focused map, not an exhaustive file inventory.
+
+- MyBookings.jsx displays the booking list.
+- BookingDetails.jsx displays one booking.
+- BookingAccessRedirect.jsx redirects the retained access route
+  to My Bookings.
+- Existing route URLs and CSS class names were preserved.
+
+The completed frontend reorganize-source.mjs scripts and backend
+reorganize-modules.mjs script were retired.
+Unreferenced public/icons.svg sprites were removed from both frontends.
+Recovery copies remain under backups/.
+
+Older file trees below are historical. Do not recreate removed tools
+or use old filenames as the current source map.
+
 ## Current feature-based structure — 2026-11-20
 
 **Status:** Source-inspected; organization completed, owner-confirmed.

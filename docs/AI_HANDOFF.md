@@ -1,5 +1,63 @@
 # NEXORA guest booking/payment redesign — AI continuation handoff
 
+## Final cleanup and naming handoff — 2026-11-20
+
+**Status:** Cleanup and Guest booking-file renaming completed,
+owner-confirmed. No further implementation batch is scheduled.
+
+This checkpoint supersedes older filename references and pending
+cleanup/naming instructions below.
+
+### Rename mapping
+
+Paths are relative to frontend/guest-web/src/features/booking/.
+
+| Previous | Current |
+|---|---|
+| pages/MyBooking.jsx | pages/BookingDetails.jsx |
+| components/MyBookingView.jsx | components/BookingDetailsView.jsx |
+| hooks/useMyBookingContext.js | hooks/useBookingDetailsContext.js |
+| hooks/useMyBookingView.js | hooks/useBookingDetailsView.js |
+| pages/BookingAccess.jsx | pages/BookingAccessRedirect.jsx |
+| styles/my-booking.css | styles/booking-details.css |
+| styles/my-booking-luxury.css | styles/booking-details-luxury.css |
+
+MyBookings.jsx remains unchanged as the booking-list page.
+Imports and corresponding component/hook names were updated.
+
+### Preserved routes
+
+- /my-bookings: booking list.
+- /my-bookings/:reservationId: booking details.
+- /my-booking: retained redirect to /my-bookings.
+- /booking-access: retained redirect to /my-bookings.
+
+Existing CSS class names, authentication, booking ownership,
+payment behavior, and recovery workflows remain unchanged.
+
+### Completed file cleanup
+
+Retired the three one-time source-relocation scripts and the two
+unreferenced frontend public/icons.svg sprites.
+
+Keep existing recovery copies, manifests, active tests, seed utilities,
+databases, migrations, generated Prisma code, uploads, and encryption
+configuration.
+
+### Verification and next action
+
+Completion is owner-confirmed.
+The assistant inspected the renamed JavaScript/JSX paths but did not run
+tests, lint, builds, servers, or browser checks for this closure.
+
+Do not invent test totals or require repeated checks without a new reason.
+The previous handoff's current feature-based test commands remain applicable.
+
+The approved cleanup, organization, and naming scope is closed.
+The owner selects the next task.
+
+NFC remains postponed. Production deployment remains deferred.
+
 ## Source organization handoff — 2026-11-20
 
 **Status:** All three source-arrangement batches completed, owner-confirmed.

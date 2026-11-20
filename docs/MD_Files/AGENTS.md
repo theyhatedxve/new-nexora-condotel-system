@@ -8,6 +8,64 @@
 
 > This proposed file is a condensed replacement guide. The existing 2026-11-11 `AGENTS.md` contains detailed historical implementation records, dependency inventories, test evidence, and screen-level checkpoints. Preserve or archive those records before adopting a replacement. This draft does not verify live repository or database state.
 
+## Cleanup and naming closure — 2026-11-20
+
+**Status:** Final unused-file cleanup and Guest booking-file renaming
+completed, owner-confirmed.
+
+This checkpoint supersedes older filenames and pending naming tasks below.
+Preserve historical checkpoints. The document-level draft designation
+remains unchanged.
+
+### Retired files
+
+- frontend/admin-web/scripts/reorganize-source.mjs
+- frontend/guest-web/scripts/reorganize-source.mjs
+- backend/scripts/reorganize-modules.mjs
+- frontend/admin-web/public/icons.svg
+- frontend/guest-web/public/icons.svg
+
+The relocation tools completed their one-time purpose.
+The public icon sprites had no references in the reviewed frontend source.
+Existing recovery copies and manifests remain retained.
+
+### Guest booking names
+
+The booking feature now uses:
+
+- pages/BookingDetails.jsx
+- components/BookingDetailsView.jsx
+- hooks/useBookingDetailsContext.js
+- hooks/useBookingDetailsView.js
+- pages/BookingAccessRedirect.jsx
+- styles/booking-details.css
+- styles/booking-details-luxury.css
+
+MyBookings.jsx remains the booking-list page.
+
+Imports and corresponding component/hook identifiers were updated.
+Existing routes and CSS class names remain unchanged.
+
+### Evidence and boundaries
+
+The owner confirmed completion.
+Current JavaScript/JSX filenames were source-inspected.
+The assistant did not run tests, lint, builds, servers, or browser checks
+for this closure. Do not invent verification output or test totals.
+
+No database data, migrations, API contracts, or business rules were
+changed by this cleanup and naming work.
+
+### Continuation
+
+The approved cleanup, organization, and naming work is closed.
+Keep recovery copies and active development/test utilities.
+Do not schedule further renaming or deletion without an identified need
+and appropriate owner authorization.
+
+The owner selects the next task.
+NFC remains postponed. Production deployment remains deferred.
+
 ## Feature organization closure — 2026-11-20
 
 **Status:** Admin frontend, Guest frontend, and backend organization
