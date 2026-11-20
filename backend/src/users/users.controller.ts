@@ -5,6 +5,7 @@ import {
   Get,
   Header,
   Headers,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -15,6 +16,7 @@ import { Throttle } from '@nestjs/throttler';
 
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { getAllowedOrigins } from '../auth/auth.config.js';
+import { requireAuthRealmOrigin } from '../auth/auth-realm.config.js';
 import { UsersService } from './users.service.js';
 
 import {
@@ -107,6 +109,23 @@ export class UsersController {
 
     return {
       data: await this.users.update(id, input, request.user),
+    };
+  }
+
+  @Post(':id/reset-password')
+  @HttpCode(200)
+  @Header('Cache-Control', 'no-store')
+  @Header('Vary', 'Authorization, Origin')
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  async resetPassword(
+    @Param('id') id: string,
+    @Body() input: StaffVersionDto,
+    @Headers('origin') origin: string | undefined,
+    @Req() request: StaffRequest,
+  ) {
+    requireAuthRealmOrigin('staff', origin);
+    return {
+      data: await this.users.resetDefaultPassword(id, input, request.user),
     };
   }
 

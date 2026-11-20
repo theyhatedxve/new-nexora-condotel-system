@@ -4,11 +4,13 @@ import { useAuth } from "../../auth/useAuth.js";
 import { ROLE_LABELS, STAFF_ROLES } from "../../../app/staffNavigation.js";
 import StaffDataState from "../../../shared/components/StaffDataState.jsx";
 import StaffUserResult from "../components/StaffUserResult.jsx";
+import StaffPasswordReset from "../components/StaffPasswordReset.jsx";
 import { useStaffData } from "../../../shared/hooks/useStaffData.js";
 import useStaffUserChange from "../hooks/useStaffUserChange.js";
 import { getStaffUser, STATUS_LABELS } from "../services/staffUsersApi.js";
 import "../styles/staff-users.css";
 import "../../../shared/styles/admin-management.css";
+import "../styles/staff-user-editor.css";
 
 function StaffUserForm({ record }) {
   const { user } = useAuth();
@@ -107,11 +109,27 @@ function StaffUserForm({ record }) {
 
   return (
     <>
+      {record && (
+        <section className="staff-editor__summary" aria-label="Staff account summary">
+          <div className="staff-editor__avatar" aria-hidden="true">
+            {(record.name || record.email).trim().charAt(0).toUpperCase()}
+          </div>
+          <div className="staff-editor__identity">
+            <h2>{record.name}</h2>
+            <p>{record.email}</p>
+          </div>
+          <div className="staff-editor__badges">
+            <span>{ROLE_LABELS[record.role]}</span>
+            <span data-status={record.status}>{STATUS_LABELS[record.status]}</span>
+          </div>
+        </section>
+      )}
       {!canEdit && (
         <p role="status">Only a Super Admin can manage this account.</p>
       )}
       <form className="staff-users__form" onSubmit={prepare}>
-        <fieldset disabled={!canEdit || change.blocked || Boolean(review)}>
+        <fieldset className="staff-editor__fields"
+          disabled={!canEdit || change.blocked || Boolean(review)}>
           <legend>{creating ? "New staff account" : "Account details"}</legend>
 
           <label>
@@ -233,6 +251,10 @@ function StaffUserForm({ record }) {
         </fieldset>
       </form>
 
+      {!creating && (
+        <StaffPasswordReset record={record} reviewOpen={Boolean(review)} />
+      )}
+
       {message && <p role="alert">{message}</p>}
 
       {review && (
@@ -310,7 +332,7 @@ export default function StaffUserEditor() {
   const [revision, setRevision] = useState(0);
 
   return (
-    <section className="staff-users management-ui">
+    <section className="staff-users management-ui staff-editor">
       <Link to="/users">Back to Users &amp; Roles</Link>
       <header className="staff-users__heading">
         <h1>{userId ? "Manage staff account" : "Add User"}</h1>

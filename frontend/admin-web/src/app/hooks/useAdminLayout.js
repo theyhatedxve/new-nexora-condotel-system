@@ -5,6 +5,7 @@ import { useAuth } from "../../features/auth/useAuth.js";
 import { staffNavigation } from "../staffNavigation.js";
 
 const additionalTitles = [
+  { path: "/profile", label: "My Profile" },
   {
     path: "/rooms/types",
     label: "Room Types",

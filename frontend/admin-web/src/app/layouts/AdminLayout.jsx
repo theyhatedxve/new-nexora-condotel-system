@@ -7,6 +7,7 @@ import useAdminLayout from "../hooks/useAdminLayout.js";
 
 import "../styles/admin-shell.css";
 import "../styles/admin-overlays.css";
+import "../../features/profile/styles/staff-profile.css";
 
 export default function AdminLayout() {
   const {

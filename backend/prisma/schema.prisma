@@ -192,6 +192,8 @@ model User {
   id           String     @id @default(cuid())
   roleId       String
   name         String
+  staffPhone   String?
+  staffAddress String?
   email        String     @unique
   passwordHash String
   status       UserStatus @default(PENDING)

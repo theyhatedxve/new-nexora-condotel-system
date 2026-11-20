@@ -196,6 +196,21 @@ export function signOut() {
   return logoutOperation;
 }
 
+export function updateStaffProfileName(userId, name) {
+  if (session.status === "authenticated" && session.user?.id === userId) {
+    publish("authenticated", { ...session.user, name });
+  }
+}
+
+export function endStaffProfileSession(userId, message) {
+  if (session.status !== "authenticated" || session.user?.id !== userId) return;
+
+  ++revision;
+  lastVerified = 0;
+  clearToken();
+  publish("anonymous", null, message);
+}
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {

@@ -14,6 +14,7 @@ import { canManageStaff } from './staff-access.policy.js';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PasswordService } from '../auth/password.service.js';
+import { RESET_LOGIN_FAILURES } from '../auth/login-lockout.policy.js';
 
 import {
   STAFF_ROLES,
@@ -526,6 +527,73 @@ export class UsersService {
       return {
         user: staffUserView(await this.requireStaff(tx, id)),
         changed: true,
+      };
+    });
+  }
+
+  async resetDefaultPassword(
+    id: string,
+    input: StaffVersionDto,
+    identity: AuthenticatedUser | undefined,
+  ) {
+    const defaultPassword = process.env.NEXORA_STAFF_DEFAULT_PASSWORD;
+    if (
+      !defaultPassword || defaultPassword.length < 12 ||
+      defaultPassword.length > 128 || defaultPassword.trim().length < 12
+    ) {
+      throw new ServiceUnavailableException(
+        'The default temporary password is not configured correctly.',
+      );
+    }
+
+    // Hash before opening the database write transaction.
+    const passwordHash = await this.passwords.hashPassword(defaultPassword);
+
+    return this.write(identity, async (tx, actorId) => {
+      const current = await this.requireStaff(tx, id);
+      if (
+        id === actorId ||
+        !['ADMIN', 'MANAGER', 'RECEPTIONIST'].includes(current.role.name)
+      ) {
+        throw new ForbiddenException(
+          'Use My Profile for your own password. This reset is only available for other Admin, Manager, and Receptionist accounts.',
+        );
+      }
+      this.assertManage(identity, current.role.name);
+      this.assertVersion(current, input.updatedAt);
+
+      if (current.status !== 'ACTIVE') {
+        throw new ConflictException(
+          'Password reset requires an active account. Pending and disabled accounts must use their existing management workflow.',
+        );
+      }
+
+      const changed = await tx.user.updateMany({
+        where: { id, updatedAt: current.updatedAt, status: 'ACTIVE' },
+        data: {
+          passwordHash,
+          mustChangePassword: true,
+          sessionVersion: { increment: 1 },
+          updatedAt: this.nextVersion(current),
+          ...RESET_LOGIN_FAILURES,
+        },
+      });
+      if (changed.count !== 1) {
+        throw new ConflictException(
+          'This account changed. Reload it before resetting the password.',
+        );
+      }
+
+      await this.invalidateAccess(tx, id, new Date());
+      await this.audit(tx, actorId, id, 'staff.password.reset_to_default', {
+        sessionsRevoked: true,
+        passwordChangeRequired: true,
+      });
+
+      return {
+        user: staffUserView(await this.requireStaff(tx, id)),
+        changed: true,
+        passwordReset: true,
       };
     });
   }

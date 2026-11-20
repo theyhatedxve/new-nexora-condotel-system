@@ -74,6 +74,12 @@ export async function sendStaffUserChange(request) {
       request.input,
       { timeout: 35_000 },
     );
+  } else if (request.kind === "reset-password") {
+    response = await api.post(
+      "/staff/users/" + encodeURIComponent(request.id) + "/reset-password",
+      request.input,
+      { timeout: 35_000 },
+    );
   } else {
     throw new Error("Unsupported staff account operation.");
   }
@@ -81,7 +87,7 @@ export async function sendStaffUserChange(request) {
   const result = response.data?.data;
   validateUser(result?.user);
 
-  if (request.kind === "update") {
+  if (request.kind === "update" || request.kind === "reset-password") {
     if (typeof result.changed !== "boolean") {
       throw new Error("Invalid staff update response.");
     }
@@ -91,10 +97,23 @@ export async function sendStaffUserChange(request) {
     throw new Error("Invalid invitation response.");
   }
 
+  if (
+    request.kind === "reset-password" &&
+    (
+      result.passwordReset !== true || result.user.id !== request.id ||
+      result.user.status !== "ACTIVE" || result.user.mustChangePassword !== true
+    )
+  ) {
+    throw new Error("The password reset result could not be verified.");
+  }
+
   return result;
 }
 
 export function staffChangeMessage(result) {
+  if (result.passwordReset === true) {
+    return "Password reset completed. Existing sessions ended. The staff member must replace the default temporary password before signing in.";
+  }
   if (result.delivery === "SMTP_ACCEPTED") {
     return "Account saved. The email server accepted the invitation. Check the recipient’s inbox.";
   }

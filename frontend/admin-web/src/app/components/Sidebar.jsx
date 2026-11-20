@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router";
+import { Link, NavLink, useLocation } from "react-router";
 import {
   BedDouble,
   ChevronDown,
@@ -212,6 +212,10 @@ export default function Sidebar({
             <LogOut size={18} aria-hidden="true" />
             Sign out
           </button>
+          <Link className="staff-profile-menu-link" to="/profile" onClick={onNavigate}>
+            <UserRound size={18} aria-hidden="true" />
+            My Profile
+          </Link>
         </div>
       </AdminDisclosure>
     </aside>

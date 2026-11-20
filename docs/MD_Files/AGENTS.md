@@ -1,5 +1,29 @@
 # NEXORA | AGENTS.md
 
+## Staff account editor and default-password reset - 2026-11-20
+
+**Status:** Approved source saved; owner verification pending.
+
+- Refined the existing staff editor with an account summary, responsive paired fields, and a separate account-security action.
+- Added `POST /api/staff/users/:id/reset-password` for active Admin, Manager, and Receptionist targets. Super Admin can reset those roles; Admin can reset Manager/Receptionist. Self-reset and Super Admin targets are rejected.
+- Reset uses backend `NEXORA_STAFF_DEFAULT_PASSWORD` (12-128 characters), revokes sessions/setup links, clears login failures, and requires password replacement through the existing temporary-password flow. It never enables Pending/Disabled accounts.
+- Added a confirmation dialog and integrated the operation with existing account-result/recovery handling. Default password is not returned or logged.
+- Added isolated regression tests. No tests, lint, builds, apps, migrations, or Prisma generation were run for this step. No `.env`, database, or unrelated security-document edits were made.
+- Next: owner configures the default password in the backend environment, restarts the backend, and runs focused checks and browser role/reset journeys.
+
+## Staff self-profile - 2026-11-20
+
+**Status:** Source changes saved under owner approval; migration and owner verification pending.
+
+- Added `/profile` for Super Admin, Admin, Manager, and Receptionist, reachable below Sign out in both account menus.
+- Added self-only profile endpoints for name, optional staff phone/address, sign-in email, and password.
+- Credential changes require the current password, invalidate sessions, and record audit field names without sensitive values.
+- Added an additive migration for `User.staffPhone` and `User.staffAddress`, plus isolated regression tests.
+- The assistant did not run migrations, Prisma generation, tests, lint, builds, servers, or browser checks. `backend/dev.db` was not modified.
+- Next: back up the stopped database, apply the migration and generate Prisma, then run the focused checks and browser journeys.
+
+The older document-level draft designation and historical checkpoints below remain unchanged.
+
 **Document version:** Proposed 2.0  
 **Prepared:** 2026-11-15  
 **Status:** REVIEW DRAFT, not yet adopted  

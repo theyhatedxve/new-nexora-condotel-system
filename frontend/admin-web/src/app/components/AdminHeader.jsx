@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import {
   CalendarDays,
   ChevronDown,
@@ -90,6 +90,10 @@ export default function AdminHeader({ title, user, onSignOut }) {
               <LogOut size={17} aria-hidden="true" />
               Sign out
             </button>
+            <Link className="staff-profile-menu-link" to="/profile">
+              <UserRound size={17} aria-hidden="true" />
+              My Profile
+            </Link>
           </div>
         </AdminDisclosure>
       </div>

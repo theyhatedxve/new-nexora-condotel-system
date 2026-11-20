@@ -1,4 +1,4 @@
-# NEXORA — Security Requirements
+y# NEXORA — Security Requirements
 
 ## Current security regression checkpoint — 2026-11-15
 

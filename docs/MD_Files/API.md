@@ -1,5 +1,31 @@
 # NEXORA | REST API Reference and Maintenance Plan
 
+## Installed source addition: reset staff password - 2026-11-20
+
+Source saved; owner verification pending. `POST /api/staff/users/:id/reset-password` accepts `{ updatedAt }` and returns `{ data: { user, changed: true, passwordReset: true } }`.
+
+- Active Super Admin may reset other Admin/Manager/Receptionist accounts; active Admin may reset Manager/Receptionist. Self-reset and Super Admin targets are forbidden. Pending/Disabled targets are rejected without changing their status.
+- Requires the staff origin, current target version, and configured backend `NEXORA_STAFF_DEFAULT_PASSWORD` (12-128 characters, at least 12 after trimming). The endpoint has a three-request-per-minute throttle.
+- Stores an Argon2id hash, requires password replacement, increments sessionVersion, revokes refresh/setup/verification tokens, clears login failures, and audits `staff.password.reset_to_default` without the password.
+- No migration is required for reset. The existing staff-profile migration prerequisite remains applicable if not yet applied.
+
+## Installed source addition: staff self-profile - 2026-11-20
+
+Source saved; migration and runtime verification pending. This addition does not adopt the older proposal sections below.
+
+All endpoints require an active staff identity: SUPER_ADMIN, ADMIN, MANAGER, or RECEPTIONIST. They always target the signed-in account; no target user ID is accepted.
+
+| Method | Path | Input / result |
+| --- | --- | --- |
+| GET | `/api/staff/profile` | Returns id, name, email, phone, address, role, updatedAt. No password hash or session version. |
+| PATCH | `/api/staff/profile` | updatedAt, name, phone, address. Optional phone/address use empty strings to clear. Returns the updated profile. |
+| POST | `/api/staff/profile/email` | updatedAt, email, currentPassword. Returns id and signInAgain=true. |
+| POST | `/api/staff/profile/password` | updatedAt, currentPassword, newPassword, confirmPassword. Returns id and signInAgain=true. |
+
+Writes enforce the configured staff origin and optimistic record version. Email/password changes revoke refresh sessions, increment sessionVersion, retire setup/verification tokens, and clear the staff refresh cookie. Wrong current passwords are 400 form errors; stale versions and duplicate email are 409 conflicts. Password changes require a different matching 12-128 character password. Audit records contain changed-field names, not personal values or credentials.
+
+Schema prerequisite: `20261120040000_staff_profile` adds nullable staffPhone/staffAddress to User. Guest phone encryption remains a separate feature.
+
 **Document:** `API.md`  
 **Draft version:** Proposed 3.0  
 **Prepared:** November 15, 2026  

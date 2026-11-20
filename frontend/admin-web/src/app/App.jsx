@@ -23,6 +23,7 @@ import Users from "../features/users/pages/Users.jsx";
 import StaffUserEditor from "../features/users/pages/StaffUserEditor.jsx";
 import StaffPassword from "../features/auth/pages/StaffPassword.jsx";
 import GuestAccounts from "../features/guests/pages/GuestAccounts.jsx";
+import MyProfile from "../features/profile/pages/MyProfile.jsx";
 import "../shared/styles/tokens.css";
 import "../shared/styles/global.css";
 
@@ -58,6 +59,7 @@ export default function App() {
 
           <Route element={<StaffRoute />}>
             <Route element={<AdminLayout />}>
+              <Route path="/profile" element={<MyProfile />} />
               {staffNavigation.map((item) => (
                 <Route key={item.path} element={<StaffRoute roles={item.roles} />}>
                   <Route
