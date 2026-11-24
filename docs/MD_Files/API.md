@@ -1,5 +1,19 @@
 # NEXORA | REST API Reference and Maintenance Plan
 
+## Guest account credentials - 2026-11-24
+
+Implemented source with isolated automated checks; development migration and real SMTP/browser acceptance pending. All routes below require the configured guest Origin. Responses use no-store and no-referrer headers.
+
+| Method | Route | Contract |
+|---|---|---|
+| POST | `/api/auth/guest/password` | Active authenticated GUEST; currentPassword, newPassword, confirmPassword; returns data.signInAgain=true. |
+| POST | `/api/auth/guest/email` | Active authenticated GUEST; email, currentPassword; sends confirmation to the new address and returns message. Current email remains unchanged. |
+| POST | `/api/auth/guest/forgot-password` | Public; email; generic 202 message before account lookup/delivery. Three requests per minute; one issuance per account/purpose per minute. |
+| POST | `/api/auth/guest/reset-password` | Public; token, newPassword, confirmPassword; single-use recovery for active GUEST only; returns data.signInAgain=true. |
+| POST | `/api/auth/guest/confirm-email` | Public; token; confirms the pending email for active GUEST only; returns data.signInAgain=true. No GET mutation. |
+
+Other routes above allow five requests per minute. Passwords require matching 12-128 character replacements different from the current password. Confirmation/reset tokens expire after 30 minutes, are stored hashed, and are bound to purpose and sessionVersion. Successful changes increment sessionVersion, revoke refresh sessions and outstanding credential links, clear the current guest refresh cookie, and audit only field names. Email collisions return 409 with transaction rollback. Guest contact/history records are unchanged. Setup, best-effort email delivery limitations, and rollback guidance: [Guest account security](../GUEST_ACCOUNT_SECURITY.md).
+
 ## Installed source addition: reset staff password - 2026-11-20
 
 Source saved; owner verification pending. `POST /api/staff/users/:id/reset-password` accepts `{ updatedAt }` and returns `{ data: { user, changed: true, passwordReset: true } }`.

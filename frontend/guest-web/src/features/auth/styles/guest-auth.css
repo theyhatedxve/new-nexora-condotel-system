@@ -37,6 +37,10 @@
   box-shadow: 0 8px 28px rgb(20 38 63 / 5%);
 }
 
+.guest-auth__security-card {
+  margin-top: 1.5rem;
+}
+
 .guest-auth form,
 .guest-auth fieldset {
   display: grid;

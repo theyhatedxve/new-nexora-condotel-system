@@ -1,5 +1,15 @@
 # NEXORA | AGENTS.md
 
+## Guest account security - 2026-11-24
+
+**Status:** Source implemented under EggPie approval. Focused automated checks verified; development migration and real SMTP/browser acceptance pending.
+
+- Added My Account password changes, verified sign-in email replacement, and Forgot/Reset Password to the Guest Website, using the existing auth/email/session infrastructure.
+- Added five guest credential routes and an additive GuestCredentialToken migration. Credential links are purpose-bound, hashed, single-use, expire after 30 minutes, and become invalid after credential changes. Email remains unchanged until explicit confirmation. Successful changes revoke existing sessions without changing booking contact/history records.
+- Added isolated service/HTTP/email/migration regression tests and an automated guest client-service check. Backend/guest builds, guest lint, and focused backend lint were run successfully. Exact commands and deployment/rollback guidance are in [GUEST_ACCOUNT_SECURITY.md](../GUEST_ACCOUNT_SECURITY.md).
+- Prisma Client was generated. No development migration, database reset, real SMTP delivery, or real account change was performed. Browser access was blocked before the existing window was opened. No Obsidian notes were read or saved because the connector was unavailable.
+- Next owner checks: back up the stopped database, apply migrations, verify configured email delivery, and exercise the three guest journeys on desktop/mobile and with keyboard navigation.
+
 ## Legacy CSS and Guest utility cleanup closure - 2026-11-20
 
 **Status:** Cleanup completed, owner-confirmed. This checkpoint closes only this cleanup batch, not unrelated pending feature or deployment checks.

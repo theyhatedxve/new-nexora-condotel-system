@@ -221,6 +221,7 @@ model User {
 
   emailVerificationTokens EmailVerificationToken[]
   staffSetupTokens        StaffSetupToken[]
+  guestCredentialTokens   GuestCredentialToken[]
   role                    Role                     @relation(fields: [roleId], references: [id], onDelete: Restrict)
   refreshTokens           RefreshToken[]
   guest                   Guest?
@@ -791,6 +792,28 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
+  @@index([expiresAt])
+}
+
+enum GuestCredentialPurpose {
+  RESET_PASSWORD
+  CHANGE_EMAIL
+}
+
+model GuestCredentialToken {
+  id             String @id @default(cuid())
+  userId         String
+  purpose        GuestCredentialPurpose
+  tokenHash      String @unique
+  pendingEmail   String?
+  sessionVersion Int
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, purpose, createdAt])
   @@index([expiresAt])
 }
 

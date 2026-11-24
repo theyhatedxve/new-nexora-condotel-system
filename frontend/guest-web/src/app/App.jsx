@@ -7,6 +7,9 @@ import Login from "../features/auth/pages/Login.jsx";
 import Register from "../features/auth/pages/Register.jsx";
 import VerifyEmail from "../features/auth/pages/VerifyEmail.jsx";
 import Logout from "../features/auth/pages/Logout.jsx";
+import AccountSecurity from "../features/auth/pages/AccountSecurity.jsx";
+import ForgotPassword from "../features/auth/pages/ForgotPassword.jsx";
+import GuestCredentialLink from "../features/auth/pages/GuestCredentialLink.jsx";
 import Home from "../features/home/pages/Home.jsx";
 import Rooms from "../features/rooms/pages/Rooms.jsx";
 import RoomDetails from "../features/rooms/pages/RoomDetails.jsx";
@@ -33,6 +36,9 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/logout" element={<Logout />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<GuestCredentialLink reset />} />
+            <Route path="/confirm-email" element={<GuestCredentialLink />} />
             <Route path="/" element={<Home />} />
             <Route path="/rooms" element={<Rooms />} />
             <Route path="/about" element={<About />} />
@@ -40,6 +46,7 @@ function App() {
             <Route path="/policies" element={<Policies />} />
             <Route path="/rooms/:id" element={<RoomDetails />} />
             <Route element={<GuestRoute />}>
+              <Route path="/account/security" element={<AccountSecurity />} />
               <Route path="/checkout/:roomTypeId" element={<Checkout />} />
               <Route path="/payment-return" element={<PaymentReturn />} />
               <Route path="/my-bookings" element={<MyBookings />} />

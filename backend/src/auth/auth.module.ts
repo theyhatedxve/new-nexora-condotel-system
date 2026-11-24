@@ -19,6 +19,8 @@ import { StaffPasswordController } from './staff-password.controller.js';
 import { StaffPasswordService } from './staff-password.service.js';
 
 import { AuthRealmController } from './auth-realm.controller.js';
+import { GuestCredentialsController } from './guest-credentials.controller.js';
+import { GuestCredentialsService } from './guest-credentials.service.js';
 
 @Module({
   imports: [
@@ -36,11 +38,13 @@ import { AuthRealmController } from './auth-realm.controller.js';
   ],
   controllers: [
     AuthController,
+    GuestCredentialsController,
     AuthRealmController,
     StaffPasswordController,
   ],
   providers: [
     AuthService,
+    GuestCredentialsService,
     PasswordService,
     JwtStrategy,
     RegistrationService,

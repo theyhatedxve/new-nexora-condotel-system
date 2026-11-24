@@ -29,8 +29,4 @@ const api = axios.create({
   withCredentials: true,
 });
 
-export async function checkBackend() {
-  return (await api.get("/health")).data;
-}
-
 export default api;

@@ -1,3 +1,9 @@
+export const timestampWithSeconds = new Intl.DateTimeFormat("en-PH", {
+  dateStyle: "medium",
+  timeStyle: "medium",
+  timeZone: "Asia/Manila",
+});
+
 export function guestName(guest) {
   return (
     [guest?.firstName, guest?.lastName]

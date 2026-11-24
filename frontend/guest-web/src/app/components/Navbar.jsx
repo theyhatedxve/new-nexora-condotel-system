@@ -121,6 +121,11 @@ export default function Navbar() {
 
             {authenticated && (
               <>
+                {auth.user.role === "GUEST" && (
+                  <NavLink to="/account/security" className="guest-header__link" onClick={closeMenu}>
+                    My Account
+                  </NavLink>
+                )}
                 {auth.user.role !== "GUEST" && (
                   <Link
                     to="/login"

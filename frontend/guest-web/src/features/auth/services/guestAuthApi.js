@@ -16,8 +16,8 @@ function clearToken() {
   delete api.defaults.headers.common.Authorization;
 }
 
-function cookieRequest(path, body) {
-  const request = () => api.post(path, body);
+function cookieRequest(path, body, config) {
+  const request = () => api.post(path, body, config);
 
   // Cookie rotation is shared by guest tabs, while module state is tab-local.
   if (navigator.locks?.request) {
@@ -29,6 +29,18 @@ function cookieRequest(path, body) {
 
 export function getGuestSession() {
   return session;
+}
+
+// Share the refresh-cookie lock so credential writes cannot race a tab's refresh.
+export async function guestCredentialRequest(path, body) {
+  return cookieRequest(path, body, { timeout: 30_000 });
+}
+
+export function endGuestCredentialSession(message) {
+  ++revision;
+  lastVerified = 0;
+  clearToken();
+  publish("anonymous", null, message);
 }
 
 export function subscribeGuestSession(listener) {

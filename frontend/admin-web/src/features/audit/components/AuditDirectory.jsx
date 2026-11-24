@@ -5,7 +5,7 @@
 } from "lucide-react";
 import StaffDataState from "../../../shared/components/StaffDataState.jsx";
 import { auditSearch } from "../services/auditApi.js";
-import { timestamp } from "../constants/auditLogs.js";
+import { timestampWithSeconds as timestamp } from "../../../shared/utils/formatters.js";
 import useAuditDirectory from "../hooks/useAuditDirectory.js";
 import { AuditFilters } from "./AuditFilters.jsx";
 

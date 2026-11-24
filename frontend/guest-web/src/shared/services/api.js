@@ -14,8 +14,3 @@ const apiBase = new URL(import.meta.env.VITE_API_URL, window.location.origin);
 export function toApiUrl(path) {
   return new URL(path, apiBase).href;
 }
-
-export async function checkBackend() {
-  const response = await api.get("/health");
-  return response.data;
-}

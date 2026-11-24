@@ -1,6 +1,6 @@
 ﻿import { Building2, LockKeyhole, Save } from "lucide-react";
 import { PROPERTY_FIELDS } from "../services/settingsApi.js";
-import { timestamp } from "../constants/settings.js";
+import { timestampWithSeconds as timestamp } from "../../../shared/utils/formatters.js";
 import { displayValue } from "../utils/settingsHelpers.js";
 import useSettingsEditor from "../hooks/useSettingsEditor.js";
 import { PropertyValues } from "./PropertyValues.jsx";
