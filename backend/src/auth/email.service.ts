@@ -113,7 +113,8 @@ export class EmailService {
   ): Promise<void> {
     const transport = this.transport(config);
     try {
-      await transport.sendMail({
+      this.logger.log('Guest verification email SMTP send attempted.');
+      const result = await transport.sendMail({
         from: config.from,
         to: email,
         subject: 'Verify your NEXORA account',
@@ -127,6 +128,11 @@ export class EmailService {
           'If you did not register, you can ignore this message.',
         ].join('\n'),
       });
+      if (result.accepted.length > 0) {
+        this.logger.log('Guest verification email accepted by SMTP.');
+      } else {
+        this.logger.warn('Guest verification email was not accepted by SMTP.');
+      }
     } finally {
       transport.close();
     }

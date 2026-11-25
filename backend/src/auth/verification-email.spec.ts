@@ -18,6 +18,22 @@ afterEach(() => {
 });
 
 it.each([
+  [['guest@example.invalid'], 'Guest verification email accepted by SMTP.'],
+  [[], 'Guest verification email was not accepted by SMTP.'],
+])('reports SMTP acceptance based on the relay response (%j)', async (accepted, expected) => {
+  const log = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+  const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
+  const sendMail = vi.fn().mockResolvedValue({ accepted });
+  vi.spyOn(nodemailer, 'createTransport').mockReturnValue({ sendMail, close: vi.fn() } as never);
+
+  await new EmailService().sendVerificationEmail('guest@example.invalid', 'verification-token');
+
+  expect(log.mock.calls[0]).toEqual(['Guest verification email SMTP send attempted.']);
+  expect(log.mock.invocationCallOrder[0]).toBeLessThan(sendMail.mock.invocationCallOrder[0]);
+  expect(accepted.length ? log.mock.calls.slice(1) : warn.mock.calls).toEqual([[expected]]);
+});
+
+it.each([
   ['EAUTH', 'authentication'],
   ['ETIMEDOUT', 'connection'],
   ['ETLS', 'tls'],

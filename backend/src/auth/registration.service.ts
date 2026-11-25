@@ -6,7 +6,7 @@ import {
   getVerificationExpiry,
 } from './registration-policy.js';
 
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PasswordService } from './password.service.js';
@@ -16,6 +16,8 @@ import type { RegisterDto } from './dto/register.dto.js';
 
 @Injectable()
 export class RegistrationService {
+  private readonly logger = new Logger(RegistrationService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
@@ -43,6 +45,7 @@ export class RegistrationService {
     });
 
     if (existing) {
+      this.logger.log('Guest registration skipped verification email because the account already exists.');
       return REGISTRATION_ACKNOWLEDGMENT;
     }
 
@@ -100,6 +103,7 @@ export class RegistrationService {
         'code' in error &&
         error.code === 'P2002'
       ) {
+        this.logger.log('Guest registration skipped verification email after a concurrent duplicate.');
         return REGISTRATION_ACKNOWLEDGMENT;
       }
 
@@ -113,8 +117,7 @@ export class RegistrationService {
     } catch {
       // Account remains PENDING. The guest can request
       // another verification email once delivery is restored.
-      // A monitoring system should record the delivery failure
-      // without recording the token or password.
+      // EmailService records the failure category.
     }
 
     return REGISTRATION_ACKNOWLEDGMENT;
